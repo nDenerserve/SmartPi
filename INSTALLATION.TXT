@@ -1,0 +1,163 @@
+Configuration the Raspberry Pi for the SmartPI
+
+
+
+There are two ways to install the necessary software to use the SmartPi with your Raspberry Pi!
+I. You install the pre-configured image on your Raspberry Pi (the easy way).
+II. You install every software and tool by your own, step by step, as shown in the following pages.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Step by step instructions
+Upgrade:
+Please login on your Raspberry Pi.
+First you have to upgrade your system.
+Use the following commands:
+I. sudo apt-get update
+II. sudo apt-get dist-upgrade
+
+The upgrade will take a while…
+When the upgrade is ready, you have to configure the I²C-Bus.
+
+I²C:
+The I²C-Bus is the communication-bus between the Raspberry Pi and the SmartPi.
+Please use the following commands:
+I. sudo apt-get install i2c-tools
+II. sudo apt-get install python-smbus
+III. sudo apt-get install libi2c-dev
+
+Now we have to enable the I²C module.
+Please configure the Raspberry Pi as follows:
+I. sudo raspi-config
+It appears a screen:
+I. Select “8 Advanced Options”
+II. Select “A7: I2C”
+III. Select “Yes”
+IV. The screen will ask if you want the interface to be enabled: Select “Yes”
+V. The screen will state the module will be loaded by default: Select “Ok”, Select “Finish”
+
+After the next reboot the I²C module will be loaded.
+
+
+
+Now it’s necessary to edit the modules file.
+Please use the following command:
+I. sudo nano /etc/modules
+
+
+Now add the following two lines:
+			i2c-bcm2708
+           i2c-dev
+Use CTRL-o, then RETURN and CTRL-x to save the file and exit.
+
+Now reboot your Raspberry Pi.
+After a reboot it’s possible to check the communication between the Raspberry Pi and the SmartPi
+(if you want):
+Connect the two devices (Raspberry Pi and SmartPi) and use the following command:
+I. sudo i2cdetect –y 1
+With this command, it is possible to search for all addresses, connected on the i²c-bus.
+Appears a “38”, the connection between the Raspberry Pi and the SmartPi is OK.
+You can see in the following picture.
+
+API (Flask, Python):
+Now you have to install python and flask for the API.
+
+Please use the following commands:
+I. sudo apt-get install python-pip
+II. sudo pip install Flask
+Now reboot your system:	sudo reboot
+Save the following files under the path “/home/pi” on the Raspberry Pi:
+all.c
+current.c
+cos.c
+frequenz.c
+power.c
+value.c
+voltage.c
+webserver.py
+
+To run the files, they must be compiled once.
+Navigate to the folder “/home/pi”.
+
+Use the following commands to compile:
+sudo gcc –o all all.c
+sudo gcc –o current current.c
+sudo gcc –o cos cos.c
+sudo gcc –o frequenz frequenz.c
+sudo gcc –o power power.c
+sudo gcc –o value value.c
+sudo gcc –o voltage voltage.c
+
+
+
+
+
+Web-Frontend (rrdtool, Python):
+First it’s necessary to install the rrd-tool.
+Please use the following command:
+I. sudo apt-get install apache2 rrdtool python-rrd
+
+Now multiple folders must be created.
+First you need to be login as root to create a folder:
+Now use the following commands:
+mkdir/var/www/cosphi
+mkdir/var/www/current
+mkdir/var/www/frequenz
+mkdir/var/www/power
+mkdir/var/www/smartpi
+mkdir/var/www/voltage
+
+In each folder you must put the correct index.html.
+Each file must be renamed to “index.html”.
+For example:
+index_current.html must be renamed to index.html.
+Put this file in the folder /var/www/current.
+
+Now save the following files under the path “/home/pi” on the Raspberry Pi:
+all_rrd.c
+smartpi_web.py
+
+To run the file, it must be compiled once.
+Navigate to the folder “/home/pi”.
+
+Use the following command to compile:
+sudo gcc –o all_rrd all_rrd.c –lm –Wall
+
+Autostart:
+If you want to start the API and the web-frontend automatically after turning on the Raspberry Pi, you have to do the following steps.
+
+Save the following file under the path “/home/pi” on the Raspberry Pi:
+smartpi_autostart.c
+
+To run the file, it must be compiled once.
+Navigate to the folder “/home/pi”.
+
+Use the following commands to compile:
+sudo gcc –o smartpi_autostart smartpi_autostart.c
+
+Now use the following command please:
+crontab –e
+
+Scroll to the end and add the following line:
+@reboot sudo /home/pi/./smartpi_autostart &
+Use CTRL-o, then RETURN and CTRL-x to save the file and exit.
+
+Now reboot your Raspberry Pi.
+ 
