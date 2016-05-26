@@ -1,3 +1,35 @@
+This file is part of SmartPi.
+
+    SmartPi is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    SmartPi is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with SmartPi.  If not, see <http://www.gnu.org/licenses/>.
+
+    Diese Datei ist Teil von SmartPi.
+
+    SmartPi ist Freie Software: Sie k√∂nnen es unter den Bedingungen
+    der GNU General Public License, wie von der Free Software Foundation,
+    Version 3 der Lizenz oder (nach Ihrer Wahl) jeder sp√§teren
+    ver√∂ffentlichten Version, weiterverbreiten und/oder modifizieren.
+
+    SmartPi wird in der Hoffnung, dass es n√ºtzlich sein wird, aber
+    OHNE JEDE GEW√ÑHRLEISTUNG, bereitgestellt; sogar ohne die implizite
+    Gew√§hrleistung der MARKTF√ÑHIGKEIT oder EIGNUNG F√úR EINEN BESTIMMTEN ZWECK.
+    Siehe die GNU General Public License f√ºr weitere Details.
+
+    Sie sollten eine Kopie der GNU General Public License zusammen mit diesem
+    Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>.
+    
+    
+    
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -127,17 +159,17 @@ phase=atoi(argv[3]);
 
 /*		
 //Leistungsmessung!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//AN ALLEN DREI EINGƒNGEN...
+//AN ALLEN DREI EING√ÑNGEN...
 */
 
-    offset_current=0.97129167;//OFFSET HABE ICH HIER MAL BEI 5A ermittelt!!!¥
+    offset_current=0.97129167;//OFFSET HABE ICH HIER MAL BEI 5A ermittelt!!!¬¥
     offset_voltage=1.00;
     
 
 
 
   //printf("Opening device...");
-  if ((device = open("/dev/i2c-0", O_RDWR)) < 0)//HABE ICH GEƒNDERT VON /dev/i2c-1 auf /dev/i2c-0
+  if ((device = open("/dev/i2c-0", O_RDWR)) < 0)//HABE ICH GE√ÑNDERT VON /dev/i2c-1 auf /dev/i2c-0
   {
     //perror("open() failed");
     exit (1);
@@ -170,7 +202,7 @@ phase=atoi(argv[3]);
 
     scan_i2c_bus(device);//Herausfinden der Device-Addresse!!!
 	
-    device_address=0x38;//Die Adresse des ADE7878 ist 0x38. Am Ende dieser Adresse kommt noch ein Bit: 1 f¸r Read und 0 f¸r write, deswegen 0x71, bzw. 0x70.
+    device_address=0x38;//Die Adresse des ADE7878 ist 0x38. Am Ende dieser Adresse kommt noch ein Bit: 1 f√ºr Read und 0 f√ºr write, deswegen 0x71, bzw. 0x70.
 
     if (ioctl(device, I2C_SLAVE, device_address) < 0)
     //if (ioctl(device, 0x70, device_address) < 0)
@@ -190,18 +222,18 @@ phase=atoi(argv[3]);
 //CONFIG2-REGISTER (I2C-LOCK) WRITE!!!!
 //-------------------------------------------------------------------------------------
 
-	//‹ber das CONFIG2-REGISTER speichere ich die gew‰hlte Datenschnittstelle, also bei uns "I2C"!!!
+	//√úber das CONFIG2-REGISTER speichere ich die gew√§hlte Datenschnittstelle, also bei uns "I2C"!!!
 	//Dieses Register verhindert, dass im laufenden Betrieb aus versehen auf "SPI" umgestellt wird!!
 	
 
 
 	Daten[0] = 0xEC;//0xEC01 (CONFIG2-REGISTER)
    	Daten[1] = 0x01; 
- 	Daten[2] = 0x02;//00000010 --> Bedeutet I2C-Lock (I2C ist nun die gew‰hlte ‹bertragungsart)
+ 	Daten[2] = 0x02;//00000010 --> Bedeutet I2C-Lock (I2C ist nun die gew√§hlte √úbertragungsart)
 	
 	
 
- 	if(write(device, Daten, 3) != 3)//Anzahl der zu ¸bertragenen Bytes hier einsetzen (hier 3 --> Register plus Dateninhalt)
+ 	if(write(device, Daten, 3) != 3)//Anzahl der zu √ºbertragenen Bytes hier einsetzen (hier 3 --> Register plus Dateninhalt)
 
     	{
     		//printf("Fehler beim Schreiben der Daten (I2C-LOCK)!\n");
@@ -215,7 +247,7 @@ phase=atoi(argv[3]);
 //-------------------------------------------------------------------------------------
 	
 
-	//Hier wird ¸berpr¸ft, ob das CONFIG2-REGISTER (I2C-LOCK)richtig gesetzt wurde (Wird allerdings derzeit nicht ausgewertet)!!!!
+	//Hier wird √ºberpr√ºft, ob das CONFIG2-REGISTER (I2C-LOCK)richtig gesetzt wurde (Wird allerdings derzeit nicht ausgewertet)!!!!
 	Daten[0] = 0xEC;//0xEC01 (CONFIG2-REGISTER)
    	Daten[1] = 0x01; 
 	//Daten[2] = 0x00; 
@@ -259,7 +291,7 @@ phase=atoi(argv[3]);
 	
 	
 
- 	if(write(device, Daten, 5) != 5)//Anzahl der zu ¸bertragenen Bytes hier einsetzen (hier 5 --> Register plus Dateninhalt)
+ 	if(write(device, Daten, 5) != 5)//Anzahl der zu √ºbertragenen Bytes hier einsetzen (hier 5 --> Register plus Dateninhalt)
 
     	{
     		//printf("Fehler beim Schreiben der Daten (DICOEFF-REGISTER)!\n");
@@ -285,7 +317,7 @@ phase=atoi(argv[3]);
 	//Daten[5] = 0x01;
 	
 
- 	if(write(device, Daten, 4) != 4)//Anzahl der zu ¸bertragenen Bytes hier einsetzen (hier 4 --> Register plus Dateninhalt)
+ 	if(write(device, Daten, 4) != 4)//Anzahl der zu √ºbertragenen Bytes hier einsetzen (hier 4 --> Register plus Dateninhalt)
     	{
     		//printf("Fehler beim Schreiben der Daten!\n");
     		return -1;
@@ -300,7 +332,7 @@ phase=atoi(argv[3]);
 //-------------------------------------------------------------------------------------
 
 	
-	//Hier wird ¸berpr¸ft, ob das RUN-Register auch gesetzt wird (Wird allerdings derzeit nicht ausgewertet)!!
+	//Hier wird √ºberpr√ºft, ob das RUN-Register auch gesetzt wird (Wird allerdings derzeit nicht ausgewertet)!!
 
 	Daten[0] = 0xE2;//0xE228 (RUN-Register)
    	Daten[1] = 0x28; 
@@ -415,7 +447,7 @@ for (t=number;t<4;t++)
 						effektivwert=0;
 						strom_real_a=0;
 
- 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgef¸hrt und anschlieﬂend der Mittelwert berechnet!!!
+ 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgef√ºhrt und anschlie√üend der Mittelwert berechnet!!!
  						{
 
   							Daten[0] = 0x43;//0x43C0 (AIRMS; Current rms an A)
@@ -467,7 +499,7 @@ for (t=number;t<4;t++)
 						ergebnis=0;
 						summe_ergebnis=0;
 
- 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgef¸hrt und anschlieﬂend der Mittelwert berechnet!!!
+ 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgef√ºhrt und anschlie√üend der Mittelwert berechnet!!!
  						{
 
   							Daten[0] = 0x43;//0x43C1 (AVRMS; Spannung rms an VA)
@@ -497,7 +529,7 @@ for (t=number;t<4;t++)
 
 							//Ich mache es hier anders als bei der Strommessung.
 							//Ich habe bei 229,8 V (eff.) einen Wert von 2427873 erhalten
-							//Ich summiere hier einfach 500 mal die gemessenen Werte auf und ermittle anschlieﬂend die Spannung!
+							//Ich summiere hier einfach 500 mal die gemessenen Werte auf und ermittle anschlie√üend die Spannung!
 						}
 
   	 					ergebnis=summe_ergebnis/500; //Hier wird der Mittelwert von 500 Messungen berechnet!!! 
@@ -543,7 +575,7 @@ for (t=number;t<4;t++)
 						ergebnis_phase=(faktor_1*Daten[0])+Daten[1];  
 	
 						clock=256000;
-						dreisechs=360;//Faktor 360∞	
+						dreisechs=360;//Faktor 360¬∞	
 
 	
 						//printf("\r\nErgebnis_phase_a:%f",ergebnis_phase);
@@ -572,7 +604,7 @@ for (t=number;t<4;t++)
 
 						//MMODE Register WRITE!!!
 						//-------------------------------------------------------------------------------------
-						//Zur Bestimmung der Netzfrequenz muss zuerst ¸ber das MMODE-Register bestimmt werden an welchem Spannungseingang die Netzfrequenz ermittelt werden soll!
+						//Zur Bestimmung der Netzfrequenz muss zuerst √ºber das MMODE-Register bestimmt werden an welchem Spannungseingang die Netzfrequenz ermittelt werden soll!
 
 						Daten[0] = 0xE7;//0xE700 (MMODE Register)
    						Daten[1] = 0x00;  	
@@ -581,7 +613,7 @@ for (t=number;t<4;t++)
 	
 	
 
- 						if(write(device, Daten, 3) != 3)//Anzahl der zu ¸bertragenen Bytes hier einsetzen (hier 3 --> Register plus Dateninhalt)
+ 						if(write(device, Daten, 3) != 3)//Anzahl der zu √ºbertragenen Bytes hier einsetzen (hier 3 --> Register plus Dateninhalt)
     						{
     							//printf("Fehler beim Schreiben der Daten (MMODE Register)!\n");
 							//printf("\r\nADE7878 wird resettet\n");
@@ -682,7 +714,7 @@ for (t=number;t<4;t++)
 						effektivwert=0;
 						strom_real_b=0;
 
- 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgef¸hrt und anschlieﬂend der Mittelwert berechnet!!!
+ 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgef√ºhrt und anschlie√üend der Mittelwert berechnet!!!
  						{
 
   							Daten[0] = 0x43;//0x43C0 (AIRMS; Current rms an A)
@@ -732,7 +764,7 @@ for (t=number;t<4;t++)
 						ergebnis=0;
 						summe_ergebnis=0;
 
- 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgef¸hrt und anschlieﬂend der Mittelwert berechnet!!!
+ 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgef√ºhrt und anschlie√üend der Mittelwert berechnet!!!
  						{
 
   							Daten[0] = 0x43;//0x43C3 (BVRMS; Spannung rms an VB)
@@ -762,7 +794,7 @@ for (t=number;t<4;t++)
 
 							//Ich mache es hier anders als bei der Strommessung.
 							//Ich habe bei 229,8 V (eff.) einen Wert von 2427873 erhalten
-							//Ich summiere hier einfach 500 mal die gemessenen Werte auf und ermittle anschlieﬂend die Spannung!
+							//Ich summiere hier einfach 500 mal die gemessenen Werte auf und ermittle anschlie√üend die Spannung!
 						}
 
   	 					ergebnis=summe_ergebnis/500; //Hier wird der Mittelwert von 500 Messungen berechnet!!! 
@@ -806,7 +838,7 @@ for (t=number;t<4;t++)
 						ergebnis_phase=(faktor_1*Daten[0])+Daten[1];  
 	
 						clock=256000;
-						dreisechs=360;//Faktor 360∞	
+						dreisechs=360;//Faktor 360¬∞	
 
 	
 						//printf("\r\nErgebnis_phase_a:%f",ergebnis_phase);
@@ -835,7 +867,7 @@ for (t=number;t<4;t++)
 
 						//MMODE Register WRITE!!!
 						//-------------------------------------------------------------------------------------
-						//Zur Bestimmung der Netzfrequenz muss zuerst ¸ber das MMODE-Register bestimmt werden an welchem Spannungseingang die Netzfrequenz ermittelt werden soll!
+						//Zur Bestimmung der Netzfrequenz muss zuerst √ºber das MMODE-Register bestimmt werden an welchem Spannungseingang die Netzfrequenz ermittelt werden soll!
 
 						Daten[0] = 0xE7;//0xE700 (MMODE Register)
    						Daten[1] = 0x00;  	
@@ -844,7 +876,7 @@ for (t=number;t<4;t++)
 	
 	
 
- 						if(write(device, Daten, 3) != 3)//Anzahl der zu ¸bertragenen Bytes hier einsetzen (hier 3 --> Register plus Dateninhalt)
+ 						if(write(device, Daten, 3) != 3)//Anzahl der zu √ºbertragenen Bytes hier einsetzen (hier 3 --> Register plus Dateninhalt)
     						{
     							//printf("Fehler beim Schreiben der Daten (MMODE Register)!\n");
 							//printf("\r\nADE7878 wird resettet\n");
@@ -940,7 +972,7 @@ for (t=number;t<4;t++)
 						effektivwert=0;
 						strom_real_c=0;
 
- 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgef¸hrt und anschlieﬂend der Mittelwert berechnet!!!
+ 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgef√ºhrt und anschlie√üend der Mittelwert berechnet!!!
  						{
 
   							Daten[0] = 0x43;//0x43C0 (AIRMS; Current rms an A)
@@ -994,7 +1026,7 @@ for (t=number;t<4;t++)
 						effektivwert=0;
 						strom_real_d=0;
 
- 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgef¸hrt und anschlieﬂend der Mittelwert berechnet!!!
+ 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgef√ºhrt und anschlie√üend der Mittelwert berechnet!!!
  						{
 
   							Daten[0] = 0x43;//0x43C0 (AIRMS; Current rms an A)
@@ -1043,7 +1075,7 @@ for (t=number;t<4;t++)
 						ergebnis=0;
 						summe_ergebnis=0;
 
- 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgef¸hrt und anschlieﬂend der Mittelwert berechnet!!!
+ 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgef√ºhrt und anschlie√üend der Mittelwert berechnet!!!
  						{
 
   							Daten[0] = 0x43;//0x43C5 (CVRMS; Spannung rms an VC)
@@ -1073,7 +1105,7 @@ for (t=number;t<4;t++)
 
 							//Ich mache es hier anders als bei der Strommessung.
 							//Ich habe bei 229,8 V (eff.) einen Wert von 2427873 erhalten
-							//Ich summiere hier einfach 500 mal die gemessenen Werte auf und ermittle anschlieﬂend die Spannung!
+							//Ich summiere hier einfach 500 mal die gemessenen Werte auf und ermittle anschlie√üend die Spannung!
 						}
 
   	 					ergebnis=summe_ergebnis/500; //Hier wird der Mittelwert von 500 Messungen berechnet!!! 
@@ -1117,7 +1149,7 @@ for (t=number;t<4;t++)
 						ergebnis_phase=(faktor_1*Daten[0])+Daten[1];  
 	
 						clock=256000;
-						dreisechs=360;//Faktor 360∞	
+						dreisechs=360;//Faktor 360¬∞	
 
 	
 						//printf("\r\nErgebnis_phase_a:%f",ergebnis_phase);
@@ -1145,7 +1177,7 @@ for (t=number;t<4;t++)
 
 						//MMODE Register WRITE!!!
 						//-------------------------------------------------------------------------------------
-						//Zur Bestimmung der Netzfrequenz muss zuerst ¸ber das MMODE-Register bestimmt werden an welchem Spannungseingang die Netzfrequenz ermittelt werden soll!
+						//Zur Bestimmung der Netzfrequenz muss zuerst √ºber das MMODE-Register bestimmt werden an welchem Spannungseingang die Netzfrequenz ermittelt werden soll!
 
 						Daten[0] = 0xE7;//0xE700 (MMODE Register)
    						Daten[1] = 0x00;  	
@@ -1154,7 +1186,7 @@ for (t=number;t<4;t++)
 	
 	
 
- 						if(write(device, Daten, 3) != 3)//Anzahl der zu ¸bertragenen Bytes hier einsetzen (hier 3 --> Register plus Dateninhalt)
+ 						if(write(device, Daten, 3) != 3)//Anzahl der zu √ºbertragenen Bytes hier einsetzen (hier 3 --> Register plus Dateninhalt)
     						{
     							//printf("Fehler beim Schreiben der Daten (MMODE Register)!\n");
 							//printf("\r\nADE7878 wird resettet\n");
@@ -1255,6 +1287,6 @@ printf("}");*/
 printf("%f:%f:%f:%f:%f:%f:%f:%f:%f:%f:%f:%f:%f:%f:%f:%f",strom_real_a,strom_real_b,strom_real_c,strom_real_d,spannung_real_a,spannung_real_b,spannung_real_c,power_a,power_b,power_c,cos_phi_a,cos_phi_b,cos_phi_c,frequenz_a,frequenz_b,frequenz_c);
 
 
-  close(device);//I2C-Verbindung schlieﬂen!!!
+  close(device);//I2C-Verbindung schlie√üen!!!
   return 0;
 }
