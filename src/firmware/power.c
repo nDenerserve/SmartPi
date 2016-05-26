@@ -1,3 +1,36 @@
+This file is part of SmartPi.
+
+    SmartPi is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    SmartPi is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with SmartPi.  If not, see <http://www.gnu.org/licenses/>.
+
+    Diese Datei ist Teil von SmartPi.
+
+    SmartPi ist Freie Software: Sie kÃ¶nnen es unter den Bedingungen
+    der GNU General Public License, wie von der Free Software Foundation,
+    Version 3 der Lizenz oder (nach Ihrer Wahl) jeder spÃ¤teren
+    verÃ¶ffentlichten Version, weiterverbreiten und/oder modifizieren.
+
+    SmartPi wird in der Hoffnung, dass es nÃ¼tzlich sein wird, aber
+    OHNE JEDE GEWÃ„HRLEISTUNG, bereitgestellt; sogar ohne die implizite
+    GewÃ¤hrleistung der MARKTFÃ„HIGKEIT oder EIGNUNG FÃœR EINEN BESTIMMTEN ZWECK.
+    Siehe die GNU General Public License fÃ¼r weitere Details.
+
+    Sie sollten eine Kopie der GNU General Public License zusammen mit diesem
+    Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>.
+    
+    
+    
+
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -74,17 +107,17 @@ phase=atoi(argv[3]);
 
 /*		
 //Leistungsmessung!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//AN ALLEN DREI EINGÄNGEN...
+//AN ALLEN DREI EINGÃ„NGEN...
 */
 
-    offset_current=0.97129167;//OFFSET HABE ICH HIER MAL BEI 5A ermittelt!!!´
+    offset_current=0.97129167;//OFFSET HABE ICH HIER MAL BEI 5A ermittelt!!!Â´
     offset_voltage=1.00;
     
 
 
 
   //printf("Opening device...");
-  if ((device = open("/dev/i2c-0", O_RDWR)) < 0)//HABE ICH GEÄNDERT VON /dev/i2c-1 auf /dev/i2c-0
+  if ((device = open("/dev/i2c-0", O_RDWR)) < 0)//HABE ICH GEÃ„NDERT VON /dev/i2c-1 auf /dev/i2c-0
   {
     //perror("open() failed");
     exit (1);
@@ -117,7 +150,7 @@ phase=atoi(argv[3]);
 
     scan_i2c_bus(device);//Herausfinden der Device-Addresse!!!
 	
-    device_address=0x38;//Die Adresse des ADE7878 ist 0x38. Am Ende dieser Adresse kommt noch ein Bit: 1 für Read und 0 für write, deswegen 0x71, bzw. 0x70.
+    device_address=0x38;//Die Adresse des ADE7878 ist 0x38. Am Ende dieser Adresse kommt noch ein Bit: 1 fÃ¼r Read und 0 fÃ¼r write, deswegen 0x71, bzw. 0x70.
 
     if (ioctl(device, I2C_SLAVE, device_address) < 0)
     //if (ioctl(device, 0x70, device_address) < 0)
@@ -137,18 +170,18 @@ phase=atoi(argv[3]);
 //CONFIG2-REGISTER (I2C-LOCK) WRITE!!!!
 //-------------------------------------------------------------------------------------
 
-	//Über das CONFIG2-REGISTER speichere ich die gewählte Datenschnittstelle, also bei uns "I2C"!!!
+	//Ãœber das CONFIG2-REGISTER speichere ich die gewÃ¤hlte Datenschnittstelle, also bei uns "I2C"!!!
 	//Dieses Register verhindert, dass im laufenden Betrieb aus versehen auf "SPI" umgestellt wird!!
 	
 
 
 	Daten[0] = 0xEC;//0xEC01 (CONFIG2-REGISTER)
    	Daten[1] = 0x01; 
- 	Daten[2] = 0x02;//00000010 --> Bedeutet I2C-Lock (I2C ist nun die gewählte Übertragungsart)
+ 	Daten[2] = 0x02;//00000010 --> Bedeutet I2C-Lock (I2C ist nun die gewÃ¤hlte Ãœbertragungsart)
 	
 	
 
- 	if(write(device, Daten, 3) != 3)//Anzahl der zu übertragenen Bytes hier einsetzen (hier 3 --> Register plus Dateninhalt)
+ 	if(write(device, Daten, 3) != 3)//Anzahl der zu Ã¼bertragenen Bytes hier einsetzen (hier 3 --> Register plus Dateninhalt)
 
     	{
     		//printf("Fehler beim Schreiben der Daten (I2C-LOCK)!\n");
@@ -162,7 +195,7 @@ phase=atoi(argv[3]);
 //-------------------------------------------------------------------------------------
 	
 
-	//Hier wird überprüft, ob das CONFIG2-REGISTER (I2C-LOCK)richtig gesetzt wurde (Wird allerdings derzeit nicht ausgewertet)!!!!
+	//Hier wird Ã¼berprÃ¼ft, ob das CONFIG2-REGISTER (I2C-LOCK)richtig gesetzt wurde (Wird allerdings derzeit nicht ausgewertet)!!!!
 	Daten[0] = 0xEC;//0xEC01 (CONFIG2-REGISTER)
    	Daten[1] = 0x01; 
 	//Daten[2] = 0x00; 
@@ -206,7 +239,7 @@ phase=atoi(argv[3]);
 	
 	
 
- 	if(write(device, Daten, 5) != 5)//Anzahl der zu übertragenen Bytes hier einsetzen (hier 5 --> Register plus Dateninhalt)
+ 	if(write(device, Daten, 5) != 5)//Anzahl der zu Ã¼bertragenen Bytes hier einsetzen (hier 5 --> Register plus Dateninhalt)
 
     	{
     		//printf("Fehler beim Schreiben der Daten (DICOEFF-REGISTER)!\n");
@@ -232,7 +265,7 @@ phase=atoi(argv[3]);
 	//Daten[5] = 0x01;
 	
 
- 	if(write(device, Daten, 4) != 4)//Anzahl der zu übertragenen Bytes hier einsetzen (hier 4 --> Register plus Dateninhalt)
+ 	if(write(device, Daten, 4) != 4)//Anzahl der zu Ã¼bertragenen Bytes hier einsetzen (hier 4 --> Register plus Dateninhalt)
     	{
     		//printf("Fehler beim Schreiben der Daten!\n");
     		return -1;
@@ -247,7 +280,7 @@ phase=atoi(argv[3]);
 //-------------------------------------------------------------------------------------
 
 	
-	//Hier wird überprüft, ob das RUN-Register auch gesetzt wird (Wird allerdings derzeit nicht ausgewertet)!!
+	//Hier wird Ã¼berprÃ¼ft, ob das RUN-Register auch gesetzt wird (Wird allerdings derzeit nicht ausgewertet)!!
 
 	Daten[0] = 0xE2;//0xE228 (RUN-Register)
    	Daten[1] = 0x28; 
@@ -314,7 +347,7 @@ for (t=number;t<4;t++)
 						effektivwert=0;
 						strom_real=0;
 
- 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgeführt und anschließend der Mittelwert berechnet!!!
+ 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgefÃ¼hrt und anschlieÃŸend der Mittelwert berechnet!!!
  						{
 
   							Daten[0] = 0x43;//0x43C0 (AIRMS; Current rms an A)
@@ -364,7 +397,7 @@ for (t=number;t<4;t++)
 						ergebnis=0;
 						summe_ergebnis=0;
 
- 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgeführt und anschließend der Mittelwert berechnet!!!
+ 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgefÃ¼hrt und anschlieÃŸend der Mittelwert berechnet!!!
  						{
 
   							Daten[0] = 0x43;//0x43C1 (AVRMS; Spannung rms an VA)
@@ -394,7 +427,7 @@ for (t=number;t<4;t++)
 
 							//Ich mache es hier anders als bei der Strommessung.
 							//Ich habe bei 229,8 V (eff.) einen Wert von 2427873 erhalten
-							//Ich summiere hier einfach 500 mal die gemessenen Werte auf und ermittle anschließend die Spannung!
+							//Ich summiere hier einfach 500 mal die gemessenen Werte auf und ermittle anschlieÃŸend die Spannung!
 						}
 
   	 					ergebnis=summe_ergebnis/500; //Hier wird der Mittelwert von 500 Messungen berechnet!!! 
@@ -460,7 +493,7 @@ for (t=number;t<4;t++)
 						effektivwert=0;
 						strom_real=0;
 
- 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgeführt und anschließend der Mittelwert berechnet!!!
+ 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgefÃ¼hrt und anschlieÃŸend der Mittelwert berechnet!!!
  						{
 
   							Daten[0] = 0x43;//0x43C0 (AIRMS; Current rms an A)
@@ -510,7 +543,7 @@ for (t=number;t<4;t++)
 						ergebnis=0;
 						summe_ergebnis=0;
 
- 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgeführt und anschließend der Mittelwert berechnet!!!
+ 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgefÃ¼hrt und anschlieÃŸend der Mittelwert berechnet!!!
  						{
 
   							Daten[0] = 0x43;//0x43C3 (BVRMS; Spannung rms an VB)
@@ -540,7 +573,7 @@ for (t=number;t<4;t++)
 
 							//Ich mache es hier anders als bei der Strommessung.
 							//Ich habe bei 229,8 V (eff.) einen Wert von 2427873 erhalten
-							//Ich summiere hier einfach 500 mal die gemessenen Werte auf und ermittle anschließend die Spannung!
+							//Ich summiere hier einfach 500 mal die gemessenen Werte auf und ermittle anschlieÃŸend die Spannung!
 						}
 
   	 					ergebnis=summe_ergebnis/500; //Hier wird der Mittelwert von 500 Messungen berechnet!!! 
@@ -602,7 +635,7 @@ for (t=number;t<4;t++)
 						effektivwert=0;
 						strom_real=0;
 
- 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgeführt und anschließend der Mittelwert berechnet!!!
+ 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgefÃ¼hrt und anschlieÃŸend der Mittelwert berechnet!!!
  						{
 
   							Daten[0] = 0x43;//0x43C0 (AIRMS; Current rms an A)
@@ -652,7 +685,7 @@ for (t=number;t<4;t++)
 						ergebnis=0;
 						summe_ergebnis=0;
 
- 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgeführt und anschließend der Mittelwert berechnet!!!
+ 						for (z=0; z<500; z++) //In dieser Schleife werden 500 Strommessungen durchgefÃ¼hrt und anschlieÃŸend der Mittelwert berechnet!!!
  						{
 
   							Daten[0] = 0x43;//0x43C5 (CVRMS; Spannung rms an VC)
@@ -682,7 +715,7 @@ for (t=number;t<4;t++)
 
 							//Ich mache es hier anders als bei der Strommessung.
 							//Ich habe bei 229,8 V (eff.) einen Wert von 2427873 erhalten
-							//Ich summiere hier einfach 500 mal die gemessenen Werte auf und ermittle anschließend die Spannung!
+							//Ich summiere hier einfach 500 mal die gemessenen Werte auf und ermittle anschlieÃŸend die Spannung!
 						}
 
   	 					ergebnis=summe_ergebnis/500; //Hier wird der Mittelwert von 500 Messungen berechnet!!! 
@@ -748,6 +781,6 @@ printf("}]");
 printf("}]");
 printf("}");
 
-  close(device);//I2C-Verbindung schließen!!!
+  close(device);//I2C-Verbindung schlieÃŸen!!!
   return 0;
 }
