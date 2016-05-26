@@ -1,3 +1,36 @@
+#This file is part of SmartPi.
+#
+#    SmartPi is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    SmartPi is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with SmartPi.  If not, see <http://www.gnu.org/licenses/>.
+#
+#    Diese Datei ist Teil von SmartPi.
+#
+#    SmartPi ist Freie Software: Sie können es unter den Bedingungen
+#    der GNU General Public License, wie von der Free Software Foundation,
+#    Version 3 der Lizenz oder (nach Ihrer Wahl) jeder späteren
+#    veröffentlichten Version, weiterverbreiten und/oder modifizieren.
+#
+#    SmartPi wird in der Hoffnung, dass es nützlich sein wird, aber
+#    OHNE JEDE GEWÄHRLEISTUNG, bereitgestellt; sogar ohne die implizite
+#    Gewährleistung der MARKTFÄHIGKEIT oder EIGNUNG FÜR EINEN BESTIMMTEN ZWECK.
+#    Siehe die GNU General Public License für weitere Details.
+#
+#    Sie sollten eine Kopie der GNU General Public License zusammen mit diesem
+#    Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>.
+    
+    
+    
+
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
@@ -14,9 +47,9 @@ dbname = 'smartpi'                                               # Name fuer Gra
 filename = dbname +'.rrd'                                       # Dateinamen mit Datum
 steps = 10                                                      # Zeitintervall fuer die Messung in Sekunden
 #path = '/var/www/plots/'                                        # absoluter Pfad zum Ablegen der Plots
-i = 0                                                           # Schleifenbedingung für den Hauptteil
+i = 0                                                           # Schleifenbedingung fÃ¼r den Hauptteil
 
-#Mit dem folgenden Befehl l�uft das Programm im Hintergrund,auch wenn die Konsole geschlossen wird, Fehlermeldungen werden in der script.log gespeichert...
+#Mit dem folgenden Befehl läuft das Programm im Hintergrund,auch wenn die Konsole geschlossen wird, Fehlermeldungen werden in der script.log gespeichert...
 #nohup python smartpi_web.py > /var/www/script.log  
 
 
@@ -47,7 +80,7 @@ except IOError:
                          "DS:frequenz_1:GAUGE:2000:U:U",
                          "DS:frequenz_2:GAUGE:2000:U:U",
                          "DS:frequenz_3:GAUGE:2000:U:U",
-                         "RRA:AVERAGE:0.5:1:2160",#Aufl�sung:1 Minute #Anzahl Werte: 2160 Minuten 
+                         "RRA:AVERAGE:0.5:1:2160",#Auflösung:1 Minute #Anzahl Werte: 2160 Minuten 
                          "RRA:AVERAGE:0.5:5:2016",
                          "RRA:AVERAGE:0.5:15:2880",
                          "RRA:AVERAGE:0.5:60:8760",)
@@ -55,7 +88,7 @@ except IOError:
 
 
 
-# Bildschirmausgabe #Diese Werte werden an die Weboberfl�che �bermittelt
+# Bildschirmausgabe #Diese Werte werden an die Weboberfläche übermittelt
 #def ausgabe(d,u,t,p,a):
     #sys.stdout.write(str('Datum: ') + d + '\n')
     #sys.stdout.write(str('Uhrzeit: ') + u + '\n')
@@ -71,7 +104,7 @@ def plotten(a):
 # Funktion zum Plotten der Grafiken
 # a:   Wert, der geplottet werden soll
     
-    # Beschriftung für die Grafiken festlegen
+    # Beschriftung fÃ¼r die Grafiken festlegen
     if a == 'current':
             title = 'CURRENT'
             label = 'in A'
@@ -214,13 +247,13 @@ while i!=0:
     datum = time.strftime('%d %m %Y')
     uhrzeit = time.strftime('%H:%M:%S')
     
-    #Lese alle Daten �ber I2C aus (Abfrage des ADE7878)
+    #Lese alle Daten über I2C aus (Abfrage des ADE7878)
     process = subprocess.Popen(['./all_rrd', '-r','10','1'], stdout=subprocess.PIPE)     
     values = process.communicate()[0]
     
     #print(values)
    
-    #Schreibe alle gemessenen Daten in die Textdatei "Smartpi_Value.txt" f�r die REST-API
+    #Schreibe alle gemessenen Daten in die Textdatei "Smartpi_Value.txt" für die REST-API
     with open ('/run/SmartPi/Smartpi_Value.txt','w') as output:
         output.write ("%s" % (values))
         output.close()
@@ -229,7 +262,7 @@ while i!=0:
      
     # Messwerte in die RRD-Datei schreiben
     from rrdtool import update as rrd_update
-    #In der Reihenfolge, in der die Datenbank angelegt worden ist, m�ssen die Daten auch eingegeben werden
+    #In der Reihenfolge, in der die Datenbank angelegt worden ist, müssen die Daten auch eingegeben werden
     #ret = rrd_update('%s' %(filename), 'N:%s:%s:%s:%s:%s:%s:%s:%s:%s:%s:%s:%s:%s:%s:%s:%s' %('8','4','5','4','5','4','5','4','5','4','5','4','5','4','5','4'));
     ret = rrd_update('%s' %(filename), 'N:%s' %(values));
 
@@ -240,7 +273,7 @@ while i!=0:
     if ret:
         print "aufgehaengt"
     
-    #Manchmal h�ngt sich das Programm auf, wenn Daten nicht richtig ausgelesen werden!
+    #Manchmal hängt sich das Programm auf, wenn Daten nicht richtig ausgelesen werden!
     if not ret:
         #Grafiken erzeugen    
         print "Erzeuge Grafiken"
