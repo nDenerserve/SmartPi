@@ -7,7 +7,6 @@ I.	You install the pre-configured image on your Raspberry Pi (the easy way).
 II.	You install every software and tool by your own, step by step, as shown in the following pages.
 
 
-You install every software and tool by your own, step by step, as shown in the following pages.
 
 
 
