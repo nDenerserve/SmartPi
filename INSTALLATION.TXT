@@ -1,10 +1,17 @@
 Configuration the Raspberry Pi for the SmartPI
 
+There are two ways to install the necessary software to use the SmartPi with your Raspberry Pi!
+I.	You install the pre-configured image on your Raspberry Pi (the easy way).
+	Here the download: http://blog.enerserve.eu/category/smartpi/
+	
+II.	You install every software and tool by your own, step by step, as shown in the following pages.
 
 
 You install every software and tool by your own, step by step, as shown in the following pages.
 
 
+
+II.
 Step by step instructions
 Upgrade:
 Please login on your Raspberry Pi.
