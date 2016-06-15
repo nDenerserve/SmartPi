@@ -76,7 +76,7 @@ void scan_i2c_bus(int device)
   }
 
 //Compilieren:
-//gcc -o all all.c -lm -Wall
+//gcc -o all_rrd all_rrd.c -lm -Wall
 
 
 
