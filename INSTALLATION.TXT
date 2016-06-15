@@ -50,7 +50,7 @@ I. sudo nano /etc/modules
 
 Now add the following two lines:
 			i2c-bcm2708
-           i2c-dev
+           		i2c-dev
 Use CTRL-o, then RETURN and CTRL-x to save the file and exit.
 
 Now reboot your Raspberry Pi.
@@ -60,7 +60,7 @@ Connect the two devices (Raspberry Pi and SmartPi) and use the following command
 I. sudo i2cdetect –y 1
 With this command, it is possible to search for all addresses, connected on the i²c-bus.
 Appears a “38”, the connection between the Raspberry Pi and the SmartPi is OK.
-You can see in the following picture.
+
 
 API (Flask, Python):
 Now you have to install python and flask for the API.
