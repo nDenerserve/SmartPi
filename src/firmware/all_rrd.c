@@ -169,7 +169,7 @@ phase=atoi(argv[3]);
 
 
   //printf("Opening device...");
-  if ((device = open("/dev/i2c-0", O_RDWR)) < 0)//HABE ICH GEÄNDERT VON /dev/i2c-1 auf /dev/i2c-0
+  if ((device = open("/dev/i2c-1", O_RDWR)) < 0)//HABE ICH GEÄNDERT VON /dev/i2c-0 auf /dev/i2c-1
   {
     //perror("open() failed");
     exit (1);
