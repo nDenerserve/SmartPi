@@ -1,4 +1,5 @@
-This file is part of SmartPi.
+/*
+	This file is part of SmartPi.
 
     SmartPi is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,11 +28,9 @@ This file is part of SmartPi.
 
     Sie sollten eine Kopie der GNU General Public License zusammen mit diesem
     Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>.
-    
-    
-    
+*/
 
-
+    
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
