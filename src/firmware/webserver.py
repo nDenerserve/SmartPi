@@ -30,6 +30,12 @@
     
     
     
+    
+#   This sourcecode, “webserver.py”,  realizes the REST-API. 
+#   In this python-code other c-programs are called like current.c, voltage.c, etc. 
+#   The c-programs get the data (measured values) from the text file “Smartpi_Value.txt”. 
+    
+    
 
 
 from flask import Flask
