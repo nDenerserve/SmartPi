@@ -30,6 +30,16 @@
     
     
     
+    
+#   This sourcecode “smartpi_web.py” calls the c-program (all_rrd.c) every 20 seconds and stores the measured data 
+#   in an text file (Smartpi_Value.txt). 
+#   The stored values are separated with an “:”. 
+#   current_1:current_2:current_3:current_N:voltage_1:voltage_2:voltage_3:power_1:power_2:power_3:cosphi_1:cosphi_2:
+#   cosphi_3:frequenz_1:frequenz_2:frequenz_3 
+#   The measured values are stored in an rrd-database also. The name is “smartpi.rrd”. 
+#   The data for the graphics of the web-frontend (http://192.168.2.22/smartpi/) are from this database (smartpi.rrd)! 
+#   The diagrams are also generated in this program “smartpi_web.py” (rrd-tool). 
+    
 
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
