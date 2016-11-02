@@ -19,6 +19,7 @@ timer = $interval(function() {
 
 
 getLinechart('power','123',moment().format('YYYY-MM-DD 00:00:00'),moment().format('YYYY-MM-DD HH:mm:ss'));
+$scope.btnpowerline = 'btn-primary';
 
   function getActualValues() {
     $Momentary.get({} ,
@@ -89,37 +90,17 @@ getLinechart('power','123',moment().format('YYYY-MM-DD 00:00:00'),moment().forma
     });
   }
 
+  function deleteFromData(description) {
+    for (var i = $scope.data.length - 1; i >= 0; i--) {
+      if ($scope.data[i].key.indexOf(description) != -1) {
+        // console.log($scope.data[i]);
+        $scope.data.splice(i,1);
+      }
 
+    }
+  // console.log($scope.data);
+  }
 
-
-  // $scope.data = [];
-  // services.getData().then(function successCb(data) {
-  //   angular.forEach(data.data, function(series) {
-  //
-  //     console.log(series);
-  //
-  //
-  //
-  //         val = [];
-  //         angular.forEach(series.values, function(value) {
-  //
-  //           val.push(
-  //             [value.time,value.value]
-  //           );
-  //         })
-  //         $scope.data.push({
-  //           key: series.key,
-  //           values: val
-  //         });
-  //         console.log(new Date(val[0][0]*1000));
-  //     })
-  //   ;
-  //
-  //   console.log(JSON.stringify($scope.data))
-  // });
-  //
-  //
-  //
   $scope.options = {
             chart: {
                 type: 'lineChart',
@@ -149,7 +130,7 @@ getLinechart('power','123',moment().format('YYYY-MM-DD 00:00:00'),moment().forma
                 },
 
                 yAxis: {
-                    axisLabel: 'power',
+                    axisLabel: 'value',
                     tickFormat: function(d){
                         return d3.format('.2s')(d);
                     },
@@ -165,18 +146,11 @@ getLinechart('power','123',moment().format('YYYY-MM-DD 00:00:00'),moment().forma
           if(!$scope.showLinechartEnergyPos) {
             getLinechart('energy_pos','123',moment().format('YYYY-MM-DD 00:00:00'),moment().format('YYYY-MM-DD HH:mm:ss'));
             $scope.showLinechartEnergyPos = true;
+            $scope.btnenergy_posline = 'btn-primary';
           } else {
-              for (var i = $scope.data.length - 1; i >= 0; i--) {
-                if ($scope.data[i].key.indexOf("energy_pos") != -1) {
-                  console.log($scope.data[i]);
-                  $scope.data.splice(i,1);
-                }
-
-              }
-
-
-            console.log($scope.data);
+            deleteFromData("energy_pos");
             $scope.showLinechartEnergyPos = false;
+            $scope.btnenergy_posline = 'btn-default';
           }
 
         };
@@ -185,9 +159,11 @@ getLinechart('power','123',moment().format('YYYY-MM-DD 00:00:00'),moment().forma
           if(!$scope.showLinechartEnergyNeg) {
             getLinechart('energy_neg','123',moment().format('YYYY-MM-DD 00:00:00'),moment().format('YYYY-MM-DD HH:mm:ss'));
             $scope.showLinechartEnergyNeg = true;
+            $scope.btnenergy_negline = 'btn-primary';
           } else {
-            alert("EnergyNeg")
+            deleteFromData("energy_neg");
             $scope.showLinechartEnergyNeg = false;
+            $scope.btnenergy_negline = 'btn-default';
           }
         };
 
@@ -195,9 +171,11 @@ getLinechart('power','123',moment().format('YYYY-MM-DD 00:00:00'),moment().forma
           if(!$scope.showLinechartCurrent) {
             getLinechart('current','123',moment().format('YYYY-MM-DD 00:00:00'),moment().format('YYYY-MM-DD HH:mm:ss'));
             $scope.showLinechartCurrent = true;
+            $scope.btncurrentline = 'btn-primary';
           } else {
-            alert("Current")
+            deleteFromData("current");
             $scope.showLinechartCurrent = false;
+            $scope.btncurrentline = 'btn-default';
           }
         };
 
@@ -205,9 +183,23 @@ getLinechart('power','123',moment().format('YYYY-MM-DD 00:00:00'),moment().forma
           if(!$scope.showLinechartVoltage) {
             getLinechart('voltage','123',moment().format('YYYY-MM-DD 00:00:00'),moment().format('YYYY-MM-DD HH:mm:ss'));
             $scope.showLinechartVoltage = true;
+            $scope.btnvoltageline = 'btn-primary';
           } else {
-            alert("Voltage")
+            deleteFromData("voltage");
             $scope.showLinechartVoltage = false;
+            $scope.btnvoltageline = 'btn-default';
+          }
+        };
+
+        $scope.linechartPower = function() {
+          if(!$scope.showLinechartPower) {
+            getLinechart('power','123',moment().format('YYYY-MM-DD 00:00:00'),moment().format('YYYY-MM-DD HH:mm:ss'));
+            $scope.showLinechartPower = true;
+            $scope.btnpowerline = 'btn-primary';
+          } else {
+            deleteFromData("power");
+            $scope.showLinechartPower = false;
+            $scope.btnpowerline = 'btn-default';
           }
         };
         // $scope.data = [
