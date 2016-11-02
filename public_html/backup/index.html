@@ -1,0 +1,16 @@
+<html ng-app="nvd3TestApp">
+<head>
+  <meta charset="utf-8">  <!-- it's important for d3.js -->
+   <script data-require="lodash.js@4.6.1" data-semver="4.6.1" src="https://cdn.jsdelivr.net/lodash/4.6.1/lodash.js"></script>
+   <script>document.write('<base href="' + document.location + '" />');</script>
+<script src="bower_components/angular/angular.js"></script>
+<script src="bower_components/d3/d3.js"></script>
+<script src="bower_components/nvd3/build/nv.d3.js"></script> <!-- or use another assembly -->
+<script src="bower_components/angular-nvd3/dist/angular-nvd3.js"></script>
+<script src="application.js"></script>
+<link rel="stylesheet" href="bower_components/nvd3/build/nv.d3.css">
+</head>
+<body ng-controller="MainCtrl">
+<nvd3 options='options' data='data'></nvd3>
+</body>
+</html>

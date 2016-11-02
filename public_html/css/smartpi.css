@@ -1,0 +1,11 @@
+.flush_left {text-align: left;}
+.flush_right {text-align: right;}
+.centered {text-align: center;}
+.display-2 {
+    font-size: 1.5rem;
+    font-weight: 300;
+}
+
+.card{
+    height: 350px;
+}
