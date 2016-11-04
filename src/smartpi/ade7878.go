@@ -60,7 +60,7 @@ const (
   OFFSET_CURRENT_N float32 = 0.97129167
   OFFSET_VOLTAGE_A float32 = 1.0
   OFFSET_VOLTAGE_B float32 = 1.0
-  OFFSET_VOLTAGE_C float32 = 100.0
+  OFFSET_VOLTAGE_C float32 = 1.0
 )
 
 
@@ -127,15 +127,16 @@ func InitADE7878(c *Config) (*i2c.Device, error)  {
       panic(err)
   }
 
+
 	// set the right power frequency to the COMPMODE-REGISTER
 	dataAddress = make([]byte, 4)
 	dataAddress[0] = 0xE6;//0xE60E (COMPMODE-REGISTER)
 	dataAddress[1] = 0x0E;
 	if c.Powerfrequency == 60 {
-		dataAddress[2] = 0x60;
+		dataAddress[2] = 0x41;
 		dataAddress[3] = 0xFF;
 	} else {
-		dataAddress[2] = 0x20;
+		dataAddress[2] = 0x1;
 		dataAddress[3] = 0xFF;
 	}
 	err = d.Write(dataAddress)
@@ -144,11 +145,11 @@ func InitADE7878(c *Config) (*i2c.Device, error)  {
   }
 
 
-	dataAddress = make([]byte, 4)
-	dataAddress[0] = 0xE6;//0xE60E (COMPMODE-REGISTER)
-	dataAddress[1] = 0x0E;
-	dataAddress[2] = 0x20;
-	dataAddress[3] = 0xFF;
+	// dataAddress = make([]byte, 4)
+	// dataAddress[0] = 0xE6;//0xE60E (COMPMODE-REGISTER)
+	// dataAddress[1] = 0x0E;
+	// dataAddress[2] = 0x20;
+	// dataAddress[3] = 0xFF;
 
 
   dataAddress = make([]byte, 5)
@@ -366,10 +367,10 @@ func ReadoutValues(d *i2c.Device, c *Config) [16]float32 {
       case 5:
 				if c.Measurevoltage2==1 {
 					// values[5] = (outcome / RMS_FACTOR_VOLTAGE) * 229.8 * OFFSET_VOLTAGE_B
-					values[5] = (outcome / RMS_FACTOR_VOLTAGE) * 231.7919 * OFFSET_VOLTAGE_B
+					values[5] = (outcome / RMS_FACTOR_VOLTAGE) * 234.8029 * OFFSET_VOLTAGE_B
 				} else {
 					if c.Currentdirection1 == 0 {
-						values[5]= float32(c.Voltage1)
+						values[5]= float32(c.Voltage2)
 					} else {
 						values[5]= float32(c.Voltage2) * -1
 					}
@@ -378,10 +379,10 @@ func ReadoutValues(d *i2c.Device, c *Config) [16]float32 {
       case 6:
 				if c.Measurevoltage3==1 {
 					// values[6] = (outcome / RMS_FACTOR_VOLTAGE) * 229.8 * OFFSET_VOLTAGE_C
-					values[6] = (outcome / RMS_FACTOR_VOLTAGE) * 232.4015 * OFFSET_VOLTAGE_C
+					values[6] = (outcome / RMS_FACTOR_VOLTAGE) * 235.34 * OFFSET_VOLTAGE_C
 				} else {
 					if c.Currentdirection1 == 0 {
-						values[6]= float32(c.Voltage1)
+						values[6]= float32(c.Voltage3)
 					} else {
 						values[6]= float32(c.Voltage3) * -1
 					}
