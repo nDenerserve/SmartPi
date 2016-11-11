@@ -101,7 +101,14 @@
     </div>
 
     <hr>
-
+    <div class="row">
+      <p>
+        <button ng-click="dayback()" type="button" class="btn" > < day back </button>
+        <button ng-click="dayforward()" type="button" class="btn" ng-disabled="disabledayforwardbutton"> day forward > </button>
+        <button ng-click="adddayback()" type="button" class="btn" > << add day back </button>
+        <button ng-click="removedayback()" type="button" class="btn" ng-disabled="disabledayremovebutton"> >> remove day back </button>
+      </p>
+    </div>
     <div class="row">
       <nvd3 options='options' data='data'></nvd3>
     </div>
