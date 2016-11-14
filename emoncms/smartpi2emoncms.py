@@ -1,6 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
+__author__ = "Sven Kopetzki"
+__copyright__ = "Copyright 2016"
+__license__ = "GNU GENERAL PUBLIC LICENSE, Version 3, 29 June 2007"
+__version__ = "0.0.1"
+__status__ = "Beta"
+
+# TODO: Implement minimum time interval between consecutive posts to emoncms.
+#       The limit of the publis server is 10s.
+#       Local emoncms server may not have any limits.
+
 import os, sys, time
 import string
 import httplib
