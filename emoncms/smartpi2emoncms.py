@@ -13,9 +13,9 @@ file_to_watch = "/var/tmp/smartpi/values"
 items = ["timestamp", "I1", "I2", "I3", "I4", "V1", "V2", "V3", "P1", "P2", "P3", "Cos1", "Cos2", "Cos3", "F1", "F2", "F3"]
 
 # Emoncms Settings
-# Domain you want to post to: localhost would be an emoncms installation on your own laptop
-# this could be changed to emoncms.org to post to emoncms.org
-#domain = "macserver.local"
+# Domain you want to post to: "localhost" would be this host.
+# This could be changed to "emoncms.org" to post to external hosted emoncms platform.
+# Alternative you may give any IP address.
 domain = "192.168.0.21"
 
 # Location of emoncms in your server, the standard setup is to place it in a folder called emoncms
