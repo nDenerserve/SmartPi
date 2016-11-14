@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
+# This python script monitors SmartPi's value file
+# and sends measurements towards an EMONCMS server.
+
 __author__ = "Sven Kopetzki"
 __copyright__ = "Copyright 2016"
 __license__ = "GNU GENERAL PUBLIC LICENSE, Version 3, 29 June 2007"
