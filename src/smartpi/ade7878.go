@@ -43,8 +43,8 @@ const (
 	FACTOR_CIRCLE float32 = 360
 	VAL float32 = math.Pi / 180.0
   FACTOR_1 int = 256;
-    FACTOR_2 int = 65536;
-    FACTOR_3 int = 16777216;
+  FACTOR_2 int = 65536;
+  FACTOR_3 int = 16777216;
   RMS_FACTOR_VOLTAGE float32 = 2427873
   CURRENT_RESISTOR_A float32 = 7.07107
   CURRENT_RESISTOR_B float32 = 7.07107
@@ -164,6 +164,7 @@ func InitADE7878(c *Config) (*i2c.Device, error)  {
       panic(err)
   }
 
+
 	dataAddress = make([]byte, 3)
   dataAddress[0] = 0xE7;//0xE7FE writeprotection
 	dataAddress[1] = 0xFE;
@@ -278,6 +279,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [16]float32 {
         if err != nil {
             panic(err)
         }
+					time.Sleep(50 * time.Millisecond)
         dataAddress[0] = 0xE6;//0xE607 (PERIOD)
         dataAddress[1] = 0x07;
         data = make([]byte, 2)
@@ -288,6 +290,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [16]float32 {
         if err != nil {
             panic(err)
         }
+					time.Sleep(50 * time.Millisecond)
         dataAddress[0] = 0xE6;//0xE607 (PERIOD)
         dataAddress[1] = 0x07;
         data = make([]byte, 2)
@@ -298,12 +301,13 @@ func ReadoutValues(d *i2c.Device, c *Config) [16]float32 {
         if err != nil {
             panic(err)
         }
+				time.Sleep(50 * time.Millisecond)
         dataAddress[0] = 0xE6;//0xE607 (PERIOD)
         dataAddress[1] = 0x07;
         data = make([]byte, 2)
       case 16:
         //  total active energy accumulation phase
-        dataAddress[0] = 0xE4;//0xE400 (AWATTHR total active energy accumulation an B)
+        dataAddress[0] = 0xE4;//0xE400 (AWATTHR total active energy accumulation an A)
         dataAddress[1] = 0x00;
         data = make([]byte, 4)
       case 17:
@@ -313,7 +317,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [16]float32 {
         data = make([]byte, 4)
       case 18:
         //  total active energy accumulation phase
-        dataAddress[0] = 0xE4;//0xE402 (CWATTHR total active energy accumulation an B)
+        dataAddress[0] = 0xE4;//0xE402 (CWATTHR total active energy accumulation an C)
         dataAddress[1] = 0x02;
         data = make([]byte, 4)
     }
@@ -408,7 +412,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [16]float32 {
         	values[9] = values[2] * values[6] * -1
 				}
       case 10:
-        values[10] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * 50 / ADE7878_CLOCK * VAL)))
+        values[10] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
 
 				if c.Measurevoltage1==1 {
 					//values[7] = values[7] * float32(math.Abs(float64(values[10])))
@@ -418,7 +422,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [16]float32 {
 				}
 
       case 11:
-        values[11] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * 50 / ADE7878_CLOCK * VAL)))
+        values[11] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
 
 				if c.Measurevoltage2==1 {
 					// values[8] = values[8] * float32(math.Abs(float64(values[11])))
@@ -428,7 +432,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [16]float32 {
 				}
 
       case 12:
-        values[12] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * 50 / ADE7878_CLOCK * VAL)))
+        values[12] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
 
 				if c.Measurevoltage3==1 {
 					// values[9] = values[9] * float32(math.Abs(float64(values[12])))

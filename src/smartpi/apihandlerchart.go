@@ -87,6 +87,10 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
   }
   start = start.UTC()
 
+  if end.Before(start) {
+    start = start.AddDate(0,0,-1)
+  }
+
       e := rrd.NewExporter()
 
       for i:=1; i<=3; i++ {
@@ -100,7 +104,9 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 
       xportRes, err := e.Xport(start, end, STEP*time.Second)
     	if err != nil {
-    		log.Fatal(err)
+        if err := json.NewEncoder(w).Encode("error"); err != nil {
+          log.Fatal(err)
+        }
     	}
       defer xportRes.FreeValues()
 

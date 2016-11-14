@@ -247,11 +247,13 @@ $scope.btnpowerline = 'btn-primary';
             getLinechart('power','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
           }
 
+          $scope.disabledayremovebutton = true;
 
           if ($scope.linechartdate.isSame(new Date(), "day")) {
             $scope.disabledayforwardbutton = true;
             $scope.disabledayremovebutton = true;
           }
+
 
         }
 
@@ -281,10 +283,13 @@ $scope.btnpowerline = 'btn-primary';
             getLinechart('power','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
           }
 
+          $scope.disabledayremovebutton = true;
+
           if ($scope.linechartdate.isSame(new Date(), "day")) {
             $scope.disabledayforwardbutton = true;
             $scope.disabledayremovebutton = true;
           }
+
         }
 
 
@@ -309,6 +314,8 @@ $scope.btnpowerline = 'btn-primary';
           if ($scope.showLinechartPower) {
             getLinechart('power','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
           }
+
+          $scope.disabledayremovebutton = false;
 
           if ($scope.linechartdate.isSame(new Date(), "day")) {
             $scope.disabledayforwardbutton = true;
