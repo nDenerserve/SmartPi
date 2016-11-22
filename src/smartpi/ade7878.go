@@ -369,7 +369,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [16]float32 {
 					// values[5] = (outcome / RMS_FACTOR_VOLTAGE) * 229.8 * OFFSET_VOLTAGE_B
 					values[5] = (outcome / RMS_FACTOR_VOLTAGE) * 234.8029 * OFFSET_VOLTAGE_B
 				} else {
-					if c.Currentdirection1 == 0 {
+					if c.Currentdirection2 == 0 {
 						values[5]= float32(c.Voltage2)
 					} else {
 						values[5]= float32(c.Voltage2) * -1
@@ -381,7 +381,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [16]float32 {
 					// values[6] = (outcome / RMS_FACTOR_VOLTAGE) * 229.8 * OFFSET_VOLTAGE_C
 					values[6] = (outcome / RMS_FACTOR_VOLTAGE) * 235.34 * OFFSET_VOLTAGE_C
 				} else {
-					if c.Currentdirection1 == 0 {
+					if c.Currentdirection3 == 0 {
 						values[6]= float32(c.Voltage3)
 					} else {
 						values[6]= float32(c.Voltage3) * -1
@@ -396,13 +396,13 @@ func ReadoutValues(d *i2c.Device, c *Config) [16]float32 {
 				}
 
       case 8:
-				if c.Currentdirection1 == 0 {
+				if c.Currentdirection2 == 0 {
 					values[8] = values[1] * values[5]
 				} else {
         	values[8] = values[1] * values[5] * -1
 				}
       case 9:
-				if c.Currentdirection1 == 0 {
+				if c.Currentdirection3 == 0 {
 					values[9] = values[2] * values[6]
 				} else {
         	values[9] = values[2] * values[6] * -1
