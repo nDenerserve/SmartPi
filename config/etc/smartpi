@@ -22,9 +22,9 @@ measure_voltage_3=1
 voltage_1=230
 voltage_2=230
 voltage_3=230
-change_current_direction_1=0
-change_current_direction_2=0
-change_current_direction_3=0
+change_current_direction_1=1
+change_current_direction_2=1
+change_current_direction_3=1
 
 [ftp]
 ftp_upload=1

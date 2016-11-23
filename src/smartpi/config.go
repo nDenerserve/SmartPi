@@ -96,8 +96,8 @@ func (p *Config) ReadParameterFromFile() {
   p.Webserverport, _ = cfg.Section("webserver").Key("port").Int()
   p.Docroot = cfg.Section("webserver").Key("docroot").String()
   p.Currentdirection1, _ = cfg.Section("device").Key("change_current_direction_1").Int()
-  p.Currentdirection2, _ = cfg.Section("device").Key("change_current_direction_2").Int()
-  p.Currentdirection3, _ = cfg.Section("device").Key("change_current_direction_3").Int()
+  p.Currentdirection1, _ = cfg.Section("device").Key("change_current_direction_2").Int()
+  p.Currentdirection1, _ = cfg.Section("device").Key("change_current_direction_3").Int()
   p.CSVdecimalpoint = cfg.Section("csv").Key("decimalpoint").String()
   p.CSVtimeformat = cfg.Section("csv").Key("timeformat").String()
 }
