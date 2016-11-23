@@ -1,6 +1,7 @@
 [base]
 serial="smartpi160812345"
 name="House"
+debuglevel=2
 
 [location]
 lat=52.3667
@@ -9,7 +10,6 @@ lng=9.7167
 [database]
 dir="/var/smartpi/db"
 file="smartpi.rrd"
-
 
 [device]
 i2c_device="/dev/i2c-1"
@@ -22,22 +22,16 @@ measure_voltage_3=1
 voltage_1=230
 voltage_2=230
 voltage_3=230
-change_current_direction_1=1
-change_current_direction_2=1
-change_current_direction_3=1
+change_current_direction_1=0
+change_current_direction_2=0
+change_current_direction_3=0
 
 [ftp]
-ftp_upload=1
-ftp_server=ftp.xxxxx.xx
-ftp_user=xxxxxxxxxxx
-ftp_pass=xxxxxxxxxxxx
-ftp_path=smartpi/
-
-[csv]
-decimalpoint=,
-timeformat=2006-01-02 15:04:05
+ftp_upload=0
+ftp_server="ftp.enerserve.eu"
+ftp_user="test"
+ftp_pass="test"
 
 [webserver]
-
 port=1080
 docroot="/var/smartpi/www"
