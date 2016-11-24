@@ -414,10 +414,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [16]float32 {
 					fmt.Printf(" # case  %v: P1: %.2f * V1: %.2f = P1: %.2f [VA]\n", i, values[2], values[6], values[9])
 				}
       case 10:
-				values[10] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
-				if c.Currentdirection3==1 {
-					values[10] = values[10] * -1
-				}
+				values[11] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * 50 / ADE7878_CLOCK * VAL)))
 				if values[10]<0 {
 					values[7] = values[7] * -1
 				}
@@ -426,10 +423,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [16]float32 {
 				}
 
       case 11:
-				values[11] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
-				if c.Currentdirection2==1 {
-					values[11] = values[11] * -1
-				}
+		        values[11] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * 50 / ADE7878_CLOCK * VAL)))
 				if values[11]<0 {
 					values[8] = values[8] * -1
 				}
@@ -437,9 +431,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [16]float32 {
 					fmt.Printf(" # case %v: cos phi: %.2f [1]\n", i, values[11])
 				}
       case 12:
-				values[12] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
-				if c.Currentdirection3==1 {
-					values[12] = values[12] * -1
+        		values[12] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * 50 / ADE7878_CLOCK * VAL)))
 				}
 				if values[12]<0 {
 					values[9] = values[9] * -1
