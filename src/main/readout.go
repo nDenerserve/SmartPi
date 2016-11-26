@@ -91,9 +91,6 @@ func main() {
 			f.Sync()
 			f.Close()
 
-
-
-
 			for index, _ := range data {
 
 				switch (index) {
@@ -138,16 +135,16 @@ func main() {
 
 		}
 
+		t := time.Now()
+		smartpi.UpdateDatabase(config.Databasedir+"/"+config.Databasefile, data)
 		if (config.Debuglevel > 0){
 			fmt.Println("## RRD Database Update ##")
-			t := time.Now()
 			fmt.Println(t.Format("2006-01-02 15:04:05"))
 			fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  V1: %g  V2: %g  V3: %g  P1: %g  P2: %g  P3: %g  COS1: %g  COS2: %g  COS3: %g  F1: %g  F2: %g  F3: %g  EB1: %g  EB2: %g  EB3: %g  EL1: %g  EL2: %g  EL3: %g \n",data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7],data[8],data[9],data[10],data[11],data[12],data[13],data[14],data[15],data[16],data[17],data[18],data[19],data[20],data[21]);
 		}
-		smartpi.UpdateDatabase(config.Databasedir+"/"+config.Databasefile, data)
 
-
-		consumecounter, err := ioutil.ReadFile("/var/smartpi/consumecounter")
+		
+		consumecounter, err := ioutil.ReadFile(config.Databasedir + "/" + "consumecounter")
 	  if err == nil {
 			counter, err = strconv.ParseFloat(string(consumecounter), 64)
 			if err != nil {
@@ -161,13 +158,13 @@ func main() {
 
 		counter = counter + float64(data[16]+data[17]+data[18])
 
-		err = ioutil.WriteFile("/var/smartpi/consumecounter", []byte(strconv.FormatFloat(counter, 'f', 8, 64)), 0644)
+		err = ioutil.WriteFile(config.Databasedir + "/" + "consumecounter", []byte(strconv.FormatFloat(counter, 'f', 8, 64)), 0644)
 	  if err != nil {
 	     panic(err)
 	  }
 
 
-		producecounter, err := ioutil.ReadFile("/var/smartpi/producecounter")
+		producecounter, err := ioutil.ReadFile(config.Databasedir + "/" + "producecounter")
 	  if err == nil {
 			counter, err = strconv.ParseFloat(string(producecounter), 64)
 			if err != nil {
@@ -181,7 +178,7 @@ func main() {
 
 		counter = counter + float64(data[19]+data[20]+data[21])
 
-		err = ioutil.WriteFile("/var/smartpi/producecounter", []byte(strconv.FormatFloat(counter, 'f', 8, 64)), 0644)
+		err = ioutil.WriteFile(config.Databasedir + "/" + "producecounter", []byte(strconv.FormatFloat(counter, 'f', 8, 64)), 0644)
 	  if err != nil {
 	     panic(err)
 	  }

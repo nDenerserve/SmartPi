@@ -49,7 +49,8 @@ We will create them again.
 	go get github.com/ziutek/rrd
 	go get gopkg.in/ini.v1
 	go get github.com/secsy/goftp
-
+	go get golang.org/x/exp/io/i2c
+	
 build SmartPi tools
 	cd  ~/SmartPi
 	make
