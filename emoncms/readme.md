@@ -21,8 +21,6 @@ The script is being configured by various variables within the code.
 # V0.2 (26/11/16)
  * Added init.d script for autostart.
 
-  init.d scripts
-   
 # V0.1 (15/11/16)
  * Initial version with basic functionality.
  * ToDo's:
