@@ -9,6 +9,18 @@ The [EMONCMS Input API](https://emoncms.org/site/api#input) is being used to pus
 
 The script is being configured by various variables within the code.
 
+# Installation
+   sudo copy smartpi2emoncms.py /usr/local/bin
+   sudo chmod +x /usr/local/bin/smartpi2emoncms.py
+
+# Autostart (init.d script)
+   sudo copy smartpi2emoncms /etc/init.d/
+   sudo chmod +x /etc/init.d/smartpi2emoncms
+   sudo update-rc.d smartpi2emoncms defaults
+
+# V0.2 (26/11/16)
+ * Added init.d script for autostart.
+
 # V0.1 (15/11/16)
  * Initial version with basic functionality.
  * ToDo's:

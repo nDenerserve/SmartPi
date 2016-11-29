@@ -15,6 +15,7 @@ GOGET=$(GO) get
 export GOPATH=$(CURDIR)
 
 all: makedir get buildsmartpireadout buildsmartpiserver buildsmartpiftpupload
+#all: makedir get buildsmartpireadout 
 
 makedir:
 	@echo "start building tree..."

@@ -45,7 +45,7 @@ import (
     "math"
 )
 
-
+var Configfile string
 
 
 func ServeChartValues(w http.ResponseWriter, r *http.Request) {

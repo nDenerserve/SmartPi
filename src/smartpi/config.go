@@ -62,6 +62,14 @@ type Config struct {
   Currentdirection3 int
   CSVdecimalpoint string
   CSVtimeformat string
+  
+  // MQTT Settings
+  MQTTenabled int
+  MQTTbroker string
+  MQTTbrokerport string
+  MQTTuser string
+  MQTTpass string
+  MQTTtopic string
 }
 
 
@@ -102,6 +110,14 @@ func (p *Config) ReadParameterFromFile() {
   p.Currentdirection3, _ = cfg.Section("device").Key("change_current_direction_3").Int()
   p.CSVdecimalpoint = cfg.Section("csv").Key("decimalpoint").String()
   p.CSVtimeformat = cfg.Section("csv").Key("timeformat").String()
+  
+  //MQTT
+  p.MQTTenabled, _ 	= cfg.Section("mqtt").Key("mqtt_enabled").Int()
+  p.MQTTbroker  	= cfg.Section("mqtt").Key("mqtt_broker_url").String()
+  p.MQTTbrokerport	= cfg.Section("mqtt").Key("mqtt_broker_port").String()
+  p.MQTTuser	 	= cfg.Section("mqtt").Key("mqtt_username").String()
+  p.MQTTpass		= cfg.Section("mqtt").Key("mqtt_password").String()
+  p.MQTTtopic		= cfg.Section("mqtt").Key("mqtt_topic").String()
 }
 
 func NewConfig() *Config {

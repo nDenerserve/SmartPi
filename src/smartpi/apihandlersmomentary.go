@@ -51,20 +51,17 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 
 func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
-
-
-		var phases = []*tPhase{}
+	  var phases = []*tPhase{}
 	  var datasets = []*tDataset{}
 	  var tempVal *tValue
 	  var tempPhase *tPhase
 	  var tempDataset *tDataset
 
-
 	  vars := mux.Vars(r)
 	  phaseId := vars["phaseId"]
 	  valueId := vars["valueId"]
 
-    config := NewConfig()
+      config := NewConfig()
 	  file, err := os.Open(config.Shareddir+"/"+config.Sharedfile)
 	  Checklog(err)
 	  defer file.Close()
