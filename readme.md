@@ -1,5 +1,7 @@
 # Installation
 Download Raspbian Jessie Lite from https://www.raspberrypi.org/downloads/raspbian/ and copy it on your SD card.
+Alternatively, you may download EmonSD, a pre-built SD card image for Raspberry Pi running as an emonPi/emonBase
+Download https://github.com/openenergymonitor/emonpi/wiki/emonSD-pre-built-SD-card-Download-&-Change-Log
 
 * Expand Filesystem
 * Change user (pi) password
@@ -19,15 +21,16 @@ Download Raspbian Jessie Lite from https://www.raspberrypi.org/downloads/raspbia
 
     i2cdetect -l
 
-The output should list your I2C channel:
+The output should list your I2C channel. "i2c-1" in my case.
 
     i2c-1   i2c             20804000.i2c                            I2C adapter
 
-##### If an I2C channel is being found, you may search for connected devices:
+##### Scan I2C bus for connected devices
+Channel 1 in my case
 
     i2cdetect -y 1
 
-In case of an SMartPi connected to an RPI3, the output should look like
+In case of an SmartPi connected to an RPI3, the output should look like this:
 
 		 0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
 	00:          -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -63,9 +66,8 @@ Download of SmartPi sources
     cd ~
     git clone https://github.com/nDenerserve/SmartPi.git
 
-Delete library folder of Smartpi git repository.
-We will create them again.
-(Caused problem on my rpi.)
+Delete some Go library folders of Smartpi git repository if present.
+We will create them again. (Caused problem on my rpi.)
 
     rm ~/SmartPi/src/github.com
     rm ~/SmartPi/src/golang.org
@@ -79,11 +81,25 @@ We will create them again.
     go get gopkg.in/ini.v1
     go get github.com/secsy/goftp
     go get golang.org/x/exp/io/i2c
-    go get golang.org/x/exp/io/i2c	
 
 ##### build SmartPi tools
 	cd  ~/SmartPi
 	make
+
+##### emonSD Specifics
+The emonSD provides a read-only file system for most areas.
+You can mount the file system with write privileges by ```rpi-rw``` in order to edit files.
+```rpi-ro``` reverts write privileges again. ```/home/pi/data``` is always mounted with write access.
+This is the location where you need to place your SmartPi database and current values file.
+In SmartPi's configif file ```/etc/smartpi``` you may set the following settings to move all files SmartPi is writing into.
+
+    [database]
+    dir="/home/pi/data/smartpi"
+    
+    [device]
+    shared_dir="/home/pi/data/smartpi"
+
+
 
 ## Change Log
 
@@ -95,3 +111,4 @@ We will create them again.
  
 ## ToDo's:
    * Round Robin Logging
+   * Improved error handling
