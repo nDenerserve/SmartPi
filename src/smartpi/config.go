@@ -62,7 +62,8 @@ type Config struct {
   Currentdirection3 int
   CSVdecimalpoint string
   CSVtimeformat string
-  
+  Counterdir string
+
   // MQTT Settings
   MQTTenabled int
   MQTTbroker string
@@ -88,6 +89,7 @@ func (p *Config) ReadParameterFromFile() {
   p.Lng, _ = cfg.Section("location").Key("lng").Float64()
   p.Databasedir = cfg.Section("database").Key("dir").String()
   p.Databasefile = cfg.Section("database").Key("file").String()
+  p.Counterdir = cfg.Section("database").Key("counterdir").String()
   p.I2cdevice = cfg.Section("device").Key("i2c_device").String()
   p.Shareddir = cfg.Section("device").Key("shared_dir").String()
   p.Sharedfile = cfg.Section("device").Key("shared_file").String()
@@ -110,7 +112,7 @@ func (p *Config) ReadParameterFromFile() {
   p.Currentdirection3, _ = cfg.Section("device").Key("change_current_direction_3").Int()
   p.CSVdecimalpoint = cfg.Section("csv").Key("decimalpoint").String()
   p.CSVtimeformat = cfg.Section("csv").Key("timeformat").String()
-  
+
   //MQTT
   p.MQTTenabled, _ 	= cfg.Section("mqtt").Key("mqtt_enabled").Int()
   p.MQTTbroker  	= cfg.Section("mqtt").Key("mqtt_broker_url").String()
