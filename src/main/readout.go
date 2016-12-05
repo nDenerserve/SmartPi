@@ -36,7 +36,7 @@ import (
 		"io/ioutil"
 		"strconv"
 		"log"
-		
+
 		//import the Paho Go MQTT library
 		MQTT "github.com/eclipse/paho.mqtt.golang"
 )
@@ -47,13 +47,13 @@ var readouts = [...]string {
 func main() {
 	config := smartpi.NewConfig()
 	var counter float64
-	
+
 	var mqttclient MQTT.Client
-	
+
 	if (config.Debuglevel > 0){
 		fmt.Printf("Start SmartPi readout\n")
 	}
-	
+
 
 	if _, err := os.Stat(config.Databasedir+"/"+config.Databasefile); os.IsNotExist(err) {
 		if (config.Debuglevel > 0){
@@ -66,23 +66,23 @@ func main() {
 		if (config.Debuglevel > 0){
 			fmt.Printf("Connecting to MQTT broker at %s\n", (config.MQTTbroker + ":" + config.MQTTbrokerport) )
 		}
-	
+
 		//create a MQTTClientOptions struct setting the broker address, clientid, user and password
-		
+
 		opts := MQTT.NewClientOptions().AddBroker("tcp://" + config.MQTTbroker + ":" + config.MQTTbrokerport)
 		opts.SetClientID("SmartPi")
 		opts.SetUsername(config.MQTTuser)
 		opts.SetPassword(config.MQTTpass)
-		
+
 		//create and start a client using the above ClientOptions
 		mqttclient = MQTT.NewClient(opts)
 		if mqtttoken := mqttclient.Connect(); mqtttoken.Wait() && mqtttoken.Error() != nil {
 			panic(mqtttoken.Error())
 		}
 	}
-	
+
  	device, _ := smartpi.InitADE7878(config)
-	
+
 	for {
 		data := make([]float32, 22)
 
@@ -133,7 +133,7 @@ func main() {
 					}
 				}
 			}
-			
+
 			for index, _ := range data {
 
 				switch (index) {
@@ -186,7 +186,7 @@ func main() {
 			fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  V1: %g  V2: %g  V3: %g  P1: %g  P2: %g  P3: %g  COS1: %g  COS2: %g  COS3: %g  F1: %g  F2: %g  F3: %g  EB1: %g  EB2: %g  EB3: %g  EL1: %g  EL2: %g  EL3: %g \n",data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7],data[8],data[9],data[10],data[11],data[12],data[13],data[14],data[15],data[16],data[17],data[18],data[19],data[20],data[21]);
 		}
 
-		consumecounter, err := ioutil.ReadFile(config.Databasedir + "/" + "consumecounter")
+		consumecounter, err := ioutil.ReadFile(config.Counterdir + "/" + "consumecounter")
 	  if err == nil {
 			counter, err = strconv.ParseFloat(string(consumecounter), 64)
 			if err != nil {
@@ -200,13 +200,13 @@ func main() {
 
 		counter = counter + float64(data[16]+data[17]+data[18])
 
-		err = ioutil.WriteFile(config.Databasedir + "/" + "consumecounter", []byte(strconv.FormatFloat(counter, 'f', 8, 64)), 0644)
+		err = ioutil.WriteFile(config.Counterdir + "/" + "consumecounter", []byte(strconv.FormatFloat(counter, 'f', 8, 64)), 0644)
 	  if err != nil {
 	     panic(err)
 	  }
 
 
-		producecounter, err := ioutil.ReadFile(config.Databasedir + "/" + "producecounter")
+		producecounter, err := ioutil.ReadFile(config.Counterdir + "/" + "producecounter")
 	  if err == nil {
 			counter, err = strconv.ParseFloat(string(producecounter), 64)
 			if err != nil {
@@ -220,7 +220,7 @@ func main() {
 
 		counter = counter + float64(data[19]+data[20]+data[21])
 
-		err = ioutil.WriteFile(config.Databasedir + "/" + "producecounter", []byte(strconv.FormatFloat(counter, 'f', 8, 64)), 0644)
+		err = ioutil.WriteFile(config.Counterdir + "/" + "producecounter", []byte(strconv.FormatFloat(counter, 'f', 8, 64)), 0644)
 	  if err != nil {
 	     panic(err)
 	  }
