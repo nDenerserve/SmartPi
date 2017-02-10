@@ -81,6 +81,7 @@ We will create them again. (Caused problem on my rpi.)
     go get gopkg.in/ini.v1
     go get github.com/secsy/goftp
     go get golang.org/x/exp/io/i2c
+	go get github.com/eclipse/paho.mqtt.golang
 
 ##### build SmartPi tools
 	cd  ~/SmartPi
