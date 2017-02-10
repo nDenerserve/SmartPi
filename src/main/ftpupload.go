@@ -65,8 +65,8 @@ func main() {
 		startDate = time.Now().AddDate(0,0,-1)
 	}
 
-	startDate = startDate.UTC()
-	endDate := time.Now().UTC()
+	// startDate = startDate.UTC()
+	endDate := time.Now()
 
 
 

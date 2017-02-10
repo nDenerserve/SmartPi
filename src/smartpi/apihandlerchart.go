@@ -37,7 +37,6 @@ import (
     "github.com/gorilla/mux"
     "net/http"
     "time"
-    "github.com/ziutek/rrd"
     "log"
     "strconv"
     "strings"
@@ -71,95 +70,242 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
   valueId := vars["valueId"]
 
 
+
   config := NewConfig()
-  dbfile := config.Databasedir+"/"+config.Databasefile
+
 
   location := time.Now().Location()
 
-  end, err := time.ParseInLocation("2006-01-02 15:04:05",to,location)
+  end, err := time.ParseInLocation(time.RFC3339,to,location)
   if err != nil {
     log.Fatal(err)
   }
-  end = end.UTC()
-	start, err := time.ParseInLocation("2006-01-02 15:04:05",from,location)
+  end = end.In(location)
+	start, err := time.ParseInLocation(time.RFC3339,from,location)
   if err != nil {
     log.Fatal(err)
   }
-  start = start.UTC()
+  start = start.In(location)
 
   if end.Before(start) {
     start = start.AddDate(0,0,-1)
   }
 
-      e := rrd.NewExporter()
 
-      for i:=1; i<=3; i++ {
+  export := make([]string, 0)
 
-        if strings.Contains(phaseId,strconv.Itoa(i)) {
-          e.Def("def"+strconv.Itoa(i), dbfile, valueId+"_"+strconv.Itoa(i), "AVERAGE")
-          e.XportDef("def"+strconv.Itoa(i), valueId+"_"+strconv.Itoa(i))
-        }
+	for i:=1; i<=3; i++ {
+    if strings.Contains(phaseId,strconv.Itoa(i)) {
+      export = append(export, valueId+"_"+strconv.Itoa(i))
+    }
+  }
 
-      }
+  fmt.Println("ReadChartData "+config.Databasedir+" "+start.Format(time.RFC3339)+ " "+end.Format(time.RFC3339))
 
-      xportRes, err := e.Xport(start, end, STEP*time.Second)
-    	if err != nil {
-        if err := json.NewEncoder(w).Encode("error"); err != nil {
-          log.Fatal(err)
-        }
-    	}
-      defer xportRes.FreeValues()
+  data := ReadChartData(config.Databasedir, start, end)
 
+	// fmt.Printf("%v", export)
 
-
-      for i := 0; i < len(xportRes.Legends); i++ {
-      row := 0
-        var values []tChartValue
-        for ti := xportRes.Start.Add(xportRes.Step); ti.Before(end) || ti.Equal(end); ti = ti.Add(xportRes.Step) {
-
-          val := xportRes.ValueAt(i, row)
-          if math.IsNaN(val) {
-            val = 0.0
-          }
-          values = append(values, tChartValue{Time: fmt.Sprintf("%d",ti.Unix()), Value: float32( val )})
-          row++
-        }
-
-
-        timeSeries = append(timeSeries, tChartSerie{Key: xportRes.Legends[i], Values: values})
-      }
-
-
-/*
-      row := 0
-    	for ti := xportRes.Start.Add(xportRes.Step); ti.Before(end) || ti.Equal(end); ti = ti.Add(xportRes.Step) {
-    		fmt.Printf("%s / %d", ti, ti.Unix())
-    		for i := 0; i < len(xportRes.Legends); i++ {
-    			v := xportRes.ValueAt(i, row)
-    			fmt.Printf("\t%e", v)
-    		}
-    		fmt.Printf("\n")
-    		row++
-    	}
-
-
-  for j := 1; j < 3; j++ {
+	for _,valueelement := range export {
+		row := 0
+		val := 0.0
 		var values []tChartValue
+		for _,dataelement := range data {
+			ti := dataelement.Date
+			switch valueelement {
+			case "current_1":
+				val = dataelement.Current_1
+			case "current_2":
+				val = dataelement.Current_2
+			case "current_3":
+				val = dataelement.Current_3
+      case "current_4":
+				val = dataelement.Current_4
+      case "voltage_1":
+        val = dataelement.Voltage_1
+      case "voltage_2":
+        val = dataelement.Voltage_2
+      case "voltage_3":
+        val = dataelement.Voltage_3
+      case "power_1":
+        val = dataelement.Power_1
+      case "power_2":
+        val = dataelement.Power_2
+      case "power_3":
+        val = dataelement.Power_3
+      case "cosphi_1":
+        val = dataelement.Cosphi_1
+      case "cosphi_2":
+        val = dataelement.Cosphi_2
+      case "cosphi_3":
+        val = dataelement.Cosphi_3
+      case "frequency_1":
+        val = dataelement.Frequency_1
+      case "frequency_2":
+        val = dataelement.Frequency_2
+      case "frequency_3":
+        val = dataelement.Frequency_3
+      case "energy_pos_1":
+        val = dataelement.Energy_pos_1
+      case "energy_pos_2":
+        val = dataelement.Energy_pos_2
+      case "energy_pos_3":
+        val = dataelement.Energy_pos_3
+      case "energy_neg_1":
+        val = dataelement.Energy_neg_1
+      case "energy_neg_2":
+        val = dataelement.Energy_neg_2
+      case "energy_neg_3":
+        val = dataelement.Energy_neg_3
 
-		for i := 1; i < 4; i++ {
-			values = append(values, tChartValue{Time: "2016090815" + strconv.Itoa(15+i), Value: float32(i * j)})
+
+			}
+
+			if math.IsNaN(val) {
+        val = 0.0
+      }
+      values = append(values, tChartValue{Time: ti.Format(time.RFC3339), Value: float32( val )})
+      row++
 		}
-
-		timeSeries = append(timeSeries, values)
+		// fmt.Println(strconv.Itoa(index)+" "+valueelement)
+		timeSeries = append(timeSeries, tChartSerie{Key: valueelement, Values: values})
 	}
 
 
-
-*/
 
   // JSON output of request
   if err := json.NewEncoder(w).Encode(timeSeries); err != nil {
      panic(err)
   }
+}
 
+
+func ServeDayValues(w http.ResponseWriter, r *http.Request) {
+
+  type tChartValue struct {
+    Time string `json:"time"`
+    Value float32 `json:"value"`
+  }
+
+  type tChartSerie struct {
+    Key string `json:"key"`
+    Values []tChartValue `json:"values"`
+    }
+
+  // type tChartSeries []tChartSerie
+
+	var timeSeries []tChartSerie
+
+  vars := mux.Vars(r)
+  from := vars["fromDate"]
+  to := vars["toDate"]
+  phaseId := vars["phaseId"]
+  valueId := vars["valueId"]
+
+
+
+  config := NewConfig()
+
+
+  location := time.Now().Location()
+
+  end, err := time.Parse(time.RFC3339,to)
+  if err != nil {
+    log.Fatal(err)
+  }
+  end = end.In(location)
+	start, err := time.Parse(time.RFC3339,from)
+  if err != nil {
+    log.Fatal(err)
+  }
+  start = start.In(location)
+
+  if end.Before(start) {
+    start = start.AddDate(0,0,-1)
+  }
+
+
+  export := make([]string, 0)
+
+	for i:=1; i<=3; i++ {
+    if strings.Contains(phaseId,strconv.Itoa(i)) {
+      export = append(export, valueId+"_"+strconv.Itoa(i))
+    }
+  }
+
+  fmt.Println("ReadDayData "+config.Databasedir+" "+start.Format(time.RFC3339)+ " "+end.Format(time.RFC3339))
+
+  data := ReadDayData(config.Databasedir, start, end)
+
+	// fmt.Printf("%v", export)
+
+	for _,valueelement := range export {
+		row := 0
+		val := 0.0
+		var values []tChartValue
+		for _,dataelement := range data {
+			ti := dataelement.Date
+			switch valueelement {
+			case "current_1":
+				val = dataelement.Current_1
+			case "current_2":
+				val = dataelement.Current_2
+			case "current_3":
+				val = dataelement.Current_3
+      case "current_4":
+				val = dataelement.Current_4
+      case "voltage_1":
+        val = dataelement.Voltage_1
+      case "voltage_2":
+        val = dataelement.Voltage_2
+      case "voltage_3":
+        val = dataelement.Voltage_3
+      case "power_1":
+        val = dataelement.Power_1
+      case "power_2":
+        val = dataelement.Power_2
+      case "power_3":
+        val = dataelement.Power_3
+      case "cosphi_1":
+        val = dataelement.Cosphi_1
+      case "cosphi_2":
+        val = dataelement.Cosphi_2
+      case "cosphi_3":
+        val = dataelement.Cosphi_3
+      case "frequency_1":
+        val = dataelement.Frequency_1
+      case "frequency_2":
+        val = dataelement.Frequency_2
+      case "frequency_3":
+        val = dataelement.Frequency_3
+      case "energy_pos_1":
+        val = dataelement.Energy_pos_1
+      case "energy_pos_2":
+        val = dataelement.Energy_pos_2
+      case "energy_pos_3":
+        val = dataelement.Energy_pos_3
+      case "energy_neg_1":
+        val = dataelement.Energy_neg_1
+      case "energy_neg_2":
+        val = dataelement.Energy_neg_2
+      case "energy_neg_3":
+        val = dataelement.Energy_neg_3
+			}
+
+			if math.IsNaN(val) {
+        val = 0.0
+      }
+      values = append(values, tChartValue{Time: ti.Format(time.RFC3339), Value: float32( val )})
+      row++
+		}
+		// fmt.Println(strconv.Itoa(index)+" "+valueelement)
+		timeSeries = append(timeSeries, tChartSerie{Key: valueelement, Values: values})
+	}
+
+
+
+  // JSON output of request
+  if err := json.NewEncoder(w).Encode(timeSeries); err != nil {
+     panic(err)
+  }
 }

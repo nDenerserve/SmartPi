@@ -27,11 +27,11 @@
 package smartpi
 
 import (
-  "golang.org/x/exp/io/i2c"
+	"golang.org/x/exp/io/i2c"
   "github.com/nathan-osman/go-rpigpio"
   "time"
   "math"
-  "fmt"
+	"fmt"
 )
 
 
@@ -40,8 +40,8 @@ const (
   ADE7878_ADDR = 0x38
   SAMPLES = 100
   ADE7878_CLOCK float32 = 256000
-  FACTOR_CIRCLE float32 = 360
-  VAL float32 = math.Pi / 180.0
+	FACTOR_CIRCLE float32 = 360
+	VAL float32 = math.Pi / 180.0
   FACTOR_1 int = 256;
   FACTOR_2 int = 65536;
   FACTOR_3 int = 16777216;
@@ -99,7 +99,8 @@ func InitADE7878(c *Config) (*i2c.Device, error)  {
   var i2cLock []byte
   i2cLock = make([]byte, 1)
 
-  d, err := i2c.Open(&i2c.Devfs{Dev: I2C_DEVICE}, ADE7878_ADDR)
+
+	d, err := i2c.Open(&i2c.Devfs{Dev: I2C_DEVICE}, ADE7878_ADDR)
   if err != nil {
       panic(err)
   }
@@ -127,6 +128,39 @@ func InitADE7878(c *Config) (*i2c.Device, error)  {
   }
 
 
+
+	dataAddress = make([]byte, 3)
+  dataAddress[0] = 0xE7;//0xE7FE writeprotection
+	dataAddress[1] = 0xFE;
+	dataAddress[2] = 0xAD;
+
+  err = d.Write(dataAddress)
+  if err != nil {
+      panic(err)
+  }
+	dataAddress[0] = 0xE7;//0xE7E3 writeprotection OFF
+	dataAddress[1] = 0xE3;
+	dataAddress[2] = 0x00;
+
+	err = d.Write(dataAddress)
+	if err != nil {
+			panic(err)
+	}
+
+	// dataAddress = make([]byte, 6)
+  // dataAddress[0] = 0x43;//0x43B6 (HPFDIS-REGISTER)
+	// dataAddress[1] = 0xB6;
+	// dataAddress[2] = 0x00;
+	// dataAddress[3] = 0x00;
+	// dataAddress[4] = 0x00;
+	// dataAddress[5] = 0x00;
+	//
+	// err = d.Write(dataAddress)
+  // if err != nil {
+  //     panic(err)
+  // }
+
+
 	// set the right power frequency to the COMPMODE-REGISTER
 	dataAddress = make([]byte, 4)
 	dataAddress[0] = 0xE6;//0xE60E (COMPMODE-REGISTER)
@@ -135,7 +169,7 @@ func InitADE7878(c *Config) (*i2c.Device, error)  {
 		dataAddress[2] = 0x41;
 		dataAddress[3] = 0xFF;
 	} else {
-		dataAddress[2] = 0x1;
+		dataAddress[2] = 0x01;
 		dataAddress[3] = 0xFF;
 	}
 	err = d.Write(dataAddress)
@@ -144,35 +178,211 @@ func InitADE7878(c *Config) (*i2c.Device, error)  {
   }
 
 
-	// dataAddress = make([]byte, 4)
-	// dataAddress[0] = 0xE6;//0xE60E (COMPMODE-REGISTER)
-	// dataAddress[1] = 0x0E;
-	// dataAddress[2] = 0x20;
-	// dataAddress[3] = 0xFF;
-
 
 	dataAddress = make([]byte, 5)
-	dataAddress[0] = 0x43;//0x43B5 (DICOEFF-REGISTER)
+  dataAddress[0] = 0x43;//0x43B5 (DICOEFF-REGISTER)
 	dataAddress[1] = 0xB5;
 	dataAddress[2] = 0xFF;
 	dataAddress[3] = 0x80;
 	dataAddress[4] = 0x00;
 
+  err = d.Write(dataAddress)
+  if err != nil {
+      panic(err)
+  }
+
+	dataAddress = make([]byte, 6)
+  dataAddress[0] = 0x43;//0x43AB (WTHR1-REGISTER)
+	dataAddress[1] = 0xAB;
+	dataAddress[2] = 0x00;
+	dataAddress[3] = 0x00;
+	dataAddress[4] = 0x00;
+	dataAddress[5] = 0x17;
+
+  err = d.Write(dataAddress)
+  if err != nil {
+      panic(err)
+  }
+
+	dataAddress = make([]byte, 6)
+  dataAddress[0] = 0x43;//0x43AC (WTHR0-REGISTER)
+	dataAddress[1] = 0xAC;
+	dataAddress[2] = 0x00;
+	dataAddress[3] = 0x85;
+	dataAddress[4] = 0x60;
+	dataAddress[5] = 0x16;
+
+
+  err = d.Write(dataAddress)
+  if err != nil {
+      panic(err)
+  }
+	//
+	// dataAddress = make([]byte, 6)
+  // dataAddress[0] = 0x43;//0x43AD (VARTHR1-REGISTER)
+	// dataAddress[1] = 0xAD;
+	// dataAddress[2] = 0x17;
+	// dataAddress[3] = 0x85;
+	// dataAddress[4] = 0x60;
+	// dataAddress[5] = 0x16;
+	//
+	//
+  // err = d.Write(dataAddress)
+  // if err != nil {
+  //     panic(err)
+  // }
+	//
+	// dataAddress = make([]byte, 6)
+  // dataAddress[0] = 0x43;//0x43AE (VARTHR0-REGISTER)
+	// dataAddress[1] = 0xAE;
+	// dataAddress[2] = 0x17;
+	// dataAddress[3] = 0x85;
+	// dataAddress[4] = 0x60;
+	// dataAddress[5] = 0x16;
+	//
+	//
+  // err = d.Write(dataAddress)
+  // if err != nil {
+  //     panic(err)
+  // }
+	//
+	// dataAddress = make([]byte, 6)
+  // dataAddress[0] = 0x43;//0x43A9 (VATHR1-REGISTER)
+	// dataAddress[1] = 0xA9;
+	// dataAddress[2] = 0x17;
+	// dataAddress[3] = 0x85;
+	// dataAddress[4] = 0x60;
+	// dataAddress[5] = 0x16;
+	//
+	//
+  // err = d.Write(dataAddress)
+  // if err != nil {
+  //     panic(err)
+  // }
+	//
+	// dataAddress = make([]byte, 6)
+  // dataAddress[0] = 0x43;//0x43AA (VARTHR0-REGISTER)
+	// dataAddress[1] = 0xAA;
+	// dataAddress[2] = 0x17;
+	// dataAddress[3] = 0x85;
+	// dataAddress[4] = 0x60;
+	// dataAddress[5] = 0x16;
+	//
+	//
+  // err = d.Write(dataAddress)
+  // if err != nil {
+  //     panic(err)
+  // }
+
+	dataAddress = make([]byte, 6)
+  dataAddress[0] = 0x43;//0x43B3 (VLEVEL-REGISTER)
+	dataAddress[1] = 0xB3;
+	dataAddress[2] = 0x00;
+	dataAddress[3] = 0x0C;
+	dataAddress[4] = 0xEC;
+	dataAddress[5] = 0x85;
+
+  err = d.Write(dataAddress)
+  if err != nil {
+      panic(err)
+  }
+
+	time.Sleep(875 * time.Millisecond)
+
+	// dataAddress = make([]byte, 2)
+  // dataAddress[0] = 0x43;//0x4381 (AVGAIN-REGISTER)
+	// dataAddress[1] = 0x81;
+	// data = make([]byte, 4)
+	//
+	// err = d.Write(dataAddress)
+	// if err != nil {
+	// 		panic(err)
+	// }
+	// err = d.Read(data)
+	// if err != nil {
+	// 		panic(err)
+	// }
+	//
+	// outcome = float32(FACTOR_3*int(data[0])+FACTOR_2*int(data[1])+FACTOR_1*int(data[2])+int(data[3]))
+	// fmt.Printf("AVGAIN-REGISTER VORHER%g   %x %x %x %x \n", outcome, data[0], data[1], data[2], data[3])
+
+
+	dataAddress = make([]byte, 6)
+  dataAddress[0] = 0x43;//0x4381 (AVGAIN-REGISTER)
+	dataAddress[1] = 0x81;
+	dataAddress[2] = 0xFF;
+	dataAddress[3] = 0xFC;
+	dataAddress[4] = 0x1C;
+	dataAddress[5] = 0xC2;
+
+  err = d.Write(dataAddress)
+  if err != nil {
+      panic(err)
+  }
+
+
+	dataAddress = make([]byte, 6)
+  dataAddress[0] = 0x43;//0x4383 (BVGAIN-REGISTER)
+	dataAddress[1] = 0x83;
+	dataAddress[2] = 0xFF;
+	dataAddress[3] = 0xFB;
+	dataAddress[4] = 0xCA;
+	dataAddress[5] = 0x60;
+
+  err = d.Write(dataAddress)
+  if err != nil {
+      panic(err)
+  }
+
+	dataAddress = make([]byte, 6)
+  dataAddress[0] = 0x43;//0x4385 (CVGAIN-REGISTER)
+	dataAddress[1] = 0x85;
+	dataAddress[2] = 0xFF;
+	dataAddress[3] = 0xFC;
+	dataAddress[4] = 0x12;
+	dataAddress[5] = 0xDE;
+
+  err = d.Write(dataAddress)
+  if err != nil {
+      panic(err)
+  }
+
+
+
+	// Line cycle mode
+	dataAddress = make([]byte, 3)
+  dataAddress[0] = 0xE7;//0xE702 LCYCMODE
+	dataAddress[1] = 0x02;
+	dataAddress[2] = 0x0F;
+
 	err = d.Write(dataAddress)
-	if err != nil {
-		panic(err)
-	}
+  if err != nil {
+      panic(err)
+  }
+
+	// Line cycle mode count
+	dataAddress = make([]byte, 3)
+  dataAddress[0] = 0xE6;//0xE60C LINECYC
+	dataAddress[1] = 0x0C;
+	dataAddress[2] = 0xC8;
+
+	err = d.Write(dataAddress)
+  if err != nil {
+      panic(err)
+  }
+
+
 
 
 	dataAddress = make([]byte, 3)
-	dataAddress[0] = 0xE7;//0xE7FE writeprotection
+  dataAddress[0] = 0xE7;//0xE7FE writeprotection
 	dataAddress[1] = 0xFE;
 	dataAddress[2] = 0xAD;
 
-	err = d.Write(dataAddress)
-	if err != nil {
-		panic(err)
-	}
+  err = d.Write(dataAddress)
+  if err != nil {
+      panic(err)
+  }
 	dataAddress[0] = 0xE7;//0xE7E3 writeprotection
 	dataAddress[1] = 0xE3;
 	dataAddress[2] = 0x80;
@@ -184,25 +394,25 @@ func InitADE7878(c *Config) (*i2c.Device, error)  {
 
 
 	dataAddress = make([]byte, 4)
-	dataAddress[0] = 0xE2;//0xE228 (RUN-Register)
+  dataAddress[0] = 0xE2;//0xE228 (RUN-Register)
 	dataAddress[1] = 0x28;
 	dataAddress[2] = 0x00;
 	dataAddress[3] = 0x01;
 
-	err = d.Write(dataAddress)
-	if err != nil {
-		panic(err)
-	}
+  err = d.Write(dataAddress)
+  if err != nil {
+      panic(err)
+  }
 	return d, nil
 }
 
-func ReadoutValues(d *i2c.Device, c *Config) [16]float32 {
+func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 
   var dataAddress []byte
   var data []byte
-  var values [16]float32
+  var values [25]float32
   var outcome float32
-  var err error
+	var err error
 
   initPiForADE7878()
   //resetADE7878()
@@ -217,11 +427,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [16]float32 {
 
   dataAddress = make([]byte, 2)
 
-  if (c.Debuglevel > 1){
-    fmt.Printf("## Measurement report ##\n")
-  }
-  
-  for i:=0; i<=15; i++ {
+  for i:=0; i<=18; i++ {
 
     switch (i) {
 
@@ -309,23 +515,23 @@ func ReadoutValues(d *i2c.Device, c *Config) [16]float32 {
         dataAddress[1] = 0x07;
         data = make([]byte, 2)
       case 16:
-        //  total active energy accumulation phase
-        dataAddress[0] = 0xE4;//0xE400 (AWATTHR total active energy accumulation an A)
+        //  Phase A total active energy accumulation.
+        dataAddress[0] = 0xE4;//0xE400 (AWATTHR total active energy an A)
         dataAddress[1] = 0x00;
         data = make([]byte, 4)
       case 17:
-        //  total active energy accumulation phase
-        dataAddress[0] = 0xE4;//0xE401 (BWATTHR total active energy accumulation an B)
+        //  Phase A total active energy accumulation.
+        dataAddress[0] = 0xE4;//0xE401 (BWATTHR total active energy an B)
         dataAddress[1] = 0x01;
         data = make([]byte, 4)
       case 18:
-        //  total active energy accumulation phase
-        dataAddress[0] = 0xE4;//0xE402 (CWATTHR total active energy accumulation an C)
+        //  Phase A total active energy accumulation.
+        dataAddress[0] = 0xE4;//0xE402 (CWATTHR total active energy an C)
         dataAddress[1] = 0x02;
         data = make([]byte, 4)
     }
 
-    for j:=0; j<SAMPLES; j++ {
+    // for j:=0; j<SAMPLES; j++ {
 
       err = d.Write(dataAddress)
       if err != nil {
@@ -337,132 +543,128 @@ func ReadoutValues(d *i2c.Device, c *Config) [16]float32 {
       }
 
       switch (i) {
-      case 0, 1, 2, 3, 4, 5, 6, 16, 17, 18:
-          outcome = outcome + float32(FACTOR_3*int(data[0])+FACTOR_2*int(data[1])+FACTOR_1*int(data[2])+int(data[3]))
-        case 10 ,11 ,12, 13, 14, 15:
-          outcome = outcome + float32(FACTOR_1*int(data[0])+int(data[1]))
+      case 0, 1, 2, 3, 4, 5, 6:
+          // outcome = outcome + float32(FACTOR_3*int(data[0])+FACTOR_2*int(data[1])+FACTOR_1*int(data[2])+int(data[3]))
+					outcome = float32(FACTOR_2*int(data[1])+FACTOR_1*int(data[2])+int(data[3]))
+      case 10 ,11 ,12, 13, 14, 15:
+          // outcome = outcome + float32(FACTOR_1*int(data[0])+int(data[1]))
+					outcome = float32(FACTOR_1*int(data[0])+int(data[1]))
+		  case 16, 17, 18:
+					outcome = outcome + float32(FACTOR_3*int(data[0])+FACTOR_2*int(data[1])+FACTOR_1*int(data[2])+int(data[3]))
       }
 
-    }
+    // }
 
-    outcome = outcome / float32(SAMPLES)
+    // outcome = outcome / float32(SAMPLES)
+
+
 
     switch (i) {
       case 0:
-				values[0] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_A) / CURRENT_CLAMP_FACTOR_A) * 100.0 * OFFSET_CURRENT_A
-				if (c.Debuglevel > 1){
-					fmt.Printf(" # case  %v: Current L1=%.2f [A]\n", i, values[0])
-				}
+        values[0] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_A) / CURRENT_CLAMP_FACTOR_A) * 100.0 * OFFSET_CURRENT_A
       case 1:
-				values[1] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_B) / CURRENT_CLAMP_FACTOR_B) * 100.0 * OFFSET_CURRENT_B
-				if (c.Debuglevel > 1){
-					fmt.Printf(" # case  %v: Current I2=%.2f [A]\n", i, values[1])
-				}
+        values[1] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_B) / CURRENT_CLAMP_FACTOR_B) * 100.0 * OFFSET_CURRENT_B
       case 2:
-				values[2] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_C) / CURRENT_CLAMP_FACTOR_C) * 100.0 * OFFSET_CURRENT_C
-				if (c.Debuglevel > 1){
-					fmt.Printf(" # case  %v: Current I3=%.2f [A]\n", i, values[2])
-				}
+        values[2] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_C) / CURRENT_CLAMP_FACTOR_C) * 100.0 * OFFSET_CURRENT_C
       case 3:
-				values[3] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_N) / CURRENT_CLAMP_FACTOR_N) * 100.0 * OFFSET_CURRENT_N
-				if (c.Debuglevel > 1){
-					fmt.Printf(" # case  %v: Current  N=%.2f [A]\n", i, values[3])
-				}
+        values[3] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_N) / CURRENT_CLAMP_FACTOR_N) * 100.0 * OFFSET_CURRENT_N
       case 4:
 				if c.Measurevoltage1==1 {
 					// values[4] = (outcome / RMS_FACTOR_VOLTAGE) * 229.8 * OFFSET_VOLTAGE_A
-					values[4] = (outcome / RMS_FACTOR_VOLTAGE) * 235.4133 * OFFSET_VOLTAGE_A
+					// values[4] = (outcome / RMS_FACTOR_VOLTAGE) * 235.4133 * OFFSET_VOLTAGE_A
+					values[4] = float32(float32(outcome) / 1e+4)
 				} else {
+					if c.Currentdirection1 == 0 {
 						values[4]= float32(c.Voltage1)
+					} else {
+						values[4]= float32(c.Voltage1) * -1
+					}
+
 				}
-				if (c.Debuglevel > 1){
-					fmt.Printf(" # case  %v: Voltage L1=%.2f [V]\n", i, values[4])
-				}
+
       case 5:
 				if c.Measurevoltage2==1 {
 					// values[5] = (outcome / RMS_FACTOR_VOLTAGE) * 229.8 * OFFSET_VOLTAGE_B
-					values[5] = (outcome / RMS_FACTOR_VOLTAGE) * 234.8029 * OFFSET_VOLTAGE_B
+					// values[5] = (outcome / RMS_FACTOR_VOLTAGE) * 234.8029 * OFFSET_VOLTAGE_B
+					values[5] = float32(float32(outcome) / 1e+4)
 				} else {
+					if c.Currentdirection2 == 0 {
 						values[5]= float32(c.Voltage2)
+					} else {
+						values[5]= float32(c.Voltage2) * -1
+					}
 				}
-				if (c.Debuglevel > 1){
-					fmt.Printf(" # case  %v: Voltage L2=%.2f [V]\n", i, values[5])
-				}
+
       case 6:
 				if c.Measurevoltage3==1 {
 					// values[6] = (outcome / RMS_FACTOR_VOLTAGE) * 229.8 * OFFSET_VOLTAGE_C
-					values[6] = (outcome / RMS_FACTOR_VOLTAGE) * 235.34 * OFFSET_VOLTAGE_C
+					// values[6] = (outcome / RMS_FACTOR_VOLTAGE) * 235.34 * OFFSET_VOLTAGE_C
+					values[6] = float32(float32(outcome) / 1e+4)
 				} else {
+					if c.Currentdirection3 == 0 {
 						values[6]= float32(c.Voltage3)
+					} else {
+						values[6]= float32(c.Voltage3) * -1
+					}
 				}
-				if (c.Debuglevel > 1){
-					fmt.Printf(" # case  %v: Voltage L1=%.2f [V]\n", i, values[6])
-				}
+
       case 7:
-				values[7] = values[0] * values[4]
-				if (c.Debuglevel > 1){
-					fmt.Printf(" # case  %v: P1: %.2f * V1: %.2f = P1: %.2f [VA]\n", i, values[0], values[4], values[7])
+				if c.Currentdirection1 == 0 {
+					values[7] = values[0] * values[4]
+				} else {
+					values[7] = values[0] * values[4] * -1
 				}
+
       case 8:
-				values[8] = values[1] * values[5]
-				if (c.Debuglevel > 1){
-					fmt.Printf(" # case  %v: P1: %.2f * V1: %.2f = P1: %.2f [VA]\n", i, values[1], values[5], values[8])
+				if c.Currentdirection2 == 0 {
+					values[8] = values[1] * values[5]
+				} else {
+        	values[8] = values[1] * values[5] * -1
 				}
       case 9:
-				values[9] = values[2] * values[6]
-				if (c.Debuglevel > 1){
-					fmt.Printf(" # case  %v: P1: %.2f * V1: %.2f = P1: %.2f [VA]\n", i, values[2], values[6], values[9])
+				if c.Currentdirection3 == 0 {
+					values[9] = values[2] * values[6]
+				} else {
+        	values[9] = values[2] * values[6] * -1
 				}
       case 10:
-				values[10] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
-				if c.Currentdirection1==1 {
-					values[10] = values[10] * -1
-					//fmt.Printf(" # Reverting leading sign of cos phi L1")
-				}
-				if values[10]<0 {
-					values[7] = values[7] * -1
-				}
-				if (c.Debuglevel > 1){
-					fmt.Printf(" # case %v: cos phi: %.2f [1]\n", i, values[10])
+        values[10] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
+
+				if c.Measurevoltage1==1 {
+					//values[7] = values[7] * float32(math.Abs(float64(values[10])))
+					values[7] = values[7] * values[10]
+				} else {
+					values[10] = 1.0
 				}
 
       case 11:
-				values[11] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
-				if c.Currentdirection2==1 {
-					values[11] = values[11] * -1
-					//fmt.Printf(" # Reverting leading sign of cos phi L2")
+        values[11] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
+
+				if c.Measurevoltage2==1 {
+					// values[8] = values[8] * float32(math.Abs(float64(values[11])))
+					values[8] = values[8] * values[11]
+				} else {
+					values[11] = 1.0
 				}
-				if values[11]<0 {
-					values[8] = values[8] * -1
-				}
-				if (c.Debuglevel > 1){
-					fmt.Printf(" # case %v: cos phi: %.2f [1]\n", i, values[11])
-				}
+
       case 12:
-				values[12] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
-				if c.Currentdirection3==1 {
-					values[12] = values[12] * -1
-					//fmt.Printf(" # Reverting leading sign of cos phi L3")
+        values[12] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
+
+				if c.Measurevoltage3==1 {
+					// values[9] = values[9] * float32(math.Abs(float64(values[12])))
+					values[9] = values[9] * values[12]
+				} else {
+					values[12] = 1.0
 				}
-				if values[12]<0 {
-					values[9] = values[9] * -1
-				}
-				if (c.Debuglevel > 1){
-					fmt.Printf(" # case %v: cos phi: %.2f [1]\n", i, values[12])
-				}
+
       case 13, 14, 15:
-				values[i] = float32(ADE7878_CLOCK / (outcome+1))
-				if (c.Debuglevel > 1){
-					fmt.Printf(" # case %v: F%v: %.2f [Hz]\n", i, i-12, values[i])
-				}
-		}
+        values[i] = float32(ADE7878_CLOCK / (outcome+1))
+			case 16 ,17 ,18:
+				values[i] = float32(outcome)
+    }
 
   }
-  /*
-  if DEBUG{
-	fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  \nV1: %g  V2: %g  V3: %g  \nP1: %g  P2: %g  P3: %g  \nCOS1: %g  COS2: %g  COS3: %g  \nF1: %g  F2: %g  F3: %g  \n",values[0],values[1],values[2],values[3],values[4],values[5],values[6],values[7],values[8],values[9],values[10],values[11],values[12],values[13],values[14],values[15]);
-  }
-  */
+	fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  V1: %g  V2: %g  V3: %g  P1: %g  P2: %g  P3: %g  COS1: %g  COS2: %g  COS3: %g  F1: %g  F2: %g  F3: %g  AWATTHR: %g  BWATTHR: %g  CWATTHR: %g  \n",values[0],values[1],values[2],values[3],values[4],values[5],values[6],values[7],values[8],values[9],values[10],values[11],values[12],values[13],values[14],values[15],values[16],values[17],values[18]);
   return values
 
 }

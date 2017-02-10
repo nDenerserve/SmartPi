@@ -15,3 +15,23 @@
   margin-left: auto;
   margin-right: auto;
 }
+
+.nopaddingright {
+  padding-right: 0px;
+}
+
+table.csvtabledata {
+  font-size: 60%;
+  border: 1px solid;
+	margin: 2em;
+}
+
+
+td {
+	border: 1px solid;
+}
+
+
+tbody.csvtabledata th.csvtabledata {
+	text-align: left;
+}

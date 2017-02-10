@@ -77,7 +77,7 @@ We will create them again. (Caused problem on my rpi.)
 
     go get github.com/gorilla/mux
     go get github.com/nathan-osman/go-rpigpio
-    go get github.com/ziutek/rrd
+    go get github.com/mattn/go-sqlite3"
     go get gopkg.in/ini.v1
     go get github.com/secsy/goftp
     go get golang.org/x/exp/io/i2c
@@ -110,5 +110,14 @@ In SmartPi's configif file ```/etc/smartpi``` you may set the following settings
  * Added this readme.md
  
 ## ToDo's:
-   * Round Robin Logging
+   * Logging
    * Improved error handling
+
+   
+### 02/10/17
+    * changed from rrdtool to sqlite3
+    * added csv-export
+    * changed from Bootstrap to Angular Material
+    * change datelayout in API to RFC3339
+    * fixed errors in datehandling
+    * added week consumption

@@ -1,10 +1,13 @@
-smartpi.controller('MainCtrl', function($scope, $Momentary, $Linechart, $interval){
+smartpi.controller('MainCtrl', function($scope, $Momentary, $Linechart, $GetDatabaseData, $GetDayData, $interval){
 
 
 
 
 $scope.data = [];
+$scope.daydata = [];
 $scope.momentary = [];
+$scope.dayconsumption = [];
+$scope.weekconsumptiondata = [];
 
 
 $scope.linechartdate = moment();
@@ -28,14 +31,22 @@ $scope.formatNumber = function(i) {
 }
 
 getActualValues();
+getConsumptionToday();
+getProductionToday();
+getConsumptionWeek();
 timer = $interval(function() {
         getActualValues();
     },5000);
 
+timer2 = $interval(function() {
+    getConsumptionToday();
+    getProductionToday();
+    },65000);
 
 
 
-getLinechart('power','123',moment().format('YYYY-MM-DD 00:00:00'),moment().format('YYYY-MM-DD HH:mm:ss'));
+
+getLinechart('power','123',moment().startOf('day').toISOString(),moment().toISOString());
 $scope.btnpowerline = 'btn-primary';
 
   function getActualValues() {
@@ -78,6 +89,85 @@ $scope.btnpowerline = 'btn-primary';
     });
   }
 
+  function getConsumptionToday() {
+
+    $scope.dayconsumption_total=0;
+
+    // $GetDatabaseData.query({category: 'energy_pos', phase: '123',startdate:moment().format('YYYY-MM-DD 00:00:00'),enddate:moment().toISOString(),step:1},
+    $GetDatabaseData.query({category: 'energy_pos', phase: '123',startdate:moment().startOf('day').toISOString(),enddate:moment().toISOString()},
+      function(data) {
+        angular.forEach(data, function(series) {
+          angular.forEach(series.values, function(value) {
+            $scope.dayconsumption_total = $scope.dayconsumption_total + value.value;
+          });
+        });
+      }, function (error) {
+      });
+  }
+
+  function getProductionToday() {
+
+    $scope.dayproduction_total=0;
+
+    $GetDatabaseData.query({category: 'energy_neg', phase: '123',startdate:moment().startOf('day').toISOString(),enddate:moment().toISOString()},
+      function(data) {
+        angular.forEach(data, function(series) {
+          angular.forEach(series.values, function(value) {
+            $scope.dayproduction_total = $scope.dayproduction_total + value.value;
+          });
+        });
+      }, function (error) {
+      });
+  }
+
+
+  function getConsumptionWeek() {
+
+
+    $GetDayData.query({category: 'energy_pos', phase: '123',startdate:moment().subtract(7,'days').startOf('day').toISOString(),enddate:moment().toISOString()},
+
+      function(data) {
+
+        var dateString;
+        var dataarray = new Array();
+
+        console.log(data);
+
+
+        angular.forEach(data, function(series) {
+          angular.forEach(series.values, function(value) {
+            //     $scope.dayconsumption_total = $scope.dayconsumption_total + value.value;
+            if (typeof dataarray[moment(value.time).format("YYYYMMDD")] === 'undefined') {
+              dataarray[moment(value.time).format("YYYYMMDD")] =  value.value;
+              console.log("if: "+moment(value.time).format("YYYYMMDD")+" value: "+value.value+" dataarray: "+dataarray[moment(value.time).format("YYYYMMDD")]);
+            } else {
+              dataarray[moment(value.time).format("YYYYMMDD")] = dataarray[moment(value.time).format("YYYYMMDD")] + value.value;
+              console.log("else: "+moment(value.time).format("YYYYMMDD")+" value: "+value.value+" dataarray: "+dataarray[moment(value.time).format("YYYYMMDD")]);
+            }
+          });
+        });
+
+        console.log(dataarray);
+
+        var obj = [];
+        for (key in dataarray) {
+           obj.push({
+               label: key,
+               value: dataarray[key]
+             });
+        }
+
+        console.log(obj);
+
+        $scope.weekconsumptiondata = [{
+          key: "Week",
+          values: obj
+        }];
+
+      }, function (error) {
+      });
+  }
+
 
   function getLinechart(category, phase, startdate, enddate) {
     $Linechart.query({category: category, phase: phase,startdate: startdate, enddate: enddate} ,
@@ -91,14 +181,14 @@ $scope.btnpowerline = 'btn-primary';
             angular.forEach(series.values, function(value) {
 
               val.push(
-                [value.time,value.value]
+                [moment(value.time).unix(),value.value]
               );
             })
             $scope.data.push({
               key: series.key,
               values: val
             });
-            console.log($scope.data);
+            // console.log($scope.data);
         })
       ;
 
@@ -106,6 +196,9 @@ $scope.btnpowerline = 'btn-primary';
 
     });
   }
+
+
+
 
   function deleteFromData(description) {
     for (var i = $scope.data.length - 1; i >= 0; i--) {
@@ -117,6 +210,36 @@ $scope.btnpowerline = 'btn-primary';
     }
   // console.log($scope.data);
   }
+
+
+  $scope.weekconsumptionoptions = {
+    chart: {
+        type: 'discreteBarChart',
+        height: 450,
+        margin : {
+            top: 20,
+            right: 20,
+            bottom: 50,
+            left: 65
+        },
+        x: function(d){ return moment(d.label).format('DD-MM-YYYY'); },
+        y: function(d){ return Math.round((d.value/1000) * 100)/100; },
+        showValues: true,
+        valueFormat: function(d){
+            return d3.format(',.2f')(d);
+        },
+        transitionDuration: 500,
+        xAxis: {
+            axisLabel: 'Date'
+        },
+        yAxis: {
+            axisLabel: 'Consumption (kWh)',
+            axisLabelDistance: 0
+        }
+    }
+};
+
+
 
   $scope.options = {
             chart: {
@@ -138,7 +261,7 @@ $scope.btnpowerline = 'btn-primary';
                 clipVoronoi: false,
 
                 xAxis: {
-                    axisLabel: 'time',
+                    axisLabel: 'Time',
                     tickFormat: function(d) {
                         return d3.time.format('%H:%M:%S %d.%m.%y')(new Date(d))
                     },
@@ -161,7 +284,7 @@ $scope.btnpowerline = 'btn-primary';
 
         $scope.linechartEnergy_pos = function() {
           if(!$scope.showLinechartEnergyPos) {
-            getLinechart('energy_pos','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('energy_pos','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
             $scope.showLinechartEnergyPos = true;
             $scope.btnenergy_posline = 'btn-primary';
           } else {
@@ -174,7 +297,7 @@ $scope.btnpowerline = 'btn-primary';
 
         $scope.linechartEnergy_neg = function() {
           if(!$scope.showLinechartEnergyNeg) {
-            getLinechart('energy_neg','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('energy_neg','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
             $scope.showLinechartEnergyNeg = true;
             $scope.btnenergy_negline = 'btn-primary';
           } else {
@@ -186,7 +309,7 @@ $scope.btnpowerline = 'btn-primary';
 
         $scope.linechartCurrent = function() {
           if(!$scope.showLinechartCurrent) {
-            getLinechart('current','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('current','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
             $scope.showLinechartCurrent = true;
             $scope.btncurrentline = 'btn-primary';
           } else {
@@ -198,7 +321,7 @@ $scope.btnpowerline = 'btn-primary';
 
         $scope.linechartVoltage = function() {
           if(!$scope.showLinechartVoltage) {
-            getLinechart('voltage','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('voltage','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
             $scope.showLinechartVoltage = true;
             $scope.btnvoltageline = 'btn-primary';
           } else {
@@ -210,7 +333,7 @@ $scope.btnpowerline = 'btn-primary';
 
         $scope.linechartPower = function() {
           if(!$scope.showLinechartPower) {
-            getLinechart('power','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('power','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
             $scope.showLinechartPower = true;
             $scope.btnpowerline = 'btn-primary';
           } else {
@@ -232,19 +355,19 @@ $scope.btnpowerline = 'btn-primary';
           $scope.tempdate.second(59);
           $scope.data = [];
           if ($scope.showLinechartEnergyPos) {
-            getLinechart('energy_pos','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('energy_pos','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
           }
           if ($scope.showLinechartEnergyNeg) {
-            getLinechart('energy_neg','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('energy_neg','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
           }
           if ($scope.showLinechartCurrent) {
-            getLinechart('current','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('current','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
           }
           if ($scope.showLinechartVoltage) {
-            getLinechart('voltage','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('voltage','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
           }
           if ($scope.showLinechartPower) {
-            getLinechart('power','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('power','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
           }
 
           $scope.disabledayremovebutton = true;
@@ -268,19 +391,19 @@ $scope.btnpowerline = 'btn-primary';
           $scope.data = [];
 
           if ($scope.showLinechartEnergyPos) {
-            getLinechart('energy_pos','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('energy_pos','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
           }
           if ($scope.showLinechartEnergyNeg) {
-            getLinechart('energy_neg','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('energy_neg','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
           }
           if ($scope.showLinechartCurrent) {
-            getLinechart('current','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('current','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
           }
           if ($scope.showLinechartVoltage) {
-            getLinechart('voltage','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('voltage','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
           }
           if ($scope.showLinechartPower) {
-            getLinechart('power','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('power','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
           }
 
           $scope.disabledayremovebutton = true;
@@ -300,19 +423,19 @@ $scope.btnpowerline = 'btn-primary';
           $scope.data = [];
 
           if ($scope.showLinechartEnergyPos) {
-            getLinechart('energy_pos','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('energy_pos','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
           }
           if ($scope.showLinechartEnergyNeg) {
-            getLinechart('energy_neg','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('energy_neg','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
           }
           if ($scope.showLinechartCurrent) {
-            getLinechart('current','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('current','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
           }
           if ($scope.showLinechartVoltage) {
-            getLinechart('voltage','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('voltage','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
           }
           if ($scope.showLinechartPower) {
-            getLinechart('power','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('power','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
           }
 
           $scope.disabledayremovebutton = false;
@@ -330,19 +453,19 @@ $scope.btnpowerline = 'btn-primary';
           $scope.data = [];
 
           if ($scope.showLinechartEnergyPos) {
-            getLinechart('energy_pos','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('energy_pos','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
           }
           if ($scope.showLinechartEnergyNeg) {
-            getLinechart('energy_neg','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('energy_neg','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
           }
           if ($scope.showLinechartCurrent) {
-            getLinechart('current','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('current','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
           }
           if ($scope.showLinechartVoltage) {
-            getLinechart('voltage','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('voltage','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
           }
           if ($scope.showLinechartPower) {
-            getLinechart('power','123',$scope.linechartdate.format('YYYY-MM-DD HH:mm:ss'),$scope.tempdate.format('YYYY-MM-DD HH:mm:ss'));
+            getLinechart('power','123',$scope.linechartdate.toISOString(),$scope.tempdate.toISOString());
           }
 
           if ($scope.linechartdate.isSame(new Date(), "day")) {

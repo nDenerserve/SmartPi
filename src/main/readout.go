@@ -55,13 +55,6 @@ func main() {
 	}
 
 
-	if _, err := os.Stat(config.Databasedir+"/"+config.Databasefile); os.IsNotExist(err) {
-		if (config.Debuglevel > 0){
-			fmt.Printf("Databasefile doesn't exist. Create.")
-		}
-		smartpi.CreateDatabase(config.Databasedir+"/"+config.Databasefile)
-	}
-
 	if (config.MQTTenabled == 1){
 		if (config.Debuglevel > 0){
 			fmt.Printf("Connecting to MQTT broker at %s\n", (config.MQTTbroker + ":" + config.MQTTbrokerport) )
@@ -174,17 +167,28 @@ func main() {
 				}
 
 			}
-			time.Sleep(5*time.Second)
+			time.Sleep(5000 * time.Millisecond)
 
 		}
 
 		t := time.Now()
-		smartpi.UpdateDatabase(config.Databasedir+"/"+config.Databasefile, data)
+
 		if (config.Debuglevel > 0){
-			fmt.Println("## RRD Database Update ##")
+			fmt.Println("## SQLITE Database Update ##")
 			fmt.Println(t.Format("2006-01-02 15:04:05"))
 			fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  V1: %g  V2: %g  V3: %g  P1: %g  P2: %g  P3: %g  COS1: %g  COS2: %g  COS3: %g  F1: %g  F2: %g  F3: %g  EB1: %g  EB2: %g  EB3: %g  EL1: %g  EL2: %g  EL3: %g \n",data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7],data[8],data[9],data[10],data[11],data[12],data[13],data[14],data[15],data[16],data[17],data[18],data[19],data[20],data[21]);
 		}
+		if _, err := os.Stat(config.Databasedir+"/smartpi_logdata_"+t.Format("200601")+".db"); os.IsNotExist(err) {
+			if (config.Debuglevel > 0){
+				fmt.Printf("Databasefile doesn't exist. Create.")
+			}
+			smartpi.CreateSQlDatabase(config.Databasedir, t);
+		}
+		smartpi.InsertData(config.Databasedir,t , data)
+
+
+
+
 
 		consumecounter, err := ioutil.ReadFile(config.Counterdir + "/" + "consumecounter")
 	  if err == nil {

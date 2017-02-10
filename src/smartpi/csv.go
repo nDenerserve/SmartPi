@@ -34,12 +34,10 @@ package smartpi
 
 import (
     "time"
-    "github.com/ziutek/rrd"
-    "log"
     "strconv"
     "strings"
-    // "fmt"
     "math"
+    "reflect"
 )
 
 
@@ -47,78 +45,30 @@ func CreateCSV(start time.Time, end time.Time) (string) {
 
 
   config := NewConfig()
-  dbfile := config.Databasedir+"/"+config.Databasefile
 
 
-  e := rrd.NewExporter()
-  csv := "date;current_1;current_2;current_3;current_4;voltage_1;voltage_2;voltage_3;power_1;power_2;power_3;cosphi_1;cosphi_2;cosphi_3;energy_pos_1;energy_pos_2;energy_pos_3;energy_neg_1;energy_neg_2;energy_neg_3"
+  data := ReadChartData(config.Databasedir, start, end)
+
+  csv := "date;current_1;current_2;current_3;current_4;voltage_1;voltage_2;voltage_3;power_1;power_2;power_3;cosphi_1;cosphi_2;cosphi_3;frequency_1;frequency_2;frequency_3;energy_pos_1;energy_pos_2;energy_pos_3;energy_neg_1;energy_neg_2;energy_neg_3"
   csv = csv + "\n"
 
 
-  e.Def("def1", dbfile, "current_1", "AVERAGE")
-  e.Def("def2", dbfile, "current_2", "AVERAGE")
-  e.Def("def3", dbfile, "current_3", "AVERAGE")
-  e.Def("def4", dbfile, "current_4", "AVERAGE")
-  e.Def("def5", dbfile, "voltage_1", "AVERAGE")
-  e.Def("def6", dbfile, "voltage_2", "AVERAGE")
-  e.Def("def7", dbfile, "voltage_3", "AVERAGE")
-  e.Def("def8", dbfile, "power_1", "AVERAGE")
-  e.Def("def9", dbfile, "power_2", "AVERAGE")
-  e.Def("def10", dbfile, "power_3", "AVERAGE")
-  e.Def("def11", dbfile, "cosphi_1", "AVERAGE")
-  e.Def("def12", dbfile, "cosphi_2", "AVERAGE")
-  e.Def("def13", dbfile, "cosphi_3", "AVERAGE")
-  e.Def("def14", dbfile, "energy_pos_1", "AVERAGE")
-  e.Def("def15", dbfile, "energy_pos_2", "AVERAGE")
-  e.Def("def16", dbfile, "energy_pos_3", "AVERAGE")
-  e.Def("def17", dbfile, "energy_neg_1", "AVERAGE")
-  e.Def("def18", dbfile, "energy_neg_2", "AVERAGE")
-  e.Def("def19", dbfile, "energy_neg_3", "AVERAGE")
 
-  e.XportDef("def1", "current_1")
-  e.XportDef("def2", "current_2")
-  e.XportDef("def3", "current_3")
-  e.XportDef("def4", "current_4")
-  e.XportDef("def5", "voltage_1")
-  e.XportDef("def6", "voltage_2")
-  e.XportDef("def7", "voltage_3")
-  e.XportDef("def8", "power_1")
-  e.XportDef("def9", "power_2")
-  e.XportDef("def10", "power_3")
-  e.XportDef("def11", "cosphi_1")
-  e.XportDef("def12", "cosphi_2")
-  e.XportDef("def13", "cosphi_3")
-  e.XportDef("def14", "energy_pos_1")
-  e.XportDef("def15", "energy_pos_2")
-  e.XportDef("def16", "energy_pos_3")
-  e.XportDef("def17", "energy_neg_1")
-  e.XportDef("def17", "energy_neg_2")
-  e.XportDef("def17", "energy_neg_3")
-
-  xportRes, err := e.Xport(start, end, STEP*time.Second)
-	if err != nil {
-		log.Fatal(err)
-	}
-  defer xportRes.FreeValues()
-
-  row := 0
-	for ti := xportRes.Start.Add(xportRes.Step); ti.Before(end) || ti.Equal(end); ti = ti.Add(xportRes.Step) {
-		// fmt.Printf("%s / %d", ti, ti.Unix())
+	for _,dataelement := range data {
+		ti := dataelement.Date
     csv = csv + ti.Format(config.CSVtimeformat)
-		for i := 0; i < len(xportRes.Legends); i++ {
-			val := xportRes.ValueAt(i, row)
+
+    datav := reflect.ValueOf(dataelement).Elem()
+
+    for i := 1; i < datav.NumField(); i++ {
+			val := datav.Field(i).Interface().(float64)
       if math.IsNaN(val) {
         val = 0.0
       }
       csv = csv + ";"+strings.Replace(strconv.FormatFloat(val,'f',5, 64),".",config.CSVdecimalpoint,-1)
-			// fmt.Printf(";%f", strings.Replace(strconv.FormatFloat(val,'f',5, 64),".",config.Decimalpoint,-1))
 		}
-		// fmt.Printf("\n")
+
     csv = csv + "\n"
-
-		row++
 	}
-  // fmt.Println(csv)
   return csv
-
 }

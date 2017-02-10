@@ -1,0 +1,114 @@
+<!doctype html>
+<html ng-app="smartpi">
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="stylesheet" href="css/reset.css">
+      <!-- CSS reset -->
+      <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700' rel='stylesheet' type='text/css'>
+      <link rel="stylesheet" href="vendor/font-awesome/css/font-awesome.min.css" />
+      <link rel="stylesheet" href="bower_components/nvd3/build/nv.d3.css">
+      <link rel="stylesheet" href="css/stretchy.css">
+      <!-- Resource style -->
+      <link rel="stylesheet" href="css/styles.css?v=1" />
+      <!-- Custom CSS -->
+      <!-- <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.css"> -->
+      <script>document.write("<link rel='stylesheet' href='css/angular-material.min.css?v=" + Date.now() + "'/>");</script>
+      <!--<link rel="stylesheet" href="css/smartpi.css?v=1" /> -->
+      <script>document.write("<link rel='stylesheet' href='css/smartpi.css?v=" + Date.now() + "'/>");</script>
+      <script src="js/modernizr.js"></script> <!-- Modernizr -->
+      <script src="bower_components/angular/angular.js"></script>
+      <script src="bower_components/d3/d3.js"></script>
+      <script src="bower_components/nvd3/build/nv.d3.js"></script> <!-- or use another assembly -->
+      <script src="bower_components/angular-nvd3/dist/angular-nvd3.js"></script>
+      <script src="bower_components/angular-resource/angular-resource.js"></script>
+      <script src="bower_components/moment/moment.js"></script>
+      <script src="bower_components/angular-file-saver/dist/angular-file-saver.bundle.js"></script>
+      <!-- <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-animate.min.js"></script> -->
+      <script>document.write("<script type='text/javascript' src='js/angular-animate.min.js?v=" + Date.now() + "'><\/script>");</script>
+      <!-- <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-aria.min.js"></script> -->
+      <script>document.write("<script type='text/javascript' src='js/angular-aria.min.js?v=" + Date.now() + "'><\/script>");</script>
+      <!-- <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-messages.min.js"></script> -->
+      <script>document.write("<script type='text/javascript' src='js/angular-messages.min.js?v=" + Date.now() + "'><\/script>");</script>
+      <!-- <script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.js"></script> -->
+      <script>document.write("<script type='text/javascript' src='js/angular-material.min.js?v=" + Date.now() + "'><\/script>");</script>
+      <!--<script src="js/app.js?v=1"></script>-->
+      <script>document.write("<script type='text/javascript' src='js/app.js?v=" + Date.now() + "'><\/script>");</script>
+      <!--<script src="js/services.js?v=1"></script>-->
+      <script>document.write("<script type='text/javascript' src='js/services.js?v=" + Date.now() + "'><\/script>");</script>
+      <!--<script src="js/module.js?v=1"></script>-->
+      <script>document.write("<script type='text/javascript' src='js/module.js?v=" + Date.now() + "'><\/script>");</script>
+      <!--<script src="js/controllers.js?v=1"></script>-->
+      <script>document.write("<script type='text/javascript' src='js/exportcontrollers.js?v=" + Date.now() + "'><\/script>");</script>
+      <title>SmartPi Export Data</title>
+   </head>
+   <body  ng-app="SmartPi" ng-controller="MainCtrl">
+      <header>
+         <nav class="cd-stretchy-nav">
+            <a class="cd-nav-trigger" href="#0">
+            Menu
+            <span aria-hidden="true"></span>
+            </a>
+            <ul>
+               <li><a href="index.html"><span></span></a></li>
+               <li><a href="export.html" class="active"><span></span></a></li>
+               <!-- <li><a href="#0"><span></span></a></li> -->
+               <!-- <li><a href="#0"><span></span></a></li> -->
+               <!-- <li><a href="#0"><span></span></a></li> -->
+            </ul>
+            <span aria-hidden="true" class="stretchy-nav-bg"></span>
+         </nav>
+      </header>
+      <!--<main class="cd-main-content">
+         <!-- main content here -->
+      <!--</main>-->
+      <md-content class="md-default-theme">
+         <div class="md-toolbar-tools">
+            <span flex></span>
+            <img src="img/enerserve.png" alt="enerserve logo" height="52">
+         </div>
+         </md-toolbar>
+         <div flex="66" flex-offset="15">
+            <div flex-gt-sm="90" flex-gt-md="80">
+               <md-card class="md-default-theme">
+                  <md-toolbar layout="row">
+                     <div class="md-toolbar-tools">
+                        <h2>
+                           <span>CSV Export</span>
+                        </h2>
+                        <span flex></span>
+                        <md-button class="md-raised" ng-click="readCSV()" aria-label="Table">
+                           Table
+                        </md-button>
+                        <md-button class="md-raised" ng-click="downloadCSV()" aria-label="Download">
+                           Download
+                        </md-button>
+                     </div>
+                  </md-toolbar>
+                  <div layout-gt-xs="row">
+                     <div flex-gt-xs>
+                        <h4>Startdate</h4>
+                        <md-datepicker ng-model="startDate" md-placeholder="Enter Startdate"></md-datepicker>
+                     </div>
+                     <div flex-gt-xs>
+                        <h4>Enddate</h4>
+                        <md-datepicker ng-model="endDate" md-placeholder="Enter Enddate"></md-datepicker>
+                     </div>
+                  </div>
+                  <div layout-gt-xs="row">
+                     <table class="csvtabledata">
+                        <tr class="csvtabledata" ng-repeat="x in data">
+                           <td class="csvtabledata" ng-repeat="y in x">{{ y }}</td>
+                        </tr>
+                     </table>
+                  </div>
+               </md-card>
+            </div>
+         </div>
+      </md-content>
+      <script src="js/jquery-2.1.4.js"></script>
+      <script src="js/main.js"></script> <!-- Resource jQuery -->
+      <script src="bower_components/tether/dist/js/tether.min.js"></script>
+      <script src="js/scripts.js"></script>
+   </body>
+</html>
