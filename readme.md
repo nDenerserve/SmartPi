@@ -114,11 +114,10 @@ In SmartPi's configif file ```/etc/smartpi``` you may set the following settings
    * Logging
    * Improved error handling
 
-   
 ### 02/10/17
-    * changed from rrdtool to sqlite3
-    * added csv-export
-    * changed from Bootstrap to Angular Material
-    * change datelayout in API to RFC3339
-    * fixed errors in datehandling
-    * added week consumption
+ * changed from rrdtool to sqlite3
+ * added csv-export
+ * changed from Bootstrap to Angular Material
+ * change datelayout in API to RFC3339
+ * fixed errors in datehandling
+ * added week consumption
