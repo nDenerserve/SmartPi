@@ -23,36 +23,23 @@
     Sie sollten eine Kopie der GNU General Public License zusammen mit diesem
     Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>.
 */
+/*
+File: apihandlersmomentary.go
+Description: Handels API requests
+*/
 
-package main
+
+
+package smartpi
 
 import (
-    "smartpi"
-    "log"
     "net/http"
     "github.com/gorilla/mux"
-    "strconv"
     "fmt"
-    // "github.com/goji/httpauth"
 )
 
-func main() {
-
-
-  //router := smartpi.NewRouter()
-    config := smartpi.NewConfig()
-    fmt.Println("SmartPi server started")
-
-    r := mux.NewRouter()
-    r.HandleFunc("/api/{phaseId}/{valueId}/now", smartpi.ServeMomentaryValues)
-    r.HandleFunc("/api/chart/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeChartValues)
-    r.HandleFunc("/api/values/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeChartValues)
-    r.HandleFunc("/api/dayvalues/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeDayValues)
-    r.HandleFunc("/api/csv/from/{fromDate}/to/{toDate}", smartpi.ServeCSVValues)
-    r.HandleFunc("/api/config/read/name/{name}", smartpi.ReadConfig)
-    r.PathPrefix("/").Handler(http.FileServer(http.Dir(config.Docroot)))
-    // http.Handle("/api/config/read/name/{name}", httpauth.SimpleBasicAuth("dave", "somepassword")(r))
-    http.Handle("/", r)
-    log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.Webserverport), nil))
-  //log.Fatal(http.ListenAndServe(":8080", router))
+func ReadConfig(w http.ResponseWriter, r *http.Request) {
+  vars := mux.Vars(r)
+  name := vars["name"]
+    fmt.Fprintln(w, "Welcome! "+name)
 }

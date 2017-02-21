@@ -61,6 +61,9 @@ const (
   OFFSET_VOLTAGE_A float32 = 1.0
   OFFSET_VOLTAGE_B float32 = 1.0
   OFFSET_VOLTAGE_C float32 = 1.0
+	POWER_CORRECTION_FACTOR_A float32 = 0.019413
+	POWER_CORRECTION_FACTOR_B float32 = 0.019413
+	POWER_CORRECTION_FACTOR_C float32 = 0.019413
 )
 
 
@@ -427,7 +430,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 
   dataAddress = make([]byte, 2)
 
-  for i:=0; i<=18; i++ {
+  for i:=0; i<=24; i++ {
 
     switch (i) {
 
@@ -465,6 +468,21 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
         // voltage phase c
         dataAddress[0] = 0x43;//0x43C5 (CVRMS; Voltage rms an C)
         dataAddress[1] = 0xC5;
+        data = make([]byte, 4)
+			case 7:
+        //  Phase A total active power.
+        dataAddress[0] = 0xE5;//0xE513 (AWATT total active power an A)
+        dataAddress[1] = 0x13;
+        data = make([]byte, 4)
+      case 8:
+        //  Phase A total active power.
+        dataAddress[0] = 0xE5;//0xE514 (BWATT total active power an B)
+        dataAddress[1] = 0x14;
+        data = make([]byte, 4)
+      case 9:
+        //  Phase A total active power.
+        dataAddress[0] = 0xE5;//0xE515 (CWATT total active power an C)
+        dataAddress[1] = 0x15;
         data = make([]byte, 4)
       case 10:
         // cosphi phase a
@@ -514,21 +532,36 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
         dataAddress[0] = 0xE6;//0xE607 (PERIOD)
         dataAddress[1] = 0x07;
         data = make([]byte, 2)
-      case 16:
-        //  Phase A total active energy accumulation.
-        dataAddress[0] = 0xE4;//0xE400 (AWATTHR total active energy an A)
-        dataAddress[1] = 0x00;
+			case 16:
+        //  Phase A total apparent power.
+        dataAddress[0] = 0xE5;//0xE519 (AVA total apparent power an A)
+        dataAddress[1] = 0x19;
         data = make([]byte, 4)
       case 17:
-        //  Phase A total active energy accumulation.
-        dataAddress[0] = 0xE4;//0xE401 (BWATTHR total active energy an B)
-        dataAddress[1] = 0x01;
+        //  Phase A total apparent power.
+        dataAddress[0] = 0xE5;//0xE51A (BVA total apparent power an B)
+        dataAddress[1] = 0x1A;
         data = make([]byte, 4)
       case 18:
-        //  Phase A total active energy accumulation.
-        dataAddress[0] = 0xE4;//0xE402 (CWATTHR total active energy an C)
-        dataAddress[1] = 0x02;
+        //  Phase A total apparent power.
+        dataAddress[0] = 0xE5;//0xE51B (CVA total apparent power an C)
+        dataAddress[1] = 0x1B;
         data = make([]byte, 4)
+			case 19:
+				//  Phase A total reactive power.
+				dataAddress[0] = 0xE5;//0xE516 (AVAR total reactive power an A)
+				dataAddress[1] = 0x16;
+				data = make([]byte, 4)
+			case 20:
+				//  Phase A total reactive power.
+				dataAddress[0] = 0xE5;//0xE517 (BVAR total reactive power an B)
+				dataAddress[1] = 0x17;
+				data = make([]byte, 4)
+			case 21:
+				//  Phase A total reactive power.
+				dataAddress[0] = 0xE5;//0xE518 (CVAR total reactive power an C)
+				dataAddress[1] = 0x18;
+				data = make([]byte, 4)
     }
 
     // for j:=0; j<SAMPLES; j++ {
@@ -549,9 +582,11 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
       case 10 ,11 ,12, 13, 14, 15:
           // outcome = outcome + float32(FACTOR_1*int(data[0])+int(data[1]))
 					outcome = float32(FACTOR_1*int(data[0])+int(data[1]))
-		  case 16, 17, 18:
-					outcome = outcome + float32(FACTOR_3*int(data[0])+FACTOR_2*int(data[1])+FACTOR_1*int(data[2])+int(data[3]))
+		  case 7, 8, 9, 16, 17, 18, 19, 20, 21:
+					// outcome = outcome + float32(FACTOR_3*int(data[0])+FACTOR_2*int(data[1])+FACTOR_1*int(data[2])+int(data[3]))
+					outcome = float32(FACTOR_3*int(data[0])+FACTOR_2*int(data[1])+FACTOR_1*int(data[2])+int(data[3]))
       }
+
 
     // }
 
@@ -562,10 +597,19 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
     switch (i) {
       case 0:
         values[0] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_A) / CURRENT_CLAMP_FACTOR_A) * 100.0 * OFFSET_CURRENT_A
+				if c.Currentdirection1 == 1 {
+					values[0] = values[0] * -1
+				}
       case 1:
         values[1] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_B) / CURRENT_CLAMP_FACTOR_B) * 100.0 * OFFSET_CURRENT_B
+				if c.Currentdirection2 == 1 {
+					values[1] = values[1] * -1
+				}
       case 2:
         values[2] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_C) / CURRENT_CLAMP_FACTOR_C) * 100.0 * OFFSET_CURRENT_C
+				if c.Currentdirection3 == 1 {
+					values[2] = values[2] * -1
+				}
       case 3:
         values[3] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_N) / CURRENT_CLAMP_FACTOR_N) * 100.0 * OFFSET_CURRENT_N
       case 4:
@@ -574,12 +618,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 					// values[4] = (outcome / RMS_FACTOR_VOLTAGE) * 235.4133 * OFFSET_VOLTAGE_A
 					values[4] = float32(float32(outcome) / 1e+4)
 				} else {
-					if c.Currentdirection1 == 0 {
 						values[4]= float32(c.Voltage1)
-					} else {
-						values[4]= float32(c.Voltage1) * -1
-					}
-
 				}
 
       case 5:
@@ -588,11 +627,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 					// values[5] = (outcome / RMS_FACTOR_VOLTAGE) * 234.8029 * OFFSET_VOLTAGE_B
 					values[5] = float32(float32(outcome) / 1e+4)
 				} else {
-					if c.Currentdirection2 == 0 {
-						values[5]= float32(c.Voltage2)
-					} else {
-						values[5]= float32(c.Voltage2) * -1
-					}
+					values[5]= float32(c.Voltage2)
 				}
 
       case 6:
@@ -601,70 +636,91 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 					// values[6] = (outcome / RMS_FACTOR_VOLTAGE) * 235.34 * OFFSET_VOLTAGE_C
 					values[6] = float32(float32(outcome) / 1e+4)
 				} else {
-					if c.Currentdirection3 == 0 {
-						values[6]= float32(c.Voltage3)
-					} else {
-						values[6]= float32(c.Voltage3) * -1
-					}
+					values[6]= float32(c.Voltage3)
 				}
 
       case 7:
-				if c.Currentdirection1 == 0 {
-					values[7] = values[0] * values[4]
-				} else {
-					values[7] = values[0] * values[4] * -1
+				values[i] = float32(outcome*POWER_CORRECTION_FACTOR_A)
+
+				if c.Currentdirection1 == 1 {
+					values[i] = values[i] * -1
 				}
 
-      case 8:
-				if c.Currentdirection2 == 0 {
+				if c.Measurevoltage1==0 {
+					values[7] = values[0] * values[4]
+				}
+
+			case 8:
+				values[i] = float32(outcome*POWER_CORRECTION_FACTOR_B)
+
+				if c.Currentdirection2 == 1 {
+					values[i] = values[i] * -1
+				}
+
+				if c.Measurevoltage2==0 {
 					values[8] = values[1] * values[5]
-				} else {
-        	values[8] = values[1] * values[5] * -1
 				}
-      case 9:
-				if c.Currentdirection3 == 0 {
+
+			case 9:
+				values[i] = float32(outcome*POWER_CORRECTION_FACTOR_C)
+
+				if c.Currentdirection3 == 1 {
+					values[i] = values[i] * -1
+				}
+
+				if c.Measurevoltage3==0 {
 					values[9] = values[2] * values[6]
-				} else {
-        	values[9] = values[2] * values[6] * -1
 				}
+
+
       case 10:
         values[10] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
 
-				if c.Measurevoltage1==1 {
-					//values[7] = values[7] * float32(math.Abs(float64(values[10])))
-					values[7] = values[7] * values[10]
-				} else {
+				if c.Measurevoltage1==0 {
 					values[10] = 1.0
 				}
 
       case 11:
         values[11] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
 
-				if c.Measurevoltage2==1 {
-					// values[8] = values[8] * float32(math.Abs(float64(values[11])))
-					values[8] = values[8] * values[11]
-				} else {
+				if c.Measurevoltage2==0 {
 					values[11] = 1.0
 				}
 
       case 12:
         values[12] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
 
-				if c.Measurevoltage3==1 {
-					// values[9] = values[9] * float32(math.Abs(float64(values[12])))
-					values[9] = values[9] * values[12]
-				} else {
+				if c.Measurevoltage3==0 {
 					values[12] = 1.0
 				}
 
       case 13, 14, 15:
         values[i] = float32(ADE7878_CLOCK / (outcome+1))
-			case 16 ,17 ,18:
+			case 16 ,17 ,18, 19, 20, 21:
 				values[i] = float32(outcome)
+			case 22:
+				if math.Signbit(float64(values[19])) {
+					values[i] = -1 * (values[7]/POWER_CORRECTION_FACTOR_A/values[16])
+				} else {
+					values[i] = values[7]/POWER_CORRECTION_FACTOR_A/values[16]
+				}
+			case 23:
+				if math.Signbit(float64(values[20])) {
+					values[i] = -1 * (values[8]/POWER_CORRECTION_FACTOR_B/values[17])
+				} else {
+					values[i] = values[8]/POWER_CORRECTION_FACTOR_B/values[17]
+				}
+			case 24:
+				if math.Signbit(float64(values[21])) {
+					values[i] = -1 * (values[9]/POWER_CORRECTION_FACTOR_C/values[18])
+				} else {
+					values[i] = values[9]/POWER_CORRECTION_FACTOR_C/values[18]
+				}
     }
 
   }
-	fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  V1: %g  V2: %g  V3: %g  P1: %g  P2: %g  P3: %g  COS1: %g  COS2: %g  COS3: %g  F1: %g  F2: %g  F3: %g  AWATTHR: %g  BWATTHR: %g  CWATTHR: %g  \n",values[0],values[1],values[2],values[3],values[4],values[5],values[6],values[7],values[8],values[9],values[10],values[11],values[12],values[13],values[14],values[15],values[16],values[17],values[18]);
+	fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  V1: %g  V2: %g  V3: %g  P1: %g  P2: %g  P3: %g  COS1: %g  COS2: %g  COS3: %g  F1: %g  F2: %g  F3: %g  AVA: %g  BVA: %g  CVA: %g  AVAR: %g  BVAR: %g  CVAR: %g  PFA: %g  PFB: %g  PFC: %g  \n",values[0],values[1],values[2],values[3],values[4],values[5],values[6],values[7],values[8],values[9],values[10],values[11],values[12],values[13],values[14],values[15],values[16],values[17],values[18],values[19],values[20],values[21],values[22],values[23],values[24]);
+
   return values
 
 }
