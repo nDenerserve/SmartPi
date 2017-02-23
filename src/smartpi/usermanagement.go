@@ -1,6 +1,6 @@
 /*
     Copyright (C) Jens Ramhorst
-  	This file is part of SmartPi.
+	  This file is part of SmartPi.
     SmartPi is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -23,26 +23,47 @@
     Sie sollten eine Kopie der GNU General Public License zusammen mit diesem
     Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>.
 */
-/*
-File: apihandlersmomentary.go
-Description: Handels API requests
-*/
-
-
 
 package smartpi
 
 import (
-    "net/http"
-    "github.com/gorilla/mux"
-    "fmt"
+    "gopkg.in/ini.v1"
+    // "path/filepath"
+    // "os"
 )
 
-func ReadConfig(w http.ResponseWriter, r *http.Request) {
-  vars := mux.Vars(r)
-  name := vars["name"]
-    fmt.Fprintln(w, "Welcome! "+name)
-    if username := r.Context().Value("Username"); username != nil {
-      fmt.Fprintln(w, "Hello! "+username.(*User).Password)
-    }
+type User struct {
+  Name string
+  Password string
+  Role []string
+  Exist bool
+}
+
+
+
+func (u *User) ReadUserFromFile(username string) {
+
+  cfg, err := ini.Load("/etc/smartpiusers")
+  if err != nil {
+      panic(err)
+  }
+
+  _, err = cfg.GetSection(username)
+  if err != nil {
+    u.Name = username
+    u.Password = "nopassword"
+    u.Role[0] = "nobody"
+    u.Exist = false
+    return
+  }
+
+  u.Name = username
+  u.Password = cfg.Section(username).Key("password").String()
+  u.Role = cfg.Section(username).Key("role").Strings(",")
+  u.Exist = true
+}
+
+func NewUser() *User {
+  t := new(User)
+  return t
 }

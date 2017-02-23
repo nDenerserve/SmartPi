@@ -98,7 +98,7 @@
                   <div layout-gt-xs="row">
                      <table class="csvtabledata">
                         <tr class="csvtabledata" ng-repeat="x in data">
-                           <td class="csvtabledata" ng-repeat="y in x">{{ y }}</td>
+                           <td class="csvtabledata" ng-repeat="y in x track by $index">{{ y }}</td>
                         </tr>
                      </table>
                   </div>

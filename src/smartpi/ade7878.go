@@ -430,6 +430,10 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 
   dataAddress = make([]byte, 2)
 
+	voltage_measure_1 := true
+	voltage_measure_2 := true
+	voltage_measure_3 := true
+
   for i:=0; i<=24; i++ {
 
     switch (i) {
@@ -597,46 +601,33 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
     switch (i) {
       case 0:
         values[0] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_A) / CURRENT_CLAMP_FACTOR_A) * 100.0 * OFFSET_CURRENT_A
-				if c.Currentdirection1 == 1 {
-					values[0] = values[0] * -1
-				}
       case 1:
         values[1] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_B) / CURRENT_CLAMP_FACTOR_B) * 100.0 * OFFSET_CURRENT_B
-				if c.Currentdirection2 == 1 {
-					values[1] = values[1] * -1
-				}
       case 2:
         values[2] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_C) / CURRENT_CLAMP_FACTOR_C) * 100.0 * OFFSET_CURRENT_C
-				if c.Currentdirection3 == 1 {
-					values[2] = values[2] * -1
-				}
       case 3:
         values[3] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_N) / CURRENT_CLAMP_FACTOR_N) * 100.0 * OFFSET_CURRENT_N
       case 4:
-				if c.Measurevoltage1==1 {
-					// values[4] = (outcome / RMS_FACTOR_VOLTAGE) * 229.8 * OFFSET_VOLTAGE_A
-					// values[4] = (outcome / RMS_FACTOR_VOLTAGE) * 235.4133 * OFFSET_VOLTAGE_A
-					values[4] = float32(float32(outcome) / 1e+4)
-				} else {
-						values[4]= float32(c.Voltage1)
+				values[4] = float32(float32(outcome) / 1e+4)
+				voltage_measure_1 = true
+				if c.Measurevoltage1==0 || values[4] < 10 {
+					values[4]= float32(c.Voltage1)
+					voltage_measure_1 = false
 				}
-
       case 5:
-				if c.Measurevoltage2==1 {
-					// values[5] = (outcome / RMS_FACTOR_VOLTAGE) * 229.8 * OFFSET_VOLTAGE_B
-					// values[5] = (outcome / RMS_FACTOR_VOLTAGE) * 234.8029 * OFFSET_VOLTAGE_B
-					values[5] = float32(float32(outcome) / 1e+4)
-				} else {
+				values[5] = float32(float32(outcome) / 1e+4)
+				voltage_measure_2 = true
+				if c.Measurevoltage2==0 || values[5] < 10 {
 					values[5]= float32(c.Voltage2)
+					voltage_measure_2 = false
 				}
 
       case 6:
-				if c.Measurevoltage3==1 {
-					// values[6] = (outcome / RMS_FACTOR_VOLTAGE) * 229.8 * OFFSET_VOLTAGE_C
-					// values[6] = (outcome / RMS_FACTOR_VOLTAGE) * 235.34 * OFFSET_VOLTAGE_C
-					values[6] = float32(float32(outcome) / 1e+4)
-				} else {
+				values[6] = float32(float32(outcome) / 1e+4)
+				voltage_measure_3 = true
+				if c.Measurevoltage3==0  || values[6] < 10 {
 					values[6]= float32(c.Voltage3)
+					voltage_measure_3 = false
 				}
 
       case 7:
@@ -646,7 +637,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 					values[i] = values[i] * -1
 				}
 
-				if c.Measurevoltage1==0 {
+				if !voltage_measure_1 {
 					values[7] = values[0] * values[4]
 				}
 
@@ -657,7 +648,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 					values[i] = values[i] * -1
 				}
 
-				if c.Measurevoltage2==0 {
+				if !voltage_measure_2 {
 					values[8] = values[1] * values[5]
 				}
 
@@ -668,13 +659,17 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 					values[i] = values[i] * -1
 				}
 
-				if c.Measurevoltage3==0 {
+				if !voltage_measure_3 {
 					values[9] = values[2] * values[6]
 				}
 
 
       case 10:
         values[10] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
+
+				if c.Currentdirection1 == 1 {
+					values[i] = values[i] * -1
+				}
 
 				if c.Measurevoltage1==0 {
 					values[10] = 1.0
@@ -683,6 +678,10 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
       case 11:
         values[11] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
 
+				if c.Currentdirection2 == 1 {
+					values[i] = values[i] * -1
+				}
+
 				if c.Measurevoltage2==0 {
 					values[11] = 1.0
 				}
@@ -690,31 +689,51 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
       case 12:
         values[12] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
 
+				if c.Currentdirection3 == 1 {
+					values[i] = values[i] * -1
+				}
+
 				if c.Measurevoltage3==0 {
 					values[12] = 1.0
 				}
 
       case 13, 14, 15:
         values[i] = float32(ADE7878_CLOCK / (outcome+1))
-			case 16 ,17 ,18, 19, 20, 21:
+			case 16 ,17 ,18:
 				values[i] = float32(outcome)
+			case 19:
+				values[i] = float32(outcome)
+				if c.Currentdirection1 == 1 {
+					values[i] = values[i] * -1
+				}
+			case 20:
+				values[i] = float32(outcome)
+				if c.Currentdirection2 == 1 {
+					values[i] = values[i] * -1
+				}
+			case 21:
+				values[i] = float32(outcome)
+				if c.Currentdirection3 == 1 {
+					values[i] = values[i] * -1
+				}
 			case 22:
+				// ??????????????????????????????????????
 				if math.Signbit(float64(values[19])) {
-					values[i] = -1 * (values[7]/POWER_CORRECTION_FACTOR_A/values[16])
+					values[i] = (values[7]/POWER_CORRECTION_FACTOR_A/values[16])
 				} else {
-					values[i] = values[7]/POWER_CORRECTION_FACTOR_A/values[16]
+					values[i] = -1 * (values[7]/POWER_CORRECTION_FACTOR_A/values[16])
 				}
 			case 23:
 				if math.Signbit(float64(values[20])) {
-					values[i] = -1 * (values[8]/POWER_CORRECTION_FACTOR_B/values[17])
+					values[i] = (values[8]/POWER_CORRECTION_FACTOR_B/values[17])
 				} else {
-					values[i] = values[8]/POWER_CORRECTION_FACTOR_B/values[17]
+					values[i] = -1 * (values[8]/POWER_CORRECTION_FACTOR_B/values[17])
 				}
 			case 24:
 				if math.Signbit(float64(values[21])) {
-					values[i] = -1 * (values[9]/POWER_CORRECTION_FACTOR_C/values[18])
+					values[i] = (values[9]/POWER_CORRECTION_FACTOR_C/values[18])
 				} else {
-					values[i] = values[9]/POWER_CORRECTION_FACTOR_C/values[18]
+					values[i] = -1 * (values[9]/POWER_CORRECTION_FACTOR_C/values[18])
 				}
     }
 
