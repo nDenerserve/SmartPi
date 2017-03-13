@@ -42,6 +42,10 @@ In case of an SmartPi connected to an RPI3, the output should look like this:
 	60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 	70: -- -- -- -- -- -- -- --
 	
+##### Remove old go version
+    sudo apt-get remove golang
+    sudo apt-get autoremove
+
 ##### Install go
 Download the archive and extract it into /usr/local, creating a Go tree in /usr/local/go.
 Currently version 1.7.3 is up to date. You may need to adapt the filenamy according to latest version.
