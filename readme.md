@@ -15,7 +15,7 @@ Download https://github.com/openenergymonitor/emonpi/wiki/emonSD-pre-built-SD-ca
 
 ##### Install additional packets. Especially, "librrd-dev" is required to build SmartPi tools.
 
-    sudo apt-get install librrd-dev rrdtool git i2c-tools avahi-daemon
+    sudo apt-get install sqlite3 git i2c-tools avahi-daemon
 
 ##### Test if i2c is correctly enabled:
 
