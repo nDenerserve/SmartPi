@@ -47,10 +47,12 @@ Download the archive and extract it into /usr/local, creating a Go tree in /usr/
 Currently version 1.7.3 is up to date. You may need to adapt the filenamy according to latest version.
 	
     cd /usr/local
-    sudo wget https://storage.googleapis.com/golang/go1.7.3.linux-armv6l.tar.gz
-    sudo tar -C /usr/local -xzf go1.7.3.linux-armv6l.tar.gz
-    sudo rm go1.7.3.linux-armv6l.tar.gz
+    sudo wget https://storage.googleapis.com/golang/go1.8rc2.linux-armv6l.tar.gz
+    sudo tar -xvzf go1.8rc2.linux-armv6l.tar.gz
+    sudo rm go1.8rc2.linux-armv6l.tar.gz
+    nano /etc/profile
 
+Paste export PATH=$PATH:/usr/local/go/bin at the end of file.
 Add "/usr/local/go/bin" to the PATH environment variable.
 You can do this by adding this line to your /etc/profile (for a system-wide installation) before the path is being exported.
 
@@ -65,23 +67,6 @@ Download of SmartPi sources
 
     cd ~
     git clone https://github.com/nDenerserve/SmartPi.git
-
-Delete some Go library folders of Smartpi git repository if present.
-We will create them again. (Caused problem on my rpi.)
-
-    rm ~/SmartPi/src/github.com
-    rm ~/SmartPi/src/golang.org
-    rm ~/SmartPi/src/gopkg.in
-
-##### Go dependencies:
-
-    go get github.com/gorilla/mux
-    go get github.com/nathan-osman/go-rpigpio
-    go get github.com/mattn/go-sqlite3"
-    go get gopkg.in/ini.v1
-    go get github.com/secsy/goftp
-    go get golang.org/x/exp/io/i2c
-	go get github.com/eclipse/paho.mqtt.golang
 
 ##### build SmartPi tools
 	cd  ~/SmartPi
