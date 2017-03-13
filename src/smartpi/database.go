@@ -52,6 +52,10 @@ func InsertData(databasedir string,t time.Time, v []float32) {
 		log.Fatal(err)
 	}
 
+	// if (config.Debuglevel > 0){
+ 		fmt.Printf("INSERT INTO smartpi_logdata_%s (date, current_1, current_2, current_3, current_4, voltage_1, voltage_2, voltage_3, power_1, power_2, power_3, cosphi_1, cosphi_2, cosphi_3, frequency_1, frequency_2, frequency_3, energy_pos_1, energy_pos_2, energy_pos_3, energy_neg_1, energy_neg_2, energy_neg_3) values (%s,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f)\n" , t.Format("200601"),t.Format("2006-01-02 15:04:05"),v[0],v[1],v[2],v[3],v[4],v[5],v[6],v[7],v[8],v[9], v[10], v[11], v[12], v[13], v[14], v[15], v[16], v[17], v[18], v[19], v[20], v[21])
+	// }
+
 	stmt, err := tx.Prepare("INSERT INTO smartpi_logdata_"+t.Format("200601")+" (date, current_1, current_2, current_3, current_4, voltage_1, voltage_2, voltage_3, power_1, power_2, power_3, cosphi_1, cosphi_2, cosphi_3, frequency_1, frequency_2, frequency_3, energy_pos_1, energy_pos_2, energy_pos_3, energy_neg_1, energy_neg_2, energy_neg_3) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 
 	if err != nil {
@@ -101,6 +105,7 @@ func ReadChartData(databasedir string, starttime time.Time, endtime time.Time) (
 		val := new(MinuteValues)
 
 		val.Date, err = time.ParseInLocation("2006-01-02T15:04:05Z",dateentry,time.Now().Location())
+		// val.Date, err = time.Parse("2006-01-02T15:04:05Z",dateentry)
 		val.Current_1 = current_1
 		val.Current_2 = current_2
 		val.Current_3 = current_3
@@ -151,7 +156,8 @@ func ReadDayData(databasedir string, starttime time.Time, endtime time.Time) ([]
 		log.Fatal(err)
 	}
 	defer stmt.Close()
-	rows, err := stmt.Query(starttime.Format("2006-01-02 15:04:05"),endtime.Format("2006-01-02 15:04:05"))
+	// fmt.Println("DStarttime: "+starttime.Local().Format("2006-01-02 15:04:05")+" DEndtime: "+endtime.Local().Format("2006-01-02 15:04:05"))
+	rows, err := stmt.Query(starttime.Local().Format("2006-01-02 15:04:05"),endtime.Local().Format("2006-01-02 15:04:05"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -172,11 +178,12 @@ func ReadDayData(databasedir string, starttime time.Time, endtime time.Time) ([]
 		val := new(MinuteValues)
 		insert := 1;
 
-		entrydate,_ := time.ParseInLocation("2006-01-02T15:04:05Z",dateentry,time.Now().Location())
+		//entrydate,_ := time.ParseInLocation("2006-01-02T15:04:05Z",dateentry,time.Now().Location())
+		entrydate,_  := time.Parse("2006-01-02T15:04:05Z",dateentry)
 
 		for i:=0; i<len(values); i++ {
 
-			if values[i].Date.Year()==entrydate.Year() && values[i].Date.YearDay() == entrydate.YearDay() {
+			if values[i].Date.Local().Year()==entrydate.Local().Year() && values[i].Date.Local().YearDay() == entrydate.Local().YearDay() {
 				values[i].Date = entrydate
 				values[i].Current_1 = values[i].Current_1 + current_1
 				values[i].Current_2 = values[i].Current_2 + current_2
@@ -208,7 +215,8 @@ func ReadDayData(databasedir string, starttime time.Time, endtime time.Time) ([]
 
 		if  insert==1 {
 
-			val.Date, err = time.ParseInLocation("2006-01-02T15:04:05Z",dateentry,time.Now().Location())
+			// val.Date, err = time.ParseInLocation("2006-01-02T15:04:05Z",dateentry,time.Now().Location())
+			val.Date, err = time.Parse("2006-01-02T15:04:05Z",dateentry)
 			val.Current_1 = current_1
 			val.Current_2 = current_2
 			val.Current_3 = current_3

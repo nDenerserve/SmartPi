@@ -76,7 +76,7 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 
   location := time.Now().Location()
 
-  end, err := time.ParseInLocation(time.RFC3339,to,location)
+  end, err := time.Parse(time.RFC3339,to)
   if err != nil {
     log.Fatal(err)
   }
@@ -207,18 +207,18 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
   config := NewConfig()
 
 
-  location := time.Now().Location()
+  // location := time.Now().Location()
 
   end, err := time.Parse(time.RFC3339,to)
   if err != nil {
     log.Fatal(err)
   }
-  end = end.In(location)
+  // end = end.In(location)
 	start, err := time.Parse(time.RFC3339,from)
   if err != nil {
     log.Fatal(err)
   }
-  start = start.In(location)
+  // start = start.In(location)
 
   if end.Before(start) {
     start = start.AddDate(0,0,-1)
@@ -233,7 +233,7 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
     }
   }
 
-  fmt.Println("ReadDayData "+config.Databasedir+" "+start.Format(time.RFC3339)+ " "+end.Format(time.RFC3339))
+  fmt.Println("ReadDayData "+config.Databasedir+" "+start.Format(time.RFC3339)+ " "+end.Format(time.RFC3339)+" |"+start.Location().String()+"|| "+start.Local().String())
 
   data := ReadDayData(config.Databasedir, start, end)
 
@@ -245,6 +245,7 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 		var values []tChartValue
 		for _,dataelement := range data {
 			ti := dataelement.Date
+      fmt.Println(ti.Format(time.RFC3339))
 			switch valueelement {
 			case "current_1":
 				val = dataelement.Current_1

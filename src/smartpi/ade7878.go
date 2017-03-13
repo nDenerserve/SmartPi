@@ -583,6 +583,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
       case 0, 1, 2, 3, 4, 5, 6:
           // outcome = outcome + float32(FACTOR_3*int(data[0])+FACTOR_2*int(data[1])+FACTOR_1*int(data[2])+int(data[3]))
 					outcome = float32(FACTOR_2*int(data[1])+FACTOR_1*int(data[2])+int(data[3]))
+					fmt.Printf("I: %d, Data0: %x, Data1: %x, Data2: %x, Data3: %x \n",i, data[0], data[1], data[2], data[3])
       case 10 ,11 ,12, 13, 14, 15:
           // outcome = outcome + float32(FACTOR_1*int(data[0])+int(data[1]))
 					outcome = float32(FACTOR_1*int(data[0])+int(data[1]))
