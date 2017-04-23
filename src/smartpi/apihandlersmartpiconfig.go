@@ -28,21 +28,19 @@ File: apihandlersmomentary.go
 Description: Handels API requests
 */
 
-
-
 package smartpi
 
 import (
-    "net/http"
-    "github.com/gorilla/mux"
-    "fmt"
+	"fmt"
+	"github.com/gorilla/mux"
+	"net/http"
 )
 
 func ReadConfig(w http.ResponseWriter, r *http.Request) {
-  vars := mux.Vars(r)
-  name := vars["name"]
-    fmt.Fprintln(w, "Welcome! "+name)
-    if username := r.Context().Value("Username"); username != nil {
-      fmt.Fprintln(w, "Hello! "+username.(*User).Password)
-    }
+	vars := mux.Vars(r)
+	name := vars["name"]
+	fmt.Fprintln(w, "Welcome! "+name)
+	if username := r.Context().Value("Username"); username != nil {
+		fmt.Fprintln(w, "Hello! "+username.(*User).Password)
+	}
 }

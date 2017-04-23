@@ -31,41 +31,39 @@ Description: Handels API requests
 package smartpi
 
 import (
-    "net/http"
-    "github.com/gorilla/mux"
-    "time"
-    "log"
-    "fmt"
+	"fmt"
+	"github.com/gorilla/mux"
+	"log"
+	"net/http"
+	"time"
 )
-
 
 func ServeCSVValues(w http.ResponseWriter, r *http.Request) {
 
-  vars := mux.Vars(r)
-  from := vars["fromDate"]
-  to := vars["toDate"]
-  w.Header().Set("Content-Type", "application/text")
+	vars := mux.Vars(r)
+	from := vars["fromDate"]
+	to := vars["toDate"]
+	w.Header().Set("Content-Type", "application/text")
 
-  location := time.Now().Location()
+	location := time.Now().Location()
 
-  end, err := time.ParseInLocation(time.RFC3339,to,location)
-  if err != nil {
-    log.Fatal(err)
-  }
-  end = end.In(location)
-	start, err := time.ParseInLocation(time.RFC3339,from,location)
-  if err != nil {
-    log.Fatal(err)
-  }
-  start = start.In(location)
+	end, err := time.ParseInLocation(time.RFC3339, to, location)
+	if err != nil {
+		log.Fatal(err)
+	}
+	end = end.In(location)
+	start, err := time.ParseInLocation(time.RFC3339, from, location)
+	if err != nil {
+		log.Fatal(err)
+	}
+	start = start.In(location)
 
-  if end.Before(start) {
-    start = start.AddDate(0,0,-1)
-  }
+	if end.Before(start) {
+		start = start.AddDate(0, 0, -1)
+	}
 
-  csvfile := CreateCSV(start,end)
+	csvfile := CreateCSV(start, end)
 
-
-  fmt.Fprintf(w,csvfile)
+	fmt.Fprintf(w, csvfile)
 
 }
