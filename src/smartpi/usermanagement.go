@@ -27,43 +27,41 @@
 package smartpi
 
 import (
-    "gopkg.in/ini.v1"
-    // "path/filepath"
-    // "os"
+	"gopkg.in/ini.v1"
+	// "path/filepath"
+	// "os"
 )
 
 type User struct {
-  Name string
-  Password string
-  Role []string
-  Exist bool
+	Name     string
+	Password string
+	Role     []string
+	Exist    bool
 }
-
-
 
 func (u *User) ReadUserFromFile(username string) {
 
-  cfg, err := ini.Load("/etc/smartpiusers")
-  if err != nil {
-      panic(err)
-  }
+	cfg, err := ini.Load("/etc/smartpiusers")
+	if err != nil {
+		panic(err)
+	}
 
-  _, err = cfg.GetSection(username)
-  if err != nil {
-    u.Name = username
-    u.Password = "nopassword"
-    u.Role[0] = "nobody"
-    u.Exist = false
-    return
-  }
+	_, err = cfg.GetSection(username)
+	if err != nil {
+		u.Name = username
+		u.Password = "nopassword"
+		u.Role[0] = "nobody"
+		u.Exist = false
+		return
+	}
 
-  u.Name = username
-  u.Password = cfg.Section(username).Key("password").String()
-  u.Role = cfg.Section(username).Key("role").Strings(",")
-  u.Exist = true
+	u.Name = username
+	u.Password = cfg.Section(username).Key("password").String()
+	u.Role = cfg.Section(username).Key("role").Strings(",")
+	u.Exist = true
 }
 
 func NewUser() *User {
-  t := new(User)
-  return t
+	t := new(User)
+	return t
 }

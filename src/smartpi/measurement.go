@@ -31,31 +31,30 @@ Description: Defines the structure of of the json-api-file
 package smartpi
 
 type tValue struct {
-  Type string `json:"type"`
-  Unity string `json:"unity"`
-  Info string `json:"info"`
-  Data float32 `json:"data"`
+	Type  string  `json:"type"`
+	Unity string  `json:"unity"`
+	Info  string  `json:"info"`
+	Data  float32 `json:"data"`
 }
 
 type tPhase struct {
-  Phase int `json:"phase"`
-  Name string `json:"name"`
-  Values []*tValue `json:"values"`
+	Phase  int       `json:"phase"`
+	Name   string    `json:"name"`
+	Values []*tValue `json:"values"`
 }
 
 type tDataset struct {
-  Time string `json:"time"`
-  Phases []*tPhase `json:"phases"`
+	Time   string    `json:"time"`
+	Phases []*tPhase `json:"phases"`
 }
 
-
 type tMeasurement struct {
-	Serial string `json:"serial"`
-  Name string `json:"name"`
-  Lat float64 `json:"lat"`
-  Lng float64 `json:"lng"`
-	Time string `json:"time"`
-	Softwareversion string `json:"softwareversion"`
-	Ipaddress string `json:"ipaddress"`
-	Datasets []*tDataset `json:"datasets"`
+	Serial          string      `json:"serial"`
+	Name            string      `json:"name"`
+	Lat             float64     `json:"lat"`
+	Lng             float64     `json:"lng"`
+	Time            string      `json:"time"`
+	Softwareversion string      `json:"softwareversion"`
+	Ipaddress       string      `json:"ipaddress"`
+	Datasets        []*tDataset `json:"datasets"`
 }
