@@ -2,11 +2,10 @@ package main
 
 import (
 	"fmt"
-  "smartpi"
+	"smartpi"
 )
 
 func main() {
-
 
 	fmt.Println(smartpi.ScanWIFI())
 

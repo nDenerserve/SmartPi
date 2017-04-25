@@ -26,40 +26,38 @@
 package smartpi
 
 import (
+	"bytes"
 	"errors"
 	"net"
 	"os/exec"
 	"text/template"
-	"bytes"
 )
 
-
 type tWIFI struct {
-	SSID string `json:"ssid"`
+	SSID    string `json:"ssid"`
 	Quality string `json:"quality"`
-	Level string `json:"level"`
+	Level   string `json:"level"`
 }
 
 type tWIFIList struct {
 	Values []tWIFI `json:"wifi"`
-	}
+}
 
 type Udhcpdparams struct {
-	Ipstart string
-	Ipend string
-	Dns string
-	Subnet string
-	Router string
+	Ipstart   string
+	Ipend     string
+	Dns       string
+	Subnet    string
+	Router    string
 	Leasetime int
 }
 
 type Hostapdparams struct {
-	Ssid string
+	Ssid          string
 	WpaPassphrase string
 }
 
-
-func ScanWIFI() (string,error) {
+func ScanWIFI() (string, error) {
 	out, err := exec.Command("/bin/sh", "-c", "sudo iwlist wlan0 scan | egrep \"(ESSID|IEEE|Quality)\"").Output()
 	if err != nil {
 		return "", err
@@ -104,11 +102,10 @@ func ExternalIP() (string, error) {
 	return "", errors.New("are you connected to the network?")
 }
 
-
 /*
 Create /etc/udhcpd.conf
 */
-func CreateUDHCPD(params Udhcpdparams) (string) {
+func CreateUDHCPD(params Udhcpdparams) string {
 
 	var buf bytes.Buffer
 
@@ -127,16 +124,16 @@ func CreateUDHCPD(params Udhcpdparams) (string) {
 		# Leasetime in Sekunden (7 Tage)
 		opt lease {{.Leasetime}}
     `
-		t, _ := template.New("template_name").Parse(templateUDHCPD)
-		t.Execute(&buf, params)
+	t, _ := template.New("template_name").Parse(templateUDHCPD)
+	t.Execute(&buf, params)
 
-		return buf.String()
+	return buf.String()
 }
 
 /*
 Create /etc/hostapd/hostapd.conf
 */
-func CreateHOSTAPD(params Hostapdparams) (string) {
+func CreateHOSTAPD(params Hostapdparams) string {
 
 	var buf bytes.Buffer
 
@@ -172,24 +169,24 @@ func CreateHOSTAPD(params Hostapdparams) (string) {
 		# Use AES, instead of TKIP
 		rsn_pairwise=CCMP
     `
-		t, _ := template.New("template_name").Parse(templateHOSTAPD)
-		t.Execute(&buf, params)
+	t, _ := template.New("template_name").Parse(templateHOSTAPD)
+	t.Execute(&buf, params)
 
-		return buf.String()
+	return buf.String()
 }
 
-func EnableDHCPDinUDHCPD() (error) {
-		_, err := exec.Command("/bin/sh", "-c", "sudo sed -i '/#DHCPD_ENABLED/!s/DHCPD_ENABLED/#DHCPD_ENABLED/' /etc/default/udhcpd").Output()
-		if err != nil {
-			return err
-		}
-		return nil
+func EnableDHCPDinUDHCPD() error {
+	_, err := exec.Command("/bin/sh", "-c", "sudo sed -i '/#DHCPD_ENABLED/!s/DHCPD_ENABLED/#DHCPD_ENABLED/' /etc/default/udhcpd").Output()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func SetWlanAdapterIp(ipaddress string) (error) {
-		_, err := exec.Command("/bin/sh", "-c", "sudo ifconfig wlan0 "+ipaddress).Output()
-		if err != nil {
-			return err
-		}
-		return nil
+func SetWlanAdapterIp(ipaddress string) error {
+	_, err := exec.Command("/bin/sh", "-c", "sudo ifconfig wlan0 "+ipaddress).Output()
+	if err != nil {
+		return err
+	}
+	return nil
 }
