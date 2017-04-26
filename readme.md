@@ -1,3 +1,6 @@
+# Forum
+https://forum.enerserve.eu
+
 # Installation
 Download Raspbian Jessie Lite from https://www.raspberrypi.org/downloads/raspbian/ and copy it on your SD card.
 Alternatively, you may download EmonSD, a pre-built SD card image for Raspberry Pi running as an emonPi/emonBase
