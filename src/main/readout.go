@@ -84,7 +84,12 @@ func main() {
 			if config.Debuglevel > 0 {
 				fmt.Println(t.Format("## Actuals File Update ##"))
 				fmt.Println(t.Format("2006-01-02 15:04:05"))
-				fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  V1: %g  V2: %g  V3: %g  P1: %g  P2: %g  P3: %g  COS1: %g  COS2: %g  COS3: %g  F1: %g  F2: %g  F3: %g  \n", valuesr[0], valuesr[1], valuesr[2], valuesr[3], valuesr[4], valuesr[5], valuesr[6], valuesr[7], valuesr[8], valuesr[9], valuesr[10], valuesr[11], valuesr[12], valuesr[13], valuesr[14], valuesr[15])
+				fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  ", data[0], data[1], data[2], data[3])
+				fmt.Printf("V1: %g  V2: %g  V3: %g  ", data[4], data[5], data[6])
+				fmt.Printf("P1: %g  P2: %g  P3: %g  ", data[7], data[8], data[9])
+				fmt.Printf("COS1: %g  COS2: %g  COS3: %g  ", data[10], data[11], data[12])
+				fmt.Printf("F1: %g  F2: %g  F3: %g  ", data[13], data[14], data[15])
+				fmt.Printf("\n")
 			}
 			var f *os.File
 			var err error
@@ -172,7 +177,14 @@ func main() {
 		if config.Debuglevel > 0 {
 			fmt.Println("## SQLITE Database Update ##")
 			fmt.Println(t.Format("2006-01-02 15:04:05"))
-			fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  V1: %g  V2: %g  V3: %g  P1: %g  P2: %g  P3: %g  COS1: %g  COS2: %g  COS3: %g  F1: %g  F2: %g  F3: %g  EB1: %g  EB2: %g  EB3: %g  EL1: %g  EL2: %g  EL3: %g \n", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15], data[16], data[17], data[18], data[19], data[20], data[21])
+			fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  ", data[0], data[1], data[2], data[3])
+			fmt.Printf("V1: %g  V2: %g  V3: %g  ", data[4], data[5], data[6])
+			fmt.Printf("P1: %g  P2: %g  P3: %g  ", data[7], data[8], data[9])
+			fmt.Printf("COS1: %g  COS2: %g  COS3: %g  ", data[10], data[11], data[12])
+			fmt.Printf("F1: %g  F2: %g  F3: %g  ", data[13], data[14], data[15])
+			fmt.Printf("EB1: %g  EB2: %g  EB3: %g  ", data[16], data[17], data[18])
+			fmt.Printf("EL1: %g  EL2: %g  EL3: %g", data[19], data[20], data[21])
+			fmt.Printf("\n")
 		}
 		if _, err := os.Stat(config.Databasedir + "/smartpi_logdata_" + t.Format("200601") + ".db"); os.IsNotExist(err) {
 			if config.Debuglevel > 0 {
