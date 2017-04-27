@@ -44,9 +44,12 @@ type Config struct {
 	Shareddir         string
 	Sharedfile        string
 	Powerfrequency    int
-	Measurevoltage1   int
-	Measurevoltage2   int
-	Measurevoltage3   int
+	MeasureCurrent1   int
+	MeasureCurrent2   int
+	MeasureCurrent3   int
+	MeasureVoltage1   int
+	MeasureVoltage2   int
+	MeasureVoltage3   int
 	Voltage1          float64
 	Voltage2          float64
 	Voltage3          float64
@@ -92,9 +95,13 @@ func (p *Config) ReadParameterFromFile() {
 	p.Shareddir = cfg.Section("device").Key("shared_dir").String()
 	p.Sharedfile = cfg.Section("device").Key("shared_file").String()
 	p.Powerfrequency, _ = cfg.Section("device").Key("power_frequency").Int()
-	p.Measurevoltage1, _ = cfg.Section("device").Key("measure_voltage_1").Int()
-	p.Measurevoltage2, _ = cfg.Section("device").Key("measure_voltage_2").Int()
-	p.Measurevoltage3, _ = cfg.Section("device").Key("measure_voltage_3").Int()
+	p.MeasureVoltage1, _ = cfg.Section("device").Key("measure_voltage_1").Int()
+	p.MeasureVoltage2, _ = cfg.Section("device").Key("measure_voltage_2").Int()
+	p.MeasureVoltage3, _ = cfg.Section("device").Key("measure_voltage_3").Int()
+	p.MeasureCurrent1, _ = cfg.Section("device").Key("measure_current_1").Int()
+	p.MeasureCurrent2, _ = cfg.Section("device").Key("measure_current_2").Int()
+	p.MeasureCurrent3, _ = cfg.Section("device").Key("measure_current_3").Int()
+	p.Voltage1, _ = cfg.Section("device").Key("voltage_1").Float64()
 	p.Voltage1, _ = cfg.Section("device").Key("voltage_1").Float64()
 	p.Voltage2, _ = cfg.Section("device").Key("voltage_2").Float64()
 	p.Voltage3, _ = cfg.Section("device").Key("voltage_3").Float64()
