@@ -1,0 +1,5 @@
+# Ignore built binaries.
+bin
+
+# Ignore CSV logs.
+*.csv

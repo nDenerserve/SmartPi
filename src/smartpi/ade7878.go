@@ -418,131 +418,131 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 		switch i {
 
 		case 0:
-			// current phase a
-			dataAddress[0] = 0x43 //0x43C0 (AIRMS; Current rms an A)
+			// Current phase A (amps).
+			dataAddress[0] = 0x43 // 0x43C0 (AIRMS; Current rms an A)
 			dataAddress[1] = 0xC0
 			data = make([]byte, 4)
 		case 1:
-			// current phase b
-			dataAddress[0] = 0x43 //0x43C2 (BIRMS; Current rms an B)
+			// Current phase B (amps).
+			dataAddress[0] = 0x43 // 0x43C2 (BIRMS; Current rms an B)
 			dataAddress[1] = 0xC2
 			data = make([]byte, 4)
 		case 2:
-			// current phase c
-			dataAddress[0] = 0x43 //0x43C4 (CIRMS; Current rms an C)
+			// Current phase C (amps).
+			dataAddress[0] = 0x43 // 0x43C4 (CIRMS; Current rms an C)
 			dataAddress[1] = 0xC4
 			data = make([]byte, 4)
 		case 3:
-			// current n
-			dataAddress[0] = 0x43 //0x43C6 (NIRMS; Current rms neutral conductor)
+			// Current Neutral (amps)
+			dataAddress[0] = 0x43 // 0x43C6 (NIRMS; Current rms neutral conductor)
 			dataAddress[1] = 0xC6
 			data = make([]byte, 4)
 		case 4:
-			// voltage phase a
-			dataAddress[0] = 0x43 //0x43C1 (AVRMS; Voltage rms an A)
+			// Voltage phase A (volts)
+			dataAddress[0] = 0x43 // 0x43C1 (AVRMS; Voltage rms an A)
 			dataAddress[1] = 0xC1
 			data = make([]byte, 4)
 		case 5:
-			// voltage phase b
-			dataAddress[0] = 0x43 //0x43C3 (BVRMS; Voltage rms an B)
+			// Voltage phase B (volts)
+			dataAddress[0] = 0x43 // 0x43C3 (BVRMS; Voltage rms an B)
 			dataAddress[1] = 0xC3
 			data = make([]byte, 4)
 		case 6:
-			// voltage phase c
-			dataAddress[0] = 0x43 //0x43C5 (CVRMS; Voltage rms an C)
+			// Voltage phase C (volts)
+			dataAddress[0] = 0x43 // 0x43C5 (CVRMS; Voltage rms an C)
 			dataAddress[1] = 0xC5
 			data = make([]byte, 4)
 		case 7:
-			//  Phase A total active power.
-			dataAddress[0] = 0xE5 //0xE513 (AWATT total active power an A)
+			// Total active power phase A (watts).
+			dataAddress[0] = 0xE5 // 0xE513 (AWATT total active power an A)
 			dataAddress[1] = 0x13
 			data = make([]byte, 4)
 		case 8:
-			//  Phase A total active power.
-			dataAddress[0] = 0xE5 //0xE514 (BWATT total active power an B)
+			// Total active power phase A (watts).
+			dataAddress[0] = 0xE5 // 0xE514 (BWATT total active power an B)
 			dataAddress[1] = 0x14
 			data = make([]byte, 4)
 		case 9:
-			//  Phase A total active power.
-			dataAddress[0] = 0xE5 //0xE515 (CWATT total active power an C)
+			// Total active power phase A (watts).
+			dataAddress[0] = 0xE5 // 0xE515 (CWATT total active power an C)
 			dataAddress[1] = 0x15
 			data = make([]byte, 4)
 		case 10:
-			// cosphi phase a
-			dataAddress[0] = 0xE6 //0xE601 (ANGLE0 cosphi an A)
+			// Cosphi phase A
+			dataAddress[0] = 0xE6 // 0xE601 (ANGLE0 cosphi an A)
 			dataAddress[1] = 0x01
 			data = make([]byte, 2)
 		case 11:
-			// cosphi phase b
-			dataAddress[0] = 0xE6 //0xE602 (ANGLE1 cosphi an B)
+			// Cosphi phase B
+			dataAddress[0] = 0xE6 // 0xE602 (ANGLE1 cosphi an B)
 			dataAddress[1] = 0x02
 			data = make([]byte, 2)
 		case 12:
-			// cosphi phase c
-			dataAddress[0] = 0xE6 //0xE603 (ANGLE1 cosphi an B)
+			// Cosphi phase C
+			dataAddress[0] = 0xE6 // 0xE603 (ANGLE1 cosphi an B)
 			dataAddress[1] = 0x03
 			data = make([]byte, 2)
 		case 13:
-			// frequency phase a
-			register := []byte{0xE7, 0x00, 0x1C} //MMODE-Register measure frequency at VA
+			// Frequency phase A (hertz).
+			register := []byte{0xE7, 0x00, 0x1C} // MMODE-Register measure frequency at VA
 			err := d.Write(register)
 			if err != nil {
 				panic(err)
 			}
 			time.Sleep(50 * time.Millisecond)
-			dataAddress[0] = 0xE6 //0xE607 (PERIOD)
+			dataAddress[0] = 0xE6 // 0xE607 (PERIOD)
 			dataAddress[1] = 0x07
 			data = make([]byte, 2)
 		case 14:
-			// frequency phase b
-			register := []byte{0xE7, 0x00, 0x1D} //MMODE-Register measure frequency at VB
+			// Frequency phase B (hertz).
+			register := []byte{0xE7, 0x00, 0x1D} // MMODE-Register measure frequency at VB
 			err = d.Write(register)
 			if err != nil {
 				panic(err)
 			}
 			time.Sleep(50 * time.Millisecond)
-			dataAddress[0] = 0xE6 //0xE607 (PERIOD)
+			dataAddress[0] = 0xE6 // 0xE607 (PERIOD)
 			dataAddress[1] = 0x07
 			data = make([]byte, 2)
 		case 15:
-			// frequency phase c
-			register := []byte{0xE7, 0x00, 0x1E} //MMODE-Register measure frequency at VC
+			// Frequency phase C (hertz).
+			register := []byte{0xE7, 0x00, 0x1E} // MMODE-Register measure frequency at VC
 			err = d.Write(register)
 			if err != nil {
 				panic(err)
 			}
 			time.Sleep(50 * time.Millisecond)
-			dataAddress[0] = 0xE6 //0xE607 (PERIOD)
+			dataAddress[0] = 0xE6 // 0xE607 (PERIOD)
 			dataAddress[1] = 0x07
 			data = make([]byte, 2)
 		case 16:
-			//  Phase A total apparent power.
-			dataAddress[0] = 0xE5 //0xE519 (AVA total apparent power an A)
+			// Total apparent power phase A (volt-amps).
+			dataAddress[0] = 0xE5 // 0xE519 (AVA total apparent power an A)
 			dataAddress[1] = 0x19
 			data = make([]byte, 4)
 		case 17:
-			//  Phase A total apparent power.
-			dataAddress[0] = 0xE5 //0xE51A (BVA total apparent power an B)
+			// Total apparent power phase B (volt-amps).
+			dataAddress[0] = 0xE5 // 0xE51A (BVA total apparent power an B)
 			dataAddress[1] = 0x1A
 			data = make([]byte, 4)
 		case 18:
-			//  Phase A total apparent power.
-			dataAddress[0] = 0xE5 //0xE51B (CVA total apparent power an C)
+			// Total apparent power phase C (volt-amps).
+			dataAddress[0] = 0xE5 // 0xE51B (CVA total apparent power an C)
 			dataAddress[1] = 0x1B
 			data = make([]byte, 4)
 		case 19:
-			//  Phase A total reactive power.
-			dataAddress[0] = 0xE5 //0xE516 (AVAR total reactive power an A)
+			// Total reactive power phase A (volt-ampere reactive).
+			dataAddress[0] = 0xE5 // 0xE516 (AVAR total reactive power an A)
 			dataAddress[1] = 0x16
 			data = make([]byte, 4)
 		case 20:
-			//  Phase A total reactive power.
-			dataAddress[0] = 0xE5 //0xE517 (BVAR total reactive power an B)
+			// Total reactive power phase B (volt-ampere reactive).
+			dataAddress[0] = 0xE5 // 0xE517 (BVAR total reactive power an B)
 			dataAddress[1] = 0x17
 			data = make([]byte, 4)
 		case 21:
-			//  Phase A total reactive power.
-			dataAddress[0] = 0xE5 //0xE518 (CVAR total reactive power an C)
+			// Total reactive power phase C (volt-ampere reactive).
+			dataAddress[0] = 0xE5 // 0xE518 (CVAR total reactive power an C)
 			dataAddress[1] = 0x18
 			data = make([]byte, 4)
 		}
@@ -714,8 +714,15 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 		}
 
 	}
-	fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  V1: %g  V2: %g  V3: %g  P1: %g  P2: %g  P3: %g  COS1: %g  COS2: %g  COS3: %g  F1: %g  F2: %g  F3: %g  AVA: %g  BVA: %g  CVA: %g  AVAR: %g  BVAR: %g  CVAR: %g  PFA: %g  PFB: %g  PFC: %g  \n", values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8], values[9], values[10], values[11], values[12], values[13], values[14], values[15], values[16], values[17], values[18], values[19], values[20], values[21], values[22], values[23], values[24])
+	fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  ", values[0], values[1], values[2], values[3])
+	fmt.Printf("V1: %g  V2: %g  V3: %g  ", values[4], values[5], values[6])
+	fmt.Printf("P1: %g  P2: %g  P3: %g  ", values[7], values[8], values[9])
+	fmt.Printf("COS1: %g  COS2: %g  COS3: %g  ", values[10], values[11], values[12])
+	fmt.Printf("F1: %g  F2: %g  F3: %g  ", values[13], values[14], values[15])
+	fmt.Printf("AVA: %g  BVA: %g  CVA: %g  ", values[16], values[17], values[18])
+	fmt.Printf("AVAR: %g  BVAR: %g  CVAR: %g  ", values[20], values[20], values[21])
+	fmt.Printf("PFA: %g  PFB: %g  PFC: %g  ", values[22], values[23], values[24])
+	fmt.Printf("\n")
 
 	return values
-
 }
