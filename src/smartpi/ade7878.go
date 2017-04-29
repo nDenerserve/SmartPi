@@ -92,201 +92,114 @@ func initPiForADE7878() {
 }
 
 func InitADE7878(c *Config) (*i2c.Device, error) {
-
-	var dataAddress []byte
-	dataAddress = make([]byte, 3)
-	var i2cLock []byte
-	i2cLock = make([]byte, 1)
-
 	d, err := i2c.Open(&i2c.Devfs{Dev: I2C_DEVICE}, ADE7878_ADDR)
 	if err != nil {
 		panic(err)
 	}
 
-	dataAddress[0] = 0xEC //0xEC01 (CONFIG2-REGISTER)
-	dataAddress[1] = 0x01
-	dataAddress[2] = 0x02 //00000010 --> Bedeutet I2C-Lock (I2C ist nun die gewählte Übertragungsart)
-
-	err = d.Write(dataAddress)
+	// 0xEC01 (CONFIG2-REGISTER)
+	// 00000010 --> Bedeutet I2C-Lock (I2C ist nun die gewählte Übertragungsart)
+	err = d.Write([]byte{0xEC, 0x01, 0x02})
 	if err != nil {
 		panic(err)
 	}
 
-	dataAddress = make([]byte, 1)
-	dataAddress[0] = 0xEC //0xEC01 (CONFIG2-REGISTER)
-
-	err = d.Write(dataAddress)
+	// 0xE1 (CONFIG2-REGISTER)
+	err = d.Write([]byte{0xEC})
 	if err != nil {
 		panic(err)
 	}
 
+	// Read i2cLock
+	i2cLock := make([]byte, 1)
 	err = d.Read(i2cLock)
 	if err != nil {
 		panic(err)
 	}
 
-	dataAddress = make([]byte, 3)
-	dataAddress[0] = 0xE7 //0xE7FE writeprotection
-	dataAddress[1] = 0xFE
-	dataAddress[2] = 0xAD
-
-	err = d.Write(dataAddress)
-	if err != nil {
-		panic(err)
-	}
-	dataAddress[0] = 0xE7 //0xE7E3 writeprotection OFF
-	dataAddress[1] = 0xE3
-	dataAddress[2] = 0x00
-
-	err = d.Write(dataAddress)
+	// 0xE7FE writeprotection
+	err = d.Write([]byte{0xE7, 0xFE, 0xAD})
 	if err != nil {
 		panic(err)
 	}
 
-	// dataAddress = make([]byte, 6)
-	// dataAddress[0] = 0x43;//0x43B6 (HPFDIS-REGISTER)
-	// dataAddress[1] = 0xB6;
-	// dataAddress[2] = 0x00;
-	// dataAddress[3] = 0x00;
-	// dataAddress[4] = 0x00;
-	// dataAddress[5] = 0x00;
-	//
-	// err = d.Write(dataAddress)
+	// 0xE7E3 writeprotection OFF
+	err = d.Write([]byte{0xE7, 0xE3, 0x00})
+	if err != nil {
+		panic(err)
+	}
+
+	// // 0x43B6 (HPFDIS-REGISTER)
+	// err = d.Write([]byte{0x43, 0xB6, 0x00, 0x00, 0x00, 0x00})
 	// if err != nil {
 	//     panic(err)
 	// }
 
-	// set the right power frequency to the COMPMODE-REGISTER
-	dataAddress = make([]byte, 4)
-	dataAddress[0] = 0xE6 //0xE60E (COMPMODE-REGISTER)
-	dataAddress[1] = 0x0E
+	// Set the right power frequency to the COMPMODE-REGISTER.
+	// 0xE60E (COMPMODE-REGISTER)
 	if c.Powerfrequency == 60 {
-		dataAddress[2] = 0x41
-		dataAddress[3] = 0xFF
+		// 0x41FF 60Hz
+		err = d.Write([]byte{0xE6, 0x0E, 0x41, 0xFF})
 	} else {
-		dataAddress[2] = 0x01
-		dataAddress[3] = 0xFF
+		// 0x01FF 50Hz
+		err = d.Write([]byte{0xE6, 0x0E, 0x01, 0xFF})
 	}
-	err = d.Write(dataAddress)
 	if err != nil {
 		panic(err)
 	}
 
-	dataAddress = make([]byte, 5)
-	dataAddress[0] = 0x43 //0x43B5 (DICOEFF-REGISTER)
-	dataAddress[1] = 0xB5
-	dataAddress[2] = 0xFF
-	dataAddress[3] = 0x80
-	dataAddress[4] = 0x00
-
-	err = d.Write(dataAddress)
+	// 0x43B5 (DICOEFF-REGISTER)
+	err = d.Write([]byte{0x43, 0xB5, 0xFF, 0x80, 0x00})
 	if err != nil {
 		panic(err)
 	}
 
-	dataAddress = make([]byte, 6)
-	dataAddress[0] = 0x43 //0x43AB (WTHR1-REGISTER)
-	dataAddress[1] = 0xAB
-	dataAddress[2] = 0x00
-	dataAddress[3] = 0x00
-	dataAddress[4] = 0x00
-	dataAddress[5] = 0x17
-
-	err = d.Write(dataAddress)
+	//0x43AB (WTHR1-REGISTER)
+	err = d.Write([]byte{0x43, 0xAB, 0x00, 0x00, 0x00, 0x17})
 	if err != nil {
 		panic(err)
 	}
 
-	dataAddress = make([]byte, 6)
-	dataAddress[0] = 0x43 //0x43AC (WTHR0-REGISTER)
-	dataAddress[1] = 0xAC
-	dataAddress[2] = 0x00
-	dataAddress[3] = 0x85
-	dataAddress[4] = 0x60
-	dataAddress[5] = 0x16
-
-	err = d.Write(dataAddress)
+	//0x43AC (WTHR0-REGISTER)
+	err = d.Write([]byte{0x43, 0xAC, 0x00, 0x85, 0x60, 0x16})
 	if err != nil {
 		panic(err)
 	}
-	//
-	// dataAddress = make([]byte, 6)
-	// dataAddress[0] = 0x43;//0x43AD (VARTHR1-REGISTER)
-	// dataAddress[1] = 0xAD;
-	// dataAddress[2] = 0x17;
-	// dataAddress[3] = 0x85;
-	// dataAddress[4] = 0x60;
-	// dataAddress[5] = 0x16;
-	//
-	//
-	// err = d.Write(dataAddress)
+
+	// // 0x43AD (VARTHR1-REGISTER)
+	// err = d.Write([]byte{0x43, 0xAD, 0x17, 0x85, 0x60, 0x16})
 	// if err != nil {
 	//     panic(err)
 	// }
 	//
-	// dataAddress = make([]byte, 6)
-	// dataAddress[0] = 0x43;//0x43AE (VARTHR0-REGISTER)
-	// dataAddress[1] = 0xAE;
-	// dataAddress[2] = 0x17;
-	// dataAddress[3] = 0x85;
-	// dataAddress[4] = 0x60;
-	// dataAddress[5] = 0x16;
-	//
-	//
-	// err = d.Write(dataAddress)
+	// // 0x43AE (VARTHR0-REGISTER)
+	// err = d.Write([]byte{0x43, 0xAE, 0x17, 0x85, 0x60, 0x16})
 	// if err != nil {
 	//     panic(err)
 	// }
 	//
-	// dataAddress = make([]byte, 6)
-	// dataAddress[0] = 0x43;//0x43A9 (VATHR1-REGISTER)
-	// dataAddress[1] = 0xA9;
-	// dataAddress[2] = 0x17;
-	// dataAddress[3] = 0x85;
-	// dataAddress[4] = 0x60;
-	// dataAddress[5] = 0x16;
-	//
-	//
-	// err = d.Write(dataAddress)
+	// // 0x43A9 (VATHR1-REGISTER)
+	// err = d.Write([]byte{0x43, 0xA9, 0x17, 0x85, 0x60, 0x16})
 	// if err != nil {
 	//     panic(err)
 	// }
 	//
-	// dataAddress = make([]byte, 6)
-	// dataAddress[0] = 0x43;//0x43AA (VARTHR0-REGISTER)
-	// dataAddress[1] = 0xAA;
-	// dataAddress[2] = 0x17;
-	// dataAddress[3] = 0x85;
-	// dataAddress[4] = 0x60;
-	// dataAddress[5] = 0x16;
-	//
-	//
-	// err = d.Write(dataAddress)
+	// // 0x43AA (VARTHR0-REGISTER)
+	// err = d.Write([]byte{0x43, 0xAA, 0x17, 0x85, 0x60, 0x16})
 	// if err != nil {
 	//     panic(err)
 	// }
 
-	dataAddress = make([]byte, 6)
-	dataAddress[0] = 0x43 //0x43B3 (VLEVEL-REGISTER)
-	dataAddress[1] = 0xB3
-	dataAddress[2] = 0x00
-	dataAddress[3] = 0x0C
-	dataAddress[4] = 0xEC
-	dataAddress[5] = 0x85
-
-	err = d.Write(dataAddress)
+	// 0x43B3 (VLEVEL-REGISTER)
+	err = d.Write([]byte{0x43, 0xB3, 0x00, 0x0C, 0xEC, 0x85})
 	if err != nil {
 		panic(err)
 	}
 
 	time.Sleep(875 * time.Millisecond)
 
-	// dataAddress = make([]byte, 2)
-	// dataAddress[0] = 0x43;//0x4381 (AVGAIN-REGISTER)
-	// dataAddress[1] = 0x81;
-	// data = make([]byte, 4)
-	//
-	// err = d.Write(dataAddress)
+	// // 0x4381 (AVGAIN-REGISTER)
+	// err = d.Write([]byte{0x43, 0x81})
 	// if err != nil {
 	// 		panic(err)
 	// }
@@ -298,95 +211,56 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 	// outcome = float32(FACTOR_3*int(data[0])+FACTOR_2*int(data[1])+FACTOR_1*int(data[2])+int(data[3]))
 	// fmt.Printf("AVGAIN-REGISTER VORHER%g   %x %x %x %x \n", outcome, data[0], data[1], data[2], data[3])
 
-	dataAddress = make([]byte, 6)
-	dataAddress[0] = 0x43 //0x4381 (AVGAIN-REGISTER)
-	dataAddress[1] = 0x81
-	dataAddress[2] = 0xFF
-	dataAddress[3] = 0xFC
-	dataAddress[4] = 0x1C
-	dataAddress[5] = 0xC2
-
-	err = d.Write(dataAddress)
+	// 0x4381 (AVGAIN-REGISTER)
+	err = d.Write([]byte{0x43, 0x81, 0xFF, 0xFC, 0x1C, 0xC2})
 	if err != nil {
 		panic(err)
 	}
 
-	dataAddress = make([]byte, 6)
-	dataAddress[0] = 0x43 //0x4383 (BVGAIN-REGISTER)
-	dataAddress[1] = 0x83
-	dataAddress[2] = 0xFF
-	dataAddress[3] = 0xFB
-	dataAddress[4] = 0xCA
-	dataAddress[5] = 0x60
-
-	err = d.Write(dataAddress)
+	// 0x4383 (BVGAIN-REGISTER)
+	err = d.Write([]byte{0x43, 0x83, 0xFF, 0xFB, 0xCA, 0x60})
 	if err != nil {
 		panic(err)
 	}
 
-	dataAddress = make([]byte, 6)
-	dataAddress[0] = 0x43 //0x4385 (CVGAIN-REGISTER)
-	dataAddress[1] = 0x85
-	dataAddress[2] = 0xFF
-	dataAddress[3] = 0xFC
-	dataAddress[4] = 0x12
-	dataAddress[5] = 0xDE
-
-	err = d.Write(dataAddress)
+	// 0x4385 (CVGAIN-REGISTER)
+	err = d.Write([]byte{0x43, 0x85, 0xFF, 0xFC, 0x12, 0xDE})
 	if err != nil {
 		panic(err)
 	}
 
 	// Line cycle mode
-	dataAddress = make([]byte, 3)
-	dataAddress[0] = 0xE7 //0xE702 LCYCMODE
-	dataAddress[1] = 0x02
-	dataAddress[2] = 0x0F
-
-	err = d.Write(dataAddress)
+	// 0xE702 LCYCMODE
+	err = d.Write([]byte{0xE7, 0x02, 0x0F})
 	if err != nil {
 		panic(err)
 	}
 
 	// Line cycle mode count
-	dataAddress = make([]byte, 3)
-	dataAddress[0] = 0xE6 //0xE60C LINECYC
-	dataAddress[1] = 0x0C
-	dataAddress[2] = 0xC8
-
-	err = d.Write(dataAddress)
+	// 0xE60C LINECYC
+	err = d.Write([]byte{0xE6, 0x0C, 0xC8})
 	if err != nil {
 		panic(err)
 	}
 
-	dataAddress = make([]byte, 3)
-	dataAddress[0] = 0xE7 //0xE7FE writeprotection
-	dataAddress[1] = 0xFE
-	dataAddress[2] = 0xAD
-
-	err = d.Write(dataAddress)
-	if err != nil {
-		panic(err)
-	}
-	dataAddress[0] = 0xE7 //0xE7E3 writeprotection
-	dataAddress[1] = 0xE3
-	dataAddress[2] = 0x80
-
-	err = d.Write(dataAddress)
+	// 0xE7FE writeprotection
+	err = d.Write([]byte{0xE7, 0xFE, 0xAD})
 	if err != nil {
 		panic(err)
 	}
 
-	dataAddress = make([]byte, 4)
-	dataAddress[0] = 0xE2 //0xE228 (RUN-Register)
-	dataAddress[1] = 0x28
-	dataAddress[2] = 0x00
-	dataAddress[3] = 0x01
-
-	err = d.Write(dataAddress)
+	// 0xE7E3 writeprotection
+	err = d.Write([]byte{0xE7, 0xE3, 0x80})
 	if err != nil {
 		panic(err)
 	}
+
+	// 0xE228 (RUN-Register)
+	err = d.Write([]byte{0xE2, 0x28, 0x00, 0x01})
+	if err != nil {
+		panic(err)
+	}
+
 	return d, nil
 }
 
@@ -592,7 +466,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 			if c.MeasureCurrent3 == 1 {
 				values[2] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_C) / CURRENT_CLAMP_FACTOR_C) * 100.0 * OFFSET_CURRENT_C
 			} else {
-				 values[2] = 0.0
+				values[2] = 0.0
 			}
 		case 3:
 			values[3] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_N) / CURRENT_CLAMP_FACTOR_N) * 100.0 * OFFSET_CURRENT_N
