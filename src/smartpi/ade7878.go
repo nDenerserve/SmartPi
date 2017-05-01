@@ -42,9 +42,6 @@ const (
 	ADE7878_CLOCK             float32 = 256000
 	FACTOR_CIRCLE             float32 = 360
 	VAL                       float32 = math.Pi / 180.0
-	FACTOR_1                  int     = 256
-	FACTOR_2                  int     = 65536
-	FACTOR_3                  int     = 16777216
 	RMS_FACTOR_VOLTAGE        float32 = 2427873
 	CURRENT_RESISTOR_A        float32 = 7.07107
 	CURRENT_RESISTOR_B        float32 = 7.07107
@@ -226,16 +223,7 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 	time.Sleep(875 * time.Millisecond)
 
 	// // 0x4381 (AVGAIN-REGISTER)
-	// err = d.Write([]byte{0x43, 0x81})
-	// if err != nil {
-	// 		panic(err)
-	// }
-	// err = d.Read(data)
-	// if err != nil {
-	// 		panic(err)
-	// }
-	//
-	// outcome = float32(FACTOR_3*int(data[0])+FACTOR_2*int(data[1])+FACTOR_1*int(data[2])+int(data[3]))
+	// outcome := DeviceFetchInt(d, 4, []byte{0x43, 0x81})
 	// fmt.Printf("AVGAIN-REGISTER VORHER%g   %x %x %x %x \n", outcome, data[0], data[1], data[2], data[3])
 
 	// 0x4381 (AVGAIN-REGISTER)
@@ -377,7 +365,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 		values[7] = 0.0
 	}
 	if c.Currentdirection1 == 1 {
-		values[7] = values[7] * -1
+		values[7] *= -1
 	}
 	if !voltage_measure_1 {
 		values[7] = values[0] * values[4]
@@ -392,7 +380,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 		values[8] = 0.0
 	}
 	if c.Currentdirection2 == 1 {
-		values[8] = values[8] * -1
+		values[8] *= -1
 	}
 	if !voltage_measure_2 {
 		values[8] = values[1] * values[5]
@@ -407,7 +395,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 		values[9] = 0.0
 	}
 	if c.Currentdirection3 == 1 {
-		values[9] = values[9] * -1
+		values[9] *= -1
 	}
 	if !voltage_measure_3 {
 		values[9] = values[2] * values[6]
@@ -417,7 +405,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	outcome = float32(DeviceFetchInt(d, 2, []byte{0xE6, 0x01}))
 	values[10] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
 	if c.Currentdirection1 == 1 {
-		values[10] = values[10] * -1
+		values[10] *= -1
 	}
 	if c.MeasureVoltage1 == 0 {
 		values[10] = 1.0
@@ -427,7 +415,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	outcome = float32(DeviceFetchInt(d, 2, []byte{0xE6, 0x02}))
 	values[11] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
 	if c.Currentdirection2 == 1 {
-		values[11] = values[11] * -1
+		values[11] *= -1
 	}
 	if c.MeasureVoltage2 == 0 {
 		values[11] = 1.0
@@ -437,7 +425,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	outcome = float32(DeviceFetchInt(d, 2, []byte{0xE6, 0x03}))
 	values[12] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
 	if c.Currentdirection3 == 1 {
-		values[12] = values[12] * -1
+		values[12] *= -1
 	}
 	if c.MeasureVoltage3 == 0 {
 		values[12] = 1.0
@@ -502,7 +490,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 		values[19] = 0.0
 	}
 	if c.Currentdirection1 == 1 {
-		values[19] = values[19] * -1
+		values[19] *= -1
 	}
 
 	// Total reactive power phase B (volt-ampere reactive).
@@ -513,7 +501,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 		values[20] = 0.0
 	}
 	if c.Currentdirection2 == 1 {
-		values[20] = values[20] * -1
+		values[20] *= -1
 	}
 
 	// Total reactive power phase C (volt-ampere reactive).
@@ -524,7 +512,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 		values[21] = 0.0
 	}
 	if c.Currentdirection3 == 1 {
-		values[21] = values[21] * -1
+		values[21] *= -1
 	}
 
 	if math.Signbit(float64(values[19])) {
