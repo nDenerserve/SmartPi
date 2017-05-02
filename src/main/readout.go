@@ -35,6 +35,7 @@ import (
 	"path/filepath"
 	"smartpi"
 	"strconv"
+	"strings"
 	"time"
 
 	//import the Paho Go MQTT library
@@ -47,16 +48,20 @@ var readouts = [...]string{
 func writeSharedFile(c *smartpi.Config, values [25]float32) {
 	var f *os.File
 	var err error
+	s := make([]string, 16)
+	for i, v := range values[0:16] {
+		s[i] = fmt.Sprintf("%g", v)
+	}
 	t := time.Now()
 	timeStamp := t.Format("2006-01-02 15:04:05")
 	if c.Debuglevel > 0 {
 		fmt.Println(t.Format("## Shared File Update ##"))
 		fmt.Println(timeStamp)
-		fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  ", values[0], values[1], values[2], values[3])
-		fmt.Printf("V1: %g  V2: %g  V3: %g  ", values[4], values[5], values[6])
-		fmt.Printf("P1: %g  P2: %g  P3: %g  ", values[7], values[8], values[9])
-		fmt.Printf("COS1: %g  COS2: %g  COS3: %g  ", values[10], values[11], values[12])
-		fmt.Printf("F1: %g  F2: %g  F3: %g  ", values[13], values[14], values[15])
+		fmt.Printf("I1: %s  I2: %s  I3: %s  I4: %s  ", s[0], s[1], s[2], s[3])
+		fmt.Printf("V1: %s  V2: %s  V3: %s  ", s[4], s[5], s[6])
+		fmt.Printf("P1: %s  P2: %s  P3: %s  ", s[7], s[8], s[9])
+		fmt.Printf("COS1: %s  COS2: %s  COS3: %s  ", s[10], s[11], s[12])
+		fmt.Printf("F1: %s  F2: %s  F3: %s  ", s[13], s[14], s[15])
 		fmt.Printf("\n")
 	}
 	sharedFile := filepath.Join(c.Shareddir, c.Sharedfile)
@@ -73,7 +78,7 @@ func writeSharedFile(c *smartpi.Config, values [25]float32) {
 		}
 	}
 	defer f.Close()
-	_, err = f.WriteString(timeStamp + fmt.Sprintf(";%g;%g;%g;%g;%g;%g;%g;%g;%g;%g;%g;%g;%g;%g;%g;%g", values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8], values[9], values[10], values[11], values[12], values[13], values[14], values[15]))
+	_, err = f.WriteString(timeStamp + ";" + strings.Join(s, ";"))
 	if err != nil {
 		panic(err)
 	}
