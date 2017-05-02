@@ -191,42 +191,34 @@ func main() {
 			publishReadouts(config, mqttclient, valuesr)
 
 			for index, _ := range data {
-
 				switch index {
-
 				case 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15:
-					data[index] = data[index] + valuesr[index]/12.0
-					/*	if index==7 || index==8 || index==9 {
-						fmt.Printf("Index: %g,  Valuesr: %g, Data: %g \n", index, valuesr[index], data[index])
-					  }*/
-
+					data[index] += valuesr[index] / 12.0
 				case 16:
 					if valuesr[7] >= 0 {
-						data[index] = data[index] + float32(math.Abs(float64(valuesr[7])))/720.0
+						data[index] += float32(math.Abs(float64(valuesr[7]))) / 720.0
 					}
 				case 17:
 					if valuesr[8] >= 0 {
-						data[index] = data[index] + float32(math.Abs(float64(valuesr[8])))/720.0
+						data[index] += float32(math.Abs(float64(valuesr[8]))) / 720.0
 					}
 				case 18:
 					if valuesr[9] >= 0 {
-						data[index] = data[index] + float32(math.Abs(float64(valuesr[9])))/720.0
+						data[index] += float32(math.Abs(float64(valuesr[9]))) / 720.0
 					}
 				case 19:
 					if valuesr[7] < 0 {
-						data[index] = data[index] + float32(math.Abs(float64(valuesr[7])))/720.0
+						data[index] += float32(math.Abs(float64(valuesr[7]))) / 720.0
 					}
 				case 20:
 					if valuesr[8] < 0 {
-						data[index] = data[index] + float32(math.Abs(float64(valuesr[8])))/720.0
+						data[index] += float32(math.Abs(float64(valuesr[8]))) / 720.0
 					}
 				case 21:
 					if valuesr[9] < 0 {
-						data[index] = data[index] + float32(math.Abs(float64(valuesr[9])))/720.0
+						data[index] += float32(math.Abs(float64(valuesr[9]))) / 720.0
 					}
-
 				}
-
 			}
 			time.Sleep(5000 * time.Millisecond)
 		}
