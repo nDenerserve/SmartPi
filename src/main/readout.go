@@ -32,8 +32,10 @@ import (
 	"log"
 	"math"
 	"os"
+	"path/filepath"
 	"smartpi"
 	"strconv"
+	"strings"
 	"time"
 
 	//import the Paho Go MQTT library
@@ -43,9 +45,120 @@ import (
 var readouts = [...]string{
 	"I1", "I2", "I3", "I4", "V1", "V2", "V3", "P1", "P2", "P3", "COS1", "COS2", "COS3", "F1", "F2", "F3"}
 
+func writeSharedFile(c *smartpi.Config, values [25]float32) {
+	var f *os.File
+	var err error
+	s := make([]string, 16)
+	for i, v := range values[0:16] {
+		s[i] = fmt.Sprintf("%g", v)
+	}
+	t := time.Now()
+	timeStamp := t.Format("2006-01-02 15:04:05")
+	if c.Debuglevel > 0 {
+		fmt.Println(t.Format("## Shared File Update ##"))
+		fmt.Println(timeStamp)
+		fmt.Printf("I1: %s  I2: %s  I3: %s  I4: %s  ", s[0], s[1], s[2], s[3])
+		fmt.Printf("V1: %s  V2: %s  V3: %s  ", s[4], s[5], s[6])
+		fmt.Printf("P1: %s  P2: %s  P3: %s  ", s[7], s[8], s[9])
+		fmt.Printf("COS1: %s  COS2: %s  COS3: %s  ", s[10], s[11], s[12])
+		fmt.Printf("F1: %s  F2: %s  F3: %s  ", s[13], s[14], s[15])
+		fmt.Printf("\n")
+	}
+	sharedFile := filepath.Join(c.Shareddir, c.Sharedfile)
+	if _, err = os.Stat(sharedFile); os.IsNotExist(err) {
+		os.MkdirAll(c.Shareddir, 0777)
+		f, err = os.Create(sharedFile)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		f, err = os.OpenFile(sharedFile, os.O_WRONLY, 0666)
+		if err != nil {
+			panic(err)
+		}
+	}
+	defer f.Close()
+	_, err = f.WriteString(timeStamp + ";" + strings.Join(s, ";"))
+	if err != nil {
+		panic(err)
+	}
+	f.Sync()
+	f.Close()
+}
+
+func updateCounterFile(c *smartpi.Config, f string, v float64) {
+	t := time.Now()
+	var counter float64
+	counterFile, err := ioutil.ReadFile(f)
+	if err == nil {
+		counter, err = strconv.ParseFloat(string(counterFile), 64)
+		if err != nil {
+			counter = 0.0
+			log.Fatal(err)
+		}
+	} else {
+		counter = 0.0
+	}
+
+	if c.Debuglevel > 0 {
+		fmt.Println("## Persistent counter file update ##")
+		fmt.Println(t.Format("2006-01-02 15:04:05"))
+		fmt.Printf("File: %q  Current: %g  Increment: %g \n ", f, counter, v)
+	}
+
+	err = ioutil.WriteFile(f, []byte(strconv.FormatFloat(counter+v, 'f', 8, 64)), 0644)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func updateSQLiteDatabase(c *smartpi.Config, data []float32) {
+	t := time.Now()
+	if c.Debuglevel > 0 {
+		fmt.Println("## SQLITE Database Update ##")
+		fmt.Println(t.Format("2006-01-02 15:04:05"))
+		fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  ", data[0], data[1], data[2], data[3])
+		fmt.Printf("V1: %g  V2: %g  V3: %g  ", data[4], data[5], data[6])
+		fmt.Printf("P1: %g  P2: %g  P3: %g  ", data[7], data[8], data[9])
+		fmt.Printf("COS1: %g  COS2: %g  COS3: %g  ", data[10], data[11], data[12])
+		fmt.Printf("F1: %g  F2: %g  F3: %g  ", data[13], data[14], data[15])
+		fmt.Printf("EB1: %g  EB2: %g  EB3: %g  ", data[16], data[17], data[18])
+		fmt.Printf("EL1: %g  EL2: %g  EL3: %g", data[19], data[20], data[21])
+		fmt.Printf("\n")
+	}
+
+	dbFileName := "smartpi_logdata_" + t.Format("200601") + ".db"
+	if _, err := os.Stat(filepath.Join(c.Databasedir, dbFileName)); os.IsNotExist(err) {
+		if c.Debuglevel > 0 {
+			fmt.Printf("Databasefile doesn't exist. Create.")
+		}
+		smartpi.CreateSQlDatabase(c.Databasedir, t)
+	}
+	smartpi.InsertData(c.Databasedir, t, data)
+}
+
+func publishReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [25]float32) {
+	//[basetopic]/[node]/[keyname]
+	if c.MQTTenabled == 1 {
+		if mqttclient.IsConnected() {
+			if c.Debuglevel > 0 {
+				fmt.Println("Publishing readoputs via MQTT...")
+			}
+			for i := 0; i < len(readouts); i++ {
+				//fmt.Printf(config.MQTTtopic + "/" + readouts[i] + "\n")
+				topic := c.MQTTtopic + "/" + readouts[i]
+				if token := mqttclient.Publish(topic, 1, false, strconv.FormatFloat(float64(values[i]), 'f', 2, 32)); token.Wait() && token.Error() != nil {
+					fmt.Println(token.Error())
+				}
+			}
+		}
+	}
+}
+
 func main() {
 	config := smartpi.NewConfig()
-	var counter float64
+	consumerCounterFile := filepath.Join(config.Counterdir, "consumecounter")
+	producerCounterFile := filepath.Join(config.Counterdir, "producecounter")
 
 	var mqttclient MQTT.Client
 
@@ -57,14 +170,11 @@ func main() {
 		if config.Debuglevel > 0 {
 			fmt.Printf("Connecting to MQTT broker at %s\n", (config.MQTTbroker + ":" + config.MQTTbrokerport))
 		}
-
 		//create a MQTTClientOptions struct setting the broker address, clientid, user and password
-
 		opts := MQTT.NewClientOptions().AddBroker("tcp://" + config.MQTTbroker + ":" + config.MQTTbrokerport)
 		opts.SetClientID("SmartPi")
 		opts.SetUsername(config.MQTTuser)
 		opts.SetPassword(config.MQTTpass)
-
 		//create and start a client using the above ClientOptions
 		mqttclient = MQTT.NewClient(opts)
 		if mqtttoken := mqttclient.Connect(); mqtttoken.Wait() && mqtttoken.Error() != nil {
@@ -80,156 +190,49 @@ func main() {
 		for i := 0; i < 12; i++ {
 			valuesr := smartpi.ReadoutValues(device, config)
 
-			t := time.Now()
-			if config.Debuglevel > 0 {
-				fmt.Println(t.Format("## Actuals File Update ##"))
-				fmt.Println(t.Format("2006-01-02 15:04:05"))
-				fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  ", data[0], data[1], data[2], data[3])
-				fmt.Printf("V1: %g  V2: %g  V3: %g  ", data[4], data[5], data[6])
-				fmt.Printf("P1: %g  P2: %g  P3: %g  ", data[7], data[8], data[9])
-				fmt.Printf("COS1: %g  COS2: %g  COS3: %g  ", data[10], data[11], data[12])
-				fmt.Printf("F1: %g  F2: %g  F3: %g  ", data[13], data[14], data[15])
-				fmt.Printf("\n")
-			}
-			var f *os.File
-			var err error
-			if _, err = os.Stat(config.Shareddir + "/" + config.Sharedfile); os.IsNotExist(err) {
-				os.MkdirAll(config.Shareddir, 0777)
-				f, err = os.Create(config.Shareddir + "/" + config.Sharedfile)
-				if err != nil {
-					panic(err)
-				}
-			} else {
-				f, err = os.OpenFile(config.Shareddir+"/"+config.Sharedfile, os.O_WRONLY, 0666)
-				if err != nil {
-					panic(err)
-				}
-			}
-			defer f.Close()
-			_, err = f.WriteString(t.Format("2006-01-02 15:04:05") + fmt.Sprintf(";%g;%g;%g;%g;%g;%g;%g;%g;%g;%g;%g;%g;%g;%g;%g;%g", valuesr[0], valuesr[1], valuesr[2], valuesr[3], valuesr[4], valuesr[5], valuesr[6], valuesr[7], valuesr[8], valuesr[9], valuesr[10], valuesr[11], valuesr[12], valuesr[13], valuesr[14], valuesr[15]))
-			if err != nil {
-				panic(err)
-			}
-			f.Sync()
-			f.Close()
+			writeSharedFile(config, valuesr)
 
 			//Publish readouts to MQTT
-			//[basetopic]/[node]/[keyname]
-			if config.MQTTenabled == 1 {
-				if mqttclient.IsConnected() {
-					if config.Debuglevel > 0 {
-						fmt.Println("Publishing readoputs via MQTT...")
-					}
-					for i := 0; i < len(readouts); i++ {
-						//fmt.Printf(config.MQTTtopic + "/" + readouts[i] + "\n")
-						topic := config.MQTTtopic + "/" + readouts[i]
-						if token := mqttclient.Publish(topic, 1, false, strconv.FormatFloat(float64(valuesr[i]), 'f', 2, 32)); token.Wait() && token.Error() != nil {
-							fmt.Println(token.Error())
-						}
-					}
-				}
-			}
+			publishReadouts(config, mqttclient, valuesr)
 
 			for index, _ := range data {
-
 				switch index {
-
 				case 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15:
-					data[index] = data[index] + valuesr[index]/12.0
-					/*	if index==7 || index==8 || index==9 {
-						fmt.Printf("Index: %g,  Valuesr: %g, Data: %g \n", index, valuesr[index], data[index])
-					  }*/
-
+					data[index] += valuesr[index] / 12.0
 				case 16:
 					if valuesr[7] >= 0 {
-						data[index] = data[index] + float32(math.Abs(float64(valuesr[7])))/720.0
+						data[index] += float32(math.Abs(float64(valuesr[7]))) / 720.0
 					}
 				case 17:
 					if valuesr[8] >= 0 {
-						data[index] = data[index] + float32(math.Abs(float64(valuesr[8])))/720.0
+						data[index] += float32(math.Abs(float64(valuesr[8]))) / 720.0
 					}
 				case 18:
 					if valuesr[9] >= 0 {
-						data[index] = data[index] + float32(math.Abs(float64(valuesr[9])))/720.0
+						data[index] += float32(math.Abs(float64(valuesr[9]))) / 720.0
 					}
 				case 19:
 					if valuesr[7] < 0 {
-						data[index] = data[index] + float32(math.Abs(float64(valuesr[7])))/720.0
+						data[index] += float32(math.Abs(float64(valuesr[7]))) / 720.0
 					}
 				case 20:
 					if valuesr[8] < 0 {
-						data[index] = data[index] + float32(math.Abs(float64(valuesr[8])))/720.0
+						data[index] += float32(math.Abs(float64(valuesr[8]))) / 720.0
 					}
 				case 21:
 					if valuesr[9] < 0 {
-						data[index] = data[index] + float32(math.Abs(float64(valuesr[9])))/720.0
+						data[index] += float32(math.Abs(float64(valuesr[9]))) / 720.0
 					}
-
 				}
-
 			}
 			time.Sleep(5000 * time.Millisecond)
-
 		}
 
-		t := time.Now()
+		// Update SQLlite database.
+		updateSQLiteDatabase(config, data)
 
-		if config.Debuglevel > 0 {
-			fmt.Println("## SQLITE Database Update ##")
-			fmt.Println(t.Format("2006-01-02 15:04:05"))
-			fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  ", data[0], data[1], data[2], data[3])
-			fmt.Printf("V1: %g  V2: %g  V3: %g  ", data[4], data[5], data[6])
-			fmt.Printf("P1: %g  P2: %g  P3: %g  ", data[7], data[8], data[9])
-			fmt.Printf("COS1: %g  COS2: %g  COS3: %g  ", data[10], data[11], data[12])
-			fmt.Printf("F1: %g  F2: %g  F3: %g  ", data[13], data[14], data[15])
-			fmt.Printf("EB1: %g  EB2: %g  EB3: %g  ", data[16], data[17], data[18])
-			fmt.Printf("EL1: %g  EL2: %g  EL3: %g", data[19], data[20], data[21])
-			fmt.Printf("\n")
-		}
-		if _, err := os.Stat(config.Databasedir + "/smartpi_logdata_" + t.Format("200601") + ".db"); os.IsNotExist(err) {
-			if config.Debuglevel > 0 {
-				fmt.Printf("Databasefile doesn't exist. Create.")
-			}
-			smartpi.CreateSQlDatabase(config.Databasedir, t)
-		}
-		smartpi.InsertData(config.Databasedir, t, data)
-
-		consumecounter, err := ioutil.ReadFile(config.Counterdir + "/" + "consumecounter")
-		if err == nil {
-			counter, err = strconv.ParseFloat(string(consumecounter), 64)
-			if err != nil {
-				counter = 0.0
-				log.Fatal(err)
-			}
-
-		} else {
-			counter = 0.0
-		}
-
-		counter = counter + float64(data[16]+data[17]+data[18])
-
-		err = ioutil.WriteFile(config.Counterdir+"/"+"consumecounter", []byte(strconv.FormatFloat(counter, 'f', 8, 64)), 0644)
-		if err != nil {
-			panic(err)
-		}
-
-		producecounter, err := ioutil.ReadFile(config.Counterdir + "/" + "producecounter")
-		if err == nil {
-			counter, err = strconv.ParseFloat(string(producecounter), 64)
-			if err != nil {
-				counter = 0.0
-				log.Fatal(err)
-			}
-
-		} else {
-			counter = 0.0
-		}
-
-		counter = counter + float64(data[19]+data[20]+data[21])
-
-		err = ioutil.WriteFile(config.Counterdir+"/"+"producecounter", []byte(strconv.FormatFloat(counter, 'f', 8, 64)), 0644)
-		if err != nil {
-			panic(err)
-		}
+		// Update persistent counter files.
+		updateCounterFile(config, consumerCounterFile, float64(data[16]+data[17]+data[18]))
+		updateCounterFile(config, producerCounterFile, float64(data[19]+data[20]+data[21]))
 	}
 }
