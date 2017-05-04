@@ -51,3 +51,10 @@ mqtt_broker_port=""
 mqtt_username=""
 mqtt_password=""
 mqtt_topic=""
+
+[umts]
+umts=0
+umts_apn=""
+umts_pin=""
+umts_username=""
+umts_password=""
