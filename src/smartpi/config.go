@@ -33,13 +33,20 @@ import (
 )
 
 type Config struct {
-	Serial            string
-	Name              string
-	DebugLevel        int
-	Lat               float64
-	Lng               float64
-	CounterDir        string
-	DatabaseDir       string
+	// [base]
+	Serial     string
+	Name       string
+	DebugLevel int
+
+	// [location]
+	Lat float64
+	Lng float64
+
+	// [database]
+	CounterDir  string
+	DatabaseDir string
+
+	// [device]
 	I2CDevice         string
 	SharedDir         string
 	SharedFile        string
@@ -56,17 +63,21 @@ type Config struct {
 	CurrentDirection1 bool
 	CurrentDirection2 bool
 	CurrentDirection3 bool
-	FTPupload         bool
-	FTPserver         string
-	FTPuser           string
-	FTPpass           string
-	FTPpath           string
-	WebserverPort     int
-	DocRoot           string
-	CSVdecimalpoint   string
-	CSVtimeformat     string
 
-	// MQTT Settings
+	// [ftp]
+	FTPupload bool
+	FTPserver string
+	FTPuser   string
+	FTPpass   string
+	FTPpath   string
+
+	// [webserver]
+	WebserverPort   int
+	DocRoot         string
+	CSVdecimalpoint string
+	CSVtimeformat   string
+
+	// [mqtt]
 	MQTTenabled    bool
 	MQTTbroker     string
 	MQTTbrokerport string
@@ -82,13 +93,20 @@ func (p *Config) ReadParameterFromFile() {
 		panic(err)
 	}
 
+	// [base]
 	p.Serial = cfg.Section("base").Key("serial").String()
 	p.Name = cfg.Section("base").Key("name").String()
 	p.DebugLevel = cfg.Section("base").Key("debuglevel").MustInt(0)
+
+	// [location]
 	p.Lat = cfg.Section("location").Key("lat").MustFloat64(52.3667)
 	p.Lng = cfg.Section("location").Key("lng").MustFloat64(9.7167)
+
+	// [database]
 	p.CounterDir = cfg.Section("database").Key("counterdir").MustString("/var/smartpi")
 	p.DatabaseDir = cfg.Section("database").Key("dir").MustString("/var/smartpi/db")
+
+	// [device]
 	p.I2CDevice = cfg.Section("device").Key("i2c_device").MustString("/dev/i2c-1")
 	p.SharedDir = cfg.Section("device").Key("shared_dir").MustString("/var/tmp/smartpi")
 	p.SharedFile = cfg.Section("device").Key("shared_file").MustString("values")
@@ -105,17 +123,21 @@ func (p *Config) ReadParameterFromFile() {
 	p.CurrentDirection1 = cfg.Section("device").Key("change_current_direction_1").MustBool(false)
 	p.CurrentDirection2 = cfg.Section("device").Key("change_current_direction_2").MustBool(false)
 	p.CurrentDirection3 = cfg.Section("device").Key("change_current_direction_3").MustBool(false)
+
+	// [ftp]
 	p.FTPupload = cfg.Section("ftp").Key("ftp_upload").MustBool(false)
 	p.FTPserver = cfg.Section("ftp").Key("ftp_server").String()
 	p.FTPuser = cfg.Section("ftp").Key("ftp_user").String()
 	p.FTPpass = cfg.Section("ftp").Key("ftp_pass").String()
 	p.FTPpath = cfg.Section("ftp").Key("ftp_path").String()
+
+	// [webserver]
 	p.WebserverPort = cfg.Section("webserver").Key("port").MustInt(1080)
 	p.DocRoot = cfg.Section("webserver").Key("docroot").MustString("/var/smartpi/www")
 	p.CSVdecimalpoint = cfg.Section("csv").Key("decimalpoint").String()
 	p.CSVtimeformat = cfg.Section("csv").Key("timeformat").String()
 
-	//MQTT
+	// [mqtt]
 	p.MQTTenabled = cfg.Section("mqtt").Key("mqtt_enabled").MustBool(false)
 	p.MQTTbroker = cfg.Section("mqtt").Key("mqtt_broker_url").String()
 	p.MQTTbrokerport = cfg.Section("mqtt").Key("mqtt_broker_port").String()
