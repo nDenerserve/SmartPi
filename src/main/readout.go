@@ -33,7 +33,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"smartpi"
+	"github.com/nDenerserve/SmartPi/src/smartpi"
 	"strconv"
 	"strings"
 	"time"

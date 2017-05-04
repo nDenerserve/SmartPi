@@ -33,7 +33,7 @@ import (
 	"golang.org/x/net/context"
 	"log"
 	"net/http"
-	"smartpi"
+	"github.com/nDenerserve/SmartPi/src/smartpi"
 	"strconv"
 )
 

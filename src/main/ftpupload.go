@@ -33,7 +33,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"smartpi"
+	"github.com/nDenerserve/SmartPi/src/smartpi"
 	"strings"
 	"time"
 )
