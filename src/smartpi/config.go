@@ -53,6 +53,9 @@ type Config struct {
 	Voltage1          float64
 	Voltage2          float64
 	Voltage3          float64
+	CurrentDirection1 bool
+	CurrentDirection2 bool
+	CurrentDirection3 bool
 	FTPupload         int
 	FTPserver         string
 	FTPuser           string
@@ -60,9 +63,6 @@ type Config struct {
 	FTPpath           string
 	Webserverport     int
 	Docroot           string
-	Currentdirection1 int
-	Currentdirection2 int
-	Currentdirection3 int
 	CSVdecimalpoint   string
 	CSVtimeformat     string
 
@@ -103,6 +103,9 @@ func (p *Config) ReadParameterFromFile() {
 	p.Voltage1, _ = cfg.Section("device").Key("voltage_1").Float64()
 	p.Voltage2, _ = cfg.Section("device").Key("voltage_2").Float64()
 	p.Voltage3, _ = cfg.Section("device").Key("voltage_3").Float64()
+	p.CurrentDirection1 = cfg.Section("device").Key("change_current_direction_1").MustBool(false)
+	p.CurrentDirection2 = cfg.Section("device").Key("change_current_direction_2").MustBool(false)
+	p.CurrentDirection3 = cfg.Section("device").Key("change_current_direction_3").MustBool(false)
 	p.FTPupload, _ = cfg.Section("ftp").Key("ftp_upload").Int()
 	p.FTPserver = cfg.Section("ftp").Key("ftp_server").String()
 	p.FTPuser = cfg.Section("ftp").Key("ftp_user").String()
@@ -110,9 +113,6 @@ func (p *Config) ReadParameterFromFile() {
 	p.FTPpath = cfg.Section("ftp").Key("ftp_path").String()
 	p.Webserverport, _ = cfg.Section("webserver").Key("port").Int()
 	p.Docroot = cfg.Section("webserver").Key("docroot").String()
-	p.Currentdirection1, _ = cfg.Section("device").Key("change_current_direction_1").Int()
-	p.Currentdirection2, _ = cfg.Section("device").Key("change_current_direction_2").Int()
-	p.Currentdirection3, _ = cfg.Section("device").Key("change_current_direction_3").Int()
 	p.CSVdecimalpoint = cfg.Section("csv").Key("decimalpoint").String()
 	p.CSVtimeformat = cfg.Section("csv").Key("timeformat").String()
 

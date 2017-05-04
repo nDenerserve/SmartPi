@@ -364,7 +364,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	} else {
 		values[7] = 0.0
 	}
-	if c.Currentdirection1 == 1 {
+	if c.CurrentDirection1 {
 		values[7] *= -1
 	}
 	if !voltage_measure_1 {
@@ -379,7 +379,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	} else {
 		values[8] = 0.0
 	}
-	if c.Currentdirection2 == 1 {
+	if c.CurrentDirection2 {
 		values[8] *= -1
 	}
 	if !voltage_measure_2 {
@@ -394,7 +394,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	} else {
 		values[9] = 0.0
 	}
-	if c.Currentdirection3 == 1 {
+	if c.CurrentDirection3 {
 		values[9] *= -1
 	}
 	if !voltage_measure_3 {
@@ -404,7 +404,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	// 0xE601 (ANGLE0 cosphi an A)
 	outcome = float32(DeviceFetchInt(d, 2, []byte{0xE6, 0x01}))
 	values[10] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
-	if c.Currentdirection1 == 1 {
+	if c.CurrentDirection1 {
 		values[10] *= -1
 	}
 	if c.MeasureVoltage1 {
@@ -414,7 +414,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	// 0xE602 (ANGLE1 cosphi an B)
 	outcome = float32(DeviceFetchInt(d, 2, []byte{0xE6, 0x02}))
 	values[11] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
-	if c.Currentdirection2 == 1 {
+	if c.CurrentDirection2 {
 		values[11] *= -1
 	}
 	if c.MeasureVoltage2 {
@@ -424,7 +424,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	// 0xE603 (ANGLE1 cosphi an C)
 	outcome = float32(DeviceFetchInt(d, 2, []byte{0xE6, 0x03}))
 	values[12] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
-	if c.Currentdirection3 == 1 {
+	if c.CurrentDirection3 {
 		values[12] *= -1
 	}
 	if c.MeasureVoltage3 {
@@ -489,7 +489,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	} else {
 		values[19] = 0.0
 	}
-	if c.Currentdirection1 == 1 {
+	if c.CurrentDirection1 {
 		values[19] *= -1
 	}
 
@@ -500,7 +500,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	} else {
 		values[20] = 0.0
 	}
-	if c.Currentdirection2 == 1 {
+	if c.CurrentDirection2 {
 		values[20] *= -1
 	}
 
@@ -511,7 +511,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	} else {
 		values[21] = 0.0
 	}
-	if c.Currentdirection3 == 1 {
+	if c.CurrentDirection3 {
 		values[21] *= -1
 	}
 
