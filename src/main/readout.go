@@ -128,13 +128,13 @@ func updateSQLiteDatabase(c *smartpi.Config, data []float32) {
 	}
 
 	dbFileName := "smartpi_logdata_" + t.Format("200601") + ".db"
-	if _, err := os.Stat(filepath.Join(c.Databasedir, dbFileName)); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(c.DatabaseDir, dbFileName)); os.IsNotExist(err) {
 		if c.DebugLevel > 0 {
 			fmt.Printf("Creating new database file.")
 		}
-		smartpi.CreateSQlDatabase(c.Databasedir, t)
+		smartpi.CreateSQlDatabase(c.DatabaseDir, t)
 	}
-	smartpi.InsertData(c.Databasedir, t, data)
+	smartpi.InsertData(c.DatabaseDir, t, data)
 }
 
 func publishReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [25]float32) {
@@ -157,8 +157,8 @@ func publishReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [25]float
 
 func main() {
 	config := smartpi.NewConfig()
-	consumerCounterFile := filepath.Join(config.Counterdir, "consumecounter")
-	producerCounterFile := filepath.Join(config.Counterdir, "producecounter")
+	consumerCounterFile := filepath.Join(config.CounterDir, "consumecounter")
+	producerCounterFile := filepath.Join(config.CounterDir, "producecounter")
 
 	var mqttclient MQTT.Client
 

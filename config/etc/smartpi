@@ -8,8 +8,8 @@ lat=52.3667
 lng=9.7167
 
 [database]
-dir="/var/smartpi/db"
 counterdir="/var/smartpi"
+dir="/var/smartpi/db"
 
 [device]
 i2c_device="/dev/i2c-1"

@@ -38,7 +38,8 @@ type Config struct {
 	DebugLevel        int
 	Lat               float64
 	Lng               float64
-	Databasedir       string
+	CounterDir        string
+	DatabaseDir       string
 	I2cdevice         string
 	Shareddir         string
 	Sharedfile        string
@@ -64,7 +65,6 @@ type Config struct {
 	Currentdirection3 int
 	CSVdecimalpoint   string
 	CSVtimeformat     string
-	Counterdir        string
 
 	// MQTT Settings
 	MQTTenabled    int
@@ -87,8 +87,8 @@ func (p *Config) ReadParameterFromFile() {
 	p.DebugLevel = cfg.Section("base").Key("debuglevel").MustInt(0)
 	p.Lat, _ = cfg.Section("location").Key("lat").Float64()
 	p.Lng, _ = cfg.Section("location").Key("lng").Float64()
-	p.Databasedir = cfg.Section("database").Key("dir").String()
-	p.Counterdir = cfg.Section("database").Key("counterdir").String()
+	p.CounterDir = cfg.Section("database").Key("counterdir").MustString("/var/smartpi")
+	p.DatabaseDir = cfg.Section("database").Key("dir").MustString("/var/smartpi/db")
 	p.I2cdevice = cfg.Section("device").Key("i2c_device").String()
 	p.Shareddir = cfg.Section("device").Key("shared_dir").String()
 	p.Sharedfile = cfg.Section("device").Key("shared_file").String()
