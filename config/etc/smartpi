@@ -3,6 +3,7 @@ serial="smartpi160812345"
 name="House"
 # Valid log levels: panic, error, info, debug
 loglevel=info
+metrics_listen_address=":9246"
 
 [location]
 lat=52.3667
