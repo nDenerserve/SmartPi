@@ -42,7 +42,7 @@ func main() {
 
 	config := smartpi.NewConfig()
 
-	if config.FTPupload == 0 {
+	if config.FTPupload {
 		os.Exit(0)
 	}
 

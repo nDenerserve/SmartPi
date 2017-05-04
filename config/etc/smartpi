@@ -30,7 +30,7 @@ change_current_direction_2=0
 change_current_direction_3=0
 
 [ftp]
-ftp_upload=1
+ftp_upload=0
 ftp_server=ftp.xxxxx.xx
 ftp_user=xxxxxxxxxxx
 ftp_pass=xxxxxxxxxxxx

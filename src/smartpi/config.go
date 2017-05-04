@@ -56,7 +56,7 @@ type Config struct {
 	CurrentDirection1 bool
 	CurrentDirection2 bool
 	CurrentDirection3 bool
-	FTPupload         int
+	FTPupload         bool
 	FTPserver         string
 	FTPuser           string
 	FTPpass           string
@@ -106,7 +106,7 @@ func (p *Config) ReadParameterFromFile() {
 	p.CurrentDirection1 = cfg.Section("device").Key("change_current_direction_1").MustBool(false)
 	p.CurrentDirection2 = cfg.Section("device").Key("change_current_direction_2").MustBool(false)
 	p.CurrentDirection3 = cfg.Section("device").Key("change_current_direction_3").MustBool(false)
-	p.FTPupload, _ = cfg.Section("ftp").Key("ftp_upload").Int()
+	p.FTPupload = cfg.Section("ftp").Key("ftp_upload").MustBool(false)
 	p.FTPserver = cfg.Section("ftp").Key("ftp_server").String()
 	p.FTPuser = cfg.Section("ftp").Key("ftp_user").String()
 	p.FTPpass = cfg.Section("ftp").Key("ftp_pass").String()
