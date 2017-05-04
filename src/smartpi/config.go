@@ -39,7 +39,6 @@ type Config struct {
 	Lat               float64
 	Lng               float64
 	Databasedir       string
-	Databasefile      string
 	I2cdevice         string
 	Shareddir         string
 	Sharedfile        string
@@ -89,7 +88,6 @@ func (p *Config) ReadParameterFromFile() {
 	p.Lat, _ = cfg.Section("location").Key("lat").Float64()
 	p.Lng, _ = cfg.Section("location").Key("lng").Float64()
 	p.Databasedir = cfg.Section("database").Key("dir").String()
-	p.Databasefile = cfg.Section("database").Key("file").String()
 	p.Counterdir = cfg.Section("database").Key("counterdir").String()
 	p.I2cdevice = cfg.Section("device").Key("i2c_device").String()
 	p.Shareddir = cfg.Section("device").Key("shared_dir").String()

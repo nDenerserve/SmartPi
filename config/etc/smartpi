@@ -9,9 +9,7 @@ lng=9.7167
 
 [database]
 dir="/var/smartpi/db"
-file="smartpi.rrd"
 counterdir="/var/smartpi"
-
 
 [device]
 i2c_device="/dev/i2c-1"

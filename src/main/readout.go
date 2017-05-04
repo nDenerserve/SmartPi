@@ -130,7 +130,7 @@ func updateSQLiteDatabase(c *smartpi.Config, data []float32) {
 	dbFileName := "smartpi_logdata_" + t.Format("200601") + ".db"
 	if _, err := os.Stat(filepath.Join(c.Databasedir, dbFileName)); os.IsNotExist(err) {
 		if c.Debuglevel > 0 {
-			fmt.Printf("Databasefile doesn't exist. Create.")
+			fmt.Printf("Creating new database file.")
 		}
 		smartpi.CreateSQlDatabase(c.Databasedir, t)
 	}
