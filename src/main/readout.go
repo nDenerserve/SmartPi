@@ -33,7 +33,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"github.com/nDenerserve/SmartPi/src/smartpi"
+	"smartpi"
 	"strconv"
 	"strings"
 	"time"
@@ -140,16 +140,46 @@ func updateSQLiteDatabase(c *smartpi.Config, data []float32) {
 func publishReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [25]float32) {
 	//[basetopic]/[node]/[keyname]
 	if c.MQTTenabled {
+		// Let's try to (re-)connect if MQTT connection was lost.
+		if !mqttclient.IsConnected() {
+			if mqtttoken := mqttclient.Connect(); mqtttoken.Wait() && mqtttoken.Error() != nil {
+				if c.DebugLevel > 0 {
+					fmt.Println("Connecting to MQTT broker failed.\n   ", mqtttoken.Error())
+				}
+			}
+		}
 		if mqttclient.IsConnected() {
 			if c.DebugLevel > 0 {
 				fmt.Println("Publishing readoputs via MQTT...")
 			}
+			
+			// Status is used to stop MQTT publication sequence in case of first error.
+			var status = true
+			
 			for i := 0; i < len(readouts); i++ {
-				//fmt.Printf(config.MQTTtopic + "/" + readouts[i] + "\n")
 				topic := c.MQTTtopic + "/" + readouts[i]
-				if token := mqttclient.Publish(topic, 1, false, strconv.FormatFloat(float64(values[i]), 'f', 2, 32)); token.Wait() && token.Error() != nil {
-					fmt.Println(token.Error())
+				
+				if status {
+					if c.DebugLevel > 0 {
+						fmt.Println("  -> ", topic, ":" , values[i])
+					}
+					token := mqttclient.Publish(topic, 1, false, strconv.FormatFloat(float64(values[i]), 'f', 2, 32))
+					
+					if !token.WaitTimeout(2 * time.Second) {
+						if c.DebugLevel > 0 {
+							fmt.Println("  MQTT Timeout. Stopping MQTT sequence.")
+						}
+						status = false
+					} else if token.Error() != nil {
+						if c.DebugLevel > 0 {
+							fmt.Println(token.Error())
+						}
+						status = false
+					}
 				}
+			}
+			if c.DebugLevel > 0 {
+				fmt.Println("done.")
 			}
 		}
 	}
@@ -175,10 +205,18 @@ func main() {
 		opts.SetClientID("SmartPi")
 		opts.SetUsername(config.MQTTuser)
 		opts.SetPassword(config.MQTTpass)
+		opts.SetAutoReconnect(true)
+		opts.SetConnectTimeout(3 * time.Second)
+		opts.SetPingTimeout(1 * time.Second)
+		opts.SetKeepAlive(1 * time.Second)
+		opts.SetMaxReconnectInterval(3 * time.Second)
 		//create and start a client using the above ClientOptions
 		mqttclient = MQTT.NewClient(opts)
 		if mqtttoken := mqttclient.Connect(); mqtttoken.Wait() && mqtttoken.Error() != nil {
-			panic(mqtttoken.Error())
+			//panic(mqtttoken.Error())
+			if config.DebugLevel > 0 {
+				fmt.Println("Connecting to MQTT broker failed.\n   ", mqtttoken.Error())
+			}
 		}
 	}
 
