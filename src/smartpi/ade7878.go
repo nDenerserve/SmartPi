@@ -330,7 +330,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	outcome = float32(DeviceFetchInt(d, 4, []byte{0x43, 0xC1}))
 	values[4] = float32(outcome / 1e+4)
 	voltage_measure_1 = true
-	if c.MeasureVoltage1 || values[4] < 10 {
+	if !c.MeasureVoltage1 || values[4] < 10 {
 		values[4] = float32(c.Voltage1)
 		voltage_measure_1 = false
 	}
@@ -340,7 +340,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	outcome = float32(DeviceFetchInt(d, 4, []byte{0x43, 0xC3}))
 	values[5] = float32(outcome / 1e+4)
 	voltage_measure_2 = true
-	if c.MeasureVoltage2 || values[5] < 10 {
+	if !c.MeasureVoltage2 || values[5] < 10 {
 		values[5] = float32(c.Voltage2)
 		voltage_measure_2 = false
 	}
@@ -350,7 +350,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	outcome = float32(DeviceFetchInt(d, 4, []byte{0x43, 0xC5}))
 	values[6] = float32(outcome / 1e+4)
 	voltage_measure_3 = true
-	if c.MeasureVoltage3 || values[6] < 10 {
+	if !c.MeasureVoltage3 || values[6] < 10 {
 		values[6] = float32(c.Voltage3)
 		voltage_measure_3 = false
 	}
