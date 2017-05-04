@@ -8,10 +8,8 @@ lat=52.3667
 lng=9.7167
 
 [database]
-dir="/var/smartpi/db"
-file="smartpi.rrd"
 counterdir="/var/smartpi"
-
+dir="/var/smartpi/db"
 
 [device]
 i2c_device="/dev/i2c-1"
@@ -32,7 +30,7 @@ change_current_direction_2=0
 change_current_direction_3=0
 
 [ftp]
-ftp_upload=1
+ftp_upload=0
 ftp_server=ftp.xxxxx.xx
 ftp_user=xxxxxxxxxxx
 ftp_pass=xxxxxxxxxxxx
@@ -53,10 +51,3 @@ mqtt_broker_port=""
 mqtt_username=""
 mqtt_password=""
 mqtt_topic=""
-
-[umts]
-umts=0
-umts_apn=
-umts_pin=
-umts_username=
-umts_password=

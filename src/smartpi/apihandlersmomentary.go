@@ -58,7 +58,7 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 	valueId := vars["valueId"]
 
 	config := NewConfig()
-	file, err := os.Open(config.Shareddir + "/" + config.Sharedfile)
+	file, err := os.Open(config.SharedDir + "/" + config.SharedFile)
 	Checklog(err)
 	defer file.Close()
 	reader := csv.NewReader(file)

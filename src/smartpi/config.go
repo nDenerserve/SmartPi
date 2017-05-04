@@ -33,42 +33,52 @@ import (
 )
 
 type Config struct {
-	Serial            string
-	Name              string
-	Debuglevel        int
-	Lat               float64
-	Lng               float64
-	Databasedir       string
-	Databasefile      string
-	I2cdevice         string
-	Shareddir         string
-	Sharedfile        string
-	Powerfrequency    int
-	MeasureCurrent1   int
-	MeasureCurrent2   int
-	MeasureCurrent3   int
-	MeasureVoltage1   int
-	MeasureVoltage2   int
-	MeasureVoltage3   int
+	// [base]
+	Serial     string
+	Name       string
+	DebugLevel int
+
+	// [location]
+	Lat float64
+	Lng float64
+
+	// [database]
+	CounterDir  string
+	DatabaseDir string
+
+	// [device]
+	I2CDevice         string
+	SharedDir         string
+	SharedFile        string
+	PowerFrequency    int
+	MeasureCurrent1   bool
+	MeasureCurrent2   bool
+	MeasureCurrent3   bool
+	MeasureVoltage1   bool
+	MeasureVoltage2   bool
+	MeasureVoltage3   bool
 	Voltage1          float64
 	Voltage2          float64
 	Voltage3          float64
-	FTPupload         int
-	FTPserver         string
-	FTPuser           string
-	FTPpass           string
-	FTPpath           string
-	Webserverport     int
-	Docroot           string
-	Currentdirection1 int
-	Currentdirection2 int
-	Currentdirection3 int
-	CSVdecimalpoint   string
-	CSVtimeformat     string
-	Counterdir        string
+	CurrentDirection1 bool
+	CurrentDirection2 bool
+	CurrentDirection3 bool
 
-	// MQTT Settings
-	MQTTenabled    int
+	// [ftp]
+	FTPupload bool
+	FTPserver string
+	FTPuser   string
+	FTPpass   string
+	FTPpath   string
+
+	// [webserver]
+	WebserverPort   int
+	DocRoot         string
+	CSVdecimalpoint string
+	CSVtimeformat   string
+
+	// [mqtt]
+	MQTTenabled    bool
 	MQTTbroker     string
 	MQTTbrokerport string
 	MQTTuser       string
@@ -83,43 +93,52 @@ func (p *Config) ReadParameterFromFile() {
 		panic(err)
 	}
 
+	// [base]
 	p.Serial = cfg.Section("base").Key("serial").String()
 	p.Name = cfg.Section("base").Key("name").String()
-	p.Debuglevel, _ = cfg.Section("base").Key("debuglevel").Int()
-	p.Lat, _ = cfg.Section("location").Key("lat").Float64()
-	p.Lng, _ = cfg.Section("location").Key("lng").Float64()
-	p.Databasedir = cfg.Section("database").Key("dir").String()
-	p.Databasefile = cfg.Section("database").Key("file").String()
-	p.Counterdir = cfg.Section("database").Key("counterdir").String()
-	p.I2cdevice = cfg.Section("device").Key("i2c_device").String()
-	p.Shareddir = cfg.Section("device").Key("shared_dir").String()
-	p.Sharedfile = cfg.Section("device").Key("shared_file").String()
-	p.Powerfrequency, _ = cfg.Section("device").Key("power_frequency").Int()
-	p.MeasureVoltage1, _ = cfg.Section("device").Key("measure_voltage_1").Int()
-	p.MeasureVoltage2, _ = cfg.Section("device").Key("measure_voltage_2").Int()
-	p.MeasureVoltage3, _ = cfg.Section("device").Key("measure_voltage_3").Int()
-	p.MeasureCurrent1, _ = cfg.Section("device").Key("measure_current_1").Int()
-	p.MeasureCurrent2, _ = cfg.Section("device").Key("measure_current_2").Int()
-	p.MeasureCurrent3, _ = cfg.Section("device").Key("measure_current_3").Int()
-	p.Voltage1, _ = cfg.Section("device").Key("voltage_1").Float64()
-	p.Voltage1, _ = cfg.Section("device").Key("voltage_1").Float64()
-	p.Voltage2, _ = cfg.Section("device").Key("voltage_2").Float64()
-	p.Voltage3, _ = cfg.Section("device").Key("voltage_3").Float64()
-	p.FTPupload, _ = cfg.Section("ftp").Key("ftp_upload").Int()
+	p.DebugLevel = cfg.Section("base").Key("debuglevel").MustInt(0)
+
+	// [location]
+	p.Lat = cfg.Section("location").Key("lat").MustFloat64(52.3667)
+	p.Lng = cfg.Section("location").Key("lng").MustFloat64(9.7167)
+
+	// [database]
+	p.CounterDir = cfg.Section("database").Key("counterdir").MustString("/var/smartpi")
+	p.DatabaseDir = cfg.Section("database").Key("dir").MustString("/var/smartpi/db")
+
+	// [device]
+	p.I2CDevice = cfg.Section("device").Key("i2c_device").MustString("/dev/i2c-1")
+	p.SharedDir = cfg.Section("device").Key("shared_dir").MustString("/var/tmp/smartpi")
+	p.SharedFile = cfg.Section("device").Key("shared_file").MustString("values")
+	p.PowerFrequency = cfg.Section("device").Key("power_frequency").MustInt(50)
+	p.MeasureVoltage1 = cfg.Section("device").Key("measure_voltage_1").MustBool(true)
+	p.MeasureVoltage2 = cfg.Section("device").Key("measure_voltage_2").MustBool(true)
+	p.MeasureVoltage3 = cfg.Section("device").Key("measure_voltage_3").MustBool(true)
+	p.MeasureCurrent1 = cfg.Section("device").Key("measure_current_1").MustBool(true)
+	p.MeasureCurrent2 = cfg.Section("device").Key("measure_current_2").MustBool(true)
+	p.MeasureCurrent3 = cfg.Section("device").Key("measure_current_3").MustBool(true)
+	p.Voltage1 = cfg.Section("device").Key("voltage_1").MustFloat64(230)
+	p.Voltage2 = cfg.Section("device").Key("voltage_2").MustFloat64(230)
+	p.Voltage3 = cfg.Section("device").Key("voltage_3").MustFloat64(230)
+	p.CurrentDirection1 = cfg.Section("device").Key("change_current_direction_1").MustBool(false)
+	p.CurrentDirection2 = cfg.Section("device").Key("change_current_direction_2").MustBool(false)
+	p.CurrentDirection3 = cfg.Section("device").Key("change_current_direction_3").MustBool(false)
+
+	// [ftp]
+	p.FTPupload = cfg.Section("ftp").Key("ftp_upload").MustBool(false)
 	p.FTPserver = cfg.Section("ftp").Key("ftp_server").String()
 	p.FTPuser = cfg.Section("ftp").Key("ftp_user").String()
 	p.FTPpass = cfg.Section("ftp").Key("ftp_pass").String()
 	p.FTPpath = cfg.Section("ftp").Key("ftp_path").String()
-	p.Webserverport, _ = cfg.Section("webserver").Key("port").Int()
-	p.Docroot = cfg.Section("webserver").Key("docroot").String()
-	p.Currentdirection1, _ = cfg.Section("device").Key("change_current_direction_1").Int()
-	p.Currentdirection2, _ = cfg.Section("device").Key("change_current_direction_2").Int()
-	p.Currentdirection3, _ = cfg.Section("device").Key("change_current_direction_3").Int()
+
+	// [webserver]
+	p.WebserverPort = cfg.Section("webserver").Key("port").MustInt(1080)
+	p.DocRoot = cfg.Section("webserver").Key("docroot").MustString("/var/smartpi/www")
 	p.CSVdecimalpoint = cfg.Section("csv").Key("decimalpoint").String()
 	p.CSVtimeformat = cfg.Section("csv").Key("timeformat").String()
 
-	//MQTT
-	p.MQTTenabled, _ = cfg.Section("mqtt").Key("mqtt_enabled").Int()
+	// [mqtt]
+	p.MQTTenabled = cfg.Section("mqtt").Key("mqtt_enabled").MustBool(false)
 	p.MQTTbroker = cfg.Section("mqtt").Key("mqtt_broker_url").String()
 	p.MQTTbrokerport = cfg.Section("mqtt").Key("mqtt_broker_port").String()
 	p.MQTTuser = cfg.Section("mqtt").Key("mqtt_username").String()

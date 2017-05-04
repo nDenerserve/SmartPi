@@ -49,7 +49,7 @@ func InsertData(databasedir string, t time.Time, v []float32) {
 		log.Fatal(err)
 	}
 
-	// if (config.Debuglevel > 0){
+	// if (config.DebugLevel > 0){
 	fmt.Printf("INSERT INTO smartpi_logdata_%s (date, current_1, current_2, current_3, current_4, voltage_1, voltage_2, voltage_3, power_1, power_2, power_3, cosphi_1, cosphi_2, cosphi_3, frequency_1, frequency_2, frequency_3, energy_pos_1, energy_pos_2, energy_pos_3, energy_neg_1, energy_neg_2, energy_neg_3) values (%s,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f)\n", t.Format("200601"), t.Format("2006-01-02 15:04:05"), v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11], v[12], v[13], v[14], v[15], v[16], v[17], v[18], v[19], v[20], v[21])
 	// }
 

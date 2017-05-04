@@ -93,9 +93,9 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	fmt.Println("ReadChartData " + config.Databasedir + " " + start.Format(time.RFC3339) + " " + end.Format(time.RFC3339))
+	fmt.Println("ReadChartData " + config.DatabaseDir + " " + start.Format(time.RFC3339) + " " + end.Format(time.RFC3339))
 
-	data := ReadChartData(config.Databasedir, start, end)
+	data := ReadChartData(config.DatabaseDir, start, end)
 
 	// fmt.Printf("%v", export)
 
@@ -218,9 +218,9 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	fmt.Println("ReadDayData " + config.Databasedir + " " + start.Format(time.RFC3339) + " " + end.Format(time.RFC3339) + " |" + start.Location().String() + "|| " + start.Local().String())
+	fmt.Println("ReadDayData " + config.DatabaseDir + " " + start.Format(time.RFC3339) + " " + end.Format(time.RFC3339) + " |" + start.Location().String() + "|| " + start.Local().String())
 
-	data := ReadDayData(config.Databasedir, start, end)
+	data := ReadDayData(config.DatabaseDir, start, end)
 
 	// fmt.Printf("%v", export)
 

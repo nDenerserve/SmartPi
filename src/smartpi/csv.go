@@ -42,7 +42,7 @@ func CreateCSV(start time.Time, end time.Time) string {
 
 	config := NewConfig()
 
-	data := ReadChartData(config.Databasedir, start, end)
+	data := ReadChartData(config.DatabaseDir, start, end)
 
 	csv := "date;current_1;current_2;current_3;current_4;voltage_1;voltage_2;voltage_3;power_1;power_2;power_3;cosphi_1;cosphi_2;cosphi_3;frequency_1;frequency_2;frequency_3;energy_pos_1;energy_pos_2;energy_pos_3;energy_neg_1;energy_neg_2;energy_neg_3"
 	csv = csv + "\n"
