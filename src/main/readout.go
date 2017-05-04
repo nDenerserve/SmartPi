@@ -31,6 +31,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math"
+	"net/http"
 	"os"
 	"path/filepath"
 	"smartpi"
@@ -38,8 +39,13 @@ import (
 	"strings"
 	"time"
 
+        "golang.org/x/exp/io/i2c"
+
 	//import the Paho Go MQTT library
 	MQTT "github.com/eclipse/paho.mqtt.golang"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/version"
 )
 
 var readouts = [...]string{
@@ -185,16 +191,11 @@ func publishReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [25]float
 	}
 }
 
-func main() {
-	config := smartpi.NewConfig()
-	consumerCounterFile := filepath.Join(config.CounterDir, "consumecounter")
-	producerCounterFile := filepath.Join(config.CounterDir, "producecounter")
-
+func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 	var mqttclient MQTT.Client
 
-	if config.DebugLevel > 0 {
-		fmt.Printf("Start SmartPi readout\n")
-	}
+	consumerCounterFile := filepath.Join(config.CounterDir, "consumecounter")
+	producerCounterFile := filepath.Join(config.CounterDir, "producecounter")
 
 	if config.MQTTenabled {
 		if config.DebugLevel > 0 {
@@ -219,9 +220,6 @@ func main() {
 			}
 		}
 	}
-
-	device, _ := smartpi.InitADE7878(config)
-
 	for {
 		data := make([]float32, 22)
 
@@ -272,5 +270,39 @@ func main() {
 		// Update persistent counter files.
 		updateCounterFile(config, consumerCounterFile, float64(data[16]+data[17]+data[18]))
 		updateCounterFile(config, producerCounterFile, float64(data[19]+data[20]+data[21]))
+	}
+}
+
+func init() {
+	prometheus.MustRegister(version.NewCollector("smartpi"))
+}
+
+func main() {
+	config := smartpi.NewConfig()
+
+	listenAddress := config.MetricsListenAddress
+
+	if config.DebugLevel > 0 {
+		fmt.Printf("Start SmartPi readout\n")
+	}
+
+	device, _ := smartpi.InitADE7878(config)
+
+	go pollSmartPi(config, device)
+
+	http.Handle("/metrics", prometheus.Handler())
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`<html>
+            <head><title>SmartPi Readout Metrics Server</title></head>
+            <body>
+            <h1>SmartPi Readout Metrics Server</h1>
+            <p><a href="/metrics">Metrics</a></p>
+            </body>
+            </html>`))
+	})
+
+	fmt.Println("Listening on %s", listenAddress)
+	if err := http.ListenAndServe(listenAddress, nil); err != nil {
+		panic(fmt.Errorf("Error starting HTTP server: %s", err))
 	}
 }

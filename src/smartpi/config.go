@@ -34,9 +34,10 @@ import (
 
 type Config struct {
 	// [base]
-	Serial     string
-	Name       string
-	DebugLevel int
+	Serial               string
+	Name                 string
+	DebugLevel           int
+	MetricsListenAddress string
 
 	// [location]
 	Lat float64
@@ -97,6 +98,7 @@ func (p *Config) ReadParameterFromFile() {
 	p.Serial = cfg.Section("base").Key("serial").String()
 	p.Name = cfg.Section("base").Key("name").String()
 	p.DebugLevel = cfg.Section("base").Key("debuglevel").MustInt(0)
+	p.MetricsListenAddress = cfg.Section("base").Key("metrics_listen_address").MustString(":9246")
 
 	// [location]
 	p.Lat = cfg.Section("location").Key("lat").MustFloat64(52.3667)
