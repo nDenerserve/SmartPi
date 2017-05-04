@@ -26,17 +26,17 @@
 package smartpi
 
 import (
-    "log"
+	"log"
 )
 
 func Checkpanic(e error) {
-  if e != nil {
-      panic(e)
-  }
+	if e != nil {
+		panic(e)
+	}
 }
 
 func Checklog(e error) {
-  if e != nil {
-    log.Fatal(e)
-  }
+	if e != nil {
+		log.Fatal(e)
+	}
 }

@@ -22,29 +22,24 @@ debug   = False # Enable/disable debug output on console
 emoncms = True  # Enable/disbale emoncms upload
 
 # SmartPi Settings
-file_to_watch = "/home/pi/data/smartpi/values"
+file_to_watch = "/var/tmp/smartpi/values"
 items = ["timestamp", "I1", "I2", "I3", "I4", "V1", "V2", "V3", "P1", "P2", "P3", "Cos1", "Cos2", "Cos3", "F1", "F2", "F3"]
 
 # Emoncms Settings
 # Domain you want to post to: "localhost" would be this host.
 # This could be changed to "emoncms.org" to post to external hosted emoncms platform.
 # Alternative you may give any IP address.
-domain = "127.0.0.1"
+domain = "192.168.0.21"
 
 # Location of emoncms in your server, the standard setup is to place it in a folder called emoncms
 # To post to emoncms.org change this to blank: ""
 emoncmspath = "emoncms"
 
 # Write apikey of emoncms account
-apikey = "ef7daf50ce902eeb9453ef2dbcf899c0"
+apikey = "ff3e0ac708599b561236eead0e729e5e"
 
 # Node id the script to appear in emoncms as
 nodeid = 5
-
-########################################
-#####    End of Settings section   #####
-##### Do not edit beyond this line #####
-########################################
 
 def file_to_timestamp(file):
     return dict ([(file, os.path.getmtime(file))])

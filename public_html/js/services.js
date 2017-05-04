@@ -11,6 +11,22 @@ angular.module('smartpi.services', ['ngResource'])
     return $resource(full+'/api/chart/:phase/:category/from/:startdate/to/:enddate');
 })
 
+.factory('$GetDatabaseData', function($resource){
+    var full = location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '');
+    return $resource(full+'/api/values/:phase/:category/from/:startdate/to/:enddate');
+})
+
+.factory('$GetDayData', function($resource){
+    var full = location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '');
+    return $resource(full+'/api/dayvalues/:phase/:category/from/:startdate/to/:enddate');
+})
+
+.factory('$GetCSVData', function($resource){
+  var factory = {}
+    var full = location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '');
+    return $resource(full+'/api/csv/from/:startdate/to/:enddate');
+})
+
 
 // .factory('services', ['$http', function($http){
 //   var serviceBase = 'services/'

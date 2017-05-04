@@ -27,26 +27,67 @@
 package main
 
 import (
-    "smartpi"
-    "log"
-    "net/http"
-    "github.com/gorilla/mux"
-    "strconv"
-    "fmt"
+	"crypto/subtle"
+	"fmt"
+	"github.com/gorilla/mux"
+	"golang.org/x/net/context"
+	"log"
+	"net/http"
+	"github.com/nDenerserve/SmartPi/src/smartpi"
+	"strconv"
 )
+
+func stringInSlice(list1 []string, list2 []string) bool {
+	for _, a := range list1 {
+		for _, b := range list2 {
+			if b == a {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func BasicAuth(realm string, handler http.HandlerFunc, u *smartpi.User, roles ...string) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		user, pass, ok := r.BasicAuth()
+
+		u.ReadUserFromFile(user)
+
+		roleAllowed := false
+		if len(roles) > 0 && stringInSlice(u.Role, roles) {
+			roleAllowed = true
+		} else if len(roles) == 0 {
+			roleAllowed = true
+		}
+
+		if !ok || !u.Exist || subtle.ConstantTimeCompare([]byte(user), []byte(u.Name)) != 1 || subtle.ConstantTimeCompare([]byte(pass), []byte(u.Password)) != 1 || !roleAllowed {
+			w.Header().Set("WWW-Authenticate", `Basic realm="`+realm+`"`)
+			w.WriteHeader(401)
+			w.Write([]byte("Unauthorised.\n"))
+			return
+		}
+		ctx := context.WithValue(r.Context(), "Username", u)
+		handler(w, r.WithContext(ctx))
+	}
+}
 
 func main() {
 
+	config := smartpi.NewConfig()
+	user := smartpi.NewUser()
+	fmt.Println("SmartPi server started")
 
-  //router := smartpi.NewRouter()
-    config := smartpi.NewConfig()
-    fmt.Println("SmartPi server started")
-
-    r := mux.NewRouter()
-    r.HandleFunc("/api/{phaseId}/{valueId}/now", smartpi.ServeMomentaryValues)
-    r.HandleFunc("/api/chart/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeChartValues)
-    r.PathPrefix("/").Handler(http.FileServer(http.Dir(config.Docroot)))
-    http.Handle("/", r)
-    log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.Webserverport), nil))
-  //log.Fatal(http.ListenAndServe(":8080", router))
+	r := mux.NewRouter()
+	r.HandleFunc("/api/{phaseId}/{valueId}/now", smartpi.ServeMomentaryValues)
+	r.HandleFunc("/api/chart/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeChartValues)
+	r.HandleFunc("/api/values/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeChartValues)
+	r.HandleFunc("/api/dayvalues/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeDayValues)
+	r.HandleFunc("/api/csv/from/{fromDate}/to/{toDate}", smartpi.ServeCSVValues)
+	r.HandleFunc("/api/config/read/name/{name}", BasicAuth("Please enter your username and password for this site", smartpi.ReadConfig, user, "administrator"))
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir(config.DocRoot)))
+	http.Handle("/", r)
+	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.WebserverPort), nil))
 }

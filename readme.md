@@ -1,21 +1,41 @@
+# Forum
+https://forum.enerserve.eu
+
 # Installation
 Download Raspbian Jessie Lite from https://www.raspberrypi.org/downloads/raspbian/ and copy it on your SD card.
 Alternatively, you may download EmonSD, a pre-built SD card image for Raspberry Pi running as an emonPi/emonBase
 Download https://github.com/openenergymonitor/emonpi/wiki/emonSD-pre-built-SD-card-Download-&-Change-Log
 
-* Expand Filesystem
-* Change user (pi) password
-* Advanced Options > Enable I2C
-	sudo raspi-config 
-
-##### Update packet list and update packets
+##### Update packet list and update packages
 
     sudo apt-get update
     sudo apt-get upgrade
 
-##### Install additional packets. Especially, "librrd-dev" is required to build SmartPi tools.
+##### Install additional packages.
 
-    sudo apt-get install librrd-dev rrdtool git i2c-tools avahi-daemon
+    $ sudo apt-get install sqlite3 git i2c-tools avahi-daemon
+
+For building SmartPi tools, additional packages are required.
+
+    sudo apt-get install librrd-dev
+
+##### Enable i2c kernel module
+
+`i2c-dev` is required for communicating with the SmartPi.
+
+To check to see if the module is loaded:
+
+    sudo lsmod | grep i2c
+
+This should return something like this:
+
+    i2c_dev                 5859  0
+    i2c_bcm2708             4834  0
+
+If the module is not listed, add it to the system.
+
+    echo 'i2c-dev' | sudo tee -a /etc/modules
+    sudo modprobe 'i2c-dev'
 
 ##### Test if i2c is correctly enabled:
 
@@ -32,60 +52,44 @@ Channel 1 in my case
 
 In case of an SmartPi connected to an RPI3, the output should look like this:
 
-		 0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
-	00:          -- -- -- -- -- -- -- -- -- -- -- -- --
-	10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-	20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-	30: -- -- -- -- -- -- -- -- 38 -- -- -- -- -- -- --
-	40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-	50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-	60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-	70: -- -- -- -- -- -- -- --
-	
+         0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+    00:          -- -- -- -- -- -- -- -- -- -- -- -- --
+    10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+    20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+    30: -- -- -- -- -- -- -- -- 38 -- -- -- -- -- -- --
+    40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+    50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+    60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+    70: -- -- -- -- -- -- -- --
+
+##### Remove old go version
+    sudo apt-get remove golang
+    sudo apt-get autoremove
+
 ##### Install go
 Download the archive and extract it into /usr/local, creating a Go tree in /usr/local/go.
-Currently version 1.7.3 is up to date. You may need to adapt the filenamy according to latest version.
-	
+Currently version 1.8.1 is up to date. You may need to adapt the filename according to latest version.
+
     cd /usr/local
-    sudo wget https://storage.googleapis.com/golang/go1.7.3.linux-armv6l.tar.gz
-    sudo tar -C /usr/local -xzf go1.7.3.linux-armv6l.tar.gz
-    sudo rm go1.7.3.linux-armv6l.tar.gz
+    curl -s https://storage.googleapis.com/golang/go1.8.1.linux-armv6l.tar.gz | sudo tar -xvz
+    echo 'PATH="/usr/local/go/bin:${PATH}"' | sudo tee -a /etc/profile
 
-Add "/usr/local/go/bin" to the PATH environment variable.
-You can do this by adding this line to your /etc/profile (for a system-wide installation) before the path is being exported.
-
-    PATH=$PATH:/usr/local/go/bin
+In order for the `${PATH}` to be updated, you will need to logout.
 
 Create a directory to contain your workspace and SmartPi git-repo, $HOME/SmartPi in this case,
 and set the GOPATH environment variable to point to that location.
 
-    $ export GOPATH=$HOME/SmartPi
+    export GOPATH="${HOME}/SmartPi"
 
 Download of SmartPi sources
 
     cd ~
     git clone https://github.com/nDenerserve/SmartPi.git
 
-Delete some Go library folders of Smartpi git repository if present.
-We will create them again. (Caused problem on my rpi.)
-
-    rm ~/SmartPi/src/github.com
-    rm ~/SmartPi/src/golang.org
-    rm ~/SmartPi/src/gopkg.in
-
-##### Go dependencies:
-
-    go get github.com/gorilla/mux
-    go get github.com/nathan-osman/go-rpigpio
-    go get github.com/ziutek/rrd
-    go get gopkg.in/ini.v1
-    go get github.com/secsy/goftp
-    go get golang.org/x/exp/io/i2c
-    go get github.com/eclipse/paho.mqtt.golang 
-
 ##### build SmartPi tools
-	cd  ~/SmartPi
-	make
+
+    cd  ~/SmartPi
+    make
 
 ##### emonSD Specifics
 The emonSD provides a read-only file system for most areas.
@@ -111,5 +115,13 @@ In SmartPi's configif file ```/etc/smartpi``` you may set the following settings
  * Added this readme.md
  
 ## ToDo's:
-   * Round Robin Logging
+   * Logging
    * Improved error handling
+
+### 02/10/17
+ * changed from rrdtool to sqlite3
+ * added csv-export
+ * changed from Bootstrap to Angular Material
+ * change datelayout in API to RFC3339
+ * fixed errors in datehandling
+ * added week consumption

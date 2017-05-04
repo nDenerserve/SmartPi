@@ -28,354 +28,340 @@ File: apihandlersmomentary.go
 Description: Handels API requests
 */
 
-
-
 package smartpi
 
 import (
-    "encoding/json"
-    "fmt"
-    "net/http"
-    "os"
-    "encoding/csv"
-    "github.com/gorilla/mux"
-    "strconv"
-    "time"
-		"math"
+	"encoding/csv"
+	"encoding/json"
+	"fmt"
+	"github.com/gorilla/mux"
+	"math"
+	"net/http"
+	"os"
+	"strconv"
+	"time"
 )
 
 func Index(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprintln(w, "Welcome!")
+	fmt.Fprintln(w, "Welcome!")
 }
 
-
-
 func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
-	  var phases = []*tPhase{}
-	  var datasets = []*tDataset{}
-	  var tempVal *tValue
-	  var tempPhase *tPhase
-	  var tempDataset *tDataset
+	var phases = []*tPhase{}
+	var datasets = []*tDataset{}
+	var tempVal *tValue
+	var tempPhase *tPhase
+	var tempDataset *tDataset
 
-	  vars := mux.Vars(r)
-	  phaseId := vars["phaseId"]
-	  valueId := vars["valueId"]
+	vars := mux.Vars(r)
+	phaseId := vars["phaseId"]
+	valueId := vars["valueId"]
 
-      config := NewConfig()
-	  file, err := os.Open(config.Shareddir+"/"+config.Sharedfile)
-	  Checklog(err)
-	  defer file.Close()
-	  reader := csv.NewReader(file)
-		reader.Comma = ';'
-	  records, err := reader.Read()
-	  Checklog(err)
+	config := NewConfig()
+	file, err := os.Open(config.SharedDir + "/" + config.SharedFile)
+	Checklog(err)
+	defer file.Close()
+	reader := csv.NewReader(file)
+	reader.Comma = ';'
+	records, err := reader.Read()
+	Checklog(err)
 
-	  t := time.Now()
+	t := time.Now()
 
-			 // API request for single values
-		 if valueId=="current" || valueId=="voltage" || valueId=="power" || valueId=="cosphi" || valueId=="frequency" {
+	// API request for single values
+	if valueId == "current" || valueId == "voltage" || valueId == "power" || valueId == "cosphi" || valueId == "frequency" {
 
-				 // request for one of the phases
-				 if (phaseId == "1") || (phaseId == "2") || (phaseId == "3") || (phaseId == "4") {
+		// request for one of the phases
+		if (phaseId == "1") || (phaseId == "2") || (phaseId == "3") || (phaseId == "4") {
 
-					var val float64
-					var err error
-					var info string
-					values := []*tValue{}
-		      id, err := strconv.Atoi(phaseId)
-		      Checklog(err)
-					if valueId=="current" && id<5 {
-						val, err = strconv.ParseFloat(records[id],32)
-					} else if valueId=="voltage" && id<4 {
-						val, err = strconv.ParseFloat(records[id+4],32)
-					} else if valueId=="power" && id<4 {
-						val, err = strconv.ParseFloat(records[id+7],32)
-					} else if valueId=="cosphi" && id<4 {
-						val, err = strconv.ParseFloat(records[id+10],32)
-					} else if valueId=="frequency" && id<4 {
-						val, err = strconv.ParseFloat(records[id+13],32)
-					} else {
-						val = 0.0
-						info = "error: not allowed"
-					}
+			var val float64
+			var err error
+			var info string
+			values := []*tValue{}
+			id, err := strconv.Atoi(phaseId)
+			Checklog(err)
+			if valueId == "current" && id < 5 {
+				val, err = strconv.ParseFloat(records[id], 32)
+			} else if valueId == "voltage" && id < 4 {
+				val, err = strconv.ParseFloat(records[id+4], 32)
+			} else if valueId == "power" && id < 4 {
+				val, err = strconv.ParseFloat(records[id+7], 32)
+			} else if valueId == "cosphi" && id < 4 {
+				val, err = strconv.ParseFloat(records[id+10], 32)
+			} else if valueId == "frequency" && id < 4 {
+				val, err = strconv.ParseFloat(records[id+13], 32)
+			} else {
+				val = 0.0
+				info = "error: not allowed"
+			}
 
-					if err != nil {
-				    val = 0.0
-						info ="warning: parse error. set value to 0.0"
-				  }
+			if err != nil {
+				val = 0.0
+				info = "warning: parse error. set value to 0.0"
+			}
 
-					if math.IsInf(val,0) {
-						val = 0.0
-						info ="warning: value infinity. set value to 0.0"
-					}
+			if math.IsInf(val, 0) {
+				val = 0.0
+				info = "warning: value infinity. set value to 0.0"
+			}
 
-		      tempVal = new(tValue)
-					if valueId=="current" {
-						tempVal.Type = "current"
-			      tempVal.Unity = "A"
-					} else if valueId=="voltage" {
-						tempVal.Type = "voltage"
-			      tempVal.Unity = "V"
-					} else if valueId=="power" {
-						tempVal.Type = "power"
-			      tempVal.Unity = "W"
-					} else if valueId=="cosphi" {
-						tempVal.Type = "cosphi"
-			      tempVal.Unity = ""
-					} else if valueId=="frequency" {
-						tempVal.Type = "frequency"
-			      tempVal.Unity = "Hz"
-					}
+			tempVal = new(tValue)
+			if valueId == "current" {
+				tempVal.Type = "current"
+				tempVal.Unity = "A"
+			} else if valueId == "voltage" {
+				tempVal.Type = "voltage"
+				tempVal.Unity = "V"
+			} else if valueId == "power" {
+				tempVal.Type = "power"
+				tempVal.Unity = "W"
+			} else if valueId == "cosphi" {
+				tempVal.Type = "cosphi"
+				tempVal.Unity = ""
+			} else if valueId == "frequency" {
+				tempVal.Type = "frequency"
+				tempVal.Unity = "Hz"
+			}
 
-					tempVal.Info = info
-		      tempVal.Data = float32(val)
+			tempVal.Info = info
+			tempVal.Data = float32(val)
 
-		      values = append(values, tempVal)
+			values = append(values, tempVal)
 
-		      tempPhase = new(tPhase)
-		      tempPhase.Phase, _ = strconv.Atoi(phaseId)
-		      tempPhase.Name = "phase "+phaseId
-		      tempPhase.Values = values
+			tempPhase = new(tPhase)
+			tempPhase.Phase, _ = strconv.Atoi(phaseId)
+			tempPhase.Name = "phase " + phaseId
+			tempPhase.Values = values
 
-		      phases = append(phases, tempPhase)
+			phases = append(phases, tempPhase)
 
-				// request for all phases
-		    } else if (phaseId == "all") {
+			// request for all phases
+		} else if phaseId == "all" {
 
-		      for i:=0; i<=3; i++ {
-
-						var val float64
-						var err error
-						var info string
-						values := []*tValue{}
-						if valueId=="current" {
-							val, err = strconv.ParseFloat(records[i+1],32)
-						} else if valueId=="voltage" && i<3 {
-							val, err = strconv.ParseFloat(records[i+5],32)
-						} else if valueId=="power" && i<3 {
-							val, err = strconv.ParseFloat(records[i+8],32)
-						} else if valueId=="cosphi" && i<3 {
-							val, err = strconv.ParseFloat(records[i+11],32)
-						} else if valueId=="frequency" && i<3 {
-							val, err = strconv.ParseFloat(records[i+14],32)
-						}
-
-						if err != nil {
-					    val = 0.0
-							info ="warning: parse error. set value to 0.0"
-					  }
-
-						if math.IsInf(val,0) {
-							val = 0.0
-							info ="warning: value infinity. set value to 0.0"
-						}
-
-		        tempVal = new(tValue)
-						if valueId=="current" {
-							tempVal.Type = "current"
-				      tempVal.Unity = "A"
-						} else if valueId=="voltage" {
-							tempVal.Type = "voltage"
-				      tempVal.Unity = "V"
-						} else if valueId=="power" {
-							tempVal.Type = "power"
-				      tempVal.Unity = "W"
-						} else if valueId=="cosphi" {
-							tempVal.Type = "cosphi"
-				      tempVal.Unity = ""
-						} else if valueId=="frequency" {
-							tempVal.Type = "frequency"
-				      tempVal.Unity = "Hz"
-						}
-						tempVal.Info = info
-		        tempVal.Data = float32(val)
-
-		        values = append(values, tempVal)
-
-		        tempPhase = new(tPhase)
-		        tempPhase.Phase = i+1
-		        tempPhase.Name = "phase "+strconv.Itoa(i+1)
-		        tempPhase.Values = values
-
-		        phases = append(phases, tempPhase)
-		      }
-		    }
-
-
-	 	} else if valueId=="all" {
-			// request for one of the phases
-			if (phaseId == "1") || (phaseId == "2") || (phaseId == "3") || (phaseId == "4") {
+			for i := 0; i <= 3; i++ {
 
 				var val float64
 				var err error
 				var info string
 				values := []*tValue{}
-				id, err := strconv.Atoi(phaseId)
-				Checklog(err)
+				if valueId == "current" {
+					val, err = strconv.ParseFloat(records[i+1], 32)
+				} else if valueId == "voltage" && i < 3 {
+					val, err = strconv.ParseFloat(records[i+5], 32)
+				} else if valueId == "power" && i < 3 {
+					val, err = strconv.ParseFloat(records[i+8], 32)
+				} else if valueId == "cosphi" && i < 3 {
+					val, err = strconv.ParseFloat(records[i+11], 32)
+				} else if valueId == "frequency" && i < 3 {
+					val, err = strconv.ParseFloat(records[i+14], 32)
+				}
 
-				for i:=1; i<=5; i++ {
+				if err != nil {
+					val = 0.0
+					info = "warning: parse error. set value to 0.0"
+				}
 
-					if i==1  && id<5 {
-						val, err = strconv.ParseFloat(records[id],32)
-					} else if i==2 && id<4 {
-						val, err = strconv.ParseFloat(records[id+4],32)
-					} else if i==3 && id<4 {
-						val, err = strconv.ParseFloat(records[id+7],32)
-					} else if i==4 && id<4 {
-						val, err = strconv.ParseFloat(records[id+10],32)
-					} else if i==5 && id<4 {
-						val, err = strconv.ParseFloat(records[id+13],32)
+				if math.IsInf(val, 0) {
+					val = 0.0
+					info = "warning: value infinity. set value to 0.0"
+				}
+
+				tempVal = new(tValue)
+				if valueId == "current" {
+					tempVal.Type = "current"
+					tempVal.Unity = "A"
+				} else if valueId == "voltage" {
+					tempVal.Type = "voltage"
+					tempVal.Unity = "V"
+				} else if valueId == "power" {
+					tempVal.Type = "power"
+					tempVal.Unity = "W"
+				} else if valueId == "cosphi" {
+					tempVal.Type = "cosphi"
+					tempVal.Unity = ""
+				} else if valueId == "frequency" {
+					tempVal.Type = "frequency"
+					tempVal.Unity = "Hz"
+				}
+				tempVal.Info = info
+				tempVal.Data = float32(val)
+
+				values = append(values, tempVal)
+
+				tempPhase = new(tPhase)
+				tempPhase.Phase = i + 1
+				tempPhase.Name = "phase " + strconv.Itoa(i+1)
+				tempPhase.Values = values
+
+				phases = append(phases, tempPhase)
+			}
+		}
+
+	} else if valueId == "all" {
+		// request for one of the phases
+		if (phaseId == "1") || (phaseId == "2") || (phaseId == "3") || (phaseId == "4") {
+
+			var val float64
+			var err error
+			var info string
+			values := []*tValue{}
+			id, err := strconv.Atoi(phaseId)
+			Checklog(err)
+
+			for i := 1; i <= 5; i++ {
+
+				if i == 1 && id < 5 {
+					val, err = strconv.ParseFloat(records[id], 32)
+				} else if i == 2 && id < 4 {
+					val, err = strconv.ParseFloat(records[id+4], 32)
+				} else if i == 3 && id < 4 {
+					val, err = strconv.ParseFloat(records[id+7], 32)
+				} else if i == 4 && id < 4 {
+					val, err = strconv.ParseFloat(records[id+10], 32)
+				} else if i == 5 && id < 4 {
+					val, err = strconv.ParseFloat(records[id+13], 32)
+				}
+
+				if err != nil {
+					val = 0.0
+					info = "warning: parse error. set value to 0.0"
+				}
+
+				if math.IsInf(val, 0) {
+					val = 0.0
+					info = "warning: value infinity. set value to 0.0"
+				}
+
+				tempVal = new(tValue)
+				if i == 1 {
+					tempVal.Type = "current"
+					tempVal.Unity = "A"
+				} else if i == 2 {
+					tempVal.Type = "voltage"
+					tempVal.Unity = "V"
+				} else if i == 3 {
+					tempVal.Type = "power"
+					tempVal.Unity = "W"
+				} else if i == 4 {
+					tempVal.Type = "cosphi"
+					tempVal.Unity = ""
+				} else if i == 5 {
+					tempVal.Type = "frequency"
+					tempVal.Unity = "Hz"
+				}
+
+				if (i == 1 && id < 5) || (i >= 2 && id < 4) {
+					tempVal.Info = info
+					tempVal.Data = float32(val)
+
+					values = append(values, tempVal)
+				}
+
+			}
+
+			tempPhase = new(tPhase)
+			tempPhase.Phase, _ = strconv.Atoi(phaseId)
+			tempPhase.Name = "phase " + phaseId
+			tempPhase.Values = values
+
+			phases = append(phases, tempPhase)
+
+			// request for all phases
+		} else if phaseId == "all" {
+
+			for i := 0; i <= 3; i++ {
+
+				var val float64
+				var err error
+				var info string
+				values := []*tValue{}
+
+				for j := 1; j <= 5; j++ {
+
+					if j == 1 && i < 4 {
+						val, err = strconv.ParseFloat(records[i+1], 32)
+					} else if j == 2 && i < 3 {
+						val, err = strconv.ParseFloat(records[i+5], 32)
+					} else if j == 3 && i < 3 {
+						val, err = strconv.ParseFloat(records[i+8], 32)
+					} else if j == 4 && i < 3 {
+						val, err = strconv.ParseFloat(records[i+11], 32)
+					} else if j == 5 && i < 3 {
+						val, err = strconv.ParseFloat(records[i+14], 32)
 					}
 
 					if err != nil {
 						val = 0.0
-						info ="warning: parse error. set value to 0.0"
+						info = "warning: parse error. set value to 0.0"
 					}
 
-					if math.IsInf(val,0) {
+					if math.IsInf(val, 0) {
 						val = 0.0
-						info ="warning: value infinity. set value to 0.0"
+						info = "warning: value infinity. set value to 0.0"
 					}
 
 					tempVal = new(tValue)
-					if i==1 {
+					if j == 1 && i < 4 {
 						tempVal.Type = "current"
 						tempVal.Unity = "A"
-					} else if i==2 {
+					} else if j == 2 && i < 3 {
 						tempVal.Type = "voltage"
 						tempVal.Unity = "V"
-					} else if i==3 {
+					} else if j == 3 && i < 3 {
 						tempVal.Type = "power"
 						tempVal.Unity = "W"
-					} else if i==4 {
+					} else if j == 4 && i < 3 {
 						tempVal.Type = "cosphi"
 						tempVal.Unity = ""
-					} else if i==5 {
+					} else if j == 5 && i < 3 {
 						tempVal.Type = "frequency"
 						tempVal.Unity = "Hz"
 					}
 
-					if (i==1 && id<5) || (i>=2 && id<4) {
+					if (j == 1 && i < 4) || (j >= 2 && i < 3) {
 						tempVal.Info = info
 						tempVal.Data = float32(val)
 
 						values = append(values, tempVal)
 					}
 
-
 				}
 
-
 				tempPhase = new(tPhase)
-				tempPhase.Phase, _ = strconv.Atoi(phaseId)
-				tempPhase.Name = "phase "+phaseId
+				tempPhase.Phase = i + 1
+				tempPhase.Name = "phase " + strconv.Itoa(i+1)
 				tempPhase.Values = values
 
 				phases = append(phases, tempPhase)
-
-			// request for all phases
-			} else if (phaseId == "all") {
-
-
-				for i:=0; i<=3; i++ {
-
-
-					var val float64
-					var err error
-					var info string
-					values := []*tValue{}
-
-
-					for j:=1; j<=5; j++ {
-
-						if j==1  && i<4 {
-							val, err = strconv.ParseFloat(records[i+1],32)
-						} else if j==2 && i<3 {
-							val, err = strconv.ParseFloat(records[i+5],32)
-						} else if j==3 && i<3 {
-							val, err = strconv.ParseFloat(records[i+8],32)
-						} else if j==4 && i<3 {
-							val, err = strconv.ParseFloat(records[i+11],32)
-						} else if j==5 && i<3 {
-							val, err = strconv.ParseFloat(records[i+14],32)
-						}
-
-						if err != nil {
-							val = 0.0
-							info ="warning: parse error. set value to 0.0"
-						}
-
-						if math.IsInf(val,0) {
-							val = 0.0
-							info ="warning: value infinity. set value to 0.0"
-						}
-
-						tempVal = new(tValue)
-						if j==1 && i<4 {
-							tempVal.Type = "current"
-							tempVal.Unity = "A"
-						} else if j==2 && i<3 {
-							tempVal.Type = "voltage"
-							tempVal.Unity = "V"
-						} else if j==3 && i<3 {
-							tempVal.Type = "power"
-							tempVal.Unity = "W"
-						} else if j==4 && i<3 {
-							tempVal.Type = "cosphi"
-							tempVal.Unity = ""
-						} else if j==5 && i<3 {
-							tempVal.Type = "frequency"
-							tempVal.Unity = "Hz"
-						}
-
-						if (j==1 && i<4) || (j>=2 && i<3) {
-							tempVal.Info = info
-							tempVal.Data = float32(val)
-
-							values = append(values, tempVal)
-						}
-
-
-					}
-
-					tempPhase = new(tPhase)
-					tempPhase.Phase = i+1
-					tempPhase.Name = "phase "+strconv.Itoa(i+1)
-					tempPhase.Values = values
-
-					phases = append(phases, tempPhase)
-
-
-				}
-
 
 			}
 
 		}
 
-			// create dataset with actual timestamp
-			// for actual values there are only one dataset
-		 	tempDataset = new(tDataset)
-	   	tempDataset.Time = records[0]
-	   	tempDataset.Phases = phases
+	}
 
-	   	datasets = append(datasets, tempDataset)
+	// create dataset with actual timestamp
+	// for actual values there are only one dataset
+	tempDataset = new(tDataset)
+	tempDataset.Time = records[0]
+	tempDataset.Phases = phases
 
+	datasets = append(datasets, tempDataset)
 
-	   	measurement := tMeasurement{
-		     Serial: config.Serial,
-		     Name: config.Name,
-		     Lat: config.Lat,
-		     Lng: config.Lng,
-		     Time: t.Format("2006-01-02 15:04:05"),
-		     Softwareversion: "",
-		     Ipaddress: GetLocalIP(),
-		     Datasets: datasets,
-	   	}
+	measurement := tMeasurement{
+		Serial:          config.Serial,
+		Name:            config.Name,
+		Lat:             config.Lat,
+		Lng:             config.Lng,
+		Time:            t.Format("2006-01-02 15:04:05"),
+		Softwareversion: "",
+		Ipaddress:       GetLocalIP(),
+		Datasets:        datasets,
+	}
 
-			// JSON output of request
-	   	if err := json.NewEncoder(w).Encode(measurement); err != nil {
-	       panic(err)
-	   	}
+	// JSON output of request
+	if err := json.NewEncoder(w).Encode(measurement); err != nil {
+		panic(err)
+	}
 
 }

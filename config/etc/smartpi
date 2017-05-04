@@ -8,28 +8,29 @@ lat=52.3667
 lng=9.7167
 
 [database]
-dir="/var/smartpi/db"
-file="smartpi.rrd"
 counterdir="/var/smartpi"
-
+dir="/var/smartpi/db"
 
 [device]
 i2c_device="/dev/i2c-1"
 shared_dir="/var/tmp/smartpi"
 shared_file="values"
 power_frequency=50
+measure_current_1=1
+measure_current_2=1
+measure_current_3=1
 measure_voltage_1=1
 measure_voltage_2=1
 measure_voltage_3=1
 voltage_1=230
 voltage_2=230
 voltage_3=230
-change_current_direction_1=1
-change_current_direction_2=1
-change_current_direction_3=1
+change_current_direction_1=0
+change_current_direction_2=0
+change_current_direction_3=0
 
 [ftp]
-ftp_upload=1
+ftp_upload=0
 ftp_server=ftp.xxxxx.xx
 ftp_user=xxxxxxxxxxx
 ftp_pass=xxxxxxxxxxxx
@@ -53,7 +54,7 @@ mqtt_topic=""
 
 [umts]
 umts=0
-umts_apn=
-umts_pin=
-umts_username=
-umts_password=
+umts_apn=""
+umts_pin=""
+umts_username=""
+umts_password=""
