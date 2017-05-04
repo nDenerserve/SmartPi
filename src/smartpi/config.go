@@ -35,7 +35,7 @@ import (
 type Config struct {
 	Serial            string
 	Name              string
-	Debuglevel        int
+	DebugLevel        int
 	Lat               float64
 	Lng               float64
 	Databasedir       string
@@ -84,7 +84,7 @@ func (p *Config) ReadParameterFromFile() {
 
 	p.Serial = cfg.Section("base").Key("serial").String()
 	p.Name = cfg.Section("base").Key("name").String()
-	p.Debuglevel, _ = cfg.Section("base").Key("debuglevel").Int()
+	p.DebugLevel = cfg.Section("base").Key("debuglevel").MustInt(0)
 	p.Lat, _ = cfg.Section("location").Key("lat").Float64()
 	p.Lng, _ = cfg.Section("location").Key("lng").Float64()
 	p.Databasedir = cfg.Section("database").Key("dir").String()

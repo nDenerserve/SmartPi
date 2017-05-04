@@ -54,7 +54,7 @@ func writeSharedFile(c *smartpi.Config, values [25]float32) {
 	}
 	t := time.Now()
 	timeStamp := t.Format("2006-01-02 15:04:05")
-	if c.Debuglevel > 0 {
+	if c.DebugLevel > 0 {
 		fmt.Println(t.Format("## Shared File Update ##"))
 		fmt.Println(timeStamp)
 		fmt.Printf("I1: %s  I2: %s  I3: %s  I4: %s  ", s[0], s[1], s[2], s[3])
@@ -100,7 +100,7 @@ func updateCounterFile(c *smartpi.Config, f string, v float64) {
 		counter = 0.0
 	}
 
-	if c.Debuglevel > 0 {
+	if c.DebugLevel > 0 {
 		fmt.Println("## Persistent counter file update ##")
 		fmt.Println(t.Format("2006-01-02 15:04:05"))
 		fmt.Printf("File: %q  Current: %g  Increment: %g \n ", f, counter, v)
@@ -114,7 +114,7 @@ func updateCounterFile(c *smartpi.Config, f string, v float64) {
 
 func updateSQLiteDatabase(c *smartpi.Config, data []float32) {
 	t := time.Now()
-	if c.Debuglevel > 0 {
+	if c.DebugLevel > 0 {
 		fmt.Println("## SQLITE Database Update ##")
 		fmt.Println(t.Format("2006-01-02 15:04:05"))
 		fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  ", data[0], data[1], data[2], data[3])
@@ -129,7 +129,7 @@ func updateSQLiteDatabase(c *smartpi.Config, data []float32) {
 
 	dbFileName := "smartpi_logdata_" + t.Format("200601") + ".db"
 	if _, err := os.Stat(filepath.Join(c.Databasedir, dbFileName)); os.IsNotExist(err) {
-		if c.Debuglevel > 0 {
+		if c.DebugLevel > 0 {
 			fmt.Printf("Creating new database file.")
 		}
 		smartpi.CreateSQlDatabase(c.Databasedir, t)
@@ -141,7 +141,7 @@ func publishReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [25]float
 	//[basetopic]/[node]/[keyname]
 	if c.MQTTenabled == 1 {
 		if mqttclient.IsConnected() {
-			if c.Debuglevel > 0 {
+			if c.DebugLevel > 0 {
 				fmt.Println("Publishing readoputs via MQTT...")
 			}
 			for i := 0; i < len(readouts); i++ {
@@ -162,12 +162,12 @@ func main() {
 
 	var mqttclient MQTT.Client
 
-	if config.Debuglevel > 0 {
+	if config.DebugLevel > 0 {
 		fmt.Printf("Start SmartPi readout\n")
 	}
 
 	if config.MQTTenabled == 1 {
-		if config.Debuglevel > 0 {
+		if config.DebugLevel > 0 {
 			fmt.Printf("Connecting to MQTT broker at %s\n", (config.MQTTbroker + ":" + config.MQTTbrokerport))
 		}
 		//create a MQTTClientOptions struct setting the broker address, clientid, user and password
