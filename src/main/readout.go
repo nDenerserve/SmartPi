@@ -64,9 +64,9 @@ func writeSharedFile(c *smartpi.Config, values [25]float32) {
 		fmt.Printf("F1: %s  F2: %s  F3: %s  ", s[13], s[14], s[15])
 		fmt.Printf("\n")
 	}
-	sharedFile := filepath.Join(c.Shareddir, c.Sharedfile)
+	sharedFile := filepath.Join(c.SharedDir, c.SharedFile)
 	if _, err = os.Stat(sharedFile); os.IsNotExist(err) {
-		os.MkdirAll(c.Shareddir, 0777)
+		os.MkdirAll(c.SharedDir, 0777)
 		f, err = os.Create(sharedFile)
 		if err != nil {
 			panic(err)

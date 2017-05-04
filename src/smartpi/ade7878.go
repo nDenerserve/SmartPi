@@ -36,7 +36,6 @@ import (
 )
 
 const (
-	I2C_DEVICE                string  = "/dev/i2c-1"
 	ADE7878_ADDR              int     = 0x38
 	SAMPLES                   int     = 100
 	ADE7878_CLOCK             float32 = 256000
@@ -116,7 +115,7 @@ func initPiForADE7878() {
 }
 
 func InitADE7878(c *Config) (*i2c.Device, error) {
-	d, err := i2c.Open(&i2c.Devfs{Dev: I2C_DEVICE}, ADE7878_ADDR)
+	d, err := i2c.Open(&i2c.Devfs{Dev: c.I2CDevice}, ADE7878_ADDR)
 	if err != nil {
 		panic(err)
 	}
@@ -161,7 +160,7 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 
 	// Set the right power frequency to the COMPMODE-REGISTER.
 	// 0xE60E (COMPMODE-REGISTER)
-	if c.Powerfrequency == 60 {
+	if c.PowerFrequency == 60 {
 		// 0x41FF 60Hz
 		err = d.Write([]byte{0xE6, 0x0E, 0x41, 0xFF})
 	} else {
@@ -284,7 +283,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	var outcome float32
 	var err error
 
-	if c.Powerfrequency == 60 {
+	if c.PowerFrequency == 60 {
 		rms_factor_current = float32(3493258) // 60Hz
 	} else {
 		rms_factor_current = float32(4191910) // 50Hz
@@ -403,7 +402,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 
 	// 0xE601 (ANGLE0 cosphi an A)
 	outcome = float32(DeviceFetchInt(d, 2, []byte{0xE6, 0x01}))
-	values[10] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
+	values[10] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.PowerFrequency) / ADE7878_CLOCK * VAL)))
 	if c.CurrentDirection1 {
 		values[10] *= -1
 	}
@@ -413,7 +412,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 
 	// 0xE602 (ANGLE1 cosphi an B)
 	outcome = float32(DeviceFetchInt(d, 2, []byte{0xE6, 0x02}))
-	values[11] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
+	values[11] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.PowerFrequency) / ADE7878_CLOCK * VAL)))
 	if c.CurrentDirection2 {
 		values[11] *= -1
 	}
@@ -423,7 +422,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 
 	// 0xE603 (ANGLE1 cosphi an C)
 	outcome = float32(DeviceFetchInt(d, 2, []byte{0xE6, 0x03}))
-	values[12] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.Powerfrequency) / ADE7878_CLOCK * VAL)))
+	values[12] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.PowerFrequency) / ADE7878_CLOCK * VAL)))
 	if c.CurrentDirection3 {
 		values[12] *= -1
 	}

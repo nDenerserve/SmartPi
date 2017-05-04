@@ -40,10 +40,10 @@ type Config struct {
 	Lng               float64
 	CounterDir        string
 	DatabaseDir       string
-	I2cdevice         string
-	Shareddir         string
-	Sharedfile        string
-	Powerfrequency    int
+	I2CDevice         string
+	SharedDir         string
+	SharedFile        string
+	PowerFrequency    int
 	MeasureCurrent1   bool
 	MeasureCurrent2   bool
 	MeasureCurrent3   bool
@@ -61,8 +61,8 @@ type Config struct {
 	FTPuser           string
 	FTPpass           string
 	FTPpath           string
-	Webserverport     int
-	Docroot           string
+	WebserverPort     int
+	DocRoot           string
 	CSVdecimalpoint   string
 	CSVtimeformat     string
 
@@ -89,20 +89,19 @@ func (p *Config) ReadParameterFromFile() {
 	p.Lng, _ = cfg.Section("location").Key("lng").Float64()
 	p.CounterDir = cfg.Section("database").Key("counterdir").MustString("/var/smartpi")
 	p.DatabaseDir = cfg.Section("database").Key("dir").MustString("/var/smartpi/db")
-	p.I2cdevice = cfg.Section("device").Key("i2c_device").String()
-	p.Shareddir = cfg.Section("device").Key("shared_dir").String()
-	p.Sharedfile = cfg.Section("device").Key("shared_file").String()
-	p.Powerfrequency, _ = cfg.Section("device").Key("power_frequency").Int()
+	p.I2CDevice = cfg.Section("device").Key("i2c_device").MustString("/dev/i2c-1")
+	p.SharedDir = cfg.Section("device").Key("shared_dir").MustString("/var/tmp/smartpi")
+	p.SharedFile = cfg.Section("device").Key("shared_file").MustString("values")
+	p.PowerFrequency = cfg.Section("device").Key("power_frequency").MustInt(50)
 	p.MeasureVoltage1 = cfg.Section("device").Key("measure_voltage_1").MustBool(true)
 	p.MeasureVoltage2 = cfg.Section("device").Key("measure_voltage_2").MustBool(true)
 	p.MeasureVoltage3 = cfg.Section("device").Key("measure_voltage_3").MustBool(true)
 	p.MeasureCurrent1 = cfg.Section("device").Key("measure_current_1").MustBool(true)
 	p.MeasureCurrent2 = cfg.Section("device").Key("measure_current_2").MustBool(true)
 	p.MeasureCurrent3 = cfg.Section("device").Key("measure_current_3").MustBool(true)
-	p.Voltage1, _ = cfg.Section("device").Key("voltage_1").Float64()
-	p.Voltage1, _ = cfg.Section("device").Key("voltage_1").Float64()
-	p.Voltage2, _ = cfg.Section("device").Key("voltage_2").Float64()
-	p.Voltage3, _ = cfg.Section("device").Key("voltage_3").Float64()
+	p.Voltage1 = cfg.Section("device").Key("voltage_1").MustFloat64(230)
+	p.Voltage2 = cfg.Section("device").Key("voltage_2").MustFloat64(230)
+	p.Voltage3 = cfg.Section("device").Key("voltage_3").MustFloat64(230)
 	p.CurrentDirection1 = cfg.Section("device").Key("change_current_direction_1").MustBool(false)
 	p.CurrentDirection2 = cfg.Section("device").Key("change_current_direction_2").MustBool(false)
 	p.CurrentDirection3 = cfg.Section("device").Key("change_current_direction_3").MustBool(false)
@@ -111,8 +110,8 @@ func (p *Config) ReadParameterFromFile() {
 	p.FTPuser = cfg.Section("ftp").Key("ftp_user").String()
 	p.FTPpass = cfg.Section("ftp").Key("ftp_pass").String()
 	p.FTPpath = cfg.Section("ftp").Key("ftp_path").String()
-	p.Webserverport, _ = cfg.Section("webserver").Key("port").Int()
-	p.Docroot = cfg.Section("webserver").Key("docroot").String()
+	p.WebserverPort = cfg.Section("webserver").Key("port").MustInt(1080)
+	p.DocRoot = cfg.Section("webserver").Key("docroot").MustString("/var/smartpi/www")
 	p.CSVdecimalpoint = cfg.Section("csv").Key("decimalpoint").String()
 	p.CSVtimeformat = cfg.Section("csv").Key("timeformat").String()
 

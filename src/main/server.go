@@ -87,7 +87,7 @@ func main() {
 	r.HandleFunc("/api/dayvalues/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeDayValues)
 	r.HandleFunc("/api/csv/from/{fromDate}/to/{toDate}", smartpi.ServeCSVValues)
 	r.HandleFunc("/api/config/read/name/{name}", BasicAuth("Please enter your username and password for this site", smartpi.ReadConfig, user, "administrator"))
-	r.PathPrefix("/").Handler(http.FileServer(http.Dir(config.Docroot)))
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir(config.DocRoot)))
 	http.Handle("/", r)
-	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.Webserverport), nil))
+	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.WebserverPort), nil))
 }
