@@ -67,7 +67,7 @@ type Config struct {
 	CSVtimeformat     string
 
 	// MQTT Settings
-	MQTTenabled    int
+	MQTTenabled    bool
 	MQTTbroker     string
 	MQTTbrokerport string
 	MQTTuser       string
@@ -117,7 +117,7 @@ func (p *Config) ReadParameterFromFile() {
 	p.CSVtimeformat = cfg.Section("csv").Key("timeformat").String()
 
 	//MQTT
-	p.MQTTenabled, _ = cfg.Section("mqtt").Key("mqtt_enabled").Int()
+	p.MQTTenabled = cfg.Section("mqtt").Key("mqtt_enabled").MustBool(false)
 	p.MQTTbroker = cfg.Section("mqtt").Key("mqtt_broker_url").String()
 	p.MQTTbrokerport = cfg.Section("mqtt").Key("mqtt_broker_port").String()
 	p.MQTTuser = cfg.Section("mqtt").Key("mqtt_username").String()

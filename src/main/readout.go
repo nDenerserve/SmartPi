@@ -139,7 +139,7 @@ func updateSQLiteDatabase(c *smartpi.Config, data []float32) {
 
 func publishReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [25]float32) {
 	//[basetopic]/[node]/[keyname]
-	if c.MQTTenabled == 1 {
+	if c.MQTTenabled {
 		if mqttclient.IsConnected() {
 			if c.DebugLevel > 0 {
 				fmt.Println("Publishing readoputs via MQTT...")
@@ -166,7 +166,7 @@ func main() {
 		fmt.Printf("Start SmartPi readout\n")
 	}
 
-	if config.MQTTenabled == 1 {
+	if config.MQTTenabled {
 		if config.DebugLevel > 0 {
 			fmt.Printf("Connecting to MQTT broker at %s\n", (config.MQTTbroker + ":" + config.MQTTbrokerport))
 		}
