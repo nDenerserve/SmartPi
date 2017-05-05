@@ -53,6 +53,14 @@ func InsertData(databasedir string, t time.Time, v []float32) {
 		return
 	}
 
+	sqlStmt = "CREATE INDEX IF NOT EXISTS `dateindex` ON `smartpi_logdata_" + t.Format("200601") + "` (`date` ASC)"
+
+	_, err = db.Exec(sqlStmt)
+	if err != nil {
+		log.Printf("%q: %s\n", err, sqlStmt)
+		return
+	}
+
 	tx, err := db.Begin()
 	if err != nil {
 		log.Fatal(err)
