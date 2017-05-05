@@ -29,7 +29,7 @@ func CreateSQlDatabase(databasedir string, t time.Time) {
 		return
 	}
 
-  sqlStmt = "CREATE INDEX IF NOT EXISTS `dateindex` ON `smartpi_logdata_" + t.Format("200601") + "` (`date` ASC)"
+	sqlStmt = "CREATE INDEX IF NOT EXISTS `dateindex` ON `smartpi_logdata_" + t.Format("200601") + "` (`date` ASC)"
 
 	_, err = db.Exec(sqlStmt)
 	if err != nil {
@@ -155,107 +155,118 @@ func ReadChartData(databasedir string, starttime time.Time, endtime time.Time) [
 }
 
 func ReadDayData(databasedir string, starttime time.Time, endtime time.Time) []*MinuteValues {
-	db, err := sql.Open("sqlite3", databasedir+"/smartpi_logdata_"+endtime.Format("200601")+".db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-	stmt, err := db.Prepare("SELECT date, current_1, current_2, current_3, current_4, voltage_1, voltage_2, voltage_3, power_1, power_2, power_3, cosphi_1, cosphi_2, cosphi_3, frequency_1, frequency_2, frequency_3, energy_pos_1, energy_pos_2, energy_pos_3, energy_neg_1, energy_neg_2, energy_neg_3 FROM smartpi_logdata_" + endtime.Format("200601") + " WHERE date BETWEEN ? AND ? ORDER BY date")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer stmt.Close()
-	// fmt.Println("DStarttime: "+starttime.Local().Format("2006-01-02 15:04:05")+" DEndtime: "+endtime.Local().Format("2006-01-02 15:04:05"))
-	rows, err := stmt.Query(starttime.Local().Format("2006-01-02 15:04:05"), endtime.Local().Format("2006-01-02 15:04:05"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
 
 	values := []*MinuteValues{}
 
-	var rowcounter = 0
+	diffmonth := Monthchange(starttime, endtime)
 
-	for rows.Next() {
-		var dateentry string
-		var current_1, current_2, current_3, current_4, voltage_1, voltage_2, voltage_3, power_1, power_2, power_3, cosphi_1, cosphi_2, cosphi_3, frequency_1, frequency_2, frequency_3, energy_pos_1, energy_pos_2, energy_pos_3, energy_neg_1, energy_neg_2, energy_neg_3 float64
-		err = rows.Scan(&dateentry, &current_1, &current_2, &current_3, &current_4, &voltage_1, &voltage_2, &voltage_3, &power_1, &power_2, &power_3, &cosphi_1, &cosphi_2, &cosphi_3, &frequency_1, &frequency_2, &frequency_3, &energy_pos_1, &energy_pos_2, &energy_pos_3, &energy_neg_1, &energy_neg_2, &energy_neg_3)
+	elapsedtime := endtime
+
+	for i := 0; i <= diffmonth; i++ {
+
+		db, err := sql.Open("sqlite3", databasedir+"/smartpi_logdata_"+elapsedtime.Format("200601")+".db")
 		if err != nil {
 			log.Fatal(err)
 		}
+		defer db.Close()
 
-		val := new(MinuteValues)
-		insert := 1
+		stmt, err := db.Prepare("SELECT date, current_1, current_2, current_3, current_4, voltage_1, voltage_2, voltage_3, power_1, power_2, power_3, cosphi_1, cosphi_2, cosphi_3, frequency_1, frequency_2, frequency_3, energy_pos_1, energy_pos_2, energy_pos_3, energy_neg_1, energy_neg_2, energy_neg_3 FROM smartpi_logdata_" + elapsedtime.Format("200601") + " WHERE date BETWEEN ? AND ? ORDER BY date")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer stmt.Close()
+		// fmt.Println("DStarttime: "+starttime.Local().Format("2006-01-02 15:04:05")+" DEndtime: "+endtime.Local().Format("2006-01-02 15:04:05"))
+		rows, err := stmt.Query(starttime.Local().Format("2006-01-02 15:04:05"), endtime.Local().Format("2006-01-02 15:04:05"))
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer rows.Close()
 
-		//entrydate,_ := time.ParseInLocation("2006-01-02T15:04:05Z",dateentry,time.Now().Location())
-		entrydate, _ := time.Parse("2006-01-02T15:04:05Z", dateentry)
+		var rowcounter = 0
 
-		for i := 0; i < len(values); i++ {
-
-			if values[i].Date.Local().Year() == entrydate.Local().Year() && values[i].Date.Local().YearDay() == entrydate.Local().YearDay() {
-				values[i].Date = entrydate
-				values[i].Current_1 = values[i].Current_1 + current_1
-				values[i].Current_2 = values[i].Current_2 + current_2
-				values[i].Current_3 = values[i].Current_3 + current_3
-				values[i].Current_4 = values[i].Current_4 + current_4
-				values[i].Voltage_1 = values[i].Voltage_1 + voltage_1
-				values[i].Voltage_2 = values[i].Voltage_2 + voltage_2
-				values[i].Voltage_3 = values[i].Voltage_3 + voltage_3
-				values[i].Power_1 = values[i].Power_1 + power_1
-				values[i].Power_2 = values[i].Power_2 + power_2
-				values[i].Power_3 = values[i].Power_3 + power_3
-				values[i].Cosphi_1 = values[i].Cosphi_1 + cosphi_1
-				values[i].Cosphi_2 = values[i].Cosphi_2 + cosphi_2
-				values[i].Cosphi_3 = values[i].Cosphi_3 + cosphi_3
-				values[i].Frequency_1 = values[i].Frequency_1 + frequency_1
-				values[i].Frequency_2 = values[i].Frequency_2 + frequency_2
-				values[i].Frequency_3 = values[i].Frequency_3 + frequency_3
-				values[i].Energy_pos_1 = values[i].Energy_pos_1 + energy_pos_1
-				values[i].Energy_pos_2 = values[i].Energy_pos_2 + energy_pos_2
-				values[i].Energy_pos_3 = values[i].Energy_pos_3 + energy_pos_3
-				values[i].Energy_neg_1 = values[i].Energy_neg_1 + energy_neg_1
-				values[i].Energy_neg_2 = values[i].Energy_neg_2 + energy_neg_2
-				values[i].Energy_neg_3 = values[i].Energy_neg_3 + energy_neg_3
-
-				insert = 0
+		for rows.Next() {
+			var dateentry string
+			var current_1, current_2, current_3, current_4, voltage_1, voltage_2, voltage_3, power_1, power_2, power_3, cosphi_1, cosphi_2, cosphi_3, frequency_1, frequency_2, frequency_3, energy_pos_1, energy_pos_2, energy_pos_3, energy_neg_1, energy_neg_2, energy_neg_3 float64
+			err = rows.Scan(&dateentry, &current_1, &current_2, &current_3, &current_4, &voltage_1, &voltage_2, &voltage_3, &power_1, &power_2, &power_3, &cosphi_1, &cosphi_2, &cosphi_3, &frequency_1, &frequency_2, &frequency_3, &energy_pos_1, &energy_pos_2, &energy_pos_3, &energy_neg_1, &energy_neg_2, &energy_neg_3)
+			if err != nil {
+				log.Fatal(err)
 			}
 
+			val := new(MinuteValues)
+			insert := 1
+
+			//entrydate,_ := time.ParseInLocation("2006-01-02T15:04:05Z",dateentry,time.Now().Location())
+			entrydate, _ := time.Parse("2006-01-02T15:04:05Z", dateentry)
+
+			for i := 0; i < len(values); i++ {
+
+				if values[i].Date.Local().Year() == entrydate.Local().Year() && values[i].Date.Local().YearDay() == entrydate.Local().YearDay() {
+					values[i].Date = entrydate
+					values[i].Current_1 = values[i].Current_1 + current_1
+					values[i].Current_2 = values[i].Current_2 + current_2
+					values[i].Current_3 = values[i].Current_3 + current_3
+					values[i].Current_4 = values[i].Current_4 + current_4
+					values[i].Voltage_1 = values[i].Voltage_1 + voltage_1
+					values[i].Voltage_2 = values[i].Voltage_2 + voltage_2
+					values[i].Voltage_3 = values[i].Voltage_3 + voltage_3
+					values[i].Power_1 = values[i].Power_1 + power_1
+					values[i].Power_2 = values[i].Power_2 + power_2
+					values[i].Power_3 = values[i].Power_3 + power_3
+					values[i].Cosphi_1 = values[i].Cosphi_1 + cosphi_1
+					values[i].Cosphi_2 = values[i].Cosphi_2 + cosphi_2
+					values[i].Cosphi_3 = values[i].Cosphi_3 + cosphi_3
+					values[i].Frequency_1 = values[i].Frequency_1 + frequency_1
+					values[i].Frequency_2 = values[i].Frequency_2 + frequency_2
+					values[i].Frequency_3 = values[i].Frequency_3 + frequency_3
+					values[i].Energy_pos_1 = values[i].Energy_pos_1 + energy_pos_1
+					values[i].Energy_pos_2 = values[i].Energy_pos_2 + energy_pos_2
+					values[i].Energy_pos_3 = values[i].Energy_pos_3 + energy_pos_3
+					values[i].Energy_neg_1 = values[i].Energy_neg_1 + energy_neg_1
+					values[i].Energy_neg_2 = values[i].Energy_neg_2 + energy_neg_2
+					values[i].Energy_neg_3 = values[i].Energy_neg_3 + energy_neg_3
+
+					insert = 0
+				}
+
+			}
+
+			if insert == 1 {
+
+				// val.Date, err = time.ParseInLocation("2006-01-02T15:04:05Z",dateentry,time.Now().Location())
+				val.Date, err = time.Parse("2006-01-02T15:04:05Z", dateentry)
+				val.Current_1 = current_1
+				val.Current_2 = current_2
+				val.Current_3 = current_3
+				val.Current_4 = current_4
+				val.Voltage_1 = voltage_1
+				val.Voltage_2 = voltage_2
+				val.Voltage_3 = voltage_3
+				val.Power_1 = power_1
+				val.Power_2 = power_2
+				val.Power_3 = power_3
+				val.Cosphi_1 = cosphi_1
+				val.Cosphi_2 = cosphi_2
+				val.Cosphi_3 = cosphi_3
+				val.Frequency_1 = frequency_1
+				val.Frequency_2 = frequency_2
+				val.Frequency_3 = frequency_3
+				val.Energy_pos_1 = energy_pos_1
+				val.Energy_pos_2 = energy_pos_2
+				val.Energy_pos_3 = energy_pos_3
+				val.Energy_neg_1 = energy_neg_1
+				val.Energy_neg_2 = energy_neg_2
+				val.Energy_neg_3 = energy_neg_3
+
+				values = append(values, val)
+			}
+			if err != nil {
+				log.Fatal(err)
+			}
+			rowcounter++
 		}
 
-		if insert == 1 {
+		elapsedtime = elapsedtime.AddDate(0, -1, 0)
 
-			// val.Date, err = time.ParseInLocation("2006-01-02T15:04:05Z",dateentry,time.Now().Location())
-			val.Date, err = time.Parse("2006-01-02T15:04:05Z", dateentry)
-			val.Current_1 = current_1
-			val.Current_2 = current_2
-			val.Current_3 = current_3
-			val.Current_4 = current_4
-			val.Voltage_1 = voltage_1
-			val.Voltage_2 = voltage_2
-			val.Voltage_3 = voltage_3
-			val.Power_1 = power_1
-			val.Power_2 = power_2
-			val.Power_3 = power_3
-			val.Cosphi_1 = cosphi_1
-			val.Cosphi_2 = cosphi_2
-			val.Cosphi_3 = cosphi_3
-			val.Frequency_1 = frequency_1
-			val.Frequency_2 = frequency_2
-			val.Frequency_3 = frequency_3
-			val.Energy_pos_1 = energy_pos_1
-			val.Energy_pos_2 = energy_pos_2
-			val.Energy_pos_3 = energy_pos_3
-			val.Energy_neg_1 = energy_neg_1
-			val.Energy_neg_2 = energy_neg_2
-			val.Energy_neg_3 = energy_neg_3
-
-			values = append(values, val)
-		}
-		if err != nil {
-			log.Fatal(err)
-		}
-		rowcounter++
 	}
 
 	return values
