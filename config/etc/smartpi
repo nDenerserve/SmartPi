@@ -2,6 +2,7 @@
 serial="smartpi160812345"
 name="House"
 debuglevel=0
+metrics_listen_address=":9246"
 
 [location]
 lat=52.3667
