@@ -36,10 +36,10 @@ import (
 )
 
 const (
-	ADE7878_ADDR              int     = 0x38
-	SAMPLES                   int     = 100
-	ADE7878_CLOCK             float32 = 256000
-	halfCircle                float32 = math.Pi / 180.0
+	ADE7878_ADDR  int     = 0x38
+	SAMPLES       int     = 100
+	ADE7878_CLOCK float32 = 256000
+	halfCircle    float64 = math.Pi / 180.0
 )
 
 type CTFactors struct {
@@ -362,6 +362,32 @@ func ReadActiveWatts(d *i2c.Device, c *Config, phase string) (watts float64) {
 	return watts
 }
 
+func ReadAngle(d *i2c.Device, c *Config, phase string) (angle float64) {
+	command := make([]byte, 2)
+	switch phase {
+	case "A":
+		command = []byte{0xE6, 0x01} // 0xE601 (ANGLE0 cosphi an A)
+	case "B":
+		command = []byte{0xE6, 0x02} // 0xE602 (ANGLE1 cosphi an B)
+	case "C":
+		command = []byte{0xE6, 0x03} // 0xE603 (ANGLE2 cosphi an C)
+	default:
+		panic(fmt.Errorf("Invalid phase %q", phase))
+	}
+
+	if c.MeasureVoltage[phase] {
+		outcome := float64(DeviceFetchInt(d, 2, command))
+		angle = math.Cos(outcome * 360 * float64(c.PowerFrequency) / float64(ADE7878_CLOCK) * halfCircle)
+		if c.CurrentDirection[phase] {
+			angle *= -1
+		}
+	} else {
+		angle = 1.0
+	}
+
+	return angle
+}
+
 func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	var values [25]float32
 	var outcome float32
@@ -399,35 +425,10 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 		values[9] = values[2] * values[6]
 	}
 
-	// 0xE601 (ANGLE0 cosphi an A)
-	outcome = float32(DeviceFetchInt(d, 2, []byte{0xE6, 0x01}))
-	values[10] = float32(math.Cos(float64(outcome * 360 * float32(c.PowerFrequency) / ADE7878_CLOCK * halfCircle)))
-	if c.CurrentDirection["A"] {
-		values[10] *= -1
-	}
-	if c.MeasureVoltage["A"] {
-		values[10] = 1.0
-	}
-
-	// 0xE602 (ANGLE1 cosphi an B)
-	outcome = float32(DeviceFetchInt(d, 2, []byte{0xE6, 0x02}))
-	values[11] = float32(math.Cos(float64(outcome * 360 * float32(c.PowerFrequency) / ADE7878_CLOCK * halfCircle)))
-	if c.CurrentDirection["B"] {
-		values[11] *= -1
-	}
-	if c.MeasureVoltage["B"] {
-		values[11] = 1.0
-	}
-
-	// 0xE603 (ANGLE1 cosphi an C)
-	outcome = float32(DeviceFetchInt(d, 2, []byte{0xE6, 0x03}))
-	values[12] = float32(math.Cos(float64(outcome * 360 * float32(c.PowerFrequency) / ADE7878_CLOCK * halfCircle)))
-	if c.CurrentDirection["C"] {
-		values[12] *= -1
-	}
-	if c.MeasureVoltage["C"] {
-		values[12] = 1.0
-	}
+	// Measure cosphis.
+	values[10] = float32(ReadAngle(d, c, "A")) // Phase A.
+	values[11] = float32(ReadAngle(d, c, "B")) // Phase B.
+	values[12] = float32(ReadAngle(d, c, "C")) // Phase C.
 
 	err = d.Write([]byte{0xE7, 0x00, 0x1C}) // MMODE-Register measure frequency at VA
 	if err != nil {
