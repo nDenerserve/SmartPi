@@ -52,12 +52,10 @@ type Config struct {
 	SharedFile        string
 	PowerFrequency    int
 	CTType            map[string]string
+	CurrentDirection  map[string]bool
 	MeasureCurrent    map[string]bool
 	MeasureVoltage    map[string]bool
 	Voltage           map[string]float64
-	CurrentDirection1 bool
-	CurrentDirection2 bool
-	CurrentDirection3 bool
 
 	// [ftp]
 	FTPupload bool
@@ -111,6 +109,10 @@ func (p *Config) ReadParameterFromFile() {
 	p.CTType["B"] = cfg.Section("device").Key("ct_type_2").MustString("YHDC_SCT013")
 	p.CTType["C"] = cfg.Section("device").Key("ct_type_3").MustString("YHDC_SCT013")
 	p.CTType["N"] = cfg.Section("device").Key("ct_type_4").MustString("YHDC_SCT013")
+	p.CurrentDirection = make(map[string]bool)
+	p.CurrentDirection["A"] = cfg.Section("device").Key("change_current_direction_1").MustBool(false)
+	p.CurrentDirection["B"] = cfg.Section("device").Key("change_current_direction_2").MustBool(false)
+	p.CurrentDirection["C"] = cfg.Section("device").Key("change_current_direction_3").MustBool(false)
 	p.MeasureCurrent = make(map[string]bool)
 	p.MeasureCurrent["A"] = cfg.Section("device").Key("measure_current_1").MustBool(true)
 	p.MeasureCurrent["B"] = cfg.Section("device").Key("measure_current_2").MustBool(true)
@@ -124,9 +126,6 @@ func (p *Config) ReadParameterFromFile() {
 	p.Voltage["A"] = cfg.Section("device").Key("voltage_1").MustFloat64(230)
 	p.Voltage["B"] = cfg.Section("device").Key("voltage_2").MustFloat64(230)
 	p.Voltage["C"] = cfg.Section("device").Key("voltage_3").MustFloat64(230)
-	p.CurrentDirection1 = cfg.Section("device").Key("change_current_direction_1").MustBool(false)
-	p.CurrentDirection2 = cfg.Section("device").Key("change_current_direction_2").MustBool(false)
-	p.CurrentDirection3 = cfg.Section("device").Key("change_current_direction_3").MustBool(false)
 
 	// [ftp]
 	p.FTPupload = cfg.Section("ftp").Key("ftp_upload").MustBool(false)
