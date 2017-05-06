@@ -413,6 +413,25 @@ func ReadFrequency(d *i2c.Device, c *Config, phase string) (frequency float64) {
 	return frequency
 }
 
+func ReadApparentPower(d *i2c.Device, c *Config, phase string) float64 {
+	command := make([]byte, 2)
+	switch phase {
+	case "A":
+		command = []byte{0xE5, 0x19} // 0xE519 (AVA total apparent power phase A)
+	case "B":
+		command = []byte{0xE5, 0x1A} // 0xE51A (BVA total apparent power phase B)
+	case "C":
+		command = []byte{0xE5, 0x1B} // 0xE51B (CVA total apparent power phase C)
+	default:
+		panic(fmt.Errorf("Invalid phase %q", phase))
+	}
+
+	if c.MeasureCurrent[phase] {
+		return float64(DeviceFetchInt(d, 4, command))
+	} else {
+		return 0.0
+	}
+}
 func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	var values [25]float32
 
@@ -455,29 +474,10 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	values[14] = float32(ReadFrequency(d, c, "B")) // Phase B.
 	values[15] = float32(ReadFrequency(d, c, "C")) // Phase C.
 
-	// Total apparent power phase A (volt-amps).
-	if c.MeasureCurrent["A"] {
-		// 0xE519 (AVA total apparent power an A)
-		values[16] = float32(DeviceFetchInt(d, 4, []byte{0xE5, 0x19}))
-	} else {
-		values[16] = 0.0
-	}
-
-	// Total apparent power phase B (volt-amps).
-	if c.MeasureCurrent["B"] {
-		// 0xE51A (BVA total apparent power an B)
-		values[17] = float32(DeviceFetchInt(d, 4, []byte{0xE5, 0x1A}))
-	} else {
-		values[17] = 0.0
-	}
-
-	// Total apparent power phase A (volt-amps).
-	if c.MeasureCurrent["C"] {
-		// 0xE51B (CVA total apparent power an C)
-		values[18] = float32(DeviceFetchInt(d, 4, []byte{0xE5, 0x1B}))
-	} else {
-		values[18] = 0.0
-	}
+	// Measure apparent power (volt-amps).
+	values[16] = float32(ReadApparentPower(d, c, "A")) // Phase A.
+	values[17] = float32(ReadApparentPower(d, c, "B")) // Phase B.
+	values[18] = float32(ReadApparentPower(d, c, "C")) // Phase C.
 
 	// Total reactive power phase A (volt-ampere reactive).
 	if c.MeasureCurrent["A"] {
