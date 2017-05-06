@@ -458,6 +458,19 @@ func ReadReactivePower(d *i2c.Device, c *Config, phase string) float64 {
 	}
 }
 
+func CalculatePowerFactor(c *Config, phase string, watts float64, voltAmps float64, voltAmpsReactive float64) float64 {
+	powerFactor := watts / CTTypes[c.CTType[phase]].PowerCorrectionFactor / voltAmps
+	if c.MeasureCurrent[phase] {
+		if math.Signbit(float64(voltAmpsReactive)) {
+			return powerFactor
+		} else {
+			return powerFactor * -1
+		}
+	} else {
+		return 0.0
+	}
+}
+
 func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	var values [25]float32
 
@@ -510,32 +523,10 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	values[20] = float32(ReadReactivePower(d, c, "B")) // Phase B.
 	values[21] = float32(ReadReactivePower(d, c, "C")) // Phase C.
 
-	if math.Signbit(float64(values[19])) {
-		values[22] = (values[7] / float32(CTTypes[c.CTType["A"]].PowerCorrectionFactor) / values[16])
-	} else {
-		values[22] = -1 * (values[7] / float32(CTTypes[c.CTType["A"]].PowerCorrectionFactor) / values[16])
-	}
-	if c.MeasureCurrent["A"] {
-		values[22] = 0.0
-	}
-
-	if math.Signbit(float64(values[20])) {
-		values[23] = (values[8] / float32(CTTypes[c.CTType["B"]].PowerCorrectionFactor) / values[17])
-	} else {
-		values[23] = -1 * (values[8] / float32(CTTypes[c.CTType["B"]].PowerCorrectionFactor) / values[17])
-	}
-	if c.MeasureCurrent["B"] {
-		values[23] = 0.0
-	}
-
-	if math.Signbit(float64(values[21])) {
-		values[24] = (values[9] / float32(CTTypes[c.CTType["C"]].PowerCorrectionFactor) / values[18])
-	} else {
-		values[24] = -1 * (values[9] / float32(CTTypes[c.CTType["C"]].PowerCorrectionFactor) / values[18])
-	}
-	if c.MeasureCurrent["C"] {
-		values[24] = 0.0
-	}
+	// Calculate power factors.
+	values[22] = float32(CalculatePowerFactor(c, "A", float64(values[7]), float64(values[16]), float64(values[20]))) // Phase A.
+	values[23] = float32(CalculatePowerFactor(c, "B", float64(values[8]), float64(values[17]), float64(values[21]))) // Phase B.
+	values[24] = float32(CalculatePowerFactor(c, "C", float64(values[9]), float64(values[19]), float64(values[22]))) // Phase C.
 
 	if c.DebugLevel > 0 {
 		fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  ", values[0], values[1], values[2], values[3])
