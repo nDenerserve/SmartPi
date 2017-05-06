@@ -432,6 +432,32 @@ func ReadApparentPower(d *i2c.Device, c *Config, phase string) float64 {
 		return 0.0
 	}
 }
+
+func ReadReactivePower(d *i2c.Device, c *Config, phase string) float64 {
+	command := make([]byte, 2)
+	switch phase {
+	case "A":
+		command = []byte{0xE5, 0x16} // 0xE516 (AVAR total reactive power phase A)
+	case "B":
+		command = []byte{0xE5, 0x17} // 0xE517 (AVAR total reactive power phase B)
+	case "C":
+		command = []byte{0xE5, 0x18} // 0xE518 (AVAR total reactive power phase C)
+	default:
+		panic(fmt.Errorf("Invalid phase %q", phase))
+	}
+
+	if c.MeasureCurrent[phase] {
+		outcome := float64(DeviceFetchInt(d, 4, command))
+		if c.CurrentDirection[phase] {
+			return outcome * -1
+		} else {
+			return outcome
+		}
+	} else {
+		return 0.0
+	}
+}
+
 func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	var values [25]float32
 
@@ -479,38 +505,10 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	values[17] = float32(ReadApparentPower(d, c, "B")) // Phase B.
 	values[18] = float32(ReadApparentPower(d, c, "C")) // Phase C.
 
-	// Total reactive power phase A (volt-ampere reactive).
-	if c.MeasureCurrent["A"] {
-		// 0xE516 (AVAR total reactive power an A)
-		values[19] = float32(DeviceFetchInt(d, 4, []byte{0xE5, 0x16}))
-	} else {
-		values[19] = 0.0
-	}
-	if c.CurrentDirection["A"] {
-		values[19] *= -1
-	}
-
-	// Total reactive power phase B (volt-ampere reactive).
-	if c.MeasureCurrent["B"] {
-		// 0xE517 (BVAR total reactive power an B)
-		values[20] = float32(DeviceFetchInt(d, 4, []byte{0xE5, 0x17}))
-	} else {
-		values[20] = 0.0
-	}
-	if c.CurrentDirection["B"] {
-		values[20] *= -1
-	}
-
-	// Total reactive power phase C (volt-ampere reactive).
-	if c.MeasureCurrent["C"] {
-		// 0xE518 (CVAR total reactive power an C)
-		values[21] = float32(DeviceFetchInt(d, 4, []byte{0xE5, 0x18}))
-	} else {
-		values[21] = 0.0
-	}
-	if c.CurrentDirection["C"] {
-		values[21] *= -1
-	}
+	// Measure reactive power (volt-ampere reactive).
+	values[19] = float32(ReadReactivePower(d, c, "A")) // Phase A.
+	values[20] = float32(ReadReactivePower(d, c, "B")) // Phase B.
+	values[21] = float32(ReadReactivePower(d, c, "C")) // Phase C.
 
 	if math.Signbit(float64(values[19])) {
 		values[22] = (values[7] / float32(CTTypes[c.CTType["A"]].PowerCorrectionFactor) / values[16])
