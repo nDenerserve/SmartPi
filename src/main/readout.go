@@ -39,7 +39,7 @@ import (
 	"strings"
 	"time"
 
-        "golang.org/x/exp/io/i2c"
+	"golang.org/x/exp/io/i2c"
 
 	//import the Paho Go MQTT library
 	MQTT "github.com/eclipse/paho.mqtt.golang"
@@ -158,19 +158,19 @@ func publishReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [25]float
 			if c.DebugLevel > 0 {
 				fmt.Println("Publishing readoputs via MQTT...")
 			}
-			
+
 			// Status is used to stop MQTT publication sequence in case of first error.
 			var status = true
-			
+
 			for i := 0; i < len(readouts); i++ {
 				topic := c.MQTTtopic + "/" + readouts[i]
-				
+
 				if status {
 					if c.DebugLevel > 0 {
-						fmt.Println("  -> ", topic, ":" , values[i])
+						fmt.Println("  -> ", topic, ":", values[i])
 					}
 					token := mqttclient.Publish(topic, 1, false, strconv.FormatFloat(float64(values[i]), 'f', 2, 32))
-					
+
 					if !token.WaitTimeout(2 * time.Second) {
 						if c.DebugLevel > 0 {
 							fmt.Println("  MQTT Timeout. Stopping MQTT sequence.")
@@ -235,6 +235,7 @@ var (
 		[]string{"phase"},
 	)
 )
+
 func updatePrometheusMetrics(v [25]float32) {
 	currentMetric.WithLabelValues("A").Set(float64(v[0]))
 	currentMetric.WithLabelValues("B").Set(float64(v[1]))
