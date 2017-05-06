@@ -216,6 +216,7 @@ var (
 		[]string{"phase"},
 	)
 )
+
 func updatePrometheusMetrics(v [25]float32) {
 	currentMetric.WithLabelValues("A").Set(float64(v[0]))
 	currentMetric.WithLabelValues("B").Set(float64(v[1]))
