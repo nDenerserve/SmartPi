@@ -311,14 +311,39 @@ func ReadCurrent(d *i2c.Device, c *Config, phase string) (current float64) {
 	return current
 }
 
+func ReadVoltage(d *i2c.Device, c *Config, phase string) (voltage float32, measureVoltage bool) {
+	command := make([]byte, 2)
+	switch phase {
+	case "A":
+		command = []byte{0x43, 0xC1} // 0x43C1 (AVRMS; Voltage RMS phase A)
+	case "B":
+		command = []byte{0x43, 0xC3} // 0x43C3 (BVRMS; Voltage RMS phase B)
+	case "C":
+		command = []byte{0x43, 0xC5} // 0x43C5 (BVRMS; Voltage RMS phase C)
+	default:
+		panic(fmt.Errorf("Invalid phase %q", phase))
+	}
+
+	voltage = float32(DeviceFetchInt(d, 4, command)) / 1e+4
+
+	// Ignore voltage reading if disalbed or less than 10 volts.
+	measureVoltage = true
+	if !c.MeasureVoltage[phase] || voltage < 10 {
+		voltage = float32(c.Voltage[phase])
+		measureVoltage = false
+	}
+
+	return voltage, measureVoltage
+}
+
 func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	var values [25]float32
 	var outcome float32
 	var err error
 
-	voltage_measure_1 := true
-	voltage_measure_2 := true
-	voltage_measure_3 := true
+	measureVoltage1 := true
+	measureVoltage2 := true
+	measureVoltage3 := true
 
 	// Measure Currents
 	values[0] = float32(ReadCurrent(d, c, "A")) // Phase A.
@@ -326,35 +351,10 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	values[2] = float32(ReadCurrent(d, c, "C")) // Phase C.
 	values[3] = float32(ReadCurrent(d, c, "N")) // Phase N.
 
-	// Voltage phase A (volts)
-	// 0x43C1 (AVRMS; Voltage rms an A)
-	outcome = float32(DeviceFetchInt(d, 4, []byte{0x43, 0xC1}))
-	values[4] = float32(outcome / 1e+4)
-	voltage_measure_1 = true
-	if !c.MeasureVoltage1 || values[4] < 10 {
-		values[4] = float32(c.Voltage1)
-		voltage_measure_1 = false
-	}
-
-	// Voltage phase B (volts)
-	// 0x43C3 (BVRMS; Voltage rms an B)
-	outcome = float32(DeviceFetchInt(d, 4, []byte{0x43, 0xC3}))
-	values[5] = float32(outcome / 1e+4)
-	voltage_measure_2 = true
-	if !c.MeasureVoltage2 || values[5] < 10 {
-		values[5] = float32(c.Voltage2)
-		voltage_measure_2 = false
-	}
-
-	// Voltage phase C (volts)
-	// 0x43C5 (BVRMS; Voltage rms an C)
-	outcome = float32(DeviceFetchInt(d, 4, []byte{0x43, 0xC5}))
-	values[6] = float32(outcome / 1e+4)
-	voltage_measure_3 = true
-	if !c.MeasureVoltage3 || values[6] < 10 {
-		values[6] = float32(c.Voltage3)
-		voltage_measure_3 = false
-	}
+	// Measure Voltages.
+	values[4], measureVoltage1 = ReadVoltage(d, c, "A") // Phase A.
+	values[5], measureVoltage2 = ReadVoltage(d, c, "B") // Phase B.
+	values[6], measureVoltage3 = ReadVoltage(d, c, "C") // Phase C.
 
 	// Total active power phase A (watts).
 	// 0xE513 (AWATT total active power an A)
@@ -367,7 +367,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	if c.CurrentDirection1 {
 		values[7] *= -1
 	}
-	if !voltage_measure_1 {
+	if !measureVoltage1 {
 		values[7] = values[0] * values[4]
 	}
 
@@ -382,7 +382,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	if c.CurrentDirection2 {
 		values[8] *= -1
 	}
-	if !voltage_measure_2 {
+	if !measureVoltage2 {
 		values[8] = values[1] * values[5]
 	}
 
@@ -397,7 +397,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	if c.CurrentDirection3 {
 		values[9] *= -1
 	}
-	if !voltage_measure_3 {
+	if !measureVoltage3 {
 		values[9] = values[2] * values[6]
 	}
 
@@ -407,7 +407,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	if c.CurrentDirection1 {
 		values[10] *= -1
 	}
-	if c.MeasureVoltage1 {
+	if c.MeasureVoltage["A"] {
 		values[10] = 1.0
 	}
 
@@ -417,7 +417,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	if c.CurrentDirection2 {
 		values[11] *= -1
 	}
-	if c.MeasureVoltage2 {
+	if c.MeasureVoltage["B"] {
 		values[11] = 1.0
 	}
 
@@ -427,7 +427,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	if c.CurrentDirection3 {
 		values[12] *= -1
 	}
-	if c.MeasureVoltage3 {
+	if c.MeasureVoltage["C"] {
 		values[12] = 1.0
 	}
 
