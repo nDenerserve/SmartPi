@@ -39,27 +39,23 @@ const (
 	ADE7878_ADDR              int     = 0x38
 	SAMPLES                   int     = 100
 	ADE7878_CLOCK             float32 = 256000
-	FACTOR_CIRCLE             float32 = 360
-	VAL                       float32 = math.Pi / 180.0
-	RMS_FACTOR_VOLTAGE        float32 = 2427873
-	CURRENT_RESISTOR_A        float32 = 7.07107
-	CURRENT_RESISTOR_B        float32 = 7.07107
-	CURRENT_RESISTOR_C        float32 = 7.07107
-	CURRENT_RESISTOR_N        float32 = 7.07107
-	CURRENT_CLAMP_FACTOR_A    float32 = 0.05
-	CURRENT_CLAMP_FACTOR_B    float32 = 0.05
-	CURRENT_CLAMP_FACTOR_C    float32 = 0.05
-	CURRENT_CLAMP_FACTOR_N    float32 = 0.05
-	OFFSET_CURRENT_A          float32 = 0.97129167
-	OFFSET_CURRENT_B          float32 = 0.97129167
-	OFFSET_CURRENT_C          float32 = 0.97129167
-	OFFSET_CURRENT_N          float32 = 0.97129167
-	OFFSET_VOLTAGE_A          float32 = 1.0
-	OFFSET_VOLTAGE_B          float32 = 1.0
-	OFFSET_VOLTAGE_C          float32 = 1.0
-	POWER_CORRECTION_FACTOR_A float32 = 0.019413
-	POWER_CORRECTION_FACTOR_B float32 = 0.019413
-	POWER_CORRECTION_FACTOR_C float32 = 0.019413
+	halfCircle                float32 = math.Pi / 180.0
+)
+
+type CTFactors struct {
+	CurrentResistor, CurrentClampFactor, OffsetCurrent, OffsetVoltage, PowerCorrectionFactor float64
+}
+
+var (
+	CTTypes = map[string]CTFactors{
+		"YHDC_SCT013": CTFactors{
+			CurrentResistor:       7.07107,
+			CurrentClampFactor:    0.05,
+			OffsetCurrent:         0.97129167,
+			OffsetVoltage:         1.0,
+			PowerCorrectionFactor: 0.019413,
+		},
+	}
 )
 
 var (
@@ -278,52 +274,57 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 	return d, nil
 }
 
+func ReadCurrent(d *i2c.Device, c *Config, phase string) (current float64) {
+	command := make([]byte, 2)
+	switch phase {
+	case "A":
+		command = []byte{0x43, 0xC0} // 0x43C0 (AIRMS; Current rms an A)
+	case "B":
+		command = []byte{0x43, 0xC2} // 0x43C2 (AIRMS; Current rms an B)
+	case "C":
+		command = []byte{0x43, 0xC4} // 0x43C4 (AIRMS; Current rms an C)
+	case "N":
+		command = []byte{0x43, 0xC6} // 0x43C6 (AIRMS; Current rms an N)
+	default:
+		panic(fmt.Errorf("Invalid phase %q", phase))
+	}
+
+	var rmsFactor float64
+	switch c.PowerFrequency {
+	case 60:
+		rmsFactor = 3493258.0 // 60Hz
+	case 50:
+		rmsFactor = 4191910.0 // 50Hz
+	default:
+		panic(fmt.Errorf("Invalid frequency %g", c.PowerFrequency))
+	}
+
+	if c.MeasureCurrent[phase] {
+		outcome := float64(DeviceFetchInt(d, 4, command))
+		cr := CTTypes[c.CTType[phase]].CurrentResistor
+		ccf := CTTypes[c.CTType[phase]].CurrentClampFactor
+		oc := CTTypes[c.CTType[phase]].OffsetCurrent
+		current = ((((outcome * 0.3535) / rmsFactor) / cr) / ccf) * 100.0 * oc
+	} else {
+		current = 0.0
+	}
+	return current
+}
+
 func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	var values [25]float32
 	var outcome float32
 	var err error
 
-	if c.PowerFrequency == 60 {
-		rms_factor_current = float32(3493258) // 60Hz
-	} else {
-		rms_factor_current = float32(4191910) // 50Hz
-	}
-
 	voltage_measure_1 := true
 	voltage_measure_2 := true
 	voltage_measure_3 := true
 
-	// Current phase A (amps).
-	if c.MeasureCurrent1 {
-		// 0x43C0 (AIRMS; Current rms an A)
-		outcome = float32(DeviceFetchInt(d, 4, []byte{0x43, 0xC0}))
-		values[0] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_A) / CURRENT_CLAMP_FACTOR_A) * 100.0 * OFFSET_CURRENT_A
-	} else {
-		values[0] = 0.0
-	}
-
-	// Current phase B (amps).
-	if c.MeasureCurrent2 {
-		// 0x43C2 (BIRMS; Current rms an B)
-		outcome = float32(DeviceFetchInt(d, 4, []byte{0x43, 0xC2}))
-		values[1] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_B) / CURRENT_CLAMP_FACTOR_B) * 100.0 * OFFSET_CURRENT_B
-	} else {
-		values[1] = 0.0
-	}
-
-	// Current phase C (amps).
-	if c.MeasureCurrent3 {
-		// 0x43C4 (CIRMS; Current rms an C)
-		outcome = float32(DeviceFetchInt(d, 4, []byte{0x43, 0xC4}))
-		values[2] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_C) / CURRENT_CLAMP_FACTOR_C) * 100.0 * OFFSET_CURRENT_C
-	} else {
-		values[2] = 0.0
-	}
-
-	// Current Neutral (amps)
-	// 0x43C6 (NIRMS; Current rms neutral conductor)
-	outcome = float32(DeviceFetchInt(d, 4, []byte{0x43, 0xC6}))
-	values[3] = ((((outcome * 0.3535) / rms_factor_current) / CURRENT_RESISTOR_N) / CURRENT_CLAMP_FACTOR_N) * 100.0 * OFFSET_CURRENT_N
+	// Measure Currents
+	values[0] = float32(ReadCurrent(d, c, "A")) // Phase A.
+	values[1] = float32(ReadCurrent(d, c, "B")) // Phase B.
+	values[2] = float32(ReadCurrent(d, c, "C")) // Phase C.
+	values[3] = float32(ReadCurrent(d, c, "N")) // Phase N.
 
 	// Voltage phase A (volts)
 	// 0x43C1 (AVRMS; Voltage rms an A)
@@ -358,8 +359,8 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	// Total active power phase A (watts).
 	// 0xE513 (AWATT total active power an A)
 	outcome = float32(DeviceFetchInt(d, 4, []byte{0xE5, 0x13}))
-	if c.MeasureCurrent1 {
-		values[7] = float32(outcome * POWER_CORRECTION_FACTOR_A)
+	if c.MeasureCurrent["A"] {
+		values[7] = float32(outcome * float32(CTTypes[c.CTType["A"]].PowerCorrectionFactor))
 	} else {
 		values[7] = 0.0
 	}
@@ -373,8 +374,8 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	// Total active power phase B (watts).
 	// 0xE514 (AWATT total active power an B)
 	outcome = float32(DeviceFetchInt(d, 4, []byte{0xE5, 0x14}))
-	if c.MeasureCurrent2 {
-		values[8] = float32(outcome * POWER_CORRECTION_FACTOR_B)
+	if c.MeasureCurrent["B"] {
+		values[8] = float32(outcome * float32(CTTypes[c.CTType["B"]].PowerCorrectionFactor))
 	} else {
 		values[8] = 0.0
 	}
@@ -388,8 +389,8 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	// Total active power phase C (watts).
 	// 0xE515 (AWATT total active power an C)
 	outcome = float32(DeviceFetchInt(d, 4, []byte{0xE5, 0x15}))
-	if c.MeasureCurrent3 {
-		values[9] = float32(outcome * POWER_CORRECTION_FACTOR_C)
+	if c.MeasureCurrent["C"] {
+		values[9] = float32(outcome * float32(CTTypes[c.CTType["C"]].PowerCorrectionFactor))
 	} else {
 		values[9] = 0.0
 	}
@@ -402,7 +403,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 
 	// 0xE601 (ANGLE0 cosphi an A)
 	outcome = float32(DeviceFetchInt(d, 2, []byte{0xE6, 0x01}))
-	values[10] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.PowerFrequency) / ADE7878_CLOCK * VAL)))
+	values[10] = float32(math.Cos(float64(outcome * 360 * float32(c.PowerFrequency) / ADE7878_CLOCK * halfCircle)))
 	if c.CurrentDirection1 {
 		values[10] *= -1
 	}
@@ -412,7 +413,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 
 	// 0xE602 (ANGLE1 cosphi an B)
 	outcome = float32(DeviceFetchInt(d, 2, []byte{0xE6, 0x02}))
-	values[11] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.PowerFrequency) / ADE7878_CLOCK * VAL)))
+	values[11] = float32(math.Cos(float64(outcome * 360 * float32(c.PowerFrequency) / ADE7878_CLOCK * halfCircle)))
 	if c.CurrentDirection2 {
 		values[11] *= -1
 	}
@@ -422,7 +423,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 
 	// 0xE603 (ANGLE1 cosphi an C)
 	outcome = float32(DeviceFetchInt(d, 2, []byte{0xE6, 0x03}))
-	values[12] = float32(math.Cos(float64(outcome * FACTOR_CIRCLE * float32(c.PowerFrequency) / ADE7878_CLOCK * VAL)))
+	values[12] = float32(math.Cos(float64(outcome * 360 * float32(c.PowerFrequency) / ADE7878_CLOCK * halfCircle)))
 	if c.CurrentDirection3 {
 		values[12] *= -1
 	}
@@ -458,7 +459,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	values[15] = float32(ADE7878_CLOCK / (outcome + 1))
 
 	// Total apparent power phase A (volt-amps).
-	if c.MeasureCurrent1 {
+	if c.MeasureCurrent["A"] {
 		// 0xE519 (AVA total apparent power an A)
 		values[16] = float32(DeviceFetchInt(d, 4, []byte{0xE5, 0x19}))
 	} else {
@@ -466,7 +467,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	}
 
 	// Total apparent power phase B (volt-amps).
-	if c.MeasureCurrent2 {
+	if c.MeasureCurrent["B"] {
 		// 0xE51A (BVA total apparent power an B)
 		values[17] = float32(DeviceFetchInt(d, 4, []byte{0xE5, 0x1A}))
 	} else {
@@ -474,7 +475,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	}
 
 	// Total apparent power phase A (volt-amps).
-	if c.MeasureCurrent3 {
+	if c.MeasureCurrent["C"] {
 		// 0xE51B (CVA total apparent power an C)
 		values[18] = float32(DeviceFetchInt(d, 4, []byte{0xE5, 0x1B}))
 	} else {
@@ -482,7 +483,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	}
 
 	// Total reactive power phase A (volt-ampere reactive).
-	if c.MeasureCurrent1 {
+	if c.MeasureCurrent["A"] {
 		// 0xE516 (AVAR total reactive power an A)
 		values[19] = float32(DeviceFetchInt(d, 4, []byte{0xE5, 0x16}))
 	} else {
@@ -493,7 +494,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	}
 
 	// Total reactive power phase B (volt-ampere reactive).
-	if c.MeasureCurrent2 {
+	if c.MeasureCurrent["B"] {
 		// 0xE517 (BVAR total reactive power an B)
 		values[20] = float32(DeviceFetchInt(d, 4, []byte{0xE5, 0x17}))
 	} else {
@@ -504,7 +505,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	}
 
 	// Total reactive power phase C (volt-ampere reactive).
-	if c.MeasureCurrent3 {
+	if c.MeasureCurrent["C"] {
 		// 0xE518 (CVAR total reactive power an C)
 		values[21] = float32(DeviceFetchInt(d, 4, []byte{0xE5, 0x18}))
 	} else {
@@ -515,29 +516,29 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	}
 
 	if math.Signbit(float64(values[19])) {
-		values[22] = (values[7] / POWER_CORRECTION_FACTOR_A / values[16])
+		values[22] = (values[7] / float32(CTTypes[c.CTType["A"]].PowerCorrectionFactor) / values[16])
 	} else {
-		values[22] = -1 * (values[7] / POWER_CORRECTION_FACTOR_A / values[16])
+		values[22] = -1 * (values[7] / float32(CTTypes[c.CTType["A"]].PowerCorrectionFactor) / values[16])
 	}
-	if c.MeasureCurrent1 {
+	if c.MeasureCurrent["A"] {
 		values[22] = 0.0
 	}
 
 	if math.Signbit(float64(values[20])) {
-		values[23] = (values[8] / POWER_CORRECTION_FACTOR_B / values[17])
+		values[23] = (values[8] / float32(CTTypes[c.CTType["B"]].PowerCorrectionFactor) / values[17])
 	} else {
-		values[23] = -1 * (values[8] / POWER_CORRECTION_FACTOR_B / values[17])
+		values[23] = -1 * (values[8] / float32(CTTypes[c.CTType["B"]].PowerCorrectionFactor) / values[17])
 	}
-	if c.MeasureCurrent2 {
+	if c.MeasureCurrent["B"] {
 		values[23] = 0.0
 	}
 
 	if math.Signbit(float64(values[21])) {
-		values[24] = (values[9] / POWER_CORRECTION_FACTOR_C / values[18])
+		values[24] = (values[9] / float32(CTTypes[c.CTType["C"]].PowerCorrectionFactor) / values[18])
 	} else {
-		values[24] = -1 * (values[9] / POWER_CORRECTION_FACTOR_C / values[18])
+		values[24] = -1 * (values[9] / float32(CTTypes[c.CTType["C"]].PowerCorrectionFactor) / values[18])
 	}
-	if c.MeasureCurrent3 {
+	if c.MeasureCurrent["C"] {
 		values[24] = 0.0
 	}
 
@@ -552,6 +553,6 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 		fmt.Printf("PFA: %g  PFB: %g  PFC: %g  ", values[22], values[23], values[24])
 		fmt.Printf("\n")
 	}
-	
+
 	return values
 }

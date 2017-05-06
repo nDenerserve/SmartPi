@@ -51,9 +51,8 @@ type Config struct {
 	SharedDir         string
 	SharedFile        string
 	PowerFrequency    int
-	MeasureCurrent1   bool
-	MeasureCurrent2   bool
-	MeasureCurrent3   bool
+	CTType            map[string]string
+	MeasureCurrent    map[string]bool
 	MeasureVoltage1   bool
 	MeasureVoltage2   bool
 	MeasureVoltage3   bool
@@ -111,12 +110,19 @@ func (p *Config) ReadParameterFromFile() {
 	p.SharedDir = cfg.Section("device").Key("shared_dir").MustString("/var/tmp/smartpi")
 	p.SharedFile = cfg.Section("device").Key("shared_file").MustString("values")
 	p.PowerFrequency = cfg.Section("device").Key("power_frequency").MustInt(50)
+	p.CTType = make(map[string]string)
+	p.CTType["A"] = cfg.Section("device").Key("ct_type_1").MustString("YHDC_SCT013")
+	p.CTType["B"] = cfg.Section("device").Key("ct_type_2").MustString("YHDC_SCT013")
+	p.CTType["C"] = cfg.Section("device").Key("ct_type_3").MustString("YHDC_SCT013")
+	p.CTType["N"] = cfg.Section("device").Key("ct_type_4").MustString("YHDC_SCT013")
 	p.MeasureVoltage1 = cfg.Section("device").Key("measure_voltage_1").MustBool(true)
 	p.MeasureVoltage2 = cfg.Section("device").Key("measure_voltage_2").MustBool(true)
 	p.MeasureVoltage3 = cfg.Section("device").Key("measure_voltage_3").MustBool(true)
-	p.MeasureCurrent1 = cfg.Section("device").Key("measure_current_1").MustBool(true)
-	p.MeasureCurrent2 = cfg.Section("device").Key("measure_current_2").MustBool(true)
-	p.MeasureCurrent3 = cfg.Section("device").Key("measure_current_3").MustBool(true)
+	p.MeasureCurrent = make(map[string]bool)
+	p.MeasureCurrent["A"] = cfg.Section("device").Key("measure_current_1").MustBool(true)
+	p.MeasureCurrent["B"] = cfg.Section("device").Key("measure_current_2").MustBool(true)
+	p.MeasureCurrent["C"] = cfg.Section("device").Key("measure_current_3").MustBool(true)
+	p.MeasureCurrent["N"] = true // Always measure Neutral.
 	p.Voltage1 = cfg.Section("device").Key("voltage_1").MustFloat64(230)
 	p.Voltage2 = cfg.Section("device").Key("voltage_2").MustFloat64(230)
 	p.Voltage3 = cfg.Section("device").Key("voltage_3").MustFloat64(230)
