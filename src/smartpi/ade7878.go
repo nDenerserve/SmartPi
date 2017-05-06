@@ -36,10 +36,10 @@ import (
 )
 
 const (
-	ADE7878_ADDR  int     = 0x38
-	SAMPLES       int     = 100
-	ADE7878_CLOCK float32 = 256000
-	halfCircle    float64 = math.Pi / 180.0
+	ADE7878_ADDR int     = 0x38
+	SAMPLES      int     = 100
+	ade7878Clock float64 = 256000
+	halfCircle   float64 = math.Pi / 180.0
 )
 
 type CTFactors struct {
@@ -377,7 +377,7 @@ func ReadAngle(d *i2c.Device, c *Config, phase string) (angle float64) {
 
 	if c.MeasureVoltage[phase] {
 		outcome := float64(DeviceFetchInt(d, 2, command))
-		angle = math.Cos(outcome * 360 * float64(c.PowerFrequency) / float64(ADE7878_CLOCK) * halfCircle)
+		angle = math.Cos(outcome * 360 * float64(c.PowerFrequency) / ade7878Clock * halfCircle)
 		if c.CurrentDirection[phase] {
 			angle *= -1
 		}
@@ -388,14 +388,33 @@ func ReadAngle(d *i2c.Device, c *Config, phase string) (angle float64) {
 	return angle
 }
 
+func ReadFrequency(d *i2c.Device, c *Config, phase string) (frequency float64) {
+	command := make([]byte, 2)
+	switch phase {
+	case "A":
+		command = []byte{0xE7, 0x00, 0x1C} // MMODE-Register measure frequency at VA
+	case "B":
+		command = []byte{0xE7, 0x00, 0x1C} // MMODE-Register measure frequency at VB
+	case "C":
+		command = []byte{0xE7, 0x00, 0x1C} // MMODE-Register measure frequency at VC
+	default:
+		panic(fmt.Errorf("Invalid phase %q", phase))
+	}
+
+	err := d.Write(command) // MMODE-Register measure frequency
+	if err != nil {
+		panic(err)
+	}
+	time.Sleep(50 * time.Millisecond)
+	// 0xE607 (PERIOD)
+	outcome := float64(DeviceFetchInt(d, 2, []byte{0xE6, 0x07}))
+	frequency = ade7878Clock / (outcome + 1)
+
+	return frequency
+}
+
 func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	var values [25]float32
-	var outcome float32
-	var err error
-
-	measureVoltage1 := true
-	measureVoltage2 := true
-	measureVoltage3 := true
 
 	// Measure Currents
 	values[0] = float32(ReadCurrent(d, c, "A")) // Phase A.
@@ -404,6 +423,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	values[3] = float32(ReadCurrent(d, c, "N")) // Phase N.
 
 	// Measure Voltages.
+	var measureVoltage1, measureVoltage2, measureVoltage3 bool
 	values[4], measureVoltage1 = ReadVoltage(d, c, "A") // Phase A.
 	values[5], measureVoltage2 = ReadVoltage(d, c, "B") // Phase B.
 	values[6], measureVoltage3 = ReadVoltage(d, c, "C") // Phase C.
@@ -430,32 +450,10 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	values[11] = float32(ReadAngle(d, c, "B")) // Phase B.
 	values[12] = float32(ReadAngle(d, c, "C")) // Phase C.
 
-	err = d.Write([]byte{0xE7, 0x00, 0x1C}) // MMODE-Register measure frequency at VA
-	if err != nil {
-		panic(err)
-	}
-	time.Sleep(50 * time.Millisecond)
-	// 0xE607 (PERIOD)
-	outcome = float32(DeviceFetchInt(d, 2, []byte{0xE6, 0x07}))
-	values[13] = float32(ADE7878_CLOCK / (outcome + 1))
-
-	err = d.Write([]byte{0xE7, 0x00, 0x1D}) // MMODE-Register measure frequency at VB
-	if err != nil {
-		panic(err)
-	}
-	time.Sleep(50 * time.Millisecond)
-	// 0xE607 (PERIOD)
-	outcome = float32(DeviceFetchInt(d, 2, []byte{0xE6, 0x07}))
-	values[14] = float32(ADE7878_CLOCK / (outcome + 1))
-
-	err = d.Write([]byte{0xE7, 0x00, 0x1E}) // MMODE-Register measure frequency at VC
-	if err != nil {
-		panic(err)
-	}
-	time.Sleep(50 * time.Millisecond)
-	// 0xE607 (PERIOD)
-	outcome = float32(DeviceFetchInt(d, 2, []byte{0xE6, 0x07}))
-	values[15] = float32(ADE7878_CLOCK / (outcome + 1))
+	// Measure frequencies.
+	values[13] = float32(ReadFrequency(d, c, "A")) // Phase A.
+	values[14] = float32(ReadFrequency(d, c, "B")) // Phase B.
+	values[15] = float32(ReadFrequency(d, c, "C")) // Phase C.
 
 	// Total apparent power phase A (volt-amps).
 	if c.MeasureCurrent["A"] {
