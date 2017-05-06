@@ -47,15 +47,15 @@ type Config struct {
 	DatabaseDir string
 
 	// [device]
-	I2CDevice         string
-	SharedDir         string
-	SharedFile        string
-	PowerFrequency    int
-	CTType            map[string]string
-	CurrentDirection  map[string]bool
-	MeasureCurrent    map[string]bool
-	MeasureVoltage    map[string]bool
-	Voltage           map[string]float64
+	I2CDevice        string
+	SharedDir        string
+	SharedFile       string
+	PowerFrequency   int
+	CTType           map[string]string
+	CurrentDirection map[string]bool
+	MeasureCurrent   map[string]bool
+	MeasureVoltage   map[string]bool
+	Voltage          map[string]float64
 
 	// [ftp]
 	FTPupload bool

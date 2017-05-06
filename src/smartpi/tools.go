@@ -89,7 +89,7 @@ func DiffTime(a, b time.Time) (int, int, int, int, int, int) {
 	return year, month, day, hour, min, sec
 }
 
-func Monthchange(a, b time.Time) (int) {
+func Monthchange(a, b time.Time) int {
 	if a.Location() != b.Location() {
 		b = b.In(a.Location())
 	}
@@ -103,7 +103,7 @@ func Monthchange(a, b time.Time) (int) {
 	month := int(M2 - M1)
 
 	if month < 0 {
-		month += (12*year)
+		month += (12 * year)
 	}
 
 	return month
