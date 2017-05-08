@@ -3,6 +3,12 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "m+iiamnbukzE8kFPfBche6D0FmQ=",
+			"path": "github.com/Sirupsen/logrus",
+			"revision": "5b60b3d3ee017ed00bcd0225fcca7acab767844b",
+			"revisionTime": "2017-05-04T07:10:19Z"
+		},
+		{
 			"checksumSHA1": "PzqUa3HAaeyzDw87wACb15/tMkI=",
 			"path": "github.com/eclipse/paho.mqtt.golang",
 			"revision": "c37a0a275c2de30bf1c7eb072dd6bef09a93c666",
