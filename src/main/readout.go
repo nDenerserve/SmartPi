@@ -40,6 +40,8 @@ import (
 
 	//import the Paho Go MQTT library
 	MQTT "github.com/eclipse/paho.mqtt.golang"
+	//import rlog - A simple Golang logger
+	"smartpi/rlog"
 )
 
 var readouts = [...]string{
@@ -54,16 +56,13 @@ func writeSharedFile(c *smartpi.Config, values [25]float32) {
 	}
 	t := time.Now()
 	timeStamp := t.Format("2006-01-02 15:04:05")
-	if c.DebugLevel > 0 {
-		fmt.Println(t.Format("## Shared File Update ##"))
-		fmt.Println(timeStamp)
-		fmt.Printf("I1: %s  I2: %s  I3: %s  I4: %s  ", s[0], s[1], s[2], s[3])
-		fmt.Printf("V1: %s  V2: %s  V3: %s  ", s[4], s[5], s[6])
-		fmt.Printf("P1: %s  P2: %s  P3: %s  ", s[7], s[8], s[9])
-		fmt.Printf("COS1: %s  COS2: %s  COS3: %s  ", s[10], s[11], s[12])
-		fmt.Printf("F1: %s  F2: %s  F3: %s  ", s[13], s[14], s[15])
-		fmt.Printf("\n")
-	}
+	rlog.Info(t.Format("## Shared File Update ##"))
+	rlog.Info(timeStamp)
+	rlog.Infof("I1: %s  I2: %s  I3: %s  I4: %s  ", s[0], s[1], s[2], s[3])
+	rlog.Infof("V1: %s  V2: %s  V3: %s  ", s[4], s[5], s[6])
+	rlog.Infof("P1: %s  P2: %s  P3: %s  ", s[7], s[8], s[9])
+	rlog.Infof("COS1: %s  COS2: %s  COS3: %s  ", s[10], s[11], s[12])
+	rlog.Infof("F1: %s  F2: %s  F3: %s  ", s[13], s[14], s[15])
 	sharedFile := filepath.Join(c.SharedDir, c.SharedFile)
 	if _, err = os.Stat(sharedFile); os.IsNotExist(err) {
 		os.MkdirAll(c.SharedDir, 0777)
@@ -100,11 +99,9 @@ func updateCounterFile(c *smartpi.Config, f string, v float64) {
 		counter = 0.0
 	}
 
-	if c.DebugLevel > 0 {
-		fmt.Println("## Persistent counter file update ##")
-		fmt.Println(t.Format("2006-01-02 15:04:05"))
-		fmt.Printf("File: %q  Current: %g  Increment: %g \n ", f, counter, v)
-	}
+	rlog.Info("## Persistent counter file update ##")
+	rlog.Info(t.Format("2006-01-02 15:04:05"))
+	rlog.Infof("File: %q  Current: %g  Increment: %g \n ", f, counter, v)
 
 	err = ioutil.WriteFile(f, []byte(strconv.FormatFloat(counter+v, 'f', 8, 64)), 0644)
 	if err != nil {
@@ -114,24 +111,19 @@ func updateCounterFile(c *smartpi.Config, f string, v float64) {
 
 func updateSQLiteDatabase(c *smartpi.Config, data []float32) {
 	t := time.Now()
-	if c.DebugLevel > 0 {
-		fmt.Println("## SQLITE Database Update ##")
-		fmt.Println(t.Format("2006-01-02 15:04:05"))
-		fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  ", data[0], data[1], data[2], data[3])
-		fmt.Printf("V1: %g  V2: %g  V3: %g  ", data[4], data[5], data[6])
-		fmt.Printf("P1: %g  P2: %g  P3: %g  ", data[7], data[8], data[9])
-		fmt.Printf("COS1: %g  COS2: %g  COS3: %g  ", data[10], data[11], data[12])
-		fmt.Printf("F1: %g  F2: %g  F3: %g  ", data[13], data[14], data[15])
-		fmt.Printf("EB1: %g  EB2: %g  EB3: %g  ", data[16], data[17], data[18])
-		fmt.Printf("EL1: %g  EL2: %g  EL3: %g", data[19], data[20], data[21])
-		fmt.Printf("\n")
-	}
+	rlog.Info("## SQLITE Database Update ##")
+	rlog.Info(t.Format("2006-01-02 15:04:05"))
+	rlog.Infof("I1: %g  I2: %g  I3: %g  I4: %g  ", data[0], data[1], data[2], data[3])
+	rlog.Infof("V1: %g  V2: %g  V3: %g  ", data[4], data[5], data[6])
+	rlog.Infof("P1: %g  P2: %g  P3: %g  ", data[7], data[8], data[9])
+	rlog.Infof("COS1: %g  COS2: %g  COS3: %g  ", data[10], data[11], data[12])
+	rlog.Infof("F1: %g  F2: %g  F3: %g  ", data[13], data[14], data[15])
+	rlog.Infof("EB1: %g  EB2: %g  EB3: %g  ", data[16], data[17], data[18])
+	rlog.Infof("EL1: %g  EL2: %g  EL3: %g", data[19], data[20], data[21])
 
 	dbFileName := "smartpi_logdata_" + t.Format("200601") + ".db"
 	if _, err := os.Stat(filepath.Join(c.DatabaseDir, dbFileName)); os.IsNotExist(err) {
-		if c.DebugLevel > 0 {
-			fmt.Printf("Creating new database file.")
-		}
+		rlog.Info("Creating new database file.")
 		smartpi.CreateSQlDatabase(c.DatabaseDir, t)
 	}
 	smartpi.InsertData(c.DatabaseDir, t, data)
@@ -143,43 +135,30 @@ func publishReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [25]float
 		// Let's try to (re-)connect if MQTT connection was lost.
 		if !mqttclient.IsConnected() {
 			if mqtttoken := mqttclient.Connect(); mqtttoken.Wait() && mqtttoken.Error() != nil {
-				if c.DebugLevel > 0 {
-					fmt.Println("Connecting to MQTT broker failed.\n   ", mqtttoken.Error())
-				}
+				rlog.Error("Connecting to MQTT broker failed.\n   ", mqtttoken.Error())
 			}
 		}
 		if mqttclient.IsConnected() {
-			if c.DebugLevel > 0 {
-				fmt.Println("Publishing readoputs via MQTT...")
-			}
-			
+			rlog.Info("Publishing readoputs via MQTT...")
+
 			// Status is used to stop MQTT publication sequence in case of first error.
 			var status = true
-			
+
 			for i := 0; i < len(readouts); i++ {
 				topic := c.MQTTtopic + "/" + readouts[i]
-				
+
 				if status {
-					if c.DebugLevel > 0 {
-						fmt.Println("  -> ", topic, ":" , values[i])
-					}
+					rlog.Tracef(1, "  -> "+topic+":"+fmt.Sprintf("%6.2f", values[i]))
 					token := mqttclient.Publish(topic, 1, false, strconv.FormatFloat(float64(values[i]), 'f', 2, 32))
-					
+
 					if !token.WaitTimeout(2 * time.Second) {
-						if c.DebugLevel > 0 {
-							fmt.Println("  MQTT Timeout. Stopping MQTT sequence.")
-						}
+						rlog.Error("  MQTT Timeout. Stopping MQTT sequence.")
 						status = false
 					} else if token.Error() != nil {
-						if c.DebugLevel > 0 {
-							fmt.Println(token.Error())
-						}
+						rlog.Error(token.Error())
 						status = false
 					}
 				}
-			}
-			if c.DebugLevel > 0 {
-				fmt.Println("done.")
 			}
 		}
 	}
@@ -192,14 +171,10 @@ func main() {
 
 	var mqttclient MQTT.Client
 
-	if config.DebugLevel > 0 {
-		fmt.Printf("Start SmartPi readout\n")
-	}
+	rlog.Info("Start SmartPi readout")
 
 	if config.MQTTenabled {
-		if config.DebugLevel > 0 {
-			fmt.Printf("Connecting to MQTT broker at %s\n", (config.MQTTbroker + ":" + config.MQTTbrokerport))
-		}
+		rlog.Infof("Connecting to MQTT broker at %s", (config.MQTTbroker + ":" + config.MQTTbrokerport))
 		//create a MQTTClientOptions struct setting the broker address, clientid, user and password
 		opts := MQTT.NewClientOptions().AddBroker("tcp://" + config.MQTTbroker + ":" + config.MQTTbrokerport)
 		opts.SetClientID("SmartPi")
@@ -214,9 +189,7 @@ func main() {
 		mqttclient = MQTT.NewClient(opts)
 		if mqtttoken := mqttclient.Connect(); mqtttoken.Wait() && mqtttoken.Error() != nil {
 			//panic(mqtttoken.Error())
-			if config.DebugLevel > 0 {
-				fmt.Println("Connecting to MQTT broker failed.\n   ", mqtttoken.Error())
-			}
+			rlog.Error("Connecting to MQTT broker failed.\n   ", mqtttoken.Error())
 		}
 	}
 

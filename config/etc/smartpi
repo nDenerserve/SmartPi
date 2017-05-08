@@ -8,18 +8,15 @@ lat=52.3667
 lng=9.7167
 
 [database]
-counterdir="/var/smartpi"
-dir="/var/smartpi/db"
+dir="/home/pi/data/smartpi"
+file="smartpi.rrd"
+counterdir="/home/pi/data/smartpi"
 
 [device]
 i2c_device="/dev/i2c-1"
-shared_dir="/var/tmp/smartpi"
+shared_dir="/home/pi/data/smartpi"
 shared_file="values"
 power_frequency=50
-ct_type_1=YHDC_SCT013
-ct_type_2=YHDC_SCT013
-ct_type_3=YHDC_SCT013
-ct_type_4=YHDC_SCT013
 measure_current_1=1
 measure_current_2=1
 measure_current_3=1
@@ -29,9 +26,9 @@ measure_voltage_3=1
 voltage_1=230
 voltage_2=230
 voltage_3=230
-change_current_direction_1=0
-change_current_direction_2=0
-change_current_direction_3=0
+change_current_direction_1=1
+change_current_direction_2=1
+change_current_direction_3=1
 
 [ftp]
 ftp_upload=0
@@ -49,16 +46,29 @@ port=1080
 docroot="/var/smartpi/www"
 
 [mqtt]
-mqtt_enabled=0
-mqtt_broker_url=""
-mqtt_broker_port=""
-mqtt_username=""
-mqtt_password=""
-mqtt_topic=""
+mqtt_enabled=1
+mqtt_username=emonpi
+mqtt_password=emonpimqtt2016
+mqtt_broker_url="127.0.0.1"
+mqtt_broker_port=1883
+mqtt_topic=emon/smartpi
 
 [umts]
 umts=0
-umts_apn=""
-umts_pin=""
-umts_username=""
-umts_password=""
+umts_apn=
+umts_pin=
+umts_username=
+umts_password=
+
+[logging]
+# https://github.com/romana/rlog
+# export RLOG_CONF_FILE=/etc/smartpi
+# RLOG_LOG_LEVEL: Set to "DEBUG", "INFO", "WARN", "ERROR", "CRITICAL" or "NONE"
+RLOG_LOG_LEVEL = INFO
+RLOG_CALLER_INFO = 1
+RLOG_TRACE_LEVEL = -1
+RLOG_LOG_NOTIME = 0
+RLOG_LOG_FILE = /home/pi/data/smartpi_rlog.log
+RLOG_LOG_STREAM = stdout
+# RLOG_TIME_FORMAT= UnixDate
+RLOG_TIME_FORMAT="2006/01/06 15:04:05"
