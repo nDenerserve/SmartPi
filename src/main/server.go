@@ -33,8 +33,9 @@ import (
 	"golang.org/x/net/context"
 	"log"
 	"net/http"
-	"smartpi"
 	"strconv"
+
+	"github.com/nDenerserve/SmartPi/src/smartpi"
 )
 
 func stringInSlice(list1 []string, list2 []string) bool {

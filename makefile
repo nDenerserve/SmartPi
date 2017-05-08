@@ -12,8 +12,6 @@ GOINSTALL=$(GO) install
 GOCLEAN=$(GO) clean
 GOGET=$(GO) get
 
-export GOPATH=$(CURDIR)
-
 all: makedir get buildsmartpireadout buildsmartpiserver buildsmartpiftpupload
 #all: makedir get buildsmartpireadout 
 
@@ -26,17 +24,17 @@ get:
 
 buildsmartpireadout:
 	@echo "start building smartpireadout..."
-	GOPATH=$(BUILDPATH) $(GOBUILD) -o bin/$(BINARY_READOUT) src/main/readout.go
+	$(GOBUILD) -o bin/$(BINARY_READOUT) src/main/readout.go
 	@echo "building smartpireadout done"
 
 buildsmartpiserver:
 	@echo "start building smartpiserver..."
-	GOPATH=$(BUILDPATH) $(GOBUILD) -o bin/$(BINARY_SERVER) src/main/server.go
+	$(GOBUILD) -o bin/$(BINARY_SERVER) src/main/server.go
 	@echo "building smartpiserver done"
 
 buildsmartpiftpupload:
 	@echo "start building smartpiftpupload..."
-	GOPATH=$(BUILDPATH) $(GOBUILD) -o bin/$(BINARY_FTPUPLOAD) src/main/ftpupload.go
+	$(GOBUILD) -o bin/$(BINARY_FTPUPLOAD) src/main/ftpupload.go
 	@echo "building smartpiftpupload done"
 
 install:

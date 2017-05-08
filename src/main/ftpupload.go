@@ -33,9 +33,10 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"smartpi"
 	"strings"
 	"time"
+
+	"github.com/nDenerserve/SmartPi/src/smartpi"
 )
 
 func main() {

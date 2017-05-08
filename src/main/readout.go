@@ -32,10 +32,11 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"smartpi"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/nDenerserve/SmartPi/src/smartpi"
 
 	log "github.com/Sirupsen/logrus"
 	//import the Paho Go MQTT library
