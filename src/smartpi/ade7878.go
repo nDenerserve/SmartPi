@@ -495,12 +495,12 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 		values[7] = values[0] * values[4]
 	}
 	if measureVoltage2 {
-		values[7] = float32(ReadActiveWatts(d, c, "B")) // Phase B.
+		values[8] = float32(ReadActiveWatts(d, c, "B")) // Phase B.
 	} else {
 		values[8] = values[1] * values[5]
 	}
 	if measureVoltage3 {
-		values[7] = float32(ReadActiveWatts(d, c, "C")) // Phase C.
+		values[9] = float32(ReadActiveWatts(d, c, "C")) // Phase C.
 	} else {
 		values[9] = values[2] * values[6]
 	}
