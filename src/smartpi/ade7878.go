@@ -33,6 +33,8 @@ import (
 	"golang.org/x/exp/io/i2c"
 	"math"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 const (
@@ -84,7 +86,7 @@ func DeviceFetchInt(d *i2c.Device, l int, cmd []byte) int64 {
 	default:
 		panic(fmt.Errorf("Invalid byte length for int conversion %d", l))
 	}
-	// fmt.Printf("DeviceFetchInt: cmd: %x data: %x result: %d\n", cmd, data, result)
+	log.Debugf("DeviceFetchInt: cmd: %x data: %x result: %d", cmd, data, result)
 	return result
 }
 
@@ -528,17 +530,16 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	values[23] = float32(CalculatePowerFactor(c, "B", float64(values[8]), float64(values[17]), float64(values[21]))) // Phase B.
 	values[24] = float32(CalculatePowerFactor(c, "C", float64(values[9]), float64(values[19]), float64(values[22]))) // Phase C.
 
-	if c.DebugLevel > 0 {
-		fmt.Printf("I1: %g  I2: %g  I3: %g  I4: %g  ", values[0], values[1], values[2], values[3])
-		fmt.Printf("V1: %g  V2: %g  V3: %g  ", values[4], values[5], values[6])
-		fmt.Printf("P1: %g  P2: %g  P3: %g  ", values[7], values[8], values[9])
-		fmt.Printf("COS1: %g  COS2: %g  COS3: %g  ", values[10], values[11], values[12])
-		fmt.Printf("F1: %g  F2: %g  F3: %g  ", values[13], values[14], values[15])
-		fmt.Printf("AVA: %g  BVA: %g  CVA: %g  ", values[16], values[17], values[18])
-		fmt.Printf("AVAR: %g  BVAR: %g  CVAR: %g  ", values[19], values[20], values[21])
-		fmt.Printf("PFA: %g  PFB: %g  PFC: %g  ", values[22], values[23], values[24])
-		fmt.Printf("\n")
-	}
+	logLine := "ReadValues: "
+	logLine += fmt.Sprintf("I1: %g  I2: %g  I3: %g  I4: %g  ", values[0], values[1], values[2], values[3])
+	logLine += fmt.Sprintf("V1: %g  V2: %g  V3: %g  ", values[4], values[5], values[6])
+	logLine += fmt.Sprintf("P1: %g  P2: %g  P3: %g  ", values[7], values[8], values[9])
+	logLine += fmt.Sprintf("COS1: %g  COS2: %g  COS3: %g  ", values[10], values[11], values[12])
+	logLine += fmt.Sprintf("F1: %g  F2: %g  F3: %g  ", values[13], values[14], values[15])
+	logLine += fmt.Sprintf("AVA: %g  BVA: %g  CVA: %g  ", values[16], values[17], values[18])
+	logLine += fmt.Sprintf("AVAR: %g  BVAR: %g  CVAR: %g  ", values[19], values[20], values[21])
+	logLine += fmt.Sprintf("PFA: %g  PFB: %g  PFC: %g  ", values[22], values[23], values[24])
+	log.Debug(logLine)
 
 	return values
 }

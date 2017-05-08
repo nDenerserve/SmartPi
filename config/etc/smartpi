@@ -1,7 +1,8 @@
 [base]
 serial="smartpi160812345"
 name="House"
-debuglevel=0
+# Valid log levels: panic, error, info, debug
+loglevel=info
 
 [location]
 lat=52.3667
