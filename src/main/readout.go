@@ -29,7 +29,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"math"
 	"os"
 	"path/filepath"
@@ -38,6 +37,7 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	//import the Paho Go MQTT library
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 )
@@ -185,8 +185,16 @@ func publishReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [25]float
 	}
 }
 
+func init() {
+	log.SetFormatter(&log.TextFormatter{})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.DebugLevel)
+}
+
 func main() {
 	config := smartpi.NewConfig()
+	log.SetLevel(config.LogLevel)
+
 	consumerCounterFile := filepath.Join(config.CounterDir, "consumecounter")
 	producerCounterFile := filepath.Join(config.CounterDir, "producecounter")
 

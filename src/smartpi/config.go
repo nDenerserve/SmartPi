@@ -27,15 +27,17 @@
 package smartpi
 
 import (
+	"strings"
+
 	"gopkg.in/ini.v1"
-	// "path/filepath"
-	// "os"
+	log "github.com/Sirupsen/logrus"
 )
 
 type Config struct {
 	// [base]
 	Serial     string
 	Name       string
+	LogLevel   log.Level
 	DebugLevel int
 
 	// [location]
@@ -89,7 +91,28 @@ func (p *Config) ReadParameterFromFile() {
 	// [base]
 	p.Serial = cfg.Section("base").Key("serial").String()
 	p.Name = cfg.Section("base").Key("name").String()
-	p.DebugLevel = cfg.Section("base").Key("debuglevel").MustInt(0)
+	// Handle logging levels
+	logLevel := cfg.Section("base").Key("loglevel").MustString("info")
+	switch strings.ToLower(logLevel) {
+	case "panic":
+		p.LogLevel = log.PanicLevel
+	case "error":
+		p.LogLevel = log.ErrorLevel
+	case "info":
+		p.LogLevel = log.InfoLevel
+	case "debug":
+		p.LogLevel = log.DebugLevel
+	default:
+		log.Panicf("Invalid log level %q", logLevel)
+	}
+	// Handle old debuglevel config key as log.Debug.
+	p.DebugLevel, err = cfg.Section("base").Key("debuglevel").Int()
+	if err == nil && p.DebugLevel > 0 {
+		p.LogLevel = log.DebugLevel
+		log.Debug("Config option debuglevel is deprecated, use loglevel=debug.")
+	} else {
+		p.DebugLevel = 0
+	}
 
 	// [location]
 	p.Lat = cfg.Section("location").Key("lat").MustFloat64(52.3667)
