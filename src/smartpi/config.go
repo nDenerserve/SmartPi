@@ -47,22 +47,15 @@ type Config struct {
 	DatabaseDir string
 
 	// [device]
-	I2CDevice         string
-	SharedDir         string
-	SharedFile        string
-	PowerFrequency    int
-	MeasureCurrent1   bool
-	MeasureCurrent2   bool
-	MeasureCurrent3   bool
-	MeasureVoltage1   bool
-	MeasureVoltage2   bool
-	MeasureVoltage3   bool
-	Voltage1          float64
-	Voltage2          float64
-	Voltage3          float64
-	CurrentDirection1 bool
-	CurrentDirection2 bool
-	CurrentDirection3 bool
+	I2CDevice        string
+	SharedDir        string
+	SharedFile       string
+	PowerFrequency   int
+	CTType           map[string]string
+	CurrentDirection map[string]bool
+	MeasureCurrent   map[string]bool
+	MeasureVoltage   map[string]bool
+	Voltage          map[string]float64
 
 	// [ftp]
 	FTPupload bool
@@ -111,18 +104,28 @@ func (p *Config) ReadParameterFromFile() {
 	p.SharedDir = cfg.Section("device").Key("shared_dir").MustString("/var/tmp/smartpi")
 	p.SharedFile = cfg.Section("device").Key("shared_file").MustString("values")
 	p.PowerFrequency = cfg.Section("device").Key("power_frequency").MustInt(50)
-	p.MeasureVoltage1 = cfg.Section("device").Key("measure_voltage_1").MustBool(true)
-	p.MeasureVoltage2 = cfg.Section("device").Key("measure_voltage_2").MustBool(true)
-	p.MeasureVoltage3 = cfg.Section("device").Key("measure_voltage_3").MustBool(true)
-	p.MeasureCurrent1 = cfg.Section("device").Key("measure_current_1").MustBool(true)
-	p.MeasureCurrent2 = cfg.Section("device").Key("measure_current_2").MustBool(true)
-	p.MeasureCurrent3 = cfg.Section("device").Key("measure_current_3").MustBool(true)
-	p.Voltage1 = cfg.Section("device").Key("voltage_1").MustFloat64(230)
-	p.Voltage2 = cfg.Section("device").Key("voltage_2").MustFloat64(230)
-	p.Voltage3 = cfg.Section("device").Key("voltage_3").MustFloat64(230)
-	p.CurrentDirection1 = cfg.Section("device").Key("change_current_direction_1").MustBool(false)
-	p.CurrentDirection2 = cfg.Section("device").Key("change_current_direction_2").MustBool(false)
-	p.CurrentDirection3 = cfg.Section("device").Key("change_current_direction_3").MustBool(false)
+	p.CTType = make(map[string]string)
+	p.CTType["A"] = cfg.Section("device").Key("ct_type_1").MustString("YHDC_SCT013")
+	p.CTType["B"] = cfg.Section("device").Key("ct_type_2").MustString("YHDC_SCT013")
+	p.CTType["C"] = cfg.Section("device").Key("ct_type_3").MustString("YHDC_SCT013")
+	p.CTType["N"] = cfg.Section("device").Key("ct_type_4").MustString("YHDC_SCT013")
+	p.CurrentDirection = make(map[string]bool)
+	p.CurrentDirection["A"] = cfg.Section("device").Key("change_current_direction_1").MustBool(false)
+	p.CurrentDirection["B"] = cfg.Section("device").Key("change_current_direction_2").MustBool(false)
+	p.CurrentDirection["C"] = cfg.Section("device").Key("change_current_direction_3").MustBool(false)
+	p.MeasureCurrent = make(map[string]bool)
+	p.MeasureCurrent["A"] = cfg.Section("device").Key("measure_current_1").MustBool(true)
+	p.MeasureCurrent["B"] = cfg.Section("device").Key("measure_current_2").MustBool(true)
+	p.MeasureCurrent["C"] = cfg.Section("device").Key("measure_current_3").MustBool(true)
+	p.MeasureCurrent["N"] = true // Always measure Neutral.
+	p.MeasureVoltage = make(map[string]bool)
+	p.MeasureVoltage["A"] = cfg.Section("device").Key("measure_voltage_1").MustBool(true)
+	p.MeasureVoltage["B"] = cfg.Section("device").Key("measure_voltage_2").MustBool(true)
+	p.MeasureVoltage["C"] = cfg.Section("device").Key("measure_voltage_3").MustBool(true)
+	p.Voltage = make(map[string]float64)
+	p.Voltage["A"] = cfg.Section("device").Key("voltage_1").MustFloat64(230)
+	p.Voltage["B"] = cfg.Section("device").Key("voltage_2").MustFloat64(230)
+	p.Voltage["C"] = cfg.Section("device").Key("voltage_3").MustFloat64(230)
 
 	// [ftp]
 	p.FTPupload = cfg.Section("ftp").Key("ftp_upload").MustBool(false)
