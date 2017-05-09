@@ -6,14 +6,6 @@ Download Raspbian Jessie Lite from https://www.raspberrypi.org/downloads/raspbia
 Alternatively, you may download EmonSD, a pre-built SD card image for Raspberry Pi running as an emonPi/emonBase
 Download https://github.com/openenergymonitor/emonpi/wiki/emonSD-pre-built-SD-card-Download-&-Change-Log
 
-##### Building source
-
-    go get -v github.com/nDenerserve/SmartPi/src/smartpi
-    cd ${GOPATH-$HOME/go}/src/github.com/nDenerserve/SmartPi
-    make
-
-NOTE: If you need to build from a fork, you will have to symlink your fork into `${GOPATH-$HOME/go}/src/github.com/nDenerserve/` to make golang dependencies work correctly.
-
 ##### Update packet list and update packages
 
     sudo apt-get update
@@ -84,20 +76,19 @@ Currently version 1.8.1 is up to date. You may need to adapt the filename accord
 
 In order for the `${PATH}` to be updated, you will need to logout.
 
-Create a directory to contain your workspace and SmartPi git-repo, $HOME/SmartPi in this case,
+Create a directory to contain your Go workspace, for example `${HOME}/go`,
 and set the GOPATH environment variable to point to that location.
 
-    export GOPATH="${HOME}/SmartPi"
+    mkdir "${HOME}/go"
+    export GOPATH="${HOME}/go"
 
-Download of SmartPi sources
+##### Building source
 
-    cd ~
-    git clone https://github.com/nDenerserve/SmartPi.git
-
-##### build SmartPi tools
-
-    cd  ~/SmartPi
+    go get -v github.com/nDenerserve/SmartPi/src/smartpi
+    cd ${GOPATH-$HOME/go}/src/github.com/nDenerserve/SmartPi
     make
+
+NOTE: If you need to build from a fork, you will have to symlink your fork into `${GOPATH-$HOME/go}/src/github.com/nDenerserve/` to make golang dependencies work correctly.
 
 ##### emonSD Specifics
 The emonSD provides a read-only file system for most areas.
