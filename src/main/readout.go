@@ -30,6 +30,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -39,8 +40,13 @@ import (
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 
 	log "github.com/Sirupsen/logrus"
+	"golang.org/x/exp/io/i2c"
+
 	//import the Paho Go MQTT library
 	MQTT "github.com/eclipse/paho.mqtt.golang"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/version"
 )
 
 var readouts = [...]string{
@@ -142,17 +148,17 @@ func publishReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [25]float
 		}
 		if mqttclient.IsConnected() {
 			log.Debug("Publishing readoputs via MQTT...")
-			
+
 			// Status is used to stop MQTT publication sequence in case of first error.
 			var status = true
-			
+
 			for i := 0; i < len(readouts); i++ {
 				topic := c.MQTTtopic + "/" + readouts[i]
-				
+
 				if status {
-					log.Debugf("  -> ", topic, ":" , values[i])
+					log.Debugf("  -> ", topic, ":", values[i])
 					token := mqttclient.Publish(topic, 1, false, strconv.FormatFloat(float64(values[i]), 'f', 2, 32))
-					
+
 					if !token.WaitTimeout(2 * time.Second) {
 						log.Debugf("  MQTT Timeout. Stopping MQTT sequence.")
 						status = false
@@ -167,22 +173,75 @@ func publishReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [25]float
 	}
 }
 
-func init() {
-	log.SetFormatter(&log.TextFormatter{})
-	log.SetOutput(os.Stdout)
-	log.SetLevel(log.DebugLevel)
+const metricsNamespace = "smartpi"
+
+var (
+	currentMetric = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: metricsNamespace,
+			Name:      "amps",
+			Help:      "Line current",
+		},
+		[]string{"phase"},
+	)
+	voltageMetric = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: metricsNamespace,
+			Name:      "volts",
+			Help:      "Line voltage",
+		},
+		[]string{"phase"},
+	)
+	activePowerMetirc = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: metricsNamespace,
+			Name:      "active_watts",
+			Help:      "Active Watts",
+		},
+		[]string{"phase"},
+	)
+	cosphiMetric = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: metricsNamespace,
+			Name:      "phase_angle",
+			Help:      "Line voltage phase angle",
+		},
+		[]string{"phase"},
+	)
+	frequencyMetric = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: metricsNamespace,
+			Name:      "phase_frequency_hertz",
+			Help:      "Line frequency in hertz",
+		},
+		[]string{"phase"},
+	)
+)
+
+func updatePrometheusMetrics(v [25]float32) {
+	currentMetric.WithLabelValues("A").Set(float64(v[0]))
+	currentMetric.WithLabelValues("B").Set(float64(v[1]))
+	currentMetric.WithLabelValues("C").Set(float64(v[2]))
+	currentMetric.WithLabelValues("N").Set(float64(v[3]))
+	voltageMetric.WithLabelValues("A").Set(float64(v[4]))
+	voltageMetric.WithLabelValues("B").Set(float64(v[5]))
+	voltageMetric.WithLabelValues("C").Set(float64(v[6]))
+	activePowerMetirc.WithLabelValues("A").Set(float64(v[7]))
+	activePowerMetirc.WithLabelValues("B").Set(float64(v[8]))
+	activePowerMetirc.WithLabelValues("C").Set(float64(v[9]))
+	cosphiMetric.WithLabelValues("A").Set(float64(v[10]))
+	cosphiMetric.WithLabelValues("B").Set(float64(v[11]))
+	cosphiMetric.WithLabelValues("C").Set(float64(v[12]))
+	frequencyMetric.WithLabelValues("A").Set(float64(v[13]))
+	frequencyMetric.WithLabelValues("B").Set(float64(v[14]))
+	frequencyMetric.WithLabelValues("C").Set(float64(v[15]))
 }
 
-func main() {
-	config := smartpi.NewConfig()
-	log.SetLevel(config.LogLevel)
+func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
+	var mqttclient MQTT.Client
 
 	consumerCounterFile := filepath.Join(config.CounterDir, "consumecounter")
 	producerCounterFile := filepath.Join(config.CounterDir, "producecounter")
-
-	var mqttclient MQTT.Client
-
-	log.Debug("Start SmartPi readout")
 
 	if config.MQTTenabled {
 		log.Debugf("Connecting to MQTT broker at %s\n", (config.MQTTbroker + ":" + config.MQTTbrokerport))
@@ -203,9 +262,6 @@ func main() {
 			log.Debugf("Connecting to MQTT broker failed. %q", mqtttoken.Error())
 		}
 	}
-
-	device, _ := smartpi.InitADE7878(config)
-
 	for {
 		data := make([]float32, 22)
 
@@ -214,8 +270,11 @@ func main() {
 
 			writeSharedFile(config, valuesr)
 
-			//Publish readouts to MQTT
+			// Publish readouts to MQTT.
 			publishReadouts(config, mqttclient, valuesr)
+
+			// Update metrics endpoint.
+			updatePrometheusMetrics(valuesr)
 
 			for index, _ := range data {
 				switch index {
@@ -256,5 +315,47 @@ func main() {
 		// Update persistent counter files.
 		updateCounterFile(config, consumerCounterFile, float64(data[16]+data[17]+data[18]))
 		updateCounterFile(config, producerCounterFile, float64(data[19]+data[20]+data[21]))
+	}
+}
+
+func init() {
+	log.SetFormatter(&log.TextFormatter{})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.DebugLevel)
+
+	prometheus.MustRegister(currentMetric)
+	prometheus.MustRegister(voltageMetric)
+	prometheus.MustRegister(activePowerMetirc)
+	prometheus.MustRegister(cosphiMetric)
+	prometheus.MustRegister(frequencyMetric)
+	prometheus.MustRegister(version.NewCollector("smartpi"))
+}
+
+func main() {
+	config := smartpi.NewConfig()
+	log.SetLevel(config.LogLevel)
+
+	listenAddress := config.MetricsListenAddress
+
+	log.Debug("Start SmartPi readout")
+
+	device, _ := smartpi.InitADE7878(config)
+
+	go pollSmartPi(config, device)
+
+	http.Handle("/metrics", prometheus.Handler())
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`<html>
+            <head><title>SmartPi Readout Metrics Server</title></head>
+            <body>
+            <h1>SmartPi Readout Metrics Server</h1>
+            <p><a href="/metrics">Metrics</a></p>
+            </body>
+            </html>`))
+	})
+
+	fmt.Println("Listening on %s", listenAddress)
+	if err := http.ListenAndServe(listenAddress, nil); err != nil {
+		panic(fmt.Errorf("Error starting HTTP server: %s", err))
 	}
 }
