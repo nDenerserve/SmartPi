@@ -394,11 +394,11 @@ func ReadFrequency(d *i2c.Device, c *Config, phase string) (frequency float64) {
 	command := make([]byte, 2)
 	switch phase {
 	case "A":
-		command = []byte{0xE7, 0x00, 0x1C} // MMODE-Register measure frequency at VA
+		command = []byte{0xE7, 0x00, 0x1C} // 0xE7001C MMODE-Register measure frequency at VA
 	case "B":
-		command = []byte{0xE7, 0x00, 0x1C} // MMODE-Register measure frequency at VB
+		command = []byte{0xE7, 0x00, 0x1D} // 0xE7001D MMODE-Register measure frequency at VB
 	case "C":
-		command = []byte{0xE7, 0x00, 0x1C} // MMODE-Register measure frequency at VC
+		command = []byte{0xE7, 0x00, 0x1E} // 0xE7001E MMODE-Register measure frequency at VC
 	default:
 		panic(fmt.Errorf("Invalid phase %q", phase))
 	}
