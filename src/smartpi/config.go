@@ -27,18 +27,18 @@
 package smartpi
 
 import (
-	"strings"
-
-	"gopkg.in/ini.v1"
 	log "github.com/Sirupsen/logrus"
+	"gopkg.in/ini.v1"
+	"strconv"
+	"strings"
 )
 
 type Config struct {
 	// [base]
-	Serial     string
-	Name       string
-	LogLevel   log.Level
-	DebugLevel int
+	Serial               string
+	Name                 string
+	LogLevel             log.Level
+	DebugLevel           int
 	MetricsListenAddress string
 
 	// [location]
@@ -82,9 +82,12 @@ type Config struct {
 	MQTTtopic      string
 }
 
+var cfg *ini.File
+var err error
+
 func (p *Config) ReadParameterFromFile() {
 
-	cfg, err := ini.Load("/etc/smartpi")
+	cfg, err = ini.Load("/etc/smartpi")
 	if err != nil {
 		panic(err)
 	}
@@ -172,6 +175,74 @@ func (p *Config) ReadParameterFromFile() {
 	p.MQTTuser = cfg.Section("mqtt").Key("mqtt_username").String()
 	p.MQTTpass = cfg.Section("mqtt").Key("mqtt_password").String()
 	p.MQTTtopic = cfg.Section("mqtt").Key("mqtt_topic").String()
+}
+
+func (p *Config) SaveParameterToFile() {
+
+	_, err = cfg.Section("base").NewKey("serial", p.Serial)
+	_, err = cfg.Section("base").NewKey("name", p.Name)
+	//_, err = cfg.Section("base").NewKey("loglevel", p.logLevel)
+	_, err = cfg.Section("base").NewKey("metrics_listen_address", p.MetricsListenAddress)
+
+	// [location]
+	_, err = cfg.Section("location").NewKey("lat", strconv.FormatFloat(p.Lat, 'f', -1, 64))
+	_, err = cfg.Section("location").NewKey("lng", strconv.FormatFloat(p.Lng, 'f', -1, 64))
+
+	// [database]
+	_, err = cfg.Section("database").NewKey("counterdir", p.CounterDir)
+	_, err = cfg.Section("database").NewKey("dir", p.DatabaseDir)
+
+	// [device]
+	_, err = cfg.Section("device").NewKey("i2c_device", p.I2CDevice)
+	_, err = cfg.Section("device").NewKey("shared_dir", p.SharedDir)
+	_, err = cfg.Section("device").NewKey("shared_file", p.SharedFile)
+	_, err = cfg.Section("device").NewKey("power_frequency", strconv.FormatInt(int64(p.PowerFrequency), 10))
+	_, err = cfg.Section("device").NewKey("ct_type_1", p.CTType["A"])
+	_, err = cfg.Section("device").NewKey("ct_type_2", p.CTType["B"])
+	_, err = cfg.Section("device").NewKey("ct_type_3", p.CTType["C"])
+	_, err = cfg.Section("device").NewKey("ct_type_4", p.CTType["N"])
+
+	_, err = cfg.Section("device").NewKey("change_current_direction_1", strconv.FormatBool(p.CurrentDirection["A"]))
+	_, err = cfg.Section("device").NewKey("change_current_direction_2", strconv.FormatBool(p.CurrentDirection["B"]))
+	_, err = cfg.Section("device").NewKey("change_current_direction_3", strconv.FormatBool(p.CurrentDirection["C"]))
+
+	_, err = cfg.Section("device").NewKey("measure_current_1", strconv.FormatBool(p.MeasureCurrent["A"]))
+	_, err = cfg.Section("device").NewKey("measure_current_2", strconv.FormatBool(p.MeasureCurrent["B"]))
+	_, err = cfg.Section("device").NewKey("measure_current_3", strconv.FormatBool(p.MeasureCurrent["C"]))
+
+	_, err = cfg.Section("device").NewKey("measure_voltage_1", strconv.FormatBool(p.MeasureVoltage["A"]))
+	_, err = cfg.Section("device").NewKey("measure_voltage_2", strconv.FormatBool(p.MeasureVoltage["B"]))
+	_, err = cfg.Section("device").NewKey("measure_voltage_3", strconv.FormatBool(p.MeasureVoltage["C"]))
+
+	_, err = cfg.Section("device").NewKey("voltage_1", strconv.FormatFloat(p.Voltage["A"], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("voltage_2", strconv.FormatFloat(p.Voltage["B"], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("voltage_3", strconv.FormatFloat(p.Voltage["C"], 'f', -1, 64))
+
+	// [ftp]
+	_, err = cfg.Section("ftp").NewKey("ftp_upload", strconv.FormatBool(p.FTPupload))
+	_, err = cfg.Section("ftp").NewKey("ftp_server", p.FTPserver)
+	_, err = cfg.Section("ftp").NewKey("ftp_user", p.FTPuser)
+	_, err = cfg.Section("ftp").NewKey("ftp_pass", p.FTPpass)
+	_, err = cfg.Section("ftp").NewKey("ftp_path", p.FTPpath)
+
+	// [webserver]
+	_, err = cfg.Section("webserver").NewKey("port", strconv.FormatInt(int64(p.WebserverPort), 10))
+	_, err = cfg.Section("webserver").NewKey("docroot", p.DocRoot)
+	_, err = cfg.Section("csv").NewKey("decimalpoint", p.CSVdecimalpoint)
+	_, err = cfg.Section("csv").NewKey("timeformat", p.CSVtimeformat)
+
+	// [mqtt]
+	_, err = cfg.Section("mqtt").NewKey("mqtt_enabled", strconv.FormatBool(p.MQTTenabled))
+	_, err = cfg.Section("mqtt").NewKey("mqtt_broker_url", p.MQTTbroker)
+	_, err = cfg.Section("mqtt").NewKey("mqtt_broker_port", p.MQTTbrokerport)
+	_, err = cfg.Section("mqtt").NewKey("mqtt_username", p.MQTTuser)
+	_, err = cfg.Section("mqtt").NewKey("mqtt_password", p.MQTTpass)
+	_, err = cfg.Section("mqtt").NewKey("mqtt_topic", p.MQTTtopic)
+
+	err := cfg.SaveTo("/etc/smartpi")
+	if err != nil {
+		panic(err)
+	}
 }
 
 func NewConfig() *Config {
