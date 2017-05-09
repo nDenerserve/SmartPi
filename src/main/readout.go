@@ -29,7 +29,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"math"
 	"os"
 	"path/filepath"
@@ -38,6 +37,7 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	//import the Paho Go MQTT library
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	//import rlog - A simple Golang logger
@@ -56,6 +56,7 @@ func writeSharedFile(c *smartpi.Config, values [25]float32) {
 	}
 	t := time.Now()
 	timeStamp := t.Format("2006-01-02 15:04:05")
+
 	rlog.Info(t.Format("## Shared File Update ##"))
 	rlog.Info(timeStamp)
 	rlog.Infof("I1: %s  I2: %s  I3: %s  I4: %s  ", s[0], s[1], s[2], s[3])
@@ -63,6 +64,7 @@ func writeSharedFile(c *smartpi.Config, values [25]float32) {
 	rlog.Infof("P1: %s  P2: %s  P3: %s  ", s[7], s[8], s[9])
 	rlog.Infof("COS1: %s  COS2: %s  COS3: %s  ", s[10], s[11], s[12])
 	rlog.Infof("F1: %s  F2: %s  F3: %s  ", s[13], s[14], s[15])
+
 	sharedFile := filepath.Join(c.SharedDir, c.SharedFile)
 	if _, err = os.Stat(sharedFile); os.IsNotExist(err) {
 		os.MkdirAll(c.SharedDir, 0777)
@@ -99,6 +101,7 @@ func updateCounterFile(c *smartpi.Config, f string, v float64) {
 		counter = 0.0
 	}
 
+
 	rlog.Info("## Persistent counter file update ##")
 	rlog.Info(t.Format("2006-01-02 15:04:05"))
 	rlog.Infof("File: %q  Current: %g  Increment: %g \n ", f, counter, v)
@@ -111,6 +114,7 @@ func updateCounterFile(c *smartpi.Config, f string, v float64) {
 
 func updateSQLiteDatabase(c *smartpi.Config, data []float32) {
 	t := time.Now()
+
 	rlog.Info("## SQLITE Database Update ##")
 	rlog.Info(t.Format("2006-01-02 15:04:05"))
 	rlog.Infof("I1: %g  I2: %g  I3: %g  I4: %g  ", data[0], data[1], data[2], data[3])
@@ -124,6 +128,7 @@ func updateSQLiteDatabase(c *smartpi.Config, data []float32) {
 	dbFileName := "smartpi_logdata_" + t.Format("200601") + ".db"
 	if _, err := os.Stat(filepath.Join(c.DatabaseDir, dbFileName)); os.IsNotExist(err) {
 		rlog.Info("Creating new database file.")
+    
 		smartpi.CreateSQlDatabase(c.DatabaseDir, t)
 	}
 	smartpi.InsertData(c.DatabaseDir, t, data)
@@ -164,8 +169,16 @@ func publishReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [25]float
 	}
 }
 
+func init() {
+	log.SetFormatter(&log.TextFormatter{})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.DebugLevel)
+}
+
 func main() {
 	config := smartpi.NewConfig()
+	log.SetLevel(config.LogLevel)
+
 	consumerCounterFile := filepath.Join(config.CounterDir, "consumecounter")
 	producerCounterFile := filepath.Join(config.CounterDir, "producecounter")
 

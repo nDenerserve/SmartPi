@@ -32,6 +32,7 @@ import (
 	"math"
 	"time"
 
+
 	rpi "github.com/nathan-osman/go-rpigpio"
 	"golang.org/x/exp/io/i2c"
 
@@ -532,6 +533,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	values[22] = float32(CalculatePowerFactor(c, "A", float64(values[7]), float64(values[16]), float64(values[20]))) // Phase A.
 	values[23] = float32(CalculatePowerFactor(c, "B", float64(values[8]), float64(values[17]), float64(values[21]))) // Phase B.
 	values[24] = float32(CalculatePowerFactor(c, "C", float64(values[9]), float64(values[19]), float64(values[22]))) // Phase C.
+
 
 	rlog.Debugf("I1: %g  I2: %g  I3: %g  I4: %g  ", values[0], values[1], values[2], values[3])
 	rlog.Debugf("V1: %g  V2: %g  V3: %g  ", values[4], values[5], values[6])
