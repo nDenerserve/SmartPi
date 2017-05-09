@@ -29,12 +29,15 @@ package smartpi
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/nathan-osman/go-rpigpio"
-	"golang.org/x/exp/io/i2c"
 	"math"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+
+	rpi "github.com/nathan-osman/go-rpigpio"
+	"golang.org/x/exp/io/i2c"
+
+	//import rlog - A simple Golang logger
+	"smartpi/rlog"
 )
 
 const (
@@ -86,12 +89,13 @@ func DeviceFetchInt(d *i2c.Device, l int, cmd []byte) int64 {
 	default:
 		panic(fmt.Errorf("Invalid byte length for int conversion %d", l))
 	}
-	log.Debugf("DeviceFetchInt: cmd: %x data: %x result: %d", cmd, data, result)
+	//fmt.Printf("DeviceFetchInt: cmd: %x data: %x result: %d\n", cmd, data, result)
+	rlog.Tracef(1, fmt.Sprintf("DeviceFetchInt: cmd: %x data: %x result: %d", cmd, data, result))
 	return result
 }
 
 func resetADE7878() {
-	println("RESET")
+	rlog.Debugf("RESET ADE7878")
 	p, err := rpi.OpenPin(4, rpi.OUT)
 	if err != nil {
 		panic(err)
@@ -220,8 +224,8 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 	time.Sleep(875 * time.Millisecond)
 
 	// // 0x4381 (AVGAIN-REGISTER)
-	// outcome := DeviceFetchInt(d, 4, []byte{0x43, 0x81})
-	// fmt.Printf("AVGAIN-REGISTER VORHER%g   %x %x %x %x \n", outcome, data[0], data[1], data[2], data[3])
+	//outcome := DeviceFetchInt(d, 4, []byte{0x43, 0x81})
+	//rlog.Tracef(1, "AVGAIN-REGISTER VORHER%g   %x %x %x %x \n", outcome, data[0], data[1], data[2], data[3])
 
 	// 0x4381 (AVGAIN-REGISTER)
 	err = d.Write([]byte{0x43, 0x81, 0xFF, 0xFC, 0x1C, 0xC2})
@@ -530,16 +534,16 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	values[23] = float32(CalculatePowerFactor(c, "B", float64(values[8]), float64(values[17]), float64(values[21]))) // Phase B.
 	values[24] = float32(CalculatePowerFactor(c, "C", float64(values[9]), float64(values[19]), float64(values[22]))) // Phase C.
 
-	logLine := "ReadValues: "
-	logLine += fmt.Sprintf("I1: %g  I2: %g  I3: %g  I4: %g  ", values[0], values[1], values[2], values[3])
-	logLine += fmt.Sprintf("V1: %g  V2: %g  V3: %g  ", values[4], values[5], values[6])
-	logLine += fmt.Sprintf("P1: %g  P2: %g  P3: %g  ", values[7], values[8], values[9])
-	logLine += fmt.Sprintf("COS1: %g  COS2: %g  COS3: %g  ", values[10], values[11], values[12])
-	logLine += fmt.Sprintf("F1: %g  F2: %g  F3: %g  ", values[13], values[14], values[15])
-	logLine += fmt.Sprintf("AVA: %g  BVA: %g  CVA: %g  ", values[16], values[17], values[18])
-	logLine += fmt.Sprintf("AVAR: %g  BVAR: %g  CVAR: %g  ", values[19], values[20], values[21])
-	logLine += fmt.Sprintf("PFA: %g  PFB: %g  PFC: %g  ", values[22], values[23], values[24])
-	log.Debug(logLine)
+
+	rlog.Debugf("I1: %g  I2: %g  I3: %g  I4: %g  ", values[0], values[1], values[2], values[3])
+	rlog.Debugf("V1: %g  V2: %g  V3: %g  ", values[4], values[5], values[6])
+	rlog.Debugf("P1: %g  P2: %g  P3: %g  ", values[7], values[8], values[9])
+	rlog.Debugf("COS1: %g  COS2: %g  COS3: %g  ", values[10], values[11], values[12])
+	rlog.Debugf("F1: %g  F2: %g  F3: %g  ", values[13], values[14], values[15])
+	rlog.Debugf("AVA: %g  BVA: %g  CVA: %g  ", values[16], values[17], values[18])
+	rlog.Debugf("AVAR: %g  BVAR: %g  CVAR: %g  ", values[19], values[20], values[21])
+	rlog.Debugf("PFA: %g  PFB: %g  PFC: %g  ", values[22], values[23], values[24])
+	rlog.Debugf("\n")
 
 	return values
 }
