@@ -6,6 +6,14 @@ Download Raspbian Jessie Lite from https://www.raspberrypi.org/downloads/raspbia
 Alternatively, you may download EmonSD, a pre-built SD card image for Raspberry Pi running as an emonPi/emonBase
 Download https://github.com/openenergymonitor/emonpi/wiki/emonSD-pre-built-SD-card-Download-&-Change-Log
 
+##### Building source
+
+    go get -v github.com/nDenerserve/SmartPi/src/smartpi
+    cd ${GOPATH-$HOME/go}/src/github.com/nDenerserve/SmartPi
+    make
+
+NOTE: If you need to build from a fork, you will have to symlink your fork into `${GOPATH-$HOME/go}/src/github.com/nDenerserve/` to make golang dependencies work correctly.
+
 ##### Update packet list and update packages
 
     sudo apt-get update
