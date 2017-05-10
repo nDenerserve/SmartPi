@@ -30,7 +30,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"gopkg.in/ini.v1"
 	"strconv"
-	"strings"
 )
 
 type Config struct {
@@ -96,18 +95,9 @@ func (p *Config) ReadParameterFromFile() {
 	p.Serial = cfg.Section("base").Key("serial").String()
 	p.Name = cfg.Section("base").Key("name").String()
 	// Handle logging levels
-	logLevel := cfg.Section("base").Key("loglevel").MustString("info")
-	switch strings.ToLower(logLevel) {
-	case "panic":
-		p.LogLevel = log.PanicLevel
-	case "error":
-		p.LogLevel = log.ErrorLevel
-	case "info":
-		p.LogLevel = log.InfoLevel
-	case "debug":
-		p.LogLevel = log.DebugLevel
-	default:
-		log.Panicf("Invalid log level %q", logLevel)
+	p.LogLevel, err = log.ParseLevel(cfg.Section("base").Key("loglevel").MustString("info"))
+	if err != nil {
+		panic(err)
 	}
 	// Handle old debuglevel config key as log.Debug.
 	p.DebugLevel, err = cfg.Section("base").Key("debuglevel").Int()
@@ -181,7 +171,7 @@ func (p *Config) SaveParameterToFile() {
 
 	_, err = cfg.Section("base").NewKey("serial", p.Serial)
 	_, err = cfg.Section("base").NewKey("name", p.Name)
-	//_, err = cfg.Section("base").NewKey("loglevel", p.logLevel)
+	_, err = cfg.Section("base").NewKey("loglevel", p.LogLevel.String())
 	_, err = cfg.Section("base").NewKey("metrics_listen_address", p.MetricsListenAddress)
 
 	// [location]
