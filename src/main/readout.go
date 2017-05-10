@@ -43,14 +43,60 @@ import (
 	"golang.org/x/exp/io/i2c"
 
 	//import the Paho Go MQTT library
-	MQTT "github.com/eclipse/paho.mqtt.golang"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/version"
 )
 
+const metricsNamespace = "smartpi"
+
 var readouts = [...]string{
 	"I1", "I2", "I3", "I4", "V1", "V2", "V3", "P1", "P2", "P3", "COS1", "COS2", "COS3", "F1", "F2", "F3"}
+
+var mqtt = smartpi.NewMQTTExporter()
+
+var (
+	currentMetric = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: metricsNamespace,
+			Name:      "amps",
+			Help:      "Line current",
+		},
+		[]string{"phase"},
+	)
+	voltageMetric = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: metricsNamespace,
+			Name:      "volts",
+			Help:      "Line voltage",
+		},
+		[]string{"phase"},
+	)
+	activePowerMetirc = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: metricsNamespace,
+			Name:      "active_watts",
+			Help:      "Active Watts",
+		},
+		[]string{"phase"},
+	)
+	cosphiMetric = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: metricsNamespace,
+			Name:      "phase_angle",
+			Help:      "Line voltage phase angle",
+		},
+		[]string{"phase"},
+	)
+	frequencyMetric = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: metricsNamespace,
+			Name:      "phase_frequency_hertz",
+			Help:      "Line frequency in hertz",
+		},
+		[]string{"phase"},
+	)
+)
 
 func writeSharedFile(c *smartpi.Config, values [25]float32) {
 	var f *os.File
@@ -137,87 +183,6 @@ func updateSQLiteDatabase(c *smartpi.Config, data []float32) {
 	smartpi.InsertData(c.DatabaseDir, t, data)
 }
 
-func publishReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [25]float32) {
-	//[basetopic]/[node]/[keyname]
-	if c.MQTTenabled {
-		// Let's try to (re-)connect if MQTT connection was lost.
-		if !mqttclient.IsConnected() {
-			if mqtttoken := mqttclient.Connect(); mqtttoken.Wait() && mqtttoken.Error() != nil {
-				log.Debugf("Connecting to MQTT broker failed. %q", mqtttoken.Error())
-			}
-		}
-		if mqttclient.IsConnected() {
-			log.Debug("Publishing readoputs via MQTT...")
-
-			// Status is used to stop MQTT publication sequence in case of first error.
-			var status = true
-
-			for i := 0; i < len(readouts); i++ {
-				topic := c.MQTTtopic + "/" + readouts[i]
-
-				if status {
-					log.Debugf("  -> ", topic, ":", values[i])
-					token := mqttclient.Publish(topic, 1, false, strconv.FormatFloat(float64(values[i]), 'f', 2, 32))
-
-					if !token.WaitTimeout(2 * time.Second) {
-						log.Debugf("  MQTT Timeout. Stopping MQTT sequence.")
-						status = false
-					} else if token.Error() != nil {
-						log.Error(token.Error())
-						status = false
-					}
-				}
-			}
-			log.Debug("MQTT done.")
-		}
-	}
-}
-
-const metricsNamespace = "smartpi"
-
-var (
-	currentMetric = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: metricsNamespace,
-			Name:      "amps",
-			Help:      "Line current",
-		},
-		[]string{"phase"},
-	)
-	voltageMetric = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: metricsNamespace,
-			Name:      "volts",
-			Help:      "Line voltage",
-		},
-		[]string{"phase"},
-	)
-	activePowerMetirc = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: metricsNamespace,
-			Name:      "active_watts",
-			Help:      "Active Watts",
-		},
-		[]string{"phase"},
-	)
-	cosphiMetric = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: metricsNamespace,
-			Name:      "phase_angle",
-			Help:      "Line voltage phase angle",
-		},
-		[]string{"phase"},
-	)
-	frequencyMetric = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: metricsNamespace,
-			Name:      "phase_frequency_hertz",
-			Help:      "Line frequency in hertz",
-		},
-		[]string{"phase"},
-	)
-)
-
 func updatePrometheusMetrics(v [25]float32) {
 	currentMetric.WithLabelValues("A").Set(float64(v[0]))
 	currentMetric.WithLabelValues("B").Set(float64(v[1]))
@@ -238,30 +203,9 @@ func updatePrometheusMetrics(v [25]float32) {
 }
 
 func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
-	var mqttclient MQTT.Client
-
 	consumerCounterFile := filepath.Join(config.CounterDir, "consumecounter")
 	producerCounterFile := filepath.Join(config.CounterDir, "producecounter")
 
-	if config.MQTTenabled {
-		log.Debugf("Connecting to MQTT broker at %s\n", (config.MQTTbroker + ":" + config.MQTTbrokerport))
-		//create a MQTTClientOptions struct setting the broker address, clientid, user and password
-		opts := MQTT.NewClientOptions().AddBroker("tcp://" + config.MQTTbroker + ":" + config.MQTTbrokerport)
-		opts.SetClientID("SmartPi")
-		opts.SetUsername(config.MQTTuser)
-		opts.SetPassword(config.MQTTpass)
-		opts.SetAutoReconnect(true)
-		opts.SetConnectTimeout(3 * time.Second)
-		opts.SetPingTimeout(1 * time.Second)
-		opts.SetKeepAlive(1 * time.Second)
-		opts.SetMaxReconnectInterval(3 * time.Second)
-		//create and start a client using the above ClientOptions
-		mqttclient = MQTT.NewClient(opts)
-		if mqtttoken := mqttclient.Connect(); mqtttoken.Wait() && mqtttoken.Error() != nil {
-			//panic(mqtttoken.Error())
-			log.Debugf("Connecting to MQTT broker failed. %q", mqtttoken.Error())
-		}
-	}
 	for {
 		data := make([]float32, 22)
 
@@ -271,7 +215,7 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 			writeSharedFile(config, valuesr)
 
 			// Publish readouts to MQTT.
-			publishReadouts(config, mqttclient, valuesr)
+			mqtt.PublishReadouts(config, valuesr[:], readouts[:])
 
 			// Update metrics endpoint.
 			updatePrometheusMetrics(valuesr)
@@ -335,6 +279,10 @@ func main() {
 	config := smartpi.NewConfig()
 	log.SetLevel(config.LogLevel)
 
+	//mqttclient := smartpi.NewMQTTExporter()
+	mqtt.Connect(config)
+
+	// WHat is listening on this address?
 	listenAddress := config.MetricsListenAddress
 
 	log.Debug("Start SmartPi readout")
@@ -354,7 +302,7 @@ func main() {
             </html>`))
 	})
 
-	fmt.Println("Listening on %s", listenAddress)
+	log.Info("Something is listening on", listenAddress)
 	if err := http.ListenAndServe(listenAddress, nil); err != nil {
 		panic(fmt.Errorf("Error starting HTTP server: %s", err))
 	}
