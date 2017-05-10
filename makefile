@@ -24,7 +24,7 @@ get:
 
 buildsmartpireadout:
 	@echo "start building smartpireadout..."
-	$(GOBUILD) -o bin/$(BINARY_READOUT) src/main/readout.go
+	$(GOBUILD) -o bin/$(BINARY_READOUT) src/readout/*.go
 	@echo "building smartpireadout done"
 
 buildsmartpiserver:
