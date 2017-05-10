@@ -8,6 +8,7 @@
 			"revision": "5b60b3d3ee017ed00bcd0225fcca7acab767844b",
 			"revisionTime": "2017-05-04T07:10:19Z"
 		},
+		{
 			"checksumSHA1": "spyv5/YFBjYyZLZa1U2LBfDR8PM=",
 			"path": "github.com/beorn7/perks/quantile",
 			"revision": "4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9",
