@@ -84,13 +84,11 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 		for i:= range confignames {
 			for j := range keys {
 				if keys[j] == confignames[i] {
-					fmt.Println("Treffer: Key: "+keys[j]+" Configname: "+confignames[i])
-					fmt.Println(reflect.TypeOf(wc.Msg.(map[string]interface{})[keys[j]]))
-					fmt.Println(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]))
-					// r := reflect.ValueOf(configuration.(*Config))
-					// f := reflect.Indirect(r).FieldByName(confignames[i])
-					// fmt.Println(f)
-					err := reflections.SetField(configuration.(*Config), confignames[i], reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String())
+					// TODO overwrite keys in config struct
+					// fmt.Println("Treffer: Key: "+keys[j]+" Configname: "+confignames[i])
+					// fmt.Println(reflect.TypeOf(wc.Msg.(map[string]interface{})[keys[j]]))
+					// fmt.Println(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]))
+					// err := reflections.SetField(configuration.(*Config), confignames[i], reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String())
 					if err != nil {
 						log.Fatal(err)
 					}
