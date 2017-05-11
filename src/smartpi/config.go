@@ -30,7 +30,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"gopkg.in/ini.v1"
 	"strconv"
-	"strings"
 	"os"
 )
 
@@ -231,7 +230,7 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("mqtt").NewKey("mqtt_password", p.MQTTpass)
 	_, err = cfg.Section("mqtt").NewKey("mqtt_topic", p.MQTTtopic)
 
-	tmpPath = "/tmp/smartpi"
+	tmpPath := "/tmp/smartpi"
 	err := cfg.SaveTo(tmpPath)
 	if err != nil {
 		panic(err)
