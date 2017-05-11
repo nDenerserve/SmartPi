@@ -69,6 +69,12 @@
 			"revisionTime": "2016-07-01T02:51:23Z"
 		},
 		{
+			"checksumSHA1": "R8z+BOS81hOWgcqymuVWHNta/yc=",
+			"path": "github.com/oleiade/reflections",
+			"revision": "0e86b3c98b2ff33e30c85cfe97d9a63d439fe7eb",
+			"revisionTime": "2016-08-17T07:03:35Z"
+		},
+		{
 			"checksumSHA1": "XsTWgEVHkRZ4xSvUYZ7ECXbfA8E=",
 			"path": "github.com/prometheus/client_golang/prometheus",
 			"revision": "738ed6c0b9b30ec936d4b74c1600ae76324efff5",
@@ -151,12 +157,6 @@
 			"path": "gopkg.in/ini.v1",
 			"revision": "6e4869b434bd001f6983749881c7ead3545887d8",
 			"revisionTime": "2016-08-27T06:11:18Z"
-		},
-		{
-			"checksumSHA1": "6Rfu8Y/96ALpk4VIC1dK3uo+WYc=",
-			"path": "gopkg.in/oleiade/reflections.v1",
-			"revision": "2b6ec3da648e3e834dc41bad8d9ed7f2dc6a9496",
-			"revisionTime": "2016-08-17T06:38:38Z"
 		}
 	],
 	"rootPath": "github.com/nDenerserve/SmartPi"

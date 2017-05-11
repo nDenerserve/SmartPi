@@ -34,12 +34,13 @@ import (
 	"fmt"
 	// "github.com/gorilla/mux"
 	"encoding/json"
+	"github.com/fatih/structs"
+	"github.com/oleiade/reflections"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"reflect"
-	"github.com/fatih/structs"
-	"gopkg.in/oleiade/reflections.v1"
+	"strconv"
 )
 
 type writeconfiguration struct {
@@ -69,8 +70,6 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-
-
 	if configuration := r.Context().Value("Config"); configuration != nil {
 
 		keys := make([]string, 0, len(wc.Msg.(map[string]interface{})))
@@ -81,17 +80,55 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 
 		confignames := structs.Names(configuration.(*Config))
 
-		for i:= range confignames {
+		for i := range confignames {
 			for j := range keys {
 				if keys[j] == confignames[i] {
-					// TODO overwrite keys in config struct
-					fmt.Println("Treffer: Key: "+keys[j]+" Configname: "+confignames[i])
+
+					fmt.Println("Treffer: Key: " + keys[j] + " Configname: " + confignames[i])
 					fmt.Println(reflect.TypeOf(wc.Msg.(map[string]interface{})[keys[j]]))
 					fmt.Println(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]))
-					err := reflections.SetField(configuration.(*Config), confignames[i], reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String())
+
+					var err error
+					var fieldtype string
+					fieldtype, err = reflections.GetFieldType(configuration.(*Config), confignames[i])
+					fmt.Println("Fieldtype: " + fieldtype)
+
+					switch fieldtype {
+					case "int":
+						switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
+						case float64:
+							err = reflections.SetField(configuration.(*Config), confignames[i], int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float()))
+						case string:
+							intval, _ := strconv.Atoi(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String())
+							err = reflections.SetField(configuration.(*Config), confignames[i], intval)
+						case int:
+							err = reflections.SetField(configuration.(*Config), confignames[i], int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int()))
+						}
+					case "float":
+						switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
+						case float64:
+							err = reflections.SetField(configuration.(*Config), confignames[i], int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float()))
+						case string:
+							floatval, _ := strconv.ParseFloat(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String(), 64)
+							err = reflections.SetField(configuration.(*Config), confignames[i], floatval)
+						case int:
+							err = reflections.SetField(configuration.(*Config), confignames[i], float64(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int()))
+						}
+					case "string":
+						switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
+						case float64:
+							err = reflections.SetField(configuration.(*Config), confignames[i], strconv.FormatFloat(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float(), 'f', -1, 64))
+						case string:
+							err = reflections.SetField(configuration.(*Config), confignames[i], reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String())
+						case int:
+							err = reflections.SetField(configuration.(*Config), confignames[i], strconv.FormatInt(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int(), 16))
+						}
+
+					}
 					if err != nil {
 						log.Fatal(err)
 					}
+
 				}
 			}
 		}

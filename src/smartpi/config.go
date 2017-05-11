@@ -29,8 +29,8 @@ package smartpi
 import (
 	log "github.com/Sirupsen/logrus"
 	"gopkg.in/ini.v1"
-	"strconv"
 	"os"
+	"strconv"
 )
 
 type Config struct {
@@ -235,7 +235,7 @@ func (p *Config) SaveParameterToFile() {
 	if err != nil {
 		panic(err)
 	}
-  os.Rename(tmpPath, "/etc/smartpi")
+	os.Rename(tmpPath, "/etc/smartpi")
 	defer os.Remove(tmpPath)
 }
 
