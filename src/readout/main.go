@@ -137,42 +137,6 @@ func updateSQLiteDatabase(c *smartpi.Config, data []float32) {
 	smartpi.InsertData(c.DatabaseDir, t, data)
 }
 
-func publishReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [25]float32) {
-	//[basetopic]/[node]/[keyname]
-	if c.MQTTenabled {
-		// Let's try to (re-)connect if MQTT connection was lost.
-		if !mqttclient.IsConnected() {
-			if mqtttoken := mqttclient.Connect(); mqtttoken.Wait() && mqtttoken.Error() != nil {
-				log.Debugf("Connecting to MQTT broker failed. %q", mqtttoken.Error())
-			}
-		}
-		if mqttclient.IsConnected() {
-			log.Debug("Publishing readoputs via MQTT...")
-
-			// Status is used to stop MQTT publication sequence in case of first error.
-			var status = true
-
-			for i := 0; i < len(readouts); i++ {
-				topic := c.MQTTtopic + "/" + readouts[i]
-
-				if status {
-					log.Debugf("  -> ", topic, ":", values[i])
-					token := mqttclient.Publish(topic, 1, false, strconv.FormatFloat(float64(values[i]), 'f', 2, 32))
-
-					if !token.WaitTimeout(2 * time.Second) {
-						log.Debugf("  MQTT Timeout. Stopping MQTT sequence.")
-						status = false
-					} else if token.Error() != nil {
-						log.Error(token.Error())
-						status = false
-					}
-				}
-			}
-			log.Debug("MQTT done.")
-		}
-	}
-}
-
 func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 	var mqttclient MQTT.Client
 
@@ -180,24 +144,9 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 	producerCounterFile := filepath.Join(config.CounterDir, "producecounter")
 
 	if config.MQTTenabled {
-		log.Debugf("Connecting to MQTT broker at %s\n", (config.MQTTbroker + ":" + config.MQTTbrokerport))
-		//create a MQTTClientOptions struct setting the broker address, clientid, user and password
-		opts := MQTT.NewClientOptions().AddBroker("tcp://" + config.MQTTbroker + ":" + config.MQTTbrokerport)
-		opts.SetClientID("SmartPi")
-		opts.SetUsername(config.MQTTuser)
-		opts.SetPassword(config.MQTTpass)
-		opts.SetAutoReconnect(true)
-		opts.SetConnectTimeout(3 * time.Second)
-		opts.SetPingTimeout(1 * time.Second)
-		opts.SetKeepAlive(1 * time.Second)
-		opts.SetMaxReconnectInterval(3 * time.Second)
-		//create and start a client using the above ClientOptions
-		mqttclient = MQTT.NewClient(opts)
-		if mqtttoken := mqttclient.Connect(); mqtttoken.Wait() && mqtttoken.Error() != nil {
-			//panic(mqtttoken.Error())
-			log.Debugf("Connecting to MQTT broker failed. %q", mqtttoken.Error())
-		}
+		mqttclient = newMQTTClient(config)
 	}
+
 	for {
 		data := make([]float32, 22)
 
@@ -207,7 +156,9 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 			writeSharedFile(config, valuesr)
 
 			// Publish readouts to MQTT.
-			publishReadouts(config, mqttclient, valuesr)
+			if config.MQTTenabled {
+				publishMQTTReadouts(config, mqttclient, valuesr)
+			}
 
 			// Update metrics endpoint.
 			updatePrometheusMetrics(valuesr)
