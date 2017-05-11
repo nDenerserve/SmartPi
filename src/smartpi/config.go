@@ -31,6 +31,7 @@ import (
 	"gopkg.in/ini.v1"
 	"strconv"
 	"strings"
+	"os"
 )
 
 type Config struct {
@@ -239,10 +240,13 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("mqtt").NewKey("mqtt_password", p.MQTTpass)
 	_, err = cfg.Section("mqtt").NewKey("mqtt_topic", p.MQTTtopic)
 
-	err := cfg.SaveTo("/etc/smartpi")
+	tmpPath = "/tmp/smartpi"
+	err := cfg.SaveTo(tmpPath)
 	if err != nil {
 		panic(err)
 	}
+  os.Rename(tmpPath, "/etc/smartpi")
+	defer os.Remove(tmpPath)
 }
 
 func NewConfig() *Config {

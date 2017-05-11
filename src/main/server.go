@@ -49,7 +49,7 @@ func stringInSlice(list1 []string, list2 []string) bool {
 	return false
 }
 
-func BasicAuth(realm string, handler http.HandlerFunc, u *smartpi.User, roles ...string) http.HandlerFunc {
+func BasicAuth(realm string, handler http.HandlerFunc, c *smartpi.Config, u *smartpi.User, roles ...string) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -71,6 +71,7 @@ func BasicAuth(realm string, handler http.HandlerFunc, u *smartpi.User, roles ..
 			return
 		}
 		ctx := context.WithValue(r.Context(), "Username", u)
+		ctx = context.WithValue(r.Context(), "Config", c)
 		handler(w, r.WithContext(ctx))
 	}
 }
@@ -87,7 +88,8 @@ func main() {
 	r.HandleFunc("/api/values/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeChartValues)
 	r.HandleFunc("/api/dayvalues/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeDayValues)
 	r.HandleFunc("/api/csv/from/{fromDate}/to/{toDate}", smartpi.ServeCSVValues)
-	r.HandleFunc("/api/config/read/name/{name}", BasicAuth("Please enter your username and password for this site", smartpi.ReadConfig, user, "administrator"))
+	r.HandleFunc("/api/config/read", BasicAuth("Please enter your username and password for this site", smartpi.ReadConfig, config, user, "administrator")).Methods("GET")
+	r.HandleFunc("/api/config/write", BasicAuth("Please enter your username and password for this site", smartpi.WriteConfig, config, user, "administrator")).Methods("POST")
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(config.DocRoot)))
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.WebserverPort), nil))
