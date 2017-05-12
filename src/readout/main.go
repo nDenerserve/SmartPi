@@ -153,7 +153,7 @@ func main() {
             </html>`))
 	})
 
-	fmt.Println("Listening on %s", listenAddress)
+	log.Debugf("Listening on %s", listenAddress)
 	if err := http.ListenAndServe(listenAddress, nil); err != nil {
 		panic(fmt.Errorf("Error starting HTTP server: %s", err))
 	}
