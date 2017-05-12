@@ -15,7 +15,7 @@ import (
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 )
 
-func writeSharedFile(c *smartpi.Config, values [25]float32) {
+func writeSharedFile(c *smartpi.Config, values [25]float64) {
 	var f *os.File
 	var err error
 	s := make([]string, 16)
@@ -70,7 +70,7 @@ func updateCounterFile(c *smartpi.Config, f string, v float64) {
 
 	logLine := "## Persistent counter file update ##"
 	logLine += t.Format(" 2006-01-02 15:04:05 ")
-	logLine += fmt.Sprintf("File: %q  Current: %g  Increment: %g \n ", f, counter, v)
+	logLine += fmt.Sprintf("File: %q  Current: %g  Increment: %g", f, counter, v)
 	log.Info(logLine)
 
 	err = ioutil.WriteFile(f, []byte(strconv.FormatFloat(counter+v, 'f', 8, 64)), 0644)
