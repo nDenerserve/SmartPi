@@ -475,6 +475,7 @@ func CalculatePowerFactor(c *Config, phase string, watts float64, voltAmps float
 
 func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	var values [25]float32
+	startTime := time.Now()
 
 	// Measure Currents
 	values[0] = float32(ReadCurrent(d, c, "A")) // Phase A.
@@ -530,7 +531,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 	values[23] = float32(CalculatePowerFactor(c, "B", float64(values[8]), float64(values[17]), float64(values[21]))) // Phase B.
 	values[24] = float32(CalculatePowerFactor(c, "C", float64(values[9]), float64(values[19]), float64(values[22]))) // Phase C.
 
-	logLine := "ReadValues: "
+	logLine := fmt.Sprintf("ReadValues: %s ", time.Since(startTime))
 	logLine += fmt.Sprintf("I1: %g  I2: %g  I3: %g  I4: %g  ", values[0], values[1], values[2], values[3])
 	logLine += fmt.Sprintf("V1: %g  V2: %g  V3: %g  ", values[4], values[5], values[6])
 	logLine += fmt.Sprintf("P1: %g  P2: %g  P3: %g  ", values[7], values[8], values[9])
