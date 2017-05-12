@@ -66,6 +66,7 @@ var (
 
 // Fetch a number of bytes from the device and convert it to an int.
 func DeviceFetchInt(d *i2c.Device, l int, cmd []byte) int64 {
+	startTime := time.Now()
 	err := d.Write(cmd)
 	if err != nil {
 		panic(err)
@@ -86,7 +87,7 @@ func DeviceFetchInt(d *i2c.Device, l int, cmd []byte) int64 {
 	default:
 		panic(fmt.Errorf("Invalid byte length for int conversion %d", l))
 	}
-	log.Debugf("DeviceFetchInt: cmd: %x data: %x result: %d", cmd, data, result)
+	log.Debugf("DeviceFetchInt: %s cmd: %x data: %x result: %d", time.Since(startTime), cmd, data, result)
 	return result
 }
 
