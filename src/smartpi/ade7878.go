@@ -61,7 +61,7 @@ var (
 )
 
 var (
-	rms_factor_current float32
+	rms_factor_current float64
 )
 
 // Fetch a number of bytes from the device and convert it to an int.
@@ -314,7 +314,7 @@ func ReadCurrent(d *i2c.Device, c *Config, phase string) (current float64) {
 	return current
 }
 
-func ReadVoltage(d *i2c.Device, c *Config, phase string) (voltage float32, measureVoltage bool) {
+func ReadVoltage(d *i2c.Device, c *Config, phase string) (voltage float64, measureVoltage bool) {
 	command := make([]byte, 2)
 	switch phase {
 	case "A":
@@ -327,12 +327,12 @@ func ReadVoltage(d *i2c.Device, c *Config, phase string) (voltage float32, measu
 		panic(fmt.Errorf("Invalid phase %q", phase))
 	}
 
-	voltage = float32(DeviceFetchInt(d, 4, command)) / 1e+4
+	voltage = float64(DeviceFetchInt(d, 4, command)) / 1e+4
 
 	// Ignore voltage reading if disalbed or less than 10 volts.
 	measureVoltage = true
 	if !c.MeasureVoltage[phase] || voltage < 10 {
-		voltage = float32(c.Voltage[phase])
+		voltage = c.Voltage[phase]
 		measureVoltage = false
 	}
 
@@ -380,7 +380,7 @@ func ReadAngle(d *i2c.Device, c *Config, phase string) (angle float64) {
 
 	if c.MeasureVoltage[phase] {
 		outcome := float64(DeviceFetchInt(d, 2, command))
-		angle = math.Cos(outcome * 360 * float64(c.PowerFrequency) / ade7878Clock * halfCircle)
+		angle = math.Cos(outcome * 360 * c.PowerFrequency / ade7878Clock * halfCircle)
 		if c.CurrentDirection[phase] {
 			angle *= -1
 		}
@@ -464,7 +464,7 @@ func ReadReactivePower(d *i2c.Device, c *Config, phase string) float64 {
 func CalculatePowerFactor(c *Config, phase string, watts float64, voltAmps float64, voltAmpsReactive float64) float64 {
 	powerFactor := watts / CTTypes[c.CTType[phase]].PowerCorrectionFactor / voltAmps
 	if c.MeasureCurrent[phase] {
-		if math.Signbit(float64(voltAmpsReactive)) {
+		if math.Signbit(voltAmpsReactive) {
 			return powerFactor
 		} else {
 			return powerFactor * -1
@@ -474,15 +474,15 @@ func CalculatePowerFactor(c *Config, phase string, watts float64, voltAmps float
 	}
 }
 
-func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
-	var values [25]float32
+func ReadoutValues(d *i2c.Device, c *Config) [25]float64 {
+	var values [25]float64
 	startTime := time.Now()
 
 	// Measure Currents
-	values[0] = float32(ReadCurrent(d, c, "A")) // Phase A.
-	values[1] = float32(ReadCurrent(d, c, "B")) // Phase B.
-	values[2] = float32(ReadCurrent(d, c, "C")) // Phase C.
-	values[3] = float32(ReadCurrent(d, c, "N")) // Phase N.
+	values[0] = ReadCurrent(d, c, "A") // Phase A.
+	values[1] = ReadCurrent(d, c, "B") // Phase B.
+	values[2] = ReadCurrent(d, c, "C") // Phase C.
+	values[3] = ReadCurrent(d, c, "N") // Phase N.
 
 	// Measure Voltages.
 	var measureVoltage1, measureVoltage2, measureVoltage3 bool
@@ -492,45 +492,45 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float32 {
 
 	// Measure Active Watts.
 	if measureVoltage1 {
-		values[7] = float32(ReadActiveWatts(d, c, "A")) // Phase A.
+		values[7] = ReadActiveWatts(d, c, "A") // Phase A.
 	} else {
 		values[7] = values[0] * values[4]
 	}
 	if measureVoltage2 {
-		values[8] = float32(ReadActiveWatts(d, c, "B")) // Phase B.
+		values[8] = ReadActiveWatts(d, c, "B") // Phase B.
 	} else {
 		values[8] = values[1] * values[5]
 	}
 	if measureVoltage3 {
-		values[9] = float32(ReadActiveWatts(d, c, "C")) // Phase C.
+		values[9] = ReadActiveWatts(d, c, "C") // Phase C.
 	} else {
 		values[9] = values[2] * values[6]
 	}
 
 	// Measure cosphis.
-	values[10] = float32(ReadAngle(d, c, "A")) // Phase A.
-	values[11] = float32(ReadAngle(d, c, "B")) // Phase B.
-	values[12] = float32(ReadAngle(d, c, "C")) // Phase C.
+	values[10] = ReadAngle(d, c, "A") // Phase A.
+	values[11] = ReadAngle(d, c, "B") // Phase B.
+	values[12] = ReadAngle(d, c, "C") // Phase C.
 
 	// Measure frequencies.
-	values[13] = float32(ReadFrequency(d, c, "A")) // Phase A.
-	values[14] = float32(ReadFrequency(d, c, "B")) // Phase B.
-	values[15] = float32(ReadFrequency(d, c, "C")) // Phase C.
+	values[13] = ReadFrequency(d, c, "A") // Phase A.
+	values[14] = ReadFrequency(d, c, "B") // Phase B.
+	values[15] = ReadFrequency(d, c, "C") // Phase C.
 
 	// Measure apparent power (volt-amps).
-	values[16] = float32(ReadApparentPower(d, c, "A")) // Phase A.
-	values[17] = float32(ReadApparentPower(d, c, "B")) // Phase B.
-	values[18] = float32(ReadApparentPower(d, c, "C")) // Phase C.
+	values[16] = ReadApparentPower(d, c, "A") // Phase A.
+	values[17] = ReadApparentPower(d, c, "B") // Phase B.
+	values[18] = ReadApparentPower(d, c, "C") // Phase C.
 
 	// Measure reactive power (volt-ampere reactive).
-	values[19] = float32(ReadReactivePower(d, c, "A")) // Phase A.
-	values[20] = float32(ReadReactivePower(d, c, "B")) // Phase B.
-	values[21] = float32(ReadReactivePower(d, c, "C")) // Phase C.
+	values[19] = ReadReactivePower(d, c, "A") // Phase A.
+	values[20] = ReadReactivePower(d, c, "B") // Phase B.
+	values[21] = ReadReactivePower(d, c, "C") // Phase C.
 
 	// Calculate power factors.
-	values[22] = float32(CalculatePowerFactor(c, "A", float64(values[7]), float64(values[16]), float64(values[20]))) // Phase A.
-	values[23] = float32(CalculatePowerFactor(c, "B", float64(values[8]), float64(values[17]), float64(values[21]))) // Phase B.
-	values[24] = float32(CalculatePowerFactor(c, "C", float64(values[9]), float64(values[19]), float64(values[22]))) // Phase C.
+	values[22] = CalculatePowerFactor(c, "A", values[7], values[16], values[20]) // Phase A.
+	values[23] = CalculatePowerFactor(c, "B", values[8], values[17], values[21]) // Phase B.
+	values[24] = CalculatePowerFactor(c, "C", values[9], values[19], values[22]) // Phase C.
 
 	logLine := fmt.Sprintf("ReadValues: %s ", time.Since(startTime))
 	logLine += fmt.Sprintf("I1: %g  I2: %g  I3: %g  I4: %g  ", values[0], values[1], values[2], values[3])

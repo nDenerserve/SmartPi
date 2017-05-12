@@ -53,7 +53,7 @@ type Config struct {
 	I2CDevice        string
 	SharedDir        string
 	SharedFile       string
-	PowerFrequency   int
+	PowerFrequency   float64
 	CTType           map[string]string
 	CurrentDirection map[string]bool
 	MeasureCurrent   map[string]bool
@@ -122,7 +122,7 @@ func (p *Config) ReadParameterFromFile() {
 	p.I2CDevice = cfg.Section("device").Key("i2c_device").MustString("/dev/i2c-1")
 	p.SharedDir = cfg.Section("device").Key("shared_dir").MustString("/var/tmp/smartpi")
 	p.SharedFile = cfg.Section("device").Key("shared_file").MustString("values")
-	p.PowerFrequency = cfg.Section("device").Key("power_frequency").MustInt(50)
+	p.PowerFrequency = cfg.Section("device").Key("power_frequency").MustFloat64(50)
 	p.CTType = make(map[string]string)
 	p.CTType["A"] = cfg.Section("device").Key("ct_type_1").MustString("YHDC_SCT013")
 	p.CTType["B"] = cfg.Section("device").Key("ct_type_2").MustString("YHDC_SCT013")

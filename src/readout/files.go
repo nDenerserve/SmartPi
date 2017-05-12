@@ -15,7 +15,7 @@ import (
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 )
 
-func writeSharedFile(c *smartpi.Config, values [25]float32) {
+func writeSharedFile(c *smartpi.Config, values [25]float64) {
 	var f *os.File
 	var err error
 	s := make([]string, 16)

@@ -32,7 +32,7 @@ func newMQTTClient(c *smartpi.Config) (mqttclient MQTT.Client) {
 	return mqttclient
 }
 
-func publishMQTTReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [25]float32) {
+func publishMQTTReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [25]float64) {
 	//[basetopic]/[node]/[keyname]
 	// Let's try to (re-)connect if MQTT connection was lost.
 	if !mqttclient.IsConnected() {
@@ -51,7 +51,7 @@ func publishMQTTReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [25]f
 
 			if status {
 				log.Debugf("  -> ", topic, ":", values[i])
-				token := mqttclient.Publish(topic, 1, false, strconv.FormatFloat(float64(values[i]), 'f', 2, 32))
+				token := mqttclient.Publish(topic, 1, false, strconv.FormatFloat(values[i], 'f', 2, 32))
 
 				if !token.WaitTimeout(2 * time.Second) {
 					log.Debugf("  MQTT Timeout. Stopping MQTT sequence.")
