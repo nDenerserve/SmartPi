@@ -63,6 +63,7 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		data := make([]float32, 22)
 
 		for i := 0; i < 12; i++ {
+			startTime := time.Now()
 			valuesr := smartpi.ReadoutValues(device, config)
 
 			writeSharedFile(config, valuesr)
@@ -105,7 +106,9 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 					}
 				}
 			}
-			time.Sleep(5000 * time.Millisecond)
+			sleepFor := (5000 * time.Millisecond) - time.Since(startTime)
+			log.Debugf("Sleeping for %s", sleepFor)
+			time.Sleep(sleepFor)
 		}
 
 		// Update SQLlite database.
