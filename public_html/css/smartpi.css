@@ -26,7 +26,6 @@ table.csvtabledata {
 	margin: 2em;
 }
 
-
 td {
 	border: 1px solid;
 }
@@ -34,4 +33,9 @@ td {
 
 tbody.csvtabledata th.csvtabledata {
 	text-align: left;
+}
+
+.md-toolbar-tools {
+  height: 90px;
+  max-height: 90px;
 }

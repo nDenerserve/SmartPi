@@ -43,9 +43,8 @@
       <!--<script src="js/module.js?v=1"></script>-->
       <script>document.write("<script type='text/javascript' src='js/module.js?v=" + Date.now() + "'><\/script>");</script>
       <!--<script src="js/controllers.js?v=1"></script>-->
-      <script>document.write("<script type='text/javascript' src='js/controllers.js?v=" + Date.now() + "'><\/script>");</script>
-
-      <title>SmartPi Dashboard</title>
+      <script>document.write("<script type='text/javascript' src='js/settingscontrollers.js?v=" + Date.now() + "'><\/script>");</script>
+      <title>SmartPi Settings</title>
    </head>
    <body  ng-app="SmartPi" ng-controller="MainCtrl">
       <header>
@@ -74,140 +73,11 @@
          </div>
          </md-toolbar>
          <div flex="66" flex-offset="15">
-         <div layout="row" layout-wrap>
-            <div flex="50">
-               <md-card class="md-default-theme">
-               <md-toolbar layout="row">
-                  <div class="md-toolbar-tools">
-                     <h2>
-                        <span>Power</span>
-                     </h2>
-                     <span flex></span>
-                     <div class="huge">{{formatNumber(momentary.power_total)}} W</div>
-                  </div>
-               </md-toolbar>
-               <md-toolbar layout="row">
-                  <div class="md-toolbar-tools">
-                     <div class="flex">
-                        <h1 class="display-2">P1: {{formatNumber(momentary.power[0])}} W</h1>
-                     </div>
-                     <div class="flex">
-                        <h1 class="display-2">P2: {{formatNumber(momentary.power[1])}} W</h1>
-                     </div>
-                     <div class="flex">
-                        <h1 class="display-2">P3: {{formatNumber(momentary.power[2])}} W</h1>
-                     </div>
-                  </div>
-               </md-toolbar>
-               <div layout="row">
-                  <div flex>
-                     Consumption today: {{formatNumber(dayconsumption_total/1000)}} kWh
-                  </div>
-                  <div flex>
-                     Production today: {{formatNumber(dayproduction_total/1000)}} kWh
-                  </div>
-               </div>
-            </div>
-            <div flex="50">
-               <md-card class="md-default-theme">
-               <md-toolbar layout="row">
-                  <div class="md-toolbar-tools">
-                     <h2>
-                        <span>Current</span>
-                     </h2>
-                     <span flex></span>
-                     <div class="huge">{{formatNumber(momentary.current_total)}} A</div>
-                  </div>
-               </md-toolbar>
-               <md-toolbar layout="row">
-                  <div class="md-toolbar-tools">
-                     <div class="flex">
-                        <h1 class="display-2">I1: {{formatNumber(momentary.current[0])}} A</h1>
-                     </div>
-                     <div class="flex">
-                        <h1 class="display-2">I2: {{formatNumber(momentary.current[1])}} A</h1>
-                     </div>
-                     <div class="flex">
-                        <h1 class="display-2">I3: {{formatNumber(momentary.current[2])}} A</h1>
-                     </div>
-                  </div>
-               </md-toolbar>
-               <div layout="row">
-                  <div flex="33">
-                     U1: {{formatNumber(momentary.voltage[0])}} V
-                  </div>
-                  <div flex="33">
-                     U2: {{formatNumber(momentary.voltage[1])}} V
-                  </div>
-                  <div flex="33">
-                     U3: {{formatNumber(momentary.voltage[2])}} V
-                  </div>
-               </div>
-               <div layout="row">
-                  <div flex="33">
-                     F1: {{formatNumber(momentary.frequency[0])}} Hz
-                  </div>
-                  <div flex="33">
-                     F2: {{formatNumber(momentary.frequency[1])}} Hz
-                  </div>
-                  <div flex="33">
-                     F3: {{formatNumber(momentary.frequency[2])}} Hz
-                  </div>
-               </div>
-               <div layout="row">
-                  <div flex="33">
-                     Cos Phi 1: {{formatNumber(momentary.cosphi[0])}}
-                  </div>
-                  <div flex="33">
-                     Cos Phi 2: {{formatNumber(momentary.cosphi[1])}}
-                  </div>
-                  <div flex="33">
-                     Cos Phi 3: {{formatNumber(momentary.cosphi[2])}}
-                  </div>
-               </div>
-            </div>
-         </div>
-         <div layout="row" layout-wrap>
-            <div flex>
-               <md-card class="md-default-theme">
-                  <md-toolbar layout="row">
-                     <div class="md-toolbar-tools">
-                        <h2>
-                           <span>Consumption</span>
-                        </h2>
-                        <span flex></span>
-                        <div class="huge">Week</div>
-                     </div>
-                  </md-toolbar>
-                  <nvd3 options='weekconsumptionoptions' data='weekconsumptiondata'></nvd3>
-               </md-card>
-            </div>
-         </div>
-         <div layout="row" layout-wrap>
-            <div flex>
-               <md-card class="md-default-theme">
-                  <md-toolbar layout="row">
-                     <div class="md-toolbar-tools">
-                        <span flex></span>
-                        <md-button ng-click="dayback()" class="md-raised" > < day back </md-button>
-                        <md-button ng-click="dayforward()" class="md-raised" ng-disabled="disabledayforwardbutton"> day forward > </md-button>
-                        <md-button ng-click="adddayback()" class="md-raised" > << add day back </md-button>
-                        <md-button ng-click="removedayback()" class="md-raised" ng-disabled="disabledayremovebutton"> >> remove day back </md-button>
-                     </div>
-                  </md-toolbar>
-                  <md-toolbar layout="row">
-                     <div class="md-toolbar-tools">
-                        <span flex></span>
-                        <md-button ng-init="showLinechartPower = true" ng-click="linechartPower()" class="md-raised" ng-class="btnpowerline">power</md-button>
-                        <md-button ng-init="showLinechartEnergyPos = false" ng-click="linechartEnergy_pos()" class="md-raised" ng-class="btnenergy_posline">energy consumption</md-button>
-                        <md-button ng-init="showLinechartEnergyNeg = false" ng-click="linechartEnergy_neg()" class="md-raised" ng-class="btnenergy_negline">energy production</md-button>
-                        <md-button ng-init="showLinechartCurrent = false" ng-click="linechartCurrent()" class="md-raised" ng-class="btncurrentline">current</md-button>
-                        <md-button ng-init="showLinechartVoltage = false" ng-click="linechartVoltage()" class="md-raised" ng-class="btnvoltageline">voltage</md-button>
-                     </div>
-                  </md-toolbar>
-                  <nvd3 options='options' data='data'></nvd3>
-               </md-card>
-            </div>
+            <md-button class="md-primary md-raised" ng-click="showLogin($event)"  >
+               Prompt Dialog
+            </md-button>
+            {{user.name}}
+            {{user.password}}
          </div>
       </md-content>
       <script src="js/jquery-2.1.4.js"></script>
