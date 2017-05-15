@@ -1,4 +1,4 @@
-angular.module('smartpi.services', ['ngResource'])
+angular.module('smartpi.services', ['ngResource', 'base64'])
 
 
 .factory('$Momentary', function($resource){
@@ -25,6 +25,20 @@ angular.module('smartpi.services', ['ngResource'])
   var factory = {}
     var full = location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '');
     return $resource(full+'/api/csv/from/:startdate/to/:enddate');
+})
+
+.factory('$GetConfigData', function($resource, $base64){
+  var factory = {}
+    var full = location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '');
+    return function(passwordhash) {
+      var auth = $base64.encode("pi:"+passwordhash);
+      return $resource(full+'/api/config/read', {}, {
+        query: {
+          method: 'GET',
+          headers: {"Authorization": "Basic " + auth}
+        }
+      });
+    }
 })
 
 

@@ -1,4 +1,4 @@
-smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData) {
+smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData, $GetConfigData) {
 
         $scope.user = {};
 
@@ -19,7 +19,19 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData)
         };
 
         $rootScope.$on("LoginDialogCloseEvent", function(event, args) {
-            console.log(args);
+
+            var encrypted = CryptoJS.SHA256(args.password).toString();
+            $GetConfigData(encrypted).query({},
+                function(data) {
+                    console.log(data);
+                },
+                function(error) {
+                    if (error.status == 400)
+                        console.log(error.data.message);
+                });
+
+
+
             $scope.user.name = args.username;
             $scope.user.password = args.password;
         });
@@ -34,9 +46,6 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData)
             };
 
             $scope.LoginSettings = function() {
-                // UserData.setUsername = $scope.user.name;
-                // UserData.SetPassword = $scope.user.password;
-                alert($scope.user.name);
                 $rootScope.$emit("LoginDialogCloseEvent", {
                     username: $scope.user.name,
                     password: $scope.user.password

@@ -34,9 +34,14 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-
+	"encoding/json"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 )
+
+type JSONError struct {
+	Code int `json:"code"`
+	Message string `json:"message"`
+}
 
 func stringInSlice(list1 []string, list2 []string) bool {
 	for _, a := range list1 {
@@ -50,6 +55,7 @@ func stringInSlice(list1 []string, list2 []string) bool {
 }
 
 func BasicAuth(realm string, handler http.HandlerFunc, c *smartpi.Config, u *smartpi.User, roles ...string) http.HandlerFunc {
+
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -66,8 +72,11 @@ func BasicAuth(realm string, handler http.HandlerFunc, c *smartpi.Config, u *sma
 
 		if !ok || !u.Exist || subtle.ConstantTimeCompare([]byte(user), []byte(u.Name)) != 1 || subtle.ConstantTimeCompare([]byte(pass), []byte(u.Password)) != 1 || !roleAllowed {
 			w.Header().Set("WWW-Authenticate", `Basic realm="`+realm+`"`)
-			w.WriteHeader(401)
-			w.Write([]byte("Unauthorised.\n"))
+			w.WriteHeader(400)
+			// w.Write([]byte("Unauthorised.\n"))
+			if err := json.NewEncoder(w).Encode(JSONError{Code: 401, Message: "Unauthorized"}); err != nil {
+				panic(err)
+			}
 			return
 		}
 		ctx := context.WithValue(r.Context(), "Username", u)
