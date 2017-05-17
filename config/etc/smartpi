@@ -10,13 +10,13 @@ lat=52.3667
 lng=9.7167
 
 [database]
+counter_enabled=true
 counterdir="/var/smartpi"
+database_enabled=true
 dir="/var/smartpi/db"
 
 [device]
 i2c_device="/dev/i2c-1"
-shared_dir="/var/tmp/smartpi"
-shared_file="values"
 power_frequency=50
 ct_type_1=YHDC_SCT013
 ct_type_2=YHDC_SCT013
@@ -47,6 +47,9 @@ decimalpoint=,
 timeformat=2006-01-02 15:04:05
 
 [webserver]
+shared_file_enabled=true
+shared_dir="/var/tmp/smartpi"
+shared_file="values"
 port=1080
 docroot="/var/smartpi/www"
 
