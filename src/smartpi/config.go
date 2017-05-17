@@ -160,8 +160,8 @@ func (p *Config) ReadParameterFromFile() {
 
 	// [webserver]
 	p.SharedFileEnabled = cfg.Section("webserver").Key("shared_file_enabled").MustBool(true)
-	p.SharedDir = cfg.Section("webserver").Key("shared_dir").MustString("/var/tmp/smartpi")
-	p.SharedFile = cfg.Section("webserver").Key("shared_file").MustString("values")
+	p.SharedDir = cfg.Section("webserver").Key("shared_dir").MustString("/var/run")
+	p.SharedFile = cfg.Section("webserver").Key("shared_file").MustString("smartpi_values")
 	p.WebserverPort = cfg.Section("webserver").Key("port").MustInt(1080)
 	p.DocRoot = cfg.Section("webserver").Key("docroot").MustString("/var/smartpi/www")
 

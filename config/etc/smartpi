@@ -48,8 +48,8 @@ timeformat=2006-01-02 15:04:05
 
 [webserver]
 shared_file_enabled=true
-shared_dir="/var/tmp/smartpi"
-shared_file="values"
+shared_dir="/var/run"
+shared_file="smartpi_values"
 port=1080
 docroot="/var/smartpi/www"
 
