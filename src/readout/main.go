@@ -66,7 +66,9 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 			startTime := time.Now()
 			valuesr := smartpi.ReadoutValues(device, config)
 
-			writeSharedFile(config, valuesr)
+			if config.SharedFileEnabled {
+				writeSharedFile(config, valuesr)
+			}
 
 			// Publish readouts to MQTT.
 			if config.MQTTenabled {
@@ -112,11 +114,15 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		}
 
 		// Update SQLlite database.
-		updateSQLiteDatabase(config, data)
+		if config.DatabaseEnabled {
+			updateSQLiteDatabase(config, data)
+		}
 
 		// Update persistent counter files.
-		updateCounterFile(config, consumerCounterFile, float64(data[16]+data[17]+data[18]))
-		updateCounterFile(config, producerCounterFile, float64(data[19]+data[20]+data[21]))
+		if config.CounterEnabled {
+			updateCounterFile(config, consumerCounterFile, float64(data[16]+data[17]+data[18]))
+			updateCounterFile(config, producerCounterFile, float64(data[19]+data[20]+data[21]))
+		}
 	}
 }
 

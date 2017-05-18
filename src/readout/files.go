@@ -50,7 +50,6 @@ func writeSharedFile(c *smartpi.Config, values [25]float64) {
 	if err != nil {
 		panic(err)
 	}
-	f.Sync()
 	f.Close()
 }
 
