@@ -1,5 +1,14 @@
 smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData, $GetConfigData) {
 
+
+
+        $scope.tabview = false;
+        $scope.toggleTab = function() {
+            $scope.tabview = !$scope.tabview;
+        }
+
+
+
         $scope.user = {};
 
         $scope.showLogin = function(ev) {
@@ -23,11 +32,14 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
             var encrypted = CryptoJS.SHA256(args.password).toString();
             $GetConfigData(encrypted).query({},
                 function(data) {
+                    $scope.tabview = true;
                     console.log(data);
                 },
                 function(error) {
                     if (error.status == 400)
-                        console.log(error.data.message);
+                        $scope.tabview = false;
+                    $scope.showLogin();
+                    console.log(error.data.message);
                 });
 
 

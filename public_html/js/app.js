@@ -1,1 +1,1 @@
-var smartpi = angular.module('smartpi', ['smartpi.services', 'smartpi.controllers', 'nvd3', 'base64']);
+var smartpi = angular.module('smartpi', ['smartpi.services', 'smartpi.controllers', 'ngMaterial', 'nvd3', 'base64']);
