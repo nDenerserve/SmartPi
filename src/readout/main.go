@@ -77,29 +77,13 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 			switch index {
 			case 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15:
 				data[index] += float32(valuesr[index] / 60.0)
-			case 16:
-				if valuesr[7] >= 0 {
-					data[index] += float32(math.Abs(valuesr[7]) / 3600.0)
+			case 16, 17, 18:
+				if valuesr[index-9] >= 0 {
+					data[index] += float32(math.Abs(valuesr[index-9]) / 3600.0)
 				}
-			case 17:
-				if valuesr[8] >= 0 {
-					data[index] += float32(math.Abs(valuesr[8]) / 3600.0)
-				}
-			case 18:
-				if valuesr[9] >= 0 {
-					data[index] += float32(math.Abs(valuesr[9]) / 3600.0)
-				}
-			case 19:
-				if valuesr[7] < 0 {
-					data[index] += float32(math.Abs(valuesr[7]) / 3600.0)
-				}
-			case 20:
-				if valuesr[8] < 0 {
-					data[index] += float32(math.Abs(valuesr[8]) / 3600.0)
-				}
-			case 21:
-				if valuesr[9] < 0 {
-					data[index] += float32(math.Abs(valuesr[9]) / 3600.0)
+			case 19, 20, 21:
+				if valuesr[index-12] < 0 {
+					data[index] += float32(math.Abs(valuesr[index-12]) / 3600.0)
 				}
 			}
 		}
