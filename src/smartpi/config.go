@@ -85,6 +85,13 @@ type Config struct {
 	MQTTuser       string
 	MQTTpass       string
 	MQTTtopic      string
+
+	// [mobile]
+	MobileEnabled  bool
+	MobileAPN			 string
+	MobilePIN			 string
+	MobileUser		 string
+	MobilePass		 string
 }
 
 var cfg *ini.File
@@ -176,6 +183,14 @@ func (p *Config) ReadParameterFromFile() {
 	p.MQTTuser = cfg.Section("mqtt").Key("mqtt_username").String()
 	p.MQTTpass = cfg.Section("mqtt").Key("mqtt_password").String()
 	p.MQTTtopic = cfg.Section("mqtt").Key("mqtt_topic").String()
+
+	// [mqtt]
+	p.MobileEnabled = cfg.Section("umts").Key("umts").MustBool(false)
+	p.MobileAPN = cfg.Section("umts").Key("umts_apn").String()
+	p.MobilePIN = cfg.Section("umts").Key("umts_pin").String()
+	p.MobileUser = cfg.Section("umts").Key("umts_username").String()
+	p.MobilePass = cfg.Section("umts").Key("umts_password").String()
+
 }
 
 func (p *Config) SaveParameterToFile() {
