@@ -36,6 +36,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/version"
 	"golang.org/x/net/context"
 )
 
@@ -85,6 +87,10 @@ func BasicAuth(realm string, handler http.HandlerFunc, c *smartpi.Config, u *sma
 	}
 }
 
+func init() {
+	prometheus.MustRegister(version.NewCollector("smartpi"))
+}
+
 func main() {
 
 	config := smartpi.NewConfig()
@@ -100,6 +106,7 @@ func main() {
 	r.HandleFunc("/api/config/read", BasicAuth("Please enter your username and password for this site", smartpi.ReadConfig, config, user, "administrator")).Methods("GET")
 	r.HandleFunc("/api/config/write", BasicAuth("Please enter your username and password for this site", smartpi.WriteConfig, config, user, "administrator")).Methods("POST")
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(config.DocRoot)))
+	http.Handle("/metrics", prometheus.Handler())
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.WebserverPort), nil))
 }
