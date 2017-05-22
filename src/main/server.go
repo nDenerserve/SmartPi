@@ -28,18 +28,19 @@ package main
 
 import (
 	"crypto/subtle"
+	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
-	"golang.org/x/net/context"
 	"log"
 	"net/http"
 	"strconv"
-	"encoding/json"
+
+	"github.com/gorilla/mux"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
+	"golang.org/x/net/context"
 )
 
 type JSONError struct {
-	Code int `json:"code"`
+	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
 
@@ -55,7 +56,6 @@ func stringInSlice(list1 []string, list2 []string) bool {
 }
 
 func BasicAuth(realm string, handler http.HandlerFunc, c *smartpi.Config, u *smartpi.User, roles ...string) http.HandlerFunc {
-
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
