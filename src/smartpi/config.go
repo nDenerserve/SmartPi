@@ -184,7 +184,7 @@ func (p *Config) ReadParameterFromFile() {
 	p.MQTTpass = cfg.Section("mqtt").Key("mqtt_password").String()
 	p.MQTTtopic = cfg.Section("mqtt").Key("mqtt_topic").String()
 
-	// [mqtt]
+	// [mobile]
 	p.MobileEnabled = cfg.Section("umts").Key("umts").MustBool(false)
 	p.MobileAPN = cfg.Section("umts").Key("umts_apn").String()
 	p.MobilePIN = cfg.Section("umts").Key("umts_pin").String()
@@ -260,13 +260,20 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("mqtt").NewKey("mqtt_password", p.MQTTpass)
 	_, err = cfg.Section("mqtt").NewKey("mqtt_topic", p.MQTTtopic)
 
+	// [mobile]
+	_, err = cfg.Section("umts").NewKey("umts", strconv.FormatBool(p.MobileEnabled))
+	_, err = cfg.Section("umts").NewKey("umts_apn", p.MobileAPN)
+	_, err = cfg.Section("umts").NewKey("umts_pin", p.MobilePIN)
+	_, err = cfg.Section("umts").NewKey("umts_username", p.MobileUser)
+	_, err = cfg.Section("umts").NewKey("umts_password", p.MobilePass)
+
 	tmpPath := "/tmp/smartpi"
 	err := cfg.SaveTo(tmpPath)
 	if err != nil {
 		panic(err)
 	}
 	os.Rename(tmpPath, "/etc/smartpi")
-	defer os.Remove(tmpPath)
+	// defer os.Remove(tmpPath)
 }
 
 func NewConfig() *Config {

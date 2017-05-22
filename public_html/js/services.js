@@ -41,6 +41,21 @@ angular.module('smartpi.services', ['ngResource', 'base64'])
     }
 })
 
+.factory('$SetConfigData', function($resource, $base64){
+  var factory = {}
+    var full = location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '');
+    return function(passwordhash) {
+      var auth = $base64.encode("pi:"+passwordhash);
+      return $resource(full+'/api/config/write', {}, {
+      // return $resource('https://requestb.in/qcp4taqc', {}, {
+        save: {
+          method: 'POST',
+          headers: {"Authorization": "Basic " + auth}
+        }
+      });
+    }
+})
+
 
 // .factory('services', ['$http', function($http){
 //   var serviceBase = 'services/'

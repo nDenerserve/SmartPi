@@ -1,4 +1,4 @@
-smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData, $GetConfigData) {
+smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData, $GetConfigData, $SetConfigData) {
 
         $scope.smartpi = {};
         $scope.smartpi.location = {};
@@ -90,8 +90,113 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
 
 
         $scope.saveConfiguration = function(config) {
-            console.log("Save " + config);
-            $scope.isDefaultSave = true;
+          var jsonObj = new Object();
+          var jsonConfigObj = new Object();
+
+
+          switch (config) {
+              case 'default':
+
+                  jsonConfigObj.Serial = $scope.smartpi.serial;
+                  jsonConfigObj.Name = $scope.smartpi.name;
+                  jsonConfigObj.Lat = $scope.smartpi.location.lat;
+                  jsonConfigObj.Lng = $scope.smartpi.location.lng;
+                  break;
+
+              case 'measurement':
+
+                  jsonConfigObj.PowerFrequency = $scope.measurement.frequency;
+
+                  var jsonMeasureCurrentObj = new Object();
+                  jsonConfigObj.MeasureCurrent = jsonMeasureCurrentObj;
+                  var jsonCTTypeObj = new Object();
+                  jsonConfigObj.CTType = jsonCTTypeObj;
+                  var jsonCurrentDirectionObj = new Object();
+                  jsonConfigObj.CurrentDirection = jsonCurrentDirectionObj;
+
+                  jsonMeasureCurrentObj.A = $scope.measurement.current.phase1.measure;
+                  jsonCTTypeObj.A = $scope.measurement.current.phase1.sensor;
+                  jsonCurrentDirectionObj.A = $scope.measurement.current.phase1.direction;
+
+                  jsonMeasureCurrentObj.B = $scope.measurement.current.phase2.measure;
+                  jsonCTTypeObj.B = $scope.measurement.current.phase2.sensor;
+                  jsonCurrentDirectionObj.B = $scope.measurement.current.phase2.direction;
+
+                  jsonMeasureCurrentObj.C = $scope.measurement.current.phase3.measure;
+                  jsonCTTypeObj.C = $scope.measurement.current.phase3.sensor;
+                  jsonCurrentDirectionObj.C = $scope.measurement.current.phase3.direction;
+
+                  jsonMeasureCurrentObj.N = $scope.measurement.current.phase4.measure;
+                  jsonCTTypeObj.N = $scope.measurement.current.phase4.sensor;
+                  // jsonCurrentDirectionObj.N = $scope.measurement.current.phase4.direction;
+
+                  var jsonMeasureVoltageObj = new Object();
+                  jsonConfigObj.MeasureVoltage = jsonMeasureVoltageObj;
+                  var jsonVoltageObj = new Object();
+                  jsonConfigObj.Voltage = jsonVoltageObj;
+
+                  jsonMeasureVoltageObj.A = $scope.measurement.voltage.phase1.measure;
+                  jsonVoltageObj.A = $scope.measurement.voltage.phase1.suppose;
+
+                  jsonMeasureVoltageObj.B = $scope.measurement.voltage.phase2.measure;
+                  jsonVoltageObj.B = $scope.measurement.voltage.phase2.suppose;
+
+                  jsonMeasureVoltageObj.C = $scope.measurement.voltage.phase3.measure;
+                  jsonVoltageObj.C = $scope.measurement.voltage.phase3.suppose;
+
+                  break;
+              case 'mqtt':
+
+                  jsonConfigObj.MQTTenabled = $scope.mqtt.enabled;
+                  jsonConfigObj.MQTTbroker = $scope.mqtt.brokerUrl;
+                  jsonConfigObj.MQTTbrokerport = $scope.mqtt.brokerPort;
+                  jsonConfigObj.MQTTuser = $scope.mqtt.username;
+                  jsonConfigObj.MQTTpass = $scope.mqtt.password;
+                  jsonConfigObj.MQTTtopic = $scope.mqtt.topic;
+                  break;
+
+              case 'ftp':
+
+                  jsonConfigObj.FTPupload = $scope.ftp.enabled;
+                  jsonConfigObj.FTPserver = $scope.ftp.serverUrl;
+                  jsonConfigObj.MQTTbrokerport = $scope.mqtt.brokerPort;
+                  jsonConfigObj.FTPuser = $scope.ftp.username;
+                  jsonConfigObj.FTPpass = $scope.ftp.password;
+                  jsonConfigObj.FTPpath = $scope.ftp.path;
+                  break;
+
+              case 'mobile':
+
+                  jsonConfigObj.MobileEnabled = $scope.mobile.enabled;
+                  jsonConfigObj.MobileAPN="\""+$scope.mobile.apn+"\"";
+                  jsonConfigObj.MobilePIN="\""+$scope.mobile.pin+"\"";
+                  jsonConfigObj.MobileUser="\""+$scope.mobile.username+"\"";
+                  jsonConfigObj.MobilePass="\""+$scope.mobile.password+"\"";
+                  break;
+
+              case 'expert':
+
+                  jsonConfigObj.CSVdecimalpoint = $scope.csv.decimalpoint;
+                  jsonConfigObj.CSVtimeformat = $scope.csv.timeformat;
+                  jsonConfigObj.database_enabled = $scope.database.database.enabled;
+                  jsonConfigObj.DatabaseDir = $scope.database.database.directory;
+                  jsonConfigObj.counter_enabled = $scope.database.counter.enabled;
+                  jsonConfigObj.CounterDir = $scope.database.counter.directory;
+                  jsonConfigObj.WebserverPort = $scope.webserver.port;
+                  break;
+
+              default:
+          }
+
+
+
+          jsonObj.type = "config";
+          jsonObj.msg = jsonConfigObj;
+          var encrypted = CryptoJS.SHA256($scope.user.password).toString();
+          $SetConfigData(encrypted).save({},jsonObj);
+          console.log(jsonObj);
+          $scope.hideSaveButton(config);
+
         }
 
         $scope.showLogin = function(ev) {
@@ -153,10 +258,10 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
                     $scope.ftp.username = data.FTPuser;
                     $scope.ftp.password = data.FTPpass;
                     $scope.mobile.enabled = data.MobileEnabled;
-                    $scope.mobile.apn = data.MobileAPN;
-                    $scope.mobile.pin = data.MobilePIN;
-                    $scope.mobile.username = data.MobileUser;
-                    $scope.mobile.password = data.MobilePass;
+                    $scope.mobile.apn = data.MobileAPN.replace (/(^")|("$)/g, '');
+                    $scope.mobile.pin = data.MobilePIN.replace (/(^")|("$)/g, '');
+                    $scope.mobile.username = data.MobileUser.replace (/(^")|("$)/g, '');
+                    $scope.mobile.password = data.MobilePass.replace (/(^")|("$)/g, '');
                     $scope.csv.decimalpoint = data.CSVdecimalpoint;
                     $scope.csv.timeformat = data.CSVtimeformat;
                     $scope.database.database.directory = data.DatabaseDir;

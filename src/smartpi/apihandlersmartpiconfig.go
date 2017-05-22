@@ -103,6 +103,8 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 							err = reflections.SetField(configuration.(*Config), confignames[i], intval)
 						case int:
 							err = reflections.SetField(configuration.(*Config), confignames[i], int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int()))
+						case bool:
+							err = reflections.SetField(configuration.(*Config), confignames[i], b2i(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool()))
 						}
 					case "float":
 						switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
@@ -113,6 +115,8 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 							err = reflections.SetField(configuration.(*Config), confignames[i], floatval)
 						case int:
 							err = reflections.SetField(configuration.(*Config), confignames[i], float64(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int()))
+						case bool:
+							err = reflections.SetField(configuration.(*Config), confignames[i], float64(b2i(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool())))
 						}
 					case "string":
 						switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
@@ -122,8 +126,21 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 							err = reflections.SetField(configuration.(*Config), confignames[i], reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String())
 						case int:
 							err = reflections.SetField(configuration.(*Config), confignames[i], strconv.FormatInt(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int(), 16))
+						case bool:
+							err = reflections.SetField(configuration.(*Config), confignames[i], strconv.FormatBool(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool()))
 						}
-
+					case "bool":
+						switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
+						case float64:
+							err = reflections.SetField(configuration.(*Config), confignames[i], !(int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float())==0))
+						case string:
+							boolval, _ := strconv.ParseBool(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String())
+							err = reflections.SetField(configuration.(*Config), confignames[i], boolval)
+						case int:
+							err = reflections.SetField(configuration.(*Config), confignames[i], !(int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int())==0))
+						case bool:
+							err = reflections.SetField(configuration.(*Config), confignames[i], reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool())
+						}
 					}
 					if err != nil {
 						log.Fatal(err)
@@ -134,4 +151,11 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 		}
 		configuration.(*Config).SaveParameterToFile()
 	}
+}
+
+func b2i(b bool) int {
+    if b {
+        return 1
+    }
+    return 0
 }
