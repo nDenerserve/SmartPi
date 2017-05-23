@@ -59,13 +59,40 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		mqttclient = newMQTTClient(config)
 	}
 
+	data := make([]float32, 22)
+	i := 0
+
 	for {
-		data := make([]float32, 22)
+		// Restart the accumulator loop every 60 seconds.
+		if i > 59 {
+			i = 0
+			data = make([]float32, 22)
+		}
 
-		for i := 0; i < 12; i++ {
-			startTime := time.Now()
-			valuesr := smartpi.ReadoutValues(device, config)
+		startTime := time.Now()
+		valuesr := smartpi.ReadoutValues(device, config)
 
+		// Update the accumlator.
+		for index, _ := range data {
+			switch index {
+			case 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15:
+				data[index] += float32(valuesr[index] / 60.0)
+			case 16, 17, 18:
+				if valuesr[index-9] >= 0 {
+					data[index] += float32(math.Abs(valuesr[index-9]) / 3600.0)
+				}
+			case 19, 20, 21:
+				if valuesr[index-12] < 0 {
+					data[index] += float32(math.Abs(valuesr[index-12]) / 3600.0)
+				}
+			}
+		}
+
+		// Update metrics endpoint.
+		updatePrometheusMetrics(valuesr)
+
+		// Every 5 seconds
+		if i%5 == 0 {
 			if config.SharedFileEnabled {
 				writeSharedFile(config, valuesr)
 			}
@@ -74,55 +101,30 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 			if config.MQTTenabled {
 				publishMQTTReadouts(config, mqttclient, valuesr)
 			}
+		}
 
-			// Update metrics endpoint.
-			updatePrometheusMetrics(valuesr)
-
-			for index, _ := range data {
-				switch index {
-				case 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15:
-					data[index] += float32(valuesr[index] / 12.0)
-				case 16:
-					if valuesr[7] >= 0 {
-						data[index] += float32(math.Abs(valuesr[7]) / 720.0)
-					}
-				case 17:
-					if valuesr[8] >= 0 {
-						data[index] += float32(math.Abs(valuesr[8]) / 720.0)
-					}
-				case 18:
-					if valuesr[9] >= 0 {
-						data[index] += float32(math.Abs(valuesr[9]) / 720.0)
-					}
-				case 19:
-					if valuesr[7] < 0 {
-						data[index] += float32(math.Abs(valuesr[7]) / 720.0)
-					}
-				case 20:
-					if valuesr[8] < 0 {
-						data[index] += float32(math.Abs(valuesr[8]) / 720.0)
-					}
-				case 21:
-					if valuesr[9] < 0 {
-						data[index] += float32(math.Abs(valuesr[9]) / 720.0)
-					}
-				}
+		// Every 60 seconds.
+		if i == 59 {
+			// Update SQLlite database.
+			if config.DatabaseEnabled {
+				updateSQLiteDatabase(config, data)
 			}
-			sleepFor := (5000 * time.Millisecond) - time.Since(startTime)
+
+			// Update persistent counter files.
+			if config.CounterEnabled {
+				updateCounterFile(config, consumerCounterFile, float64(data[16]+data[17]+data[18]))
+				updateCounterFile(config, producerCounterFile, float64(data[19]+data[20]+data[21]))
+			}
+		}
+
+		sleepFor := (1000 * time.Millisecond) - time.Since(startTime)
+		if int64(sleepFor) <= 0 {
+			log.Errorf("Sleep duration negative: %s", sleepFor)
+		} else {
 			log.Debugf("Sleeping for %s", sleepFor)
 			time.Sleep(sleepFor)
 		}
-
-		// Update SQLlite database.
-		if config.DatabaseEnabled {
-			updateSQLiteDatabase(config, data)
-		}
-
-		// Update persistent counter files.
-		if config.CounterEnabled {
-			updateCounterFile(config, consumerCounterFile, float64(data[16]+data[17]+data[18]))
-			updateCounterFile(config, producerCounterFile, float64(data[19]+data[20]+data[21]))
-		}
+		i++
 	}
 }
 
