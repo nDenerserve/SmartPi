@@ -90,9 +90,9 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 		for j := range keys {
 			if keys[j] == confignames[i] {
 
-				fmt.Println("Treffer: Key: " + keys[j] + " Configname: " + confignames[i])
-				fmt.Println(reflect.TypeOf(wc.Msg.(map[string]interface{})[keys[j]]))
-				fmt.Println(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]))
+				// fmt.Println("Treffer: Key: " + keys[j] + " Configname: " + confignames[i])
+				// fmt.Println(reflect.TypeOf(wc.Msg.(map[string]interface{})[keys[j]]))
+				// fmt.Println(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]))
 
 				var err error
 				var fieldtype string

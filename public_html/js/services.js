@@ -41,6 +41,20 @@ angular.module('smartpi.services', ['ngResource', 'base64'])
     }
 })
 
+.factory('$GetUserData', function($resource, $base64){
+  var factory = {}
+    var full = location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '');
+    return function(passwordhash) {
+      var auth = $base64.encode("pi:"+passwordhash);
+      return $resource(full+'/api/config/user/read', {}, {
+        query: {
+          method: 'GET',
+          headers: {"Authorization": "Basic " + auth}
+        }
+      });
+    }
+})
+
 .factory('$SetConfigData', function($resource, $base64){
   var factory = {}
     var full = location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '');
@@ -55,6 +69,22 @@ angular.module('smartpi.services', ['ngResource', 'base64'])
       });
     }
 })
+
+factory('$SetUserData', function($resource, $base64){
+  var factory = {}
+    var full = location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '');
+    return function(passwordhash) {
+      var auth = $base64.encode("pi:"+passwordhash);
+      return $resource(full+'/api/config/user/write', {}, {
+      // return $resource('https://requestb.in/qcp4taqc', {}, {
+        save: {
+          method: 'POST',
+          headers: {"Authorization": "Basic " + auth}
+        }
+      });
+    }
+})
+
 
 
 // .factory('services', ['$http', function($http){

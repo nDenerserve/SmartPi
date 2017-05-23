@@ -1,4 +1,4 @@
-smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData, $GetConfigData, $SetConfigData) {
+smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData, $GetConfigData, $SetConfigData, $GetUserData) {
 
         $scope.smartpi = {};
         $scope.smartpi.location = {};
@@ -25,6 +25,7 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
         $scope.database.counter = {};
         $scope.webserver = {};
 
+        $scope.userdata = {};
 
 
 
@@ -277,7 +278,17 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
                     console.log(error.data.message);
                 });
 
-
+            $GetUserData(encrypted).query({},
+              function(userdata) {
+                $scope.userdata.name = userdata.Name;
+                $scope.userdata.role = userdata.Role;
+            },
+            function(error) {
+                if (error.status == 400)
+                    $scope.tabview = false;
+                $scope.showLogin();
+                console.log(error.data.message);
+            });
 
             $scope.user.name = args.username;
             $scope.user.password = args.password;

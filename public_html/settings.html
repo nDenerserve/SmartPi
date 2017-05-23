@@ -369,6 +369,37 @@
                             <md-button ng-style="{'visibility': isMobileSave?'visible':'hidden'}" class="md-raised md-primary" ng-click="saveConfiguration('mobile')">Save</md-button>
                         </md-content>
                     </md-tab>
+                    <md-tab label="Userdata">
+                        <md-content class="md-padding">
+                          <div layout="row" layout-xs="column">
+                              <md-input-container flex="50">
+                                  <label>Username</label>
+                                  <input required name="userdataname" ng-model="userdata.name" ng-change="showSaveButton('userdata')">
+                                  <div ng-messages="projectForm.userdataname.$error">
+                                      <div ng-message="required">This is required.</div>
+                                  </div>
+                              </md-input-container>
+                          </div>
+                          <div layout="row" layout-xs="column">
+                              <md-input-container flex="50">
+                                  <label>Password</label>
+                                  <input required name="userdatapasswd1" ng-model="userdata.password" ng-change="showSaveButton('userdata')">
+                                  <div ng-messages="projectForm.userdatapasswd1.$error">
+                                      <div ng-message="required">This is required.</div>
+                                  </div>
+                              </md-input-container>
+                              <md-input-container flex="50">
+                                  <label>Password repeat</label>
+                                  <input required name="userdatapasswd1" ng-model="userdata.password2" ng-change="showSaveButton('userdata')">
+                                  <div ng-messages="projectForm.name.$error">
+                                      <div ng-message="required">This is required.</div>
+                                  </div>
+                              </md-input-container>
+                          </div>
+
+                            <md-button ng-style="{'visibility': isExpertSave?'visible':'hidden'}" class="md-raised md-primary" ng-click="saveConfiguration('expert')">Save</md-button>
+                        </md-content>
+                    </md-tab>
                     <md-tab label="Expert settings">
                         <md-content class="md-padding">
                             <h2>CSV</h2>
