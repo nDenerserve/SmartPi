@@ -29,6 +29,7 @@ package smartpi
 import (
 	log "github.com/Sirupsen/logrus"
 	"gopkg.in/ini.v1"
+	"io"
 	"os"
 	"strconv"
 )
@@ -75,8 +76,8 @@ type Config struct {
 	DocRoot           string
 
 	// [csv]
-	CSVdecimalpoint   string
-	CSVtimeformat     string
+	CSVdecimalpoint string
+	CSVtimeformat   string
 
 	// [mqtt]
 	MQTTenabled    bool
@@ -87,11 +88,11 @@ type Config struct {
 	MQTTtopic      string
 
 	// [mobile]
-	MobileEnabled  bool
-	MobileAPN			 string
-	MobilePIN			 string
-	MobileUser		 string
-	MobilePass		 string
+	MobileEnabled bool
+	MobileAPN     string
+	MobilePIN     string
+	MobileUser    string
+	MobilePass    string
 }
 
 var cfg *ini.File
@@ -267,13 +268,27 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("umts").NewKey("umts_username", p.MobileUser)
 	_, err = cfg.Section("umts").NewKey("umts_password", p.MobilePass)
 
-	tmpPath := "/tmp/smartpi"
-	err := cfg.SaveTo(tmpPath)
+	tmpFile := "/tmp/smartpi"
+	err := cfg.SaveTo(tmpFile)
 	if err != nil {
 		panic(err)
 	}
-	os.Rename(tmpPath, "/etc/smartpi")
-	// defer os.Remove(tmpPath)
+
+	srcFile, err := os.Open(tmpFile)
+	Checklog(err)
+	defer srcFile.Close()
+
+	destFile, err := os.Create("/etc/smartpi") // creates if file doesn't exist
+	Checklog(err)
+	defer destFile.Close()
+
+	_, err = io.Copy(destFile, srcFile)
+	Checklog(err)
+
+	err = destFile.Sync()
+	Checklog(err)
+
+	defer os.Remove(tmpFile)
 }
 
 func NewConfig() *Config {
