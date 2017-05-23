@@ -35,6 +35,7 @@ import (
 	// "github.com/gorilla/mux"
 	"encoding/json"
 	"github.com/fatih/structs"
+	"github.com/gorilla/context"
 	"github.com/oleiade/reflections"
 	"io/ioutil"
 	"log"
@@ -51,14 +52,18 @@ type writeconfiguration struct {
 func ReadConfig(w http.ResponseWriter, r *http.Request) {
 	// vars := mux.Vars(r)
 	// name := vars["name"]
-	// if username := r.Context().Value("Username"); username != nil {
-	//
-	// }
-	if configuration := r.Context().Value("Config"); configuration != nil {
-		if err := json.NewEncoder(w).Encode(configuration.(*Config)); err != nil {
-			panic(err)
-		}
+
+	// user := context.Get(r,"Username")
+	configuration := context.Get(r, "Config")
+	if err := json.NewEncoder(w).Encode(configuration.(*Config)); err != nil {
+		panic(err)
 	}
+
+	// if configuration := r.Context().Value("Config"); configuration != nil {
+	// 	if err := json.NewEncoder(w).Encode(configuration.(*Config)); err != nil {
+	// 		panic(err)
+	// 	}
+	// }
 }
 
 func WriteConfig(w http.ResponseWriter, r *http.Request) {
@@ -70,87 +75,88 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	if configuration := r.Context().Value("Config"); configuration != nil {
+	configuration := context.Get(r, "Config")
+	// if configuration := r.Context().Value("Config"); configuration != nil {
 
-		keys := make([]string, 0, len(wc.Msg.(map[string]interface{})))
-		for k := range wc.Msg.(map[string]interface{}) {
-			keys = append(keys, k)
-		}
-		fmt.Printf("%+v\n", keys)
+	keys := make([]string, 0, len(wc.Msg.(map[string]interface{})))
+	for k := range wc.Msg.(map[string]interface{}) {
+		keys = append(keys, k)
+	}
+	fmt.Printf("%+v\n", keys)
 
-		confignames := structs.Names(configuration.(*Config))
+	confignames := structs.Names(configuration.(*Config))
 
-		for i := range confignames {
-			for j := range keys {
-				if keys[j] == confignames[i] {
+	for i := range confignames {
+		for j := range keys {
+			if keys[j] == confignames[i] {
 
-					fmt.Println("Treffer: Key: " + keys[j] + " Configname: " + confignames[i])
-					fmt.Println(reflect.TypeOf(wc.Msg.(map[string]interface{})[keys[j]]))
-					fmt.Println(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]))
+				fmt.Println("Treffer: Key: " + keys[j] + " Configname: " + confignames[i])
+				fmt.Println(reflect.TypeOf(wc.Msg.(map[string]interface{})[keys[j]]))
+				fmt.Println(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]))
 
-					var err error
-					var fieldtype string
-					fieldtype, err = reflections.GetFieldType(configuration.(*Config), confignames[i])
-					fmt.Println("Fieldtype: " + fieldtype)
+				var err error
+				var fieldtype string
+				fieldtype, err = reflections.GetFieldType(configuration.(*Config), confignames[i])
+				fmt.Println("Fieldtype: " + fieldtype)
 
-					switch fieldtype {
-					case "int":
-						switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
-						case float64:
-							err = reflections.SetField(configuration.(*Config), confignames[i], int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float()))
-						case string:
-							intval, _ := strconv.Atoi(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String())
-							err = reflections.SetField(configuration.(*Config), confignames[i], intval)
-						case int:
-							err = reflections.SetField(configuration.(*Config), confignames[i], int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int()))
-						case bool:
-							err = reflections.SetField(configuration.(*Config), confignames[i], b2i(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool()))
-						}
-					case "float":
-						switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
-						case float64:
-							err = reflections.SetField(configuration.(*Config), confignames[i], int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float()))
-						case string:
-							floatval, _ := strconv.ParseFloat(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String(), 64)
-							err = reflections.SetField(configuration.(*Config), confignames[i], floatval)
-						case int:
-							err = reflections.SetField(configuration.(*Config), confignames[i], float64(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int()))
-						case bool:
-							err = reflections.SetField(configuration.(*Config), confignames[i], float64(b2i(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool())))
-						}
-					case "string":
-						switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
-						case float64:
-							err = reflections.SetField(configuration.(*Config), confignames[i], strconv.FormatFloat(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float(), 'f', -1, 64))
-						case string:
-							err = reflections.SetField(configuration.(*Config), confignames[i], reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String())
-						case int:
-							err = reflections.SetField(configuration.(*Config), confignames[i], strconv.FormatInt(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int(), 16))
-						case bool:
-							err = reflections.SetField(configuration.(*Config), confignames[i], strconv.FormatBool(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool()))
-						}
-					case "bool":
-						switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
-						case float64:
-							err = reflections.SetField(configuration.(*Config), confignames[i], !(int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float()) == 0))
-						case string:
-							boolval, _ := strconv.ParseBool(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String())
-							err = reflections.SetField(configuration.(*Config), confignames[i], boolval)
-						case int:
-							err = reflections.SetField(configuration.(*Config), confignames[i], !(int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int()) == 0))
-						case bool:
-							err = reflections.SetField(configuration.(*Config), confignames[i], reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool())
-						}
+				switch fieldtype {
+				case "int":
+					switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
+					case float64:
+						err = reflections.SetField(configuration.(*Config), confignames[i], int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float()))
+					case string:
+						intval, _ := strconv.Atoi(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String())
+						err = reflections.SetField(configuration.(*Config), confignames[i], intval)
+					case int:
+						err = reflections.SetField(configuration.(*Config), confignames[i], int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int()))
+					case bool:
+						err = reflections.SetField(configuration.(*Config), confignames[i], b2i(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool()))
 					}
-					if err != nil {
-						log.Fatal(err)
+				case "float":
+					switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
+					case float64:
+						err = reflections.SetField(configuration.(*Config), confignames[i], int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float()))
+					case string:
+						floatval, _ := strconv.ParseFloat(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String(), 64)
+						err = reflections.SetField(configuration.(*Config), confignames[i], floatval)
+					case int:
+						err = reflections.SetField(configuration.(*Config), confignames[i], float64(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int()))
+					case bool:
+						err = reflections.SetField(configuration.(*Config), confignames[i], float64(b2i(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool())))
 					}
-
+				case "string":
+					switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
+					case float64:
+						err = reflections.SetField(configuration.(*Config), confignames[i], strconv.FormatFloat(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float(), 'f', -1, 64))
+					case string:
+						err = reflections.SetField(configuration.(*Config), confignames[i], reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String())
+					case int:
+						err = reflections.SetField(configuration.(*Config), confignames[i], strconv.FormatInt(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int(), 16))
+					case bool:
+						err = reflections.SetField(configuration.(*Config), confignames[i], strconv.FormatBool(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool()))
+					}
+				case "bool":
+					switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
+					case float64:
+						err = reflections.SetField(configuration.(*Config), confignames[i], !(int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float()) == 0))
+					case string:
+						boolval, _ := strconv.ParseBool(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String())
+						err = reflections.SetField(configuration.(*Config), confignames[i], boolval)
+					case int:
+						err = reflections.SetField(configuration.(*Config), confignames[i], !(int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int()) == 0))
+					case bool:
+						err = reflections.SetField(configuration.(*Config), confignames[i], reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool())
+					}
 				}
+				if err != nil {
+					log.Fatal(err)
+				}
+
 			}
 		}
-		configuration.(*Config).SaveParameterToFile()
 	}
+	configuration.(*Config).SaveParameterToFile()
+	// }
 }
 
 func b2i(b bool) int {

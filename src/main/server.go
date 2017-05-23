@@ -35,10 +35,12 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/context"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/version"
-	"golang.org/x/net/context"
+	// "golang.org/x/net/context"
+
 )
 
 type JSONError struct {
@@ -81,9 +83,11 @@ func BasicAuth(realm string, handler http.HandlerFunc, c *smartpi.Config, u *sma
 			}
 			return
 		}
-		ctx := context.WithValue(r.Context(), "Username", u)
-		ctx = context.WithValue(r.Context(), "Config", c)
-		handler(w, r.WithContext(ctx))
+
+		context.Set(r,"Config", c)
+		context.Set(r,"Username", u)
+
+		handler(w, r)
 	}
 }
 
