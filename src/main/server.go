@@ -107,6 +107,6 @@ func main() {
 	r.HandleFunc("/api/config/write", BasicAuth("Please enter your username and password for this site", smartpi.WriteConfig, config, user, "administrator")).Methods("POST")
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(config.DocRoot)))
 	http.Handle("/metrics", prometheus.Handler())
-	http.Handle("/", r)
+	http.Handle("/", prometheus.InstrumentHandler("smartpi", r))
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.WebserverPort), nil))
 }
