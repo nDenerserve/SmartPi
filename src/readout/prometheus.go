@@ -44,7 +44,7 @@ var (
 	frequencyMetric = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: metricsNamespace,
-			Name:      "phase_frequency_hertz",
+			Name:      "frequency_hertz",
 			Help:      "Line frequency in hertz",
 		},
 		[]string{"phase"},
