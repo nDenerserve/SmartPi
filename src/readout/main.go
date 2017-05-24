@@ -138,6 +138,9 @@ func init() {
 	prometheus.MustRegister(activePowerMetirc)
 	prometheus.MustRegister(cosphiMetric)
 	prometheus.MustRegister(frequencyMetric)
+	prometheus.MustRegister(apparentPowerMetric)
+	prometheus.MustRegister(reactivePowerMetric)
+	prometheus.MustRegister(powerFactorMetric)
 	prometheus.MustRegister(version.NewCollector("smartpi"))
 }
 
