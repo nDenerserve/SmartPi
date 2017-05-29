@@ -70,7 +70,7 @@ angular.module('smartpi.services', ['ngResource', 'base64'])
     }
 })
 
-factory('$SetUserData', function($resource, $base64){
+.factory('$SetUserData', function($resource, $base64){
   var factory = {}
     var full = location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '');
     return function(passwordhash) {

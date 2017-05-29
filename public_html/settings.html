@@ -101,7 +101,7 @@
         </md-toolbar>
         <div flex="66" flex-offset="15">
 
-            <form name="projectForm">
+
 
                 <md-tabs md-dynamic-height md-border-bottom ng-if="tabview">
                     <md-tab label="Default settings">
@@ -370,12 +370,13 @@
                         </md-content>
                     </md-tab>
                     <md-tab label="Userdata">
+                      <ng-form name="forms.userdataForm">
                         <md-content class="md-padding">
                           <div layout="row" layout-xs="column">
                               <md-input-container flex="50">
                                   <label>Username</label>
                                   <input required name="userdataname" ng-model="userdata.name" ng-change="showSaveButton('userdata')">
-                                  <div ng-messages="projectForm.userdataname.$error">
+                                  <div ng-messages="forms.userdataForm.userdataname.$error">
                                       <div ng-message="required">This is required.</div>
                                   </div>
                               </md-input-container>
@@ -383,22 +384,21 @@
                           <div layout="row" layout-xs="column">
                               <md-input-container flex="50">
                                   <label>Password</label>
-                                  <input required name="userdatapasswd1" ng-model="userdata.password" ng-change="showSaveButton('userdata')">
-                                  <div ng-messages="projectForm.userdatapasswd1.$error">
-                                      <div ng-message="required">This is required.</div>
-                                  </div>
+                                  <input type="password" name="userdatapasswd" ng-model="userdata.password">
+
                               </md-input-container>
                               <md-input-container flex="50">
                                   <label>Password repeat</label>
-                                  <input required name="userdatapasswd1" ng-model="userdata.password2" ng-change="showSaveButton('userdata')">
-                                  <div ng-messages="projectForm.name.$error">
-                                      <div ng-message="required">This is required.</div>
+                                  <input type="password" name="userdatapasswdconfirm" ng-model="userdata.passwordconfirm" ng-pattern="{{userdata.password}}" ng-change="showSaveButton('userdata')">
+                                  <div ng-messages="forms.userdataForm.userdatapasswdconfirm.$error">
+                                      <div ng-message="pattern">Not equal!!!</div>
                                   </div>
                               </md-input-container>
                           </div>
 
-                            <md-button ng-style="{'visibility': isExpertSave?'visible':'hidden'}" class="md-raised md-primary" ng-click="saveConfiguration('expert')">Save</md-button>
+                            <md-button ng-style="{'visibility': isUserdataSave?'visible':'hidden'}" class="md-raised md-primary" ng-click="saveConfiguration('expert')">Save</md-button>
                         </md-content>
+                      </ng-form>
                     </md-tab>
                     <md-tab label="Expert settings">
                         <md-content class="md-padding">
@@ -459,7 +459,6 @@
                     </md-tab>
                 </md-tabs>
 
-            </form>
 
 
         </div>

@@ -25,6 +25,8 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
         $scope.database.counter = {};
         $scope.webserver = {};
 
+        $scope.forms = {};
+        $scope.user = {};
         $scope.userdata = {};
 
 
@@ -36,7 +38,7 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
 
 
 
-        $scope.user = {};
+
 
 
         $scope.showSaveButton = function(button) {
@@ -56,6 +58,14 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
                 case 'mobile':
                     $scope.isMobileSave = true;
                     break;
+                case 'userdata':
+                // console.log($scope.forms.userdataForm.$valid);
+                  if (!$scope.forms.userdataForm.userdatapasswdconfirm.$error.pattern) {
+                    $scope.isUserdataSave = true;
+                  } else {
+                    $scope.isUserdataSave = false;
+                  }
+                  break;
                 case 'expert':
                     $scope.isExpertSave = true;
                     break;
@@ -80,6 +90,9 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
                     break;
                 case 'mobile':
                     $scope.isMobileSave = false;
+                    break;
+                case 'userdata':
+                    $scope.isUserdataSave = false;
                     break;
                 case 'expert':
                     $scope.isExpertSave = false;
@@ -195,7 +208,7 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
           jsonObj.msg = jsonConfigObj;
           var encrypted = CryptoJS.SHA256($scope.user.password).toString();
           $SetConfigData(encrypted).save({},jsonObj);
-          console.log(jsonObj);
+          // console.log(jsonObj);
           $scope.hideSaveButton(config);
 
         }
@@ -222,7 +235,7 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
             $GetConfigData(encrypted).query({},
                 function(data) {
                     $scope.tabview = true;
-                    console.log(data);
+                    // console.log(data);
                     $scope.smartpi.serial = data.Serial;
                     $scope.smartpi.name = data.Name;
                     $scope.smartpi.location.lat = data.Lat;
@@ -275,7 +288,7 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
                     if (error.status == 400)
                         $scope.tabview = false;
                     $scope.showLogin();
-                    console.log(error.data.message);
+                    // console.log(error.data.message);
                 });
 
             $GetUserData(encrypted).query({},
