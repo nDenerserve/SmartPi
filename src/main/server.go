@@ -33,7 +33,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-
+	"flag"
+	"os"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/context"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
@@ -95,10 +96,24 @@ func init() {
 	prometheus.MustRegister(version.NewCollector("smartpi"))
 }
 
+
+var appVersion = "No Version Provided"
+
 func main() {
 
 	config := smartpi.NewConfig()
 	user := smartpi.NewUser()
+
+
+	version := flag.Bool("v", false, "prints current version information")
+    flag.Parse()
+    if *version {
+      fmt.Println(appVersion)
+      os.Exit(0)
+    }
+
+
+
 	fmt.Println("SmartPi server started")
 
 	r := mux.NewRouter()

@@ -35,13 +35,26 @@ import (
 	"os"
 	"strings"
 	"time"
-
+	"flag"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 )
+
+
+var appVersion = "No Version Provided"
+
 
 func main() {
 
 	config := smartpi.NewConfig()
+
+
+	version := flag.Bool("v", false, "prints current version information")
+    flag.Parse()
+    if *version {
+      fmt.Println(appVersion)
+      os.Exit(0)
+    }
+
 
 	if config.FTPupload {
 		os.Exit(0)
