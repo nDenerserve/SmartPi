@@ -44,8 +44,32 @@ var (
 	frequencyMetric = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: metricsNamespace,
-			Name:      "phase_frequency_hertz",
+			Name:      "frequency_hertz",
 			Help:      "Line frequency in hertz",
+		},
+		[]string{"phase"},
+	)
+	apparentPowerMetric = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: metricsNamespace,
+			Name:      "apparent_power_volt_amps",
+			Help:      "Line apparent power in volt amps",
+		},
+		[]string{"phase"},
+	)
+	reactivePowerMetric = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: metricsNamespace,
+			Name:      "reactive_power_volt_amps",
+			Help:      "Line reactive power in volt amps reactive",
+		},
+		[]string{"phase"},
+	)
+	powerFactorMetric = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: metricsNamespace,
+			Name:      "power_factor_ratio",
+			Help:      "Line power factor ratio",
 		},
 		[]string{"phase"},
 	)
@@ -68,4 +92,13 @@ func updatePrometheusMetrics(v [25]float64) {
 	frequencyMetric.WithLabelValues("A").Set(v[13])
 	frequencyMetric.WithLabelValues("B").Set(v[14])
 	frequencyMetric.WithLabelValues("C").Set(v[15])
+	apparentPowerMetric.WithLabelValues("A").Set(v[16])
+	apparentPowerMetric.WithLabelValues("B").Set(v[17])
+	apparentPowerMetric.WithLabelValues("C").Set(v[18])
+	reactivePowerMetric.WithLabelValues("A").Set(v[19])
+	reactivePowerMetric.WithLabelValues("B").Set(v[20])
+	reactivePowerMetric.WithLabelValues("C").Set(v[21])
+	powerFactorMetric.WithLabelValues("A").Set(v[22])
+	powerFactorMetric.WithLabelValues("B").Set(v[23])
+	powerFactorMetric.WithLabelValues("C").Set(v[24])
 }
