@@ -173,7 +173,6 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
 
                   jsonConfigObj.FTPupload = $scope.ftp.enabled;
                   jsonConfigObj.FTPserver = $scope.ftp.serverUrl;
-                  jsonConfigObj.MQTTbrokerport = $scope.mqtt.brokerPort;
                   jsonConfigObj.FTPuser = $scope.ftp.username;
                   jsonConfigObj.FTPpass = $scope.ftp.password;
                   jsonConfigObj.FTPpath = $scope.ftp.path;
@@ -267,7 +266,7 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
                     $scope.mqtt.password = data.MQTTpass;
                     $scope.mqtt.topic = data.MQTTtopic;
                     $scope.ftp.enabled = data.FTPupload;
-                    $scope.ftp.serverurl = data.FTPserver;
+                    $scope.ftp.serverUrl = data.FTPserver;
                     $scope.ftp.path = data.FTPpath;
                     $scope.ftp.username = data.FTPuser;
                     $scope.ftp.password = data.FTPpass;

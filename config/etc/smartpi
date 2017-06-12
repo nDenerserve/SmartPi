@@ -1,5 +1,5 @@
 [base]
-serial="smartpi160812345"
+serial="smartpi170512345"
 name="House"
 # Valid log levels: panic, error, info, debug
 loglevel=info
