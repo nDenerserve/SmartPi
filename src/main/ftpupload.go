@@ -31,7 +31,7 @@ import (
 	"fmt"
 	"github.com/secsy/goftp"
 	"io/ioutil"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"os"
 	"strings"
 	"time"
@@ -40,8 +40,15 @@ import (
 )
 
 
-var appVersion = "No Version Provided"
+func init() {
+	log.SetFormatter(&log.TextFormatter{})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.DebugLevel)
+}
 
+
+
+var appVersion = "No Version Provided"
 
 func main() {
 
@@ -56,7 +63,7 @@ func main() {
     }
 
 
-	if config.FTPupload {
+	if !config.FTPupload {
 		os.Exit(0)
 	}
 
@@ -78,12 +85,16 @@ func main() {
 	// startDate = startDate.UTC()
 	endDate := time.Now()
 
+	log.Debugf("Startdate: "+startDate.Format("2006-01-02 15:04:05"));
+	log.Debugf("Enddate: "+endDate.Format("2006-01-02 15:04:05"));
+
 	csvfile := bytes.NewBufferString(smartpi.CreateCSV(startDate, endDate))
 
 	ftpconfig := goftp.Config{
 		User:               config.FTPuser,
 		Password:           config.FTPpass,
 		ConnectionsPerHost: 10,
+		Timeout:            60 * time.Second,
 		Logger:             os.Stderr,
 	}
 
@@ -92,7 +103,8 @@ func main() {
 		panic(err)
 	}
 
-	ftp_path := config.FTPpath + config.Serial
+	// ftp_path := config.FTPpath + config.Serial
+	ftp_path := config.FTPpath
 	pathlist := strings.Split(ftp_path, "/")
 	for i := 0; i < len(pathlist); i++ {
 		if len(pathlist[i]) == 0 {
