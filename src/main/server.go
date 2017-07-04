@@ -28,15 +28,26 @@ package main
 
 import (
 	"crypto/subtle"
+	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
-	"golang.org/x/net/context"
 	"log"
 	"net/http"
 	"strconv"
-
+	"flag"
+	"os"
+	"github.com/gorilla/mux"
+	"github.com/gorilla/context"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/version"
+	// "golang.org/x/net/context"
+
 )
+
+type JSONError struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
 
 func stringInSlice(list1 []string, list2 []string) bool {
 	for _, a := range list1 {
@@ -49,7 +60,7 @@ func stringInSlice(list1 []string, list2 []string) bool {
 	return false
 }
 
-func BasicAuth(realm string, handler http.HandlerFunc, u *smartpi.User, roles ...string) http.HandlerFunc {
+func BasicAuth(realm string, handler http.HandlerFunc, c *smartpi.Config, u *smartpi.User, roles ...string) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -66,19 +77,43 @@ func BasicAuth(realm string, handler http.HandlerFunc, u *smartpi.User, roles ..
 
 		if !ok || !u.Exist || subtle.ConstantTimeCompare([]byte(user), []byte(u.Name)) != 1 || subtle.ConstantTimeCompare([]byte(pass), []byte(u.Password)) != 1 || !roleAllowed {
 			w.Header().Set("WWW-Authenticate", `Basic realm="`+realm+`"`)
-			w.WriteHeader(401)
-			w.Write([]byte("Unauthorised.\n"))
+			w.WriteHeader(400)
+			// w.Write([]byte("Unauthorised.\n"))
+			if err := json.NewEncoder(w).Encode(JSONError{Code: 401, Message: "Unauthorized"}); err != nil {
+				panic(err)
+			}
 			return
 		}
-		ctx := context.WithValue(r.Context(), "Username", u)
-		handler(w, r.WithContext(ctx))
+
+		context.Set(r,"Config", c)
+		context.Set(r,"Username", u)
+
+		handler(w, r)
 	}
 }
+
+func init() {
+	prometheus.MustRegister(version.NewCollector("smartpi"))
+}
+
+
+var appVersion = "No Version Provided"
 
 func main() {
 
 	config := smartpi.NewConfig()
 	user := smartpi.NewUser()
+
+
+	version := flag.Bool("v", false, "prints current version information")
+    flag.Parse()
+    if *version {
+      fmt.Println(appVersion)
+      os.Exit(0)
+    }
+
+
+
 	fmt.Println("SmartPi server started")
 
 	r := mux.NewRouter()
@@ -87,8 +122,11 @@ func main() {
 	r.HandleFunc("/api/values/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeChartValues)
 	r.HandleFunc("/api/dayvalues/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeDayValues)
 	r.HandleFunc("/api/csv/from/{fromDate}/to/{toDate}", smartpi.ServeCSVValues)
-	r.HandleFunc("/api/config/read/name/{name}", BasicAuth("Please enter your username and password for this site", smartpi.ReadConfig, user, "administrator"))
+	r.HandleFunc("/api/config/read", BasicAuth("Please enter your username and password for this site", smartpi.ReadConfig, config, user, "administrator")).Methods("GET")
+	r.HandleFunc("/api/config/write", BasicAuth("Please enter your username and password for this site", smartpi.WriteConfig, config, user, "administrator")).Methods("POST")
+	r.HandleFunc("/api/config/user/read", BasicAuth("Please enter your username and password for this site", smartpi.ReadUserData, config, user, "administrator")).Methods("GET")
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(config.DocRoot)))
-	http.Handle("/", r)
+	http.Handle("/metrics", prometheus.Handler())
+	http.Handle("/", prometheus.InstrumentHandler("smartpi", r))
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.WebserverPort), nil))
 }

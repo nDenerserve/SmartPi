@@ -29,6 +29,8 @@ package smartpi
 import (
 	log "github.com/Sirupsen/logrus"
 	"gopkg.in/ini.v1"
+	"io"
+	"os"
 	"strconv"
 )
 
@@ -45,14 +47,14 @@ type Config struct {
 	Lng float64
 
 	// [database]
-	CounterDir  string
-	DatabaseDir string
+	CounterEnabled  bool
+	CounterDir      string
+	DatabaseEnabled bool
+	DatabaseDir     string
 
 	// [device]
 	I2CDevice        string
-	SharedDir        string
-	SharedFile       string
-	PowerFrequency   int
+	PowerFrequency   float64
 	CTType           map[string]string
 	CurrentDirection map[string]bool
 	MeasureCurrent   map[string]bool
@@ -67,8 +69,13 @@ type Config struct {
 	FTPpath   string
 
 	// [webserver]
-	WebserverPort   int
-	DocRoot         string
+	SharedFileEnabled bool
+	SharedDir         string
+	SharedFile        string
+	WebserverPort     int
+	DocRoot           string
+
+	// [csv]
 	CSVdecimalpoint string
 	CSVtimeformat   string
 
@@ -79,6 +86,13 @@ type Config struct {
 	MQTTuser       string
 	MQTTpass       string
 	MQTTtopic      string
+
+	// [mobile]
+	MobileEnabled bool
+	MobileAPN     string
+	MobilePIN     string
+	MobileUser    string
+	MobilePass    string
 }
 
 var cfg *ini.File
@@ -114,14 +128,14 @@ func (p *Config) ReadParameterFromFile() {
 	p.Lng = cfg.Section("location").Key("lng").MustFloat64(9.7167)
 
 	// [database]
+	p.CounterEnabled = cfg.Section("database").Key("counter_enabled").MustBool(true)
 	p.CounterDir = cfg.Section("database").Key("counterdir").MustString("/var/smartpi")
+	p.DatabaseEnabled = cfg.Section("database").Key("database_enabled").MustBool(true)
 	p.DatabaseDir = cfg.Section("database").Key("dir").MustString("/var/smartpi/db")
 
 	// [device]
 	p.I2CDevice = cfg.Section("device").Key("i2c_device").MustString("/dev/i2c-1")
-	p.SharedDir = cfg.Section("device").Key("shared_dir").MustString("/var/tmp/smartpi")
-	p.SharedFile = cfg.Section("device").Key("shared_file").MustString("values")
-	p.PowerFrequency = cfg.Section("device").Key("power_frequency").MustInt(50)
+	p.PowerFrequency = cfg.Section("device").Key("power_frequency").MustFloat64(50)
 	p.CTType = make(map[string]string)
 	p.CTType["A"] = cfg.Section("device").Key("ct_type_1").MustString("YHDC_SCT013")
 	p.CTType["B"] = cfg.Section("device").Key("ct_type_2").MustString("YHDC_SCT013")
@@ -153,8 +167,13 @@ func (p *Config) ReadParameterFromFile() {
 	p.FTPpath = cfg.Section("ftp").Key("ftp_path").String()
 
 	// [webserver]
+	p.SharedFileEnabled = cfg.Section("webserver").Key("shared_file_enabled").MustBool(true)
+	p.SharedDir = cfg.Section("webserver").Key("shared_dir").MustString("/var/run")
+	p.SharedFile = cfg.Section("webserver").Key("shared_file").MustString("smartpi_values")
 	p.WebserverPort = cfg.Section("webserver").Key("port").MustInt(1080)
 	p.DocRoot = cfg.Section("webserver").Key("docroot").MustString("/var/smartpi/www")
+
+	// [csv]
 	p.CSVdecimalpoint = cfg.Section("csv").Key("decimalpoint").String()
 	p.CSVtimeformat = cfg.Section("csv").Key("timeformat").String()
 
@@ -165,6 +184,14 @@ func (p *Config) ReadParameterFromFile() {
 	p.MQTTuser = cfg.Section("mqtt").Key("mqtt_username").String()
 	p.MQTTpass = cfg.Section("mqtt").Key("mqtt_password").String()
 	p.MQTTtopic = cfg.Section("mqtt").Key("mqtt_topic").String()
+
+	// [mobile]
+	p.MobileEnabled = cfg.Section("umts").Key("umts").MustBool(false)
+	p.MobileAPN = cfg.Section("umts").Key("umts_apn").String()
+	p.MobilePIN = cfg.Section("umts").Key("umts_pin").String()
+	p.MobileUser = cfg.Section("umts").Key("umts_username").String()
+	p.MobilePass = cfg.Section("umts").Key("umts_password").String()
+
 }
 
 func (p *Config) SaveParameterToFile() {
@@ -179,13 +206,13 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("location").NewKey("lng", strconv.FormatFloat(p.Lng, 'f', -1, 64))
 
 	// [database]
+	_, err = cfg.Section("database").NewKey("counter_enabled", strconv.FormatBool(p.CounterEnabled))
 	_, err = cfg.Section("database").NewKey("counterdir", p.CounterDir)
+	_, err = cfg.Section("database").NewKey("database_enabled", strconv.FormatBool(p.DatabaseEnabled))
 	_, err = cfg.Section("database").NewKey("dir", p.DatabaseDir)
 
 	// [device]
 	_, err = cfg.Section("device").NewKey("i2c_device", p.I2CDevice)
-	_, err = cfg.Section("device").NewKey("shared_dir", p.SharedDir)
-	_, err = cfg.Section("device").NewKey("shared_file", p.SharedFile)
 	_, err = cfg.Section("device").NewKey("power_frequency", strconv.FormatInt(int64(p.PowerFrequency), 10))
 	_, err = cfg.Section("device").NewKey("ct_type_1", p.CTType["A"])
 	_, err = cfg.Section("device").NewKey("ct_type_2", p.CTType["B"])
@@ -216,8 +243,13 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("ftp").NewKey("ftp_path", p.FTPpath)
 
 	// [webserver]
+	_, err = cfg.Section("webserver").NewKey("shared_file_enabled", strconv.FormatBool(p.SharedFileEnabled))
+	_, err = cfg.Section("webserver").NewKey("shared_dir", p.SharedDir)
+	_, err = cfg.Section("webserver").NewKey("shared_file", p.SharedFile)
 	_, err = cfg.Section("webserver").NewKey("port", strconv.FormatInt(int64(p.WebserverPort), 10))
 	_, err = cfg.Section("webserver").NewKey("docroot", p.DocRoot)
+
+	// [csv]
 	_, err = cfg.Section("csv").NewKey("decimalpoint", p.CSVdecimalpoint)
 	_, err = cfg.Section("csv").NewKey("timeformat", p.CSVtimeformat)
 
@@ -229,10 +261,34 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("mqtt").NewKey("mqtt_password", p.MQTTpass)
 	_, err = cfg.Section("mqtt").NewKey("mqtt_topic", p.MQTTtopic)
 
-	err := cfg.SaveTo("/etc/smartpi")
+	// [mobile]
+	_, err = cfg.Section("umts").NewKey("umts", strconv.FormatBool(p.MobileEnabled))
+	_, err = cfg.Section("umts").NewKey("umts_apn", p.MobileAPN)
+	_, err = cfg.Section("umts").NewKey("umts_pin", p.MobilePIN)
+	_, err = cfg.Section("umts").NewKey("umts_username", p.MobileUser)
+	_, err = cfg.Section("umts").NewKey("umts_password", p.MobilePass)
+
+	tmpFile := "/tmp/smartpi"
+	err := cfg.SaveTo(tmpFile)
 	if err != nil {
 		panic(err)
 	}
+
+	srcFile, err := os.Open(tmpFile)
+	Checklog(err)
+	defer srcFile.Close()
+
+	destFile, err := os.Create("/etc/smartpi") // creates if file doesn't exist
+	Checklog(err)
+	defer destFile.Close()
+
+	_, err = io.Copy(destFile, srcFile)
+	Checklog(err)
+
+	err = destFile.Sync()
+	Checklog(err)
+
+	defer os.Remove(tmpFile)
 }
 
 func NewConfig() *Config {

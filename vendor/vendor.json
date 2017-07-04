@@ -27,6 +27,12 @@
 			"revisionTime": "2017-04-13T21:40:49Z"
 		},
 		{
+			"checksumSHA1": "40Ns85VYa4smQPcewZ7SOdfLnKU=",
+			"path": "github.com/fatih/structs",
+			"revision": "a720dfa8df582c51dee1b36feabb906bde1588bd",
+			"revisionTime": "2017-01-03T08:10:50Z"
+		},
+		{
 			"checksumSHA1": "kBeNcaKk56FguvPSUCEaH6AxpRc=",
 			"path": "github.com/golang/protobuf/proto",
 			"revision": "c9c7427a2a70d2eb3bafa0ab2dc163e45f143317",
@@ -61,6 +67,12 @@
 			"path": "github.com/nathan-osman/go-rpigpio",
 			"revision": "bce6190607da242de6cd7c566aceb73e32b0a25a",
 			"revisionTime": "2016-07-01T02:51:23Z"
+		},
+		{
+			"checksumSHA1": "R8z+BOS81hOWgcqymuVWHNta/yc=",
+			"path": "github.com/oleiade/reflections",
+			"revision": "0e86b3c98b2ff33e30c85cfe97d9a63d439fe7eb",
+			"revisionTime": "2016-08-17T07:03:35Z"
 		},
 		{
 			"checksumSHA1": "XsTWgEVHkRZ4xSvUYZ7ECXbfA8E=",
