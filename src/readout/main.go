@@ -27,14 +27,14 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"github.com/nDenerserve/SmartPi/src/smartpi"
 	"math"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
-	"flag"
-	"github.com/nDenerserve/SmartPi/src/smartpi"
 
 	log "github.com/Sirupsen/logrus"
 	"golang.org/x/exp/io/i2c"
@@ -45,7 +45,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/version"
 )
-
 
 var readouts = [...]string{
 	"I1", "I2", "I3", "I4", "V1", "V2", "V3", "P1", "P2", "P3", "COS1", "COS2", "COS3", "F1", "F2", "F3"}
@@ -145,22 +144,17 @@ func init() {
 	prometheus.MustRegister(version.NewCollector("smartpi"))
 }
 
-
 var appVersion = "No Version Provided"
-
 
 func main() {
 	config := smartpi.NewConfig()
 
-
 	version := flag.Bool("v", false, "prints current version information")
-    flag.Parse()
-    if *version {
-      fmt.Println(appVersion)
-      os.Exit(0)
-    }
-
-
+	flag.Parse()
+	if *version {
+		fmt.Println(appVersion)
+		os.Exit(0)
+	}
 
 	log.SetLevel(config.LogLevel)
 
