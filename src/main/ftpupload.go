@@ -28,17 +28,16 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
+	"github.com/nDenerserve/SmartPi/src/smartpi"
 	"github.com/secsy/goftp"
 	"io/ioutil"
-	log "github.com/Sirupsen/logrus"
 	"os"
 	"strings"
 	"time"
-	"flag"
-	"github.com/nDenerserve/SmartPi/src/smartpi"
 )
-
 
 func init() {
 	log.SetFormatter(&log.TextFormatter{})
@@ -46,22 +45,18 @@ func init() {
 	log.SetLevel(log.DebugLevel)
 }
 
-
-
 var appVersion = "No Version Provided"
 
 func main() {
 
 	config := smartpi.NewConfig()
 
-
 	version := flag.Bool("v", false, "prints current version information")
-    flag.Parse()
-    if *version {
-      fmt.Println(appVersion)
-      os.Exit(0)
-    }
-
+	flag.Parse()
+	if *version {
+		fmt.Println(appVersion)
+		os.Exit(0)
+	}
 
 	if !config.FTPupload {
 		os.Exit(0)
@@ -85,8 +80,8 @@ func main() {
 	// startDate = startDate.UTC()
 	endDate := time.Now()
 
-	log.Debugf("Startdate: "+startDate.Format("2006-01-02 15:04:05"));
-	log.Debugf("Enddate: "+endDate.Format("2006-01-02 15:04:05"));
+	log.Debugf("Startdate: " + startDate.Format("2006-01-02 15:04:05"))
+	log.Debugf("Enddate: " + endDate.Format("2006-01-02 15:04:05"))
 
 	csvfile := bytes.NewBufferString(smartpi.CreateCSV(startDate, endDate))
 
