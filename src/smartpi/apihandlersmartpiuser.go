@@ -46,7 +46,7 @@ func ReadUserData(w http.ResponseWriter, r *http.Request) {
 	// vars := mux.Vars(r)
 	// name := vars["name"]
 
-	user := context.Get(r,"Username")
+	user := context.Get(r, "Username")
 	if err := json.NewEncoder(w).Encode(user.(*User)); err != nil {
 		panic(err)
 	}

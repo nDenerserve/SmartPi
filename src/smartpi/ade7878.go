@@ -112,9 +112,9 @@ func initPiForADE7878() {
 	   defer p.Close()
 	   p.Write(rpi.HIGH)*/
 }
-	
-func WriteRegister(d *i2c.Device, register string, data ...byte)(err error){
-		return  d.Write(append(ADE7878REG[register], data...))
+
+func WriteRegister(d *i2c.Device, register string, data ...byte) (err error) {
+	return d.Write(append(ADE7878REG[register], data...))
 }
 
 func InitADE7878(c *Config) (*i2c.Device, error) {
@@ -122,7 +122,7 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	// 0xEC01 (CONFIG2-REGISTER)
 	// 00000010 --> I2C-Lock
 	//err = d.Write(append(ADE7878REG["CONFIG2"], 0x02))
