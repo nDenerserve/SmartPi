@@ -113,6 +113,10 @@ func initPiForADE7878() {
 	   p.Write(rpi.HIGH)*/
 }
 
+func WriteRegister(d *i2c.Device, register string, data ...byte) (err error) {
+	return d.Write(append(ADE7878REG[register], data...))
+}
+
 func InitADE7878(c *Config) (*i2c.Device, error) {
 	d, err := i2c.Open(&i2c.Devfs{Dev: c.I2CDevice}, ADE7878_ADDR)
 	if err != nil {
@@ -120,13 +124,14 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 	}
 
 	// 0xEC01 (CONFIG2-REGISTER)
-	// 00000010 --> Bedeutet I2C-Lock (I2C ist nun die gewählte Übertragungsart)
-	err = d.Write([]byte{0xEC, 0x01, 0x02})
+	// 00000010 --> I2C-Lock
+	//err = d.Write(append(ADE7878REG["CONFIG2"], 0x02))
+	err = WriteRegister(d, "CONFIG2", 0x02)
 	if err != nil {
 		panic(err)
 	}
 
-	// 0xE1 (CONFIG2-REGISTER)
+	// 0xE1
 	err = d.Write([]byte{0xEC})
 	if err != nil {
 		panic(err)
@@ -152,7 +157,7 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 	}
 
 	// // 0x43B6 (HPFDIS-REGISTER)
-	// err = d.Write([]byte{0x43, 0xB6, 0x00, 0x00, 0x00, 0x00})
+	// err = d.Write(append(ADE7878REG["HPFDIS"], 0x00, 0x00, 0x00, 0x00})
 	// if err != nil {
 	//     panic(err)
 	// }
@@ -161,59 +166,59 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 	// 0xE60E (COMPMODE-REGISTER)
 	if c.PowerFrequency == 60 {
 		// 0x41FF 60Hz
-		err = d.Write([]byte{0xE6, 0x0E, 0x41, 0xFF})
+		err = WriteRegister(d, "COMPMODE", 0x41, 0xFF)
 	} else {
 		// 0x01FF 50Hz
-		err = d.Write([]byte{0xE6, 0x0E, 0x01, 0xFF})
+		err = WriteRegister(d, "COMPMODE", 0x01, 0xFF)
 	}
 	if err != nil {
 		panic(err)
 	}
 
 	// 0x43B5 (DICOEFF-REGISTER)
-	err = d.Write([]byte{0x43, 0xB5, 0xFF, 0x80, 0x00})
+	err = WriteRegister(d, "DICOEFF", 0xFF, 0x80, 0x00)
 	if err != nil {
 		panic(err)
 	}
 
 	//0x43AB (WTHR1-REGISTER)
-	err = d.Write([]byte{0x43, 0xAB, 0x00, 0x00, 0x00, 0x17})
+	err = WriteRegister(d, "WTHR1", 0x00, 0x00, 0x00, 0x17)
 	if err != nil {
 		panic(err)
 	}
 
 	//0x43AC (WTHR0-REGISTER)
-	err = d.Write([]byte{0x43, 0xAC, 0x00, 0x85, 0x60, 0x16})
+	err = WriteRegister(d, "WTHR0", 0x00, 0x85, 0x60, 0x16)
 	if err != nil {
 		panic(err)
 	}
 
 	// // 0x43AD (VARTHR1-REGISTER)
-	// err = d.Write([]byte{0x43, 0xAD, 0x17, 0x85, 0x60, 0x16})
+	// err = d.Write(append(ADE7878REG["VARTHR1"], 0x17, 0x85, 0x60, 0x16))
 	// if err != nil {
 	//     panic(err)
 	// }
 	//
 	// // 0x43AE (VARTHR0-REGISTER)
-	// err = d.Write([]byte{0x43, 0xAE, 0x17, 0x85, 0x60, 0x16})
+	// err = d.Write(append(ADE7878REG["VARTHR0"], 0x17, 0x85, 0x60, 0x16))
 	// if err != nil {
 	//     panic(err)
 	// }
 	//
 	// // 0x43A9 (VATHR1-REGISTER)
-	// err = d.Write([]byte{0x43, 0xA9, 0x17, 0x85, 0x60, 0x16})
+	// err = d.Write(append(ADE7878REG["VATHR1"], 0x17, 0x85, 0x60, 0x16))
 	// if err != nil {
 	//     panic(err)
 	// }
 	//
-	// // 0x43AA (VARTHR0-REGISTER)
-	// err = d.Write([]byte{0x43, 0xAA, 0x17, 0x85, 0x60, 0x16})
+	// // 0x43AA (VATHR0-REGISTER)
+	// err = d.Write(append(ADE7878REG["VATHR0"], 0x17, 0x85, 0x60, 0x16))
 	// if err != nil {
 	//     panic(err)
 	// }
 
 	// 0x43B3 (VLEVEL-REGISTER)
-	err = d.Write([]byte{0x43, 0xB3, 0x00, 0x0C, 0xEC, 0x85})
+	err = WriteRegister(d, "VLEVEL", 0x00, 0x0C, 0xEC, 0x85)
 	if err != nil {
 		panic(err)
 	}
@@ -221,37 +226,37 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 	time.Sleep(875 * time.Millisecond)
 
 	// // 0x4381 (AVGAIN-REGISTER)
-	// outcome := DeviceFetchInt(d, 4, []byte{0x43, 0x81})
+	// outcome := DeviceFetchInt(d, 4, ADE7878REG["AVGAIN"])
 	// fmt.Printf("AVGAIN-REGISTER VORHER%g   %x %x %x %x \n", outcome, data[0], data[1], data[2], data[3])
 
 	// 0x4381 (AVGAIN-REGISTER)
-	err = d.Write([]byte{0x43, 0x81, 0xFF, 0xFC, 0x1C, 0xC2})
+	err = WriteRegister(d, "AVGAIN", 0xFF, 0xFC, 0x1C, 0xC2)
 	if err != nil {
 		panic(err)
 	}
 
 	// 0x4383 (BVGAIN-REGISTER)
-	err = d.Write([]byte{0x43, 0x83, 0xFF, 0xFB, 0xCA, 0x60})
+	err = WriteRegister(d, "BVGAIN", 0xFF, 0xFB, 0xCA, 0x60)
 	if err != nil {
 		panic(err)
 	}
 
 	// 0x4385 (CVGAIN-REGISTER)
-	err = d.Write([]byte{0x43, 0x85, 0xFF, 0xFC, 0x12, 0xDE})
+	err = WriteRegister(d, "CVGAIN", 0xFF, 0xFC, 0x12, 0xDE)
 	if err != nil {
 		panic(err)
 	}
 
 	// Line cycle mode
 	// 0xE702 LCYCMODE
-	err = d.Write([]byte{0xE7, 0x02, 0x0F})
+	err = WriteRegister(d, "LCYCMODE", 0x0F)
 	if err != nil {
 		panic(err)
 	}
 
 	// Line cycle mode count
 	// 0xE60C LINECYC
-	err = d.Write([]byte{0xE6, 0x0C, 0xC8})
+	err = WriteRegister(d, "LCYCMODE", 0xC8)
 	if err != nil {
 		panic(err)
 	}
@@ -269,7 +274,7 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 	}
 
 	// 0xE228 (RUN-Register)
-	err = d.Write([]byte{0xE2, 0x28, 0x00, 0x01})
+	err = WriteRegister(d, "RUN", 0x00, 0x01)
 	if err != nil {
 		panic(err)
 	}
@@ -281,13 +286,13 @@ func ReadCurrent(d *i2c.Device, c *Config, phase string) (current float64) {
 	command := make([]byte, 2)
 	switch phase {
 	case "A":
-		command = []byte{0x43, 0xC0} // 0x43C0 (AIRMS; Current rms an A)
+		command = ADE7878REG["AIRMS"] // 0x43C0 (AIRMS; Current rms an A)
 	case "B":
-		command = []byte{0x43, 0xC2} // 0x43C2 (AIRMS; Current rms an B)
+		command = ADE7878REG["BIRMS"] // 0x43C2 (AIRMS; Current rms an B)
 	case "C":
-		command = []byte{0x43, 0xC4} // 0x43C4 (AIRMS; Current rms an C)
+		command = ADE7878REG["CIRMS"] // 0x43C4 (AIRMS; Current rms an C)
 	case "N":
-		command = []byte{0x43, 0xC6} // 0x43C6 (AIRMS; Current rms an N)
+		command = ADE7878REG["NIRMS"] // 0x43C6 (AIRMS; Current rms an N)
 	default:
 		panic(fmt.Errorf("Invalid phase %q", phase))
 	}

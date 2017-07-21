@@ -29,19 +29,18 @@ package main
 import (
 	"crypto/subtle"
 	"encoding/json"
-	"fmt"
-	"log"
-	"net/http"
-	"strconv"
 	"flag"
-	"os"
-	"github.com/gorilla/mux"
+	"fmt"
 	"github.com/gorilla/context"
+	"github.com/gorilla/mux"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/version"
+	"log"
+	"net/http"
+	"os"
+	"strconv"
 	// "golang.org/x/net/context"
-
 )
 
 type JSONError struct {
@@ -85,8 +84,8 @@ func BasicAuth(realm string, handler http.HandlerFunc, c *smartpi.Config, u *sma
 			return
 		}
 
-		context.Set(r,"Config", c)
-		context.Set(r,"Username", u)
+		context.Set(r, "Config", c)
+		context.Set(r, "Username", u)
 
 		handler(w, r)
 	}
@@ -96,7 +95,6 @@ func init() {
 	prometheus.MustRegister(version.NewCollector("smartpi"))
 }
 
-
 var appVersion = "No Version Provided"
 
 func main() {
@@ -104,15 +102,12 @@ func main() {
 	config := smartpi.NewConfig()
 	user := smartpi.NewUser()
 
-
 	version := flag.Bool("v", false, "prints current version information")
-    flag.Parse()
-    if *version {
-      fmt.Println(appVersion)
-      os.Exit(0)
-    }
-
-
+	flag.Parse()
+	if *version {
+		fmt.Println(appVersion)
+		os.Exit(0)
+	}
 
 	fmt.Println("SmartPi server started")
 
