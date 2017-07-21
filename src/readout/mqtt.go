@@ -32,7 +32,7 @@ func newMQTTClient(c *smartpi.Config) (mqttclient MQTT.Client) {
 	return mqttclient
 }
 
-func publishMQTTReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [25]float64) {
+func publishMQTTReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [28]float64) {
 	//[basetopic]/[node]/[keyname]
 	// Let's try to (re-)connect if MQTT connection was lost.
 	if !mqttclient.IsConnected() {

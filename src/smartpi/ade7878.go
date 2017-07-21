@@ -370,6 +370,33 @@ func ReadActiveWatts(d *i2c.Device, c *Config, phase string) (watts float64) {
 	return watts
 }
 
+
+func ReadActiveEnergy(d *i2c.Device, c *Config, phase string) (energy float64) {
+	command := make([]byte, 2)
+	switch phase {
+	case "A":
+		command = []byte{0xE4, 0x00} // 0xE4000 (AWATTHR total active energy phase A)
+	case "B":
+		command = []byte{0xE4, 0x00} // 0xE4001 (BWATTHR total active energy phase B)
+	case "C":
+		command = []byte{0xE4, 0x00} // 0xE4002 (CWATTHR total active energy phase C)
+	default:
+		panic(fmt.Errorf("Invalid phase %q", phase))
+	}
+
+	outcome := float64(DeviceFetchInt(d, 4, command))
+
+	energy = outcome
+
+	// if c.CurrentDirection[phase] {
+	// 	watts *= -1
+	// }
+
+	return energy
+}
+
+
+
 func ReadAngle(d *i2c.Device, c *Config, phase string) (angle float64) {
 	command := make([]byte, 2)
 	switch phase {
@@ -479,8 +506,8 @@ func CalculatePowerFactor(c *Config, phase string, watts float64, voltAmps float
 	}
 }
 
-func ReadoutValues(d *i2c.Device, c *Config) [25]float64 {
-	var values [25]float64
+func ReadoutValues(d *i2c.Device, c *Config) [28]float64 {
+	var values [28]float64
 	startTime := time.Now()
 
 	// Measure Currents
@@ -537,6 +564,10 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float64 {
 	values[23] = CalculatePowerFactor(c, "B", values[8], values[17], values[21]) // Phase B.
 	values[24] = CalculatePowerFactor(c, "C", values[9], values[19], values[22]) // Phase C.
 
+	values[25] = ReadActiveEnergy(d, c, "A") // Phase A.
+	values[26] = ReadActiveEnergy(d, c, "B") // Phase B.
+	values[27] = ReadActiveEnergy(d, c, "C") // Phase C.
+
 	logLine := fmt.Sprintf("ReadValues: %s ", time.Since(startTime))
 	logLine += fmt.Sprintf("I1: %g  I2: %g  I3: %g  I4: %g  ", values[0], values[1], values[2], values[3])
 	logLine += fmt.Sprintf("V1: %g  V2: %g  V3: %g  ", values[4], values[5], values[6])
@@ -546,6 +577,7 @@ func ReadoutValues(d *i2c.Device, c *Config) [25]float64 {
 	logLine += fmt.Sprintf("AVA: %g  BVA: %g  CVA: %g  ", values[16], values[17], values[18])
 	logLine += fmt.Sprintf("AVAR: %g  BVAR: %g  CVAR: %g  ", values[19], values[20], values[21])
 	logLine += fmt.Sprintf("PFA: %g  PFB: %g  PFC: %g  ", values[22], values[23], values[24])
+	logLine += fmt.Sprintf("AWATTHR: %g  BWATTHR: %g  CWATTHR: %g  ", values[25], values[26], values[27])
 	log.Debug(logLine)
 
 	return values

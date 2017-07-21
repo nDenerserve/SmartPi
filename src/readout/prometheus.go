@@ -75,7 +75,7 @@ var (
 	)
 )
 
-func updatePrometheusMetrics(v [25]float64) {
+func updatePrometheusMetrics(v [28]float64) {
 	currentMetric.WithLabelValues("A").Set(v[0])
 	currentMetric.WithLabelValues("B").Set(v[1])
 	currentMetric.WithLabelValues("C").Set(v[2])
