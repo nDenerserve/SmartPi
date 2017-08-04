@@ -3,9 +3,11 @@ package smartpi
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
 	"log"
+	"os"
 	"time"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type MinuteValues struct {
@@ -94,6 +96,10 @@ func ReadChartData(databasedir string, starttime time.Time, endtime time.Time) [
 
 	for i := 0; i <= diffmonth; i++ {
 
+		if _, err := os.Stat(databasedir + "/smartpi_logdata_" + elapsedtime.Format("200601") + ".db"); os.IsNotExist(err) {
+			CreateSQlDatabase(databasedir, elapsedtime)
+		}
+
 		db, err := sql.Open("sqlite3", databasedir+"/smartpi_logdata_"+elapsedtime.Format("200601")+".db")
 		if err != nil {
 			log.Fatal(err)
@@ -172,6 +178,10 @@ func ReadDayData(databasedir string, starttime time.Time, endtime time.Time) []*
 	elapsedtime := endtime
 
 	for i := 0; i <= diffmonth; i++ {
+
+		if _, err := os.Stat(databasedir + "/smartpi_logdata_" + elapsedtime.Format("200601") + ".db"); os.IsNotExist(err) {
+			CreateSQlDatabase(databasedir, elapsedtime)
+		}
 
 		db, err := sql.Open("sqlite3", databasedir+"/smartpi_logdata_"+elapsedtime.Format("200601")+".db")
 		if err != nil {
