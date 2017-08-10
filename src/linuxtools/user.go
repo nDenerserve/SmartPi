@@ -59,6 +59,26 @@ func GetUsers() {
 
 }
 
+func ChangePassword(user string, newpassword string) (bool, error) {
+	_, err := exec.Command("/bin/sh", "-c", `echo "echo '`+user+`:`+newpassword+`' | chpasswd" >> /tmp/changepass.sh`).Output()
+	if err != nil {
+		return false, err
+	}
+	_, err = exec.Command("/bin/sh", "-c", `chmod +x /tmp/changepass.sh`).Output()
+	if err != nil {
+		return false, err
+	}
+	_, err = exec.Command("/bin/sh", "-c", `sudo /tmp/changepass.sh`).Output()
+	if err != nil {
+		return false, err
+	}
+	_, err = exec.Command("/bin/sh", "-c", `rm /tmp/changepass.sh`).Output()
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func GetGroupsFromUser(user string) ([]string, error) {
 	out, err := exec.Command("/bin/sh", "-c", `groups `+user).Output()
 	if err != nil {

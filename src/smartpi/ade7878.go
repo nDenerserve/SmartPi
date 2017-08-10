@@ -29,10 +29,11 @@ package smartpi
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/nathan-osman/go-rpigpio"
-	"golang.org/x/exp/io/i2c"
 	"math"
 	"time"
+
+	"github.com/nathan-osman/go-rpigpio"
+	"golang.org/x/exp/io/i2c"
 
 	log "github.com/Sirupsen/logrus"
 )
@@ -336,7 +337,12 @@ func ReadVoltage(d *i2c.Device, c *Config, phase string) (voltage float64, measu
 
 	// Ignore voltage reading if disalbed or less than 10 volts.
 	measureVoltage = true
-	if !c.MeasureVoltage[phase] || voltage < 10 {
+	// if !c.MeasureVoltage[phase] || voltage < 10 {
+	// 	voltage = c.Voltage[phase]
+	// 	measureVoltage = false
+	// }
+
+	if !c.MeasureVoltage[phase] { // || voltage < 10 {
 		voltage = c.Voltage[phase]
 		measureVoltage = false
 	}
@@ -370,7 +376,6 @@ func ReadActiveWatts(d *i2c.Device, c *Config, phase string) (watts float64) {
 	return watts
 }
 
-
 func ReadActiveEnergy(d *i2c.Device, c *Config, phase string) (energy float64) {
 	command := make([]byte, 2)
 	switch phase {
@@ -394,8 +399,6 @@ func ReadActiveEnergy(d *i2c.Device, c *Config, phase string) (energy float64) {
 
 	return energy
 }
-
-
 
 func ReadAngle(d *i2c.Device, c *Config, phase string) (angle float64) {
 	command := make([]byte, 2)
