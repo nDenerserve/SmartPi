@@ -63,6 +63,12 @@
 			"revisionTime": "2016-04-24T11:30:07Z"
 		},
 		{
+			"checksumSHA1": "lfOuMiAdiqc/dalUSBTvD5ZMSzA=",
+			"path": "github.com/msteinert/pam",
+			"revision": "2c288b3ef8272766b4243917240e04e4221eb4a5",
+			"revisionTime": "2017-07-05T14:26:45Z"
+		},
+		{
 			"checksumSHA1": "dw+Q0K2sjGCfpjZjptVFxBF6Qhg=",
 			"path": "github.com/nathan-osman/go-rpigpio",
 			"revision": "bce6190607da242de6cd7c566aceb73e32b0a25a",

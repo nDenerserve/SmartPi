@@ -206,7 +206,8 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
           jsonObj.type = "config";
           jsonObj.msg = jsonConfigObj;
           var encrypted = CryptoJS.SHA256($scope.user.password).toString();
-          $SetConfigData(encrypted).save({},jsonObj);
+          //$SetConfigData(encrypted).save({},jsonObj);
+          $SetConfigData($scope.user.name,$scope.user.password).save({},jsonObj);
           // console.log(jsonObj);
           $scope.hideSaveButton(config);
 
@@ -230,8 +231,9 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
 
         $rootScope.$on("LoginDialogCloseEvent", function(event, args) {
 
-            var encrypted = CryptoJS.SHA256(args.password).toString();
-            $GetConfigData(encrypted).query({},
+            //var encrypted = CryptoJS.SHA256(args.password).toString();
+            //$GetConfigData(encrypted).query({},
+            $GetConfigData(args.username,args.password).query({},
                 function(data) {
                     $scope.tabview = true;
                     // console.log(data);
@@ -290,7 +292,8 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
                     // console.log(error.data.message);
                 });
 
-            $GetUserData(encrypted).query({},
+            //$GetUserData(encrypted).query({},
+            $GetUserData(args.username,args.password).query({},
               function(userdata) {
                 $scope.userdata.name = userdata.Name;
                 $scope.userdata.role = userdata.Role;

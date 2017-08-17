@@ -27,10 +27,11 @@
 package smartpi
 
 import (
-	"gopkg.in/ini.v1"
-	// "path/filepath"
-	// "os"
+	"github.com/nDenerserve/SmartPi/src/linuxtools"
 )
+
+// "path/filepath"
+// "os"
 
 type User struct {
 	Name     string
@@ -39,26 +40,23 @@ type User struct {
 	Exist    bool
 }
 
-func (u *User) ReadUserFromFile(username string) {
+func (u *User) ReadUser(username string, password string) {
 
-	cfg, err := ini.Load("/etc/smartpiusers")
-	if err != nil {
-		panic(err)
-	}
-
-	_, err = cfg.GetSection(username)
-	if err != nil {
+	if linuxtools.ValidateUser(username, password) {
+		u.Role = []string{}
+		u.Name = username
+		u.Password = password
+		u.Role, _ = linuxtools.GetGroupsFromUser(u.Name)
+		u.Exist = true
+		return
+	} else {
+		u.Role = []string{}
 		u.Name = username
 		u.Password = "nopassword"
-		u.Role[0] = "nobody"
+		u.Role = append(u.Role, "nobody")
 		u.Exist = false
 		return
 	}
-
-	u.Name = username
-	u.Password = cfg.Section(username).Key("password").String()
-	u.Role = cfg.Section(username).Key("role").Strings(",")
-	u.Exist = true
 }
 
 func NewUser() *User {

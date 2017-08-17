@@ -90,6 +90,7 @@ func GetGroupsFromUser(user string) ([]string, error) {
 }
 
 func ValidateUser(username string, password string) bool {
+
 	err := pamAuth("passwd", username, password)
 	if err != nil {
 		return false
