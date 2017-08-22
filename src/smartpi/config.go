@@ -27,11 +27,12 @@
 package smartpi
 
 import (
-	log "github.com/Sirupsen/logrus"
-	"gopkg.in/ini.v1"
 	"io"
 	"os"
 	"strconv"
+
+	log "github.com/Sirupsen/logrus"
+	"gopkg.in/ini.v1"
 )
 
 type Config struct {
@@ -53,13 +54,14 @@ type Config struct {
 	DatabaseDir     string
 
 	// [device]
-	I2CDevice        string
-	PowerFrequency   float64
-	CTType           map[string]string
-	CurrentDirection map[string]bool
-	MeasureCurrent   map[string]bool
-	MeasureVoltage   map[string]bool
-	Voltage          map[string]float64
+	I2CDevice            string
+	PowerFrequency       float64
+	CTType               map[string]string
+	CTTypePrimaryCurrent map[string]int
+	CurrentDirection     map[string]bool
+	MeasureCurrent       map[string]bool
+	MeasureVoltage       map[string]bool
+	Voltage              map[string]float64
 
 	// [ftp]
 	FTPupload bool
@@ -141,6 +143,10 @@ func (p *Config) ReadParameterFromFile() {
 	p.CTType["B"] = cfg.Section("device").Key("ct_type_2").MustString("YHDC_SCT013")
 	p.CTType["C"] = cfg.Section("device").Key("ct_type_3").MustString("YHDC_SCT013")
 	p.CTType["N"] = cfg.Section("device").Key("ct_type_4").MustString("YHDC_SCT013")
+	p.CTTypePrimaryCurrent["A"] = cfg.Section("device").Key("ct_type_1_primary_current").MustInt(100)
+	p.CTTypePrimaryCurrent["B"] = cfg.Section("device").Key("ct_type_2_primary_current").MustInt(100)
+	p.CTTypePrimaryCurrent["C"] = cfg.Section("device").Key("ct_type_3_primary_current").MustInt(100)
+	p.CTTypePrimaryCurrent["N"] = cfg.Section("device").Key("ct_type_4_primary_current").MustInt(100)
 	p.CurrentDirection = make(map[string]bool)
 	p.CurrentDirection["A"] = cfg.Section("device").Key("change_current_direction_1").MustBool(false)
 	p.CurrentDirection["B"] = cfg.Section("device").Key("change_current_direction_2").MustBool(false)
@@ -218,6 +224,11 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("device").NewKey("ct_type_2", p.CTType["B"])
 	_, err = cfg.Section("device").NewKey("ct_type_3", p.CTType["C"])
 	_, err = cfg.Section("device").NewKey("ct_type_4", p.CTType["N"])
+
+	_, err = cfg.Section("device").NewKey("ct_type_1_primary_current", strconv.FormatInt(int64(p.CTTypePrimaryCurrent["A"]), 10))
+	_, err = cfg.Section("device").NewKey("ct_type_2_primary_current", strconv.FormatInt(int64(p.CTTypePrimaryCurrent["B"]), 10))
+	_, err = cfg.Section("device").NewKey("ct_type_3_primary_current", strconv.FormatInt(int64(p.CTTypePrimaryCurrent["C"]), 10))
+	_, err = cfg.Section("device").NewKey("ct_type_4_primary_current", strconv.FormatInt(int64(p.CTTypePrimaryCurrent["N"]), 10))
 
 	_, err = cfg.Section("device").NewKey("change_current_direction_1", strconv.FormatBool(p.CurrentDirection["A"]))
 	_, err = cfg.Section("device").NewKey("change_current_direction_2", strconv.FormatBool(p.CurrentDirection["B"]))
