@@ -143,6 +143,7 @@ func (p *Config) ReadParameterFromFile() {
 	p.CTType["B"] = cfg.Section("device").Key("ct_type_2").MustString("YHDC_SCT013")
 	p.CTType["C"] = cfg.Section("device").Key("ct_type_3").MustString("YHDC_SCT013")
 	p.CTType["N"] = cfg.Section("device").Key("ct_type_4").MustString("YHDC_SCT013")
+	p.CTTypePrimaryCurrent = make(map[string]int)
 	p.CTTypePrimaryCurrent["A"] = cfg.Section("device").Key("ct_type_1_primary_current").MustInt(100)
 	p.CTTypePrimaryCurrent["B"] = cfg.Section("device").Key("ct_type_2_primary_current").MustInt(100)
 	p.CTTypePrimaryCurrent["C"] = cfg.Section("device").Key("ct_type_3_primary_current").MustInt(100)

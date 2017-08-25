@@ -98,6 +98,19 @@ func init() {
 
 var appVersion = "No Version Provided"
 
+type Softwareinformations struct {
+	Softwareversion string
+}
+
+func getSoftwareInformations(w http.ResponseWriter, r *http.Request) {
+	data := Softwareinformations{Softwareversion: appVersion}
+
+	// JSON output of request
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		panic(err)
+	}
+}
+
 func main() {
 
 	config := smartpi.NewConfig()
@@ -118,6 +131,7 @@ func main() {
 	r.HandleFunc("/api/values/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeChartValues)
 	r.HandleFunc("/api/dayvalues/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeDayValues)
 	r.HandleFunc("/api/csv/from/{fromDate}/to/{toDate}", smartpi.ServeCSVValues)
+	r.HandleFunc("/api/version", getSoftwareInformations)
 	r.HandleFunc("/api/config/read", BasicAuth("Please enter your username and password for this site", smartpi.ReadConfig, config, user, "smartpiadmin")).Methods("GET")
 	r.HandleFunc("/api/config/write", BasicAuth("Please enter your username and password for this site", smartpi.WriteConfig, config, user, "smartpiadmin")).Methods("POST")
 	r.HandleFunc("/api/config/user/read", BasicAuth("Please enter your username and password for this site", smartpi.ReadUserData, config, user, "smartpiadmin")).Methods("GET")

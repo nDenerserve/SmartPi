@@ -96,7 +96,11 @@
     <md-content class="md-default-theme">
         <div class="md-toolbar-tools">
             <span flex></span>
-            <img src="img/enerserve.png" alt="enerserve logo" height="52">
+            <div>
+              <img src="img/enerserve.png" alt="enerserve logo" height="52">
+              <br>
+              <span  style="font-size: small;">Version: {{softwareversion}}</span>
+          </div>
         </div>
         </md-toolbar>
         <div flex="66" flex-offset="15">
@@ -157,7 +161,12 @@
                                     <label>Current Sensor</label>
                                     <md-select ng-model="measurement.current.phase1.sensor" ng-change="showSaveButton('measurement')">
                                         <md-option value="YHDC_SCT013">YHDC_SCT013</md-option>
+                                        <md-option value="X/1A">Current transformer 1A sec current</md-option>
                                     </md-select>
+                                </md-input-container>
+                                <md-input-container class="md-block" flex="8" ng-if="measurement.current.phase1.sensor=='X/1A'">
+                                    <label>Secondary current [A]</label>
+                                    <input name="PrimarycurrentPhase1" ng-model="measurement.current.phase1.primarycurrent" ng-change="showSaveButton('measurement')">
                                 </md-input-container>
                                 <md-switch ng-model="measurement.current.phase1.direction" aria-label="Current direction phase 1" flex="20" ng-change="showSaveButton('measurement')">
                                     Change current direction phase 1
@@ -171,7 +180,12 @@
                                     <label>Current Sensor</label>
                                     <md-select ng-model="measurement.current.phase2.sensor" ng-change="showSaveButton('measurement')">
                                         <md-option value="YHDC_SCT013">YHDC_SCT013</md-option>
+                                        <md-option ng-checked="swedishCheck" value="X/1A">Current transformer 1A sec current</md-option>
                                     </md-select>
+                                </md-input-container>
+                                <md-input-container class="md-block" flex="8" ng-if="measurement.current.phase2.sensor=='X/1A'">
+                                    <label>Secondary current [A]</label>
+                                    <input name="PrimarycurrentPhase2" ng-model="measurement.current.phase2.primarycurrent" ng-change="showSaveButton('measurement')">
                                 </md-input-container>
                                 <md-switch ng-model="measurement.current.phase2.direction" aria-label="Current direction phase 2" flex="20" ng-change="showSaveButton('measurement')">
                                     Change current direction phase 2
@@ -185,7 +199,12 @@
                                     <label>Current Sensor</label>
                                     <md-select ng-model="measurement.current.phase3.sensor" ng-change="showSaveButton('measurement')">
                                         <md-option value="YHDC_SCT013">YHDC_SCT013</md-option>
+                                        <md-option value="X/1A">Current transformer 1A sec current</md-option>
                                     </md-select>
+                                </md-input-container>
+                                <md-input-container class="md-block" flex="8" ng-if="measurement.current.phase3.sensor=='X/1A'">
+                                    <label>Secondary current [A]</label>
+                                    <input name="PrimarycurrentPhase3" ng-model="measurement.current.phase3.primarycurrent" ng-change="showSaveButton('measurement')">
                                 </md-input-container>
                                 <md-switch ng-model="measurement.current.phase3.direction" aria-label="Current direction phase 3" flex="20" ng-change="showSaveButton('measurement')">
                                     Change current direction phase 3
@@ -199,7 +218,12 @@
                                     <label>Current Sensor</label>
                                     <md-select ng-model="measurement.current.phase4.sensor" ng-change="showSaveButton('measurement')">
                                         <md-option value="YHDC_SCT013">YHDC_SCT013</md-option>
+                                        <md-option value="X/1A">Current transformer 1A sec current</md-option>
                                     </md-select>
+                                </md-input-container>
+                                <md-input-container class="md-block" flex="8" ng-if="measurement.current.phase4.sensor=='X/1A'">
+                                    <label>Secondary current [A]</label>
+                                    <input name="PrimarycurrentPhase4" ng-model="measurement.current.phase4.primarycurrent" ng-change="showSaveButton('measurement')">
                                 </md-input-container>
                                 <!-- <md-switch ng-model="measurement.current.phase4.direction" aria-label="Current direction neutral" flex="20">
                                     Change current direction phase 4
@@ -463,6 +487,7 @@
 
         </div>
     </md-content>
+
     <script src="js/jquery-2.1.4.js"></script>
     <script src="js/main.js"></script>
     <!-- Resource jQuery -->

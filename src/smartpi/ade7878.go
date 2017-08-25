@@ -60,10 +60,10 @@ var (
 		},
 		"X/1A": CTFactors{
 			CurrentResistor:       0.33,
-			CurrentClampFactor:    0.5,
+			CurrentClampFactor:    1.0,
 			OffsetCurrent:         1.010725941,
 			OffsetVoltage:         1.0,
-			PowerCorrectionFactor: 0.019413,
+			PowerCorrectionFactor: 0.043861,
 		},
 	}
 )
@@ -126,6 +126,7 @@ func WriteRegister(d *i2c.Device, register string, data ...byte) (err error) {
 }
 
 func InitADE7878(c *Config) (*i2c.Device, error) {
+
 	d, err := i2c.Open(&i2c.Devfs{Dev: c.I2CDevice}, ADE7878_ADDR)
 	if err != nil {
 		panic(err)
@@ -323,7 +324,14 @@ func ReadCurrent(d *i2c.Device, c *Config, phase string) (current float64) {
 	if c.MeasureCurrent[phase] {
 		outcome := float64(DeviceFetchInt(d, 4, command))
 		cr := CTTypes[c.CTType[phase]].CurrentResistor
-		ccf := CTTypes[c.CTType[phase]].CurrentClampFactor
+
+		var ccf float64
+		if c.CTType[phase] == "YHDC_SCT013" {
+			ccf = CTTypes[c.CTType[phase]].CurrentClampFactor
+		} else {
+			ccf = 1.0 / (float64(c.CTTypePrimaryCurrent[phase]) / 100.0)
+		}
+
 		oc := CTTypes[c.CTType[phase]].OffsetCurrent
 		outcome = outcome - 7300
 		current = ((((outcome * 0.3535) / rmsFactor) / cr) / ccf) * 100.0 * oc

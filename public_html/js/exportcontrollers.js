@@ -1,10 +1,18 @@
-smartpi.controller('MainCtrl', function($scope, $Momentary, $http, $interval, FileSaver, Blob){
+smartpi.controller('MainCtrl', function($scope, $Momentary, $http, $interval, FileSaver, Blob, $GetSoftwareInformations){
 
 
 
 
   $scope.startDate = moment().startOf('day').toDate();
   $scope.endDate = moment().endOf('day').toDate();
+
+
+  $GetSoftwareInformations.get({},
+    function(softwareinformations) {
+      $scope.softwareversion = softwareinformations.Softwareversion;
+      console.log($scope.softwareversion);
+    });
+
 
 
   $scope.downloadCSV = function() {
