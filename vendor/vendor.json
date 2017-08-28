@@ -159,6 +159,12 @@
 			"revisionTime": "2016-11-01T21:56:08Z"
 		},
 		{
+			"checksumSHA1": "To5eWGIjHQcw3pQ0N1uFepqaxmE=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "739734461d1c916b6c72a63d7efda2b27edb369f",
+			"revisionTime": "2017-07-07T11:51:12Z"
+		},
+		{
 			"checksumSHA1": "YRD335tkMvgHzkfbfveMUpsE3Bw=",
 			"path": "gopkg.in/ini.v1",
 			"revision": "6e4869b434bd001f6983749881c7ead3545887d8",
