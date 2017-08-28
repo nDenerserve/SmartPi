@@ -1,4 +1,4 @@
-smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData, $GetConfigData, $SetConfigData, $GetUserData) {
+smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData, $GetConfigData, $SetConfigData, $GetUserData, $GetSoftwareInformations) {
 
         $scope.smartpi = {};
         $scope.smartpi.location = {};
@@ -119,29 +119,35 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
 
               case 'measurement':
 
-                  jsonConfigObj.PowerFrequency = $scope.measurement.frequency;
+                  jsonConfigObj.PowerFrequency = parseInt($scope.measurement.frequency);
 
                   var jsonMeasureCurrentObj = new Object();
                   jsonConfigObj.MeasureCurrent = jsonMeasureCurrentObj;
                   var jsonCTTypeObj = new Object();
                   jsonConfigObj.CTType = jsonCTTypeObj;
+                  var jsonCTTypePrimaryCurrentObj = new Object();
+                  jsonConfigObj.CTTypePrimaryCurrent = jsonCTTypePrimaryCurrentObj;
                   var jsonCurrentDirectionObj = new Object();
                   jsonConfigObj.CurrentDirection = jsonCurrentDirectionObj;
 
                   jsonMeasureCurrentObj.A = $scope.measurement.current.phase1.measure;
                   jsonCTTypeObj.A = $scope.measurement.current.phase1.sensor;
+                  jsonCTTypePrimaryCurrentObj.A = parseInt($scope.measurement.current.phase1.primarycurrent);
                   jsonCurrentDirectionObj.A = $scope.measurement.current.phase1.direction;
 
                   jsonMeasureCurrentObj.B = $scope.measurement.current.phase2.measure;
                   jsonCTTypeObj.B = $scope.measurement.current.phase2.sensor;
+                  jsonCTTypePrimaryCurrentObj.B = parseInt($scope.measurement.current.phase2.primarycurrent);
                   jsonCurrentDirectionObj.B = $scope.measurement.current.phase2.direction;
 
                   jsonMeasureCurrentObj.C = $scope.measurement.current.phase3.measure;
                   jsonCTTypeObj.C = $scope.measurement.current.phase3.sensor;
+                  jsonCTTypePrimaryCurrentObj.C = $scope.measurement.current.phase3.primarycurrent;
                   jsonCurrentDirectionObj.C = $scope.measurement.current.phase3.direction;
 
                   jsonMeasureCurrentObj.N = $scope.measurement.current.phase4.measure;
                   jsonCTTypeObj.N = $scope.measurement.current.phase4.sensor;
+                  jsonCTTypePrimaryCurrentObj.N = parseInt($scope.measurement.current.phase4.primarycurrent);
                   // jsonCurrentDirectionObj.N = $scope.measurement.current.phase4.direction;
 
                   var jsonMeasureVoltageObj = new Object();
@@ -150,13 +156,13 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
                   jsonConfigObj.Voltage = jsonVoltageObj;
 
                   jsonMeasureVoltageObj.A = $scope.measurement.voltage.phase1.measure;
-                  jsonVoltageObj.A = $scope.measurement.voltage.phase1.suppose;
+                  jsonVoltageObj.A = parseInt($scope.measurement.voltage.phase1.suppose);
 
                   jsonMeasureVoltageObj.B = $scope.measurement.voltage.phase2.measure;
-                  jsonVoltageObj.B = $scope.measurement.voltage.phase2.suppose;
+                  jsonVoltageObj.B = parseInt($scope.measurement.voltage.phase2.suppose);
 
                   jsonMeasureVoltageObj.C = $scope.measurement.voltage.phase3.measure;
-                  jsonVoltageObj.C = $scope.measurement.voltage.phase3.suppose;
+                  jsonVoltageObj.C = parseInt($scope.measurement.voltage.phase3.suppose);
 
                   break;
               case 'mqtt':
@@ -206,11 +212,20 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
           jsonObj.type = "config";
           jsonObj.msg = jsonConfigObj;
           var encrypted = CryptoJS.SHA256($scope.user.password).toString();
-          $SetConfigData(encrypted).save({},jsonObj);
-          // console.log(jsonObj);
+          //$SetConfigData(encrypted).save({},jsonObj);
+          $SetConfigData($scope.user.name,$scope.user.password).save({},jsonObj);
+          console.log(jsonObj);
           $scope.hideSaveButton(config);
 
         }
+
+
+        $GetSoftwareInformations.get({},
+          function(softwareinformations) {
+            $scope.softwareversion = softwareinformations.Softwareversion;
+          });
+
+
 
         $scope.showLogin = function(ev) {
             $mdDialog.show({
@@ -230,11 +245,12 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
 
         $rootScope.$on("LoginDialogCloseEvent", function(event, args) {
 
-            var encrypted = CryptoJS.SHA256(args.password).toString();
-            $GetConfigData(encrypted).query({},
+            //var encrypted = CryptoJS.SHA256(args.password).toString();
+            //$GetConfigData(encrypted).query({},
+            $GetConfigData(args.username,args.password).query({},
                 function(data) {
                     $scope.tabview = true;
-                    // console.log(data);
+                    console.log(data);
                     $scope.smartpi.serial = data.Serial;
                     $scope.smartpi.name = data.Name;
                     $scope.smartpi.location.lat = data.Lat;
@@ -248,6 +264,10 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
                     $scope.measurement.current.phase2.sensor = data.CTType.B;
                     $scope.measurement.current.phase3.sensor = data.CTType.C;
                     $scope.measurement.current.phase4.sensor = data.CTType.N;
+                    $scope.measurement.current.phase1.primarycurrent = data.CTTypePrimaryCurrent.A;
+                    $scope.measurement.current.phase2.primarycurrent = data.CTTypePrimaryCurrent.B;
+                    $scope.measurement.current.phase3.primarycurrent = data.CTTypePrimaryCurrent.C;
+                    $scope.measurement.current.phase4.primarycurrent = data.CTTypePrimaryCurrent.N;
                     $scope.measurement.frequency = data.PowerFrequency;
                     $scope.measurement.current.phase1.direction = data.CurrentDirection.A;
                     $scope.measurement.current.phase2.direction = data.CurrentDirection.B;
@@ -290,7 +310,8 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
                     // console.log(error.data.message);
                 });
 
-            $GetUserData(encrypted).query({},
+            //$GetUserData(encrypted).query({},
+            $GetUserData(args.username,args.password).query({},
               function(userdata) {
                 $scope.userdata.name = userdata.Name;
                 $scope.userdata.role = userdata.Role;
@@ -304,6 +325,7 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData,
 
             $scope.user.name = args.username;
             $scope.user.password = args.password;
+
         });
 
         function DialogController($scope, $rootScope, $mdDialog, UserData) {

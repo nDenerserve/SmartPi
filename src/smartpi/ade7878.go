@@ -29,10 +29,11 @@ package smartpi
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/nathan-osman/go-rpigpio"
-	"golang.org/x/exp/io/i2c"
 	"math"
 	"time"
+
+	"github.com/nathan-osman/go-rpigpio"
+	"golang.org/x/exp/io/i2c"
 
 	log "github.com/Sirupsen/logrus"
 )
@@ -53,9 +54,16 @@ var (
 		"YHDC_SCT013": CTFactors{
 			CurrentResistor:       7.07107,
 			CurrentClampFactor:    0.05,
-			OffsetCurrent:         0.97129167,
+			OffsetCurrent:         1.049084906,
 			OffsetVoltage:         1.0,
 			PowerCorrectionFactor: 0.019413,
+		},
+		"X/1A": CTFactors{
+			CurrentResistor:       0.33,
+			CurrentClampFactor:    1.0,
+			OffsetCurrent:         1.010725941,
+			OffsetVoltage:         1.0,
+			PowerCorrectionFactor: 0.043861,
 		},
 	}
 )
@@ -118,6 +126,7 @@ func WriteRegister(d *i2c.Device, register string, data ...byte) (err error) {
 }
 
 func InitADE7878(c *Config) (*i2c.Device, error) {
+
 	d, err := i2c.Open(&i2c.Devfs{Dev: c.I2CDevice}, ADE7878_ADDR)
 	if err != nil {
 		panic(err)
@@ -247,6 +256,11 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 		panic(err)
 	}
 
+	// err = WriteRegister(d, "AIRMSOS", 0x11, 0x47, 0xE9)
+	// if err != nil {
+	// 	panic(err)
+	// }
+
 	// Line cycle mode
 	// 0xE702 LCYCMODE
 	err = WriteRegister(d, "LCYCMODE", 0x0F)
@@ -310,8 +324,16 @@ func ReadCurrent(d *i2c.Device, c *Config, phase string) (current float64) {
 	if c.MeasureCurrent[phase] {
 		outcome := float64(DeviceFetchInt(d, 4, command))
 		cr := CTTypes[c.CTType[phase]].CurrentResistor
-		ccf := CTTypes[c.CTType[phase]].CurrentClampFactor
+
+		var ccf float64
+		if c.CTType[phase] == "YHDC_SCT013" {
+			ccf = CTTypes[c.CTType[phase]].CurrentClampFactor
+		} else {
+			ccf = 1.0 / (float64(c.CTTypePrimaryCurrent[phase]) / 100.0)
+		}
+
 		oc := CTTypes[c.CTType[phase]].OffsetCurrent
+		outcome = outcome - 7300
 		current = ((((outcome * 0.3535) / rmsFactor) / cr) / ccf) * 100.0 * oc
 	} else {
 		current = 0.0
@@ -336,7 +358,12 @@ func ReadVoltage(d *i2c.Device, c *Config, phase string) (voltage float64, measu
 
 	// Ignore voltage reading if disalbed or less than 10 volts.
 	measureVoltage = true
-	if !c.MeasureVoltage[phase] || voltage < 10 {
+	// if !c.MeasureVoltage[phase] || voltage < 10 {
+	// 	voltage = c.Voltage[phase]
+	// 	measureVoltage = false
+	// }
+
+	if !c.MeasureVoltage[phase] { // || voltage < 10 {
 		voltage = c.Voltage[phase]
 		measureVoltage = false
 	}
@@ -370,7 +397,6 @@ func ReadActiveWatts(d *i2c.Device, c *Config, phase string) (watts float64) {
 	return watts
 }
 
-
 func ReadActiveEnergy(d *i2c.Device, c *Config, phase string) (energy float64) {
 	command := make([]byte, 2)
 	switch phase {
@@ -394,8 +420,6 @@ func ReadActiveEnergy(d *i2c.Device, c *Config, phase string) (energy float64) {
 
 	return energy
 }
-
-
 
 func ReadAngle(d *i2c.Device, c *Config, phase string) (angle float64) {
 	command := make([]byte, 2)

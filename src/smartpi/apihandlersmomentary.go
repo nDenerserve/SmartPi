@@ -34,12 +34,13 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
 	"math"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 func Index(w http.ResponseWriter, r *http.Request) {
@@ -98,6 +99,11 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				val = 0.0
 				info = "warning: parse error. set value to 0.0"
+			}
+
+			if math.IsNaN(val) {
+				val = 0.0
+				info = "warning: value NaN. set value to 0.0"
 			}
 
 			if math.IsInf(val, 0) {
@@ -159,6 +165,11 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					val = 0.0
 					info = "warning: parse error. set value to 0.0"
+				}
+
+				if math.IsNaN(val) {
+					val = 0.0
+					info = "warning: value NaN. set value to 0.0"
 				}
 
 				if math.IsInf(val, 0) {
@@ -227,6 +238,11 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 					info = "warning: parse error. set value to 0.0"
 				}
 
+				if math.IsNaN(val) {
+					val = 0.0
+					info = "warning: value NaN. set value to 0.0"
+				}
+
 				if math.IsInf(val, 0) {
 					val = 0.0
 					info = "warning: value infinity. set value to 0.0"
@@ -293,6 +309,11 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 					if err != nil {
 						val = 0.0
 						info = "warning: parse error. set value to 0.0"
+					}
+
+					if math.IsNaN(val) {
+						val = 0.0
+						info = "warning: value NaN. set value to 0.0"
 					}
 
 					if math.IsInf(val, 0) {

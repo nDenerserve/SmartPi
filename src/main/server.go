@@ -31,15 +31,16 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"strconv"
+
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/version"
-	"log"
-	"net/http"
-	"os"
-	"strconv"
 	// "golang.org/x/net/context"
 )
 
@@ -65,7 +66,7 @@ func BasicAuth(realm string, handler http.HandlerFunc, c *smartpi.Config, u *sma
 
 		user, pass, ok := r.BasicAuth()
 
-		u.ReadUserFromFile(user)
+		u.ReadUser(user, pass)
 
 		roleAllowed := false
 		if len(roles) > 0 && stringInSlice(u.Role, roles) {
@@ -97,6 +98,19 @@ func init() {
 
 var appVersion = "No Version Provided"
 
+type Softwareinformations struct {
+	Softwareversion string
+}
+
+func getSoftwareInformations(w http.ResponseWriter, r *http.Request) {
+	data := Softwareinformations{Softwareversion: appVersion}
+
+	// JSON output of request
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		panic(err)
+	}
+}
+
 func main() {
 
 	config := smartpi.NewConfig()
@@ -117,9 +131,10 @@ func main() {
 	r.HandleFunc("/api/values/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeChartValues)
 	r.HandleFunc("/api/dayvalues/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeDayValues)
 	r.HandleFunc("/api/csv/from/{fromDate}/to/{toDate}", smartpi.ServeCSVValues)
-	r.HandleFunc("/api/config/read", BasicAuth("Please enter your username and password for this site", smartpi.ReadConfig, config, user, "administrator")).Methods("GET")
-	r.HandleFunc("/api/config/write", BasicAuth("Please enter your username and password for this site", smartpi.WriteConfig, config, user, "administrator")).Methods("POST")
-	r.HandleFunc("/api/config/user/read", BasicAuth("Please enter your username and password for this site", smartpi.ReadUserData, config, user, "administrator")).Methods("GET")
+	r.HandleFunc("/api/version", getSoftwareInformations)
+	r.HandleFunc("/api/config/read", BasicAuth("Please enter your username and password for this site", smartpi.ReadConfig, config, user, "smartpiadmin")).Methods("GET")
+	r.HandleFunc("/api/config/write", BasicAuth("Please enter your username and password for this site", smartpi.WriteConfig, config, user, "smartpiadmin")).Methods("POST")
+	r.HandleFunc("/api/config/user/read", BasicAuth("Please enter your username and password for this site", smartpi.ReadUserData, config, user, "smartpiadmin")).Methods("GET")
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(config.DocRoot)))
 	http.Handle("/metrics", prometheus.Handler())
 	http.Handle("/", prometheus.InstrumentHandler("smartpi", r))

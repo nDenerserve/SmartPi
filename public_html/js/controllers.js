@@ -1,4 +1,4 @@
-smartpi.controller('MainCtrl', function($scope, $Momentary, $Linechart, $GetDatabaseData, $GetDayData, $interval){
+smartpi.controller('MainCtrl', function($scope, $Momentary, $Linechart, $GetDatabaseData, $GetDayData, $interval, $GetSoftwareInformations){
 
 
 
@@ -29,6 +29,11 @@ $scope.disabledayremovebutton = true;
 $scope.formatNumber = function(i) {
     return Math.round(i * 100)/100;
 }
+
+$GetSoftwareInformations.get({},
+  function(softwareinformations) {
+    $scope.softwareversion = softwareinformations.Softwareversion;
+  });
 
 getActualValues();
 getConsumptionToday();
