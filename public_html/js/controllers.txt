@@ -51,7 +51,7 @@ timer2 = $interval(function() {
 
 
 
-getLinechart('power','123sum',moment().startOf('day').format(),moment().format());
+getLinechart('power','123',moment().startOf('day').format(),moment().format());
 $scope.btnpowerline = 'btn-primary';
 
   function getActualValues() {
@@ -342,7 +342,7 @@ $scope.btnpowerline = 'btn-primary';
 
         $scope.linechartPower = function() {
           if(!$scope.showLinechartPower) {
-            getLinechart('power','123sum',$scope.linechartdate.format(),$scope.tempdate.format());
+            getLinechart('power','123',$scope.linechartdate.format(),$scope.tempdate.format());
             $scope.showLinechartPower = true;
             $scope.btnpowerline = 'btn-primary';
           } else {
@@ -376,7 +376,7 @@ $scope.btnpowerline = 'btn-primary';
             getLinechart('voltage','123',$scope.linechartdate.format(),$scope.tempdate.format());
           }
           if ($scope.showLinechartPower) {
-            getLinechart('power','123sum',$scope.linechartdate.format(),$scope.tempdate.format());
+            getLinechart('power','123',$scope.linechartdate.format(),$scope.tempdate.format());
           }
 
           $scope.disabledayremovebutton = true;
@@ -412,7 +412,7 @@ $scope.btnpowerline = 'btn-primary';
             getLinechart('voltage','123',$scope.linechartdate.format(),$scope.tempdate.format());
           }
           if ($scope.showLinechartPower) {
-            getLinechart('power','123sum',$scope.linechartdate.format(),$scope.tempdate.format());
+            getLinechart('power','123',$scope.linechartdate.format(),$scope.tempdate.format());
           }
 
           $scope.disabledayremovebutton = true;
@@ -444,7 +444,7 @@ $scope.btnpowerline = 'btn-primary';
             getLinechart('voltage','123',$scope.linechartdate.format(),$scope.tempdate.format());
           }
           if ($scope.showLinechartPower) {
-            getLinechart('power','123sum',$scope.linechartdate.format(),$scope.tempdate.format());
+            getLinechart('power','123',$scope.linechartdate.format(),$scope.tempdate.format());
           }
 
           $scope.disabledayremovebutton = false;
@@ -474,7 +474,7 @@ $scope.btnpowerline = 'btn-primary';
             getLinechart('voltage','123',$scope.linechartdate.format(),$scope.tempdate.format());
           }
           if ($scope.showLinechartPower) {
-            getLinechart('power','123sum',$scope.linechartdate.format(),$scope.tempdate.format());
+            getLinechart('power','123',$scope.linechartdate.format(),$scope.tempdate.format());
           }
 
           if ($scope.linechartdate.isSame(new Date(), "day")) {

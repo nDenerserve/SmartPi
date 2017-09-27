@@ -33,13 +33,14 @@ package smartpi
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
 	"log"
 	"math"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 var Configfile string
@@ -93,6 +94,10 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if strings.Contains(phaseId, "sum") {
+		export = append(export, valueId+"_sum")
+	}
+
 	fmt.Println("ReadChartData " + config.DatabaseDir + " " + start.Format(time.RFC3339) + " " + end.Format(time.RFC3339))
 
 	data := ReadChartData(config.DatabaseDir, start, end)
@@ -126,6 +131,8 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 				val = dataelement.Power_2
 			case "power_3":
 				val = dataelement.Power_3
+			case "power_sum":
+				val = dataelement.Power_1 + dataelement.Power_2 + dataelement.Power_3
 			case "cosphi_1":
 				val = dataelement.Cosphi_1
 			case "cosphi_2":
@@ -218,6 +225,10 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if strings.Contains(phaseId, "sum") {
+		export = append(export, valueId+"_sum")
+	}
+
 	fmt.Println("ReadDayData " + config.DatabaseDir + " " + start.Format(time.RFC3339) + " " + end.Format(time.RFC3339) + " |" + start.Location().String() + "|| " + start.Local().String())
 
 	data := ReadDayData(config.DatabaseDir, start, end)
@@ -252,6 +263,8 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 				val = dataelement.Power_2
 			case "power_3":
 				val = dataelement.Power_3
+			case "power_sum":
+				val = dataelement.Power_1 + dataelement.Power_2 + dataelement.Power_3
 			case "cosphi_1":
 				val = dataelement.Cosphi_1
 			case "cosphi_2":
