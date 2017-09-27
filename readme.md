@@ -17,7 +17,7 @@ Download https://github.com/openenergymonitor/emonpi/wiki/emonSD-pre-built-SD-ca
 
 For building SmartPi tools, additional packages are required.
 
-    sudo apt-get install librrd-dev
+    sudo apt-get install libpam0g-dev
 
 ##### Enable i2c kernel module
 
