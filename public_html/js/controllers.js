@@ -1,4 +1,4 @@
-smartpi.controller('MainCtrl', function($scope, $Momentary, $Linechart, $GetDatabaseData, $GetDayData, $interval, $GetSoftwareInformations) {
+smartpi.controller('MainCtrl', function($scope, $Momentary, $Linechart, $GetDatabaseData, $GetDayData, $interval, $GetSoftwareInformations, $mdSidenav) {
 
     $scope.toShow = "dashboard";
 
@@ -49,7 +49,12 @@ smartpi.controller('MainCtrl', function($scope, $Momentary, $Linechart, $GetData
     }, 65000);
 
 
-
+    $scope.openSidebar = function() {
+        $mdSidenav('sidebarright').open()
+    };
+    $scope.closeSidebar = function() {
+        $mdSidenav('sidebarright').close()
+    };
 
     $scope.show = function(toShow) {
         if (toShow == "chart") {

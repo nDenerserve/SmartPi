@@ -7,7 +7,6 @@
     <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="css/reset.css">
     <!-- CSS reset -->
-    <link rel="stylesheet" href="vendor/bootstrap/css/bootstrap.min.css" />
     <link rel="stylesheet" href="vendor/font-awesome/css/font-awesome.min.css" />
     <link href="vendor/metisMenu/metisMenu.min.css" rel="stylesheet">
     <!-- MetisMenu CSS -->
@@ -67,6 +66,7 @@
     </script>
     <!--<script src="js/controllers.js?v=1"></script>-->
     <script>
+        <!-- <link rel="stylesheet" href="vendor/bootstrap/css/bootstrap.min.css" /> -->
         document.write("<script type='text/javascript' src='js/controllers.js?v=" + Date.now() + "'><\/script>");
     </script>
     <title>SmartPi Dashboard</title>
@@ -76,7 +76,7 @@
     <header>
         <nav class="cd-stretchy-nav">
             <a class="cd-nav-trigger" href="#0">
-            Menu
+
             <span aria-hidden="true"></span>
             </a>
             <ul>
@@ -96,32 +96,29 @@
     <md-content class="md-default-theme">
         <div class="md-toolbar-tools">
             <span flex></span>
-            <div>
+            <div hide show-gt-sm>
                 <img src="img/enerserve.png" alt="enerserve logo" height="52">
                 <br>
                 <span style="font-size: small;">Version: {{softwareversion}}</span>
+            </div>
+            <div show hide-gt-sm>
+                <md-button ng-click="openSidebar()" class="md-fab md-primary" aria-label="Graph Menu" hide-gt-sm>
+                    <md-icon md-svg-src="img/icons/ic_menu_24px.svg"></md-icon>
+                </md-button>
             </div>
         </div>
         </md-toolbar>
         <div flex="66">
             <section layout="row">
-                <md-sidenav class="md-sidenav-left" md-component-id="left" md-is-locked-open="$mdMedia('gt-md')" md-whiteframe="4">
-                    <md-toolbar class="md-theme-indigo">
-                        <h1 class="md-toolbar-tools">Graph</h1>
-                    </md-toolbar>
-                    <md-content layout-padding="" layout="column" layout-align="start start">
-                        <md-button ng-click="show('dashboard')" class="md-primary">Dashboard</md-button>
-                        <md-button ng-click="show('chart')" class="md-primary">Chart</md-button>
-                    </md-content>
-                </md-sidenav>
+
                 <md-content flex>
 
 
                     <div ng-switch="toShow">
                         <div ng-switch-when="dashboard">
 
-                            <div layout="row" layout-wrap>
-                                <div flex="50">
+                            <div layout="row" layout-wrap layout-sm="column">
+                                <div flex>
                                     <md-card class="md-default-theme" style="margin-top: 0px;">
                                         <md-toolbar layout="row">
                                             <div class="md-toolbar-tools">
@@ -154,7 +151,7 @@
                                             </div>
                                         </div>
                                 </div>
-                                <div flex="50">
+                                <div flex>
                                     <md-card class="md-default-theme" style="margin-top: 0px;">
                                         <md-toolbar layout="row">
                                             <div class="md-toolbar-tools">
@@ -268,7 +265,25 @@
                     </div>
 
 
+
+
                 </md-content>
+
+                <md-sidenav class="md-sidenav-right" md-component-id="sidebarright" md-is-locked-open="$mdMedia('gt-sm')" md-whiteframe="4">
+                    <md-toolbar class="md-theme-indigo">
+                        <div layout="row">
+                            <h1 class="md-toolbar-tools">Graph</h1>
+                            <span flex></span>
+                            <md-icon ng-click="closeSidebar()" md-svg-src="img/icons/ic_close_48px.svg" aria-label="Cart"></md-icon>
+                        </div>
+                    </md-toolbar>
+                    <md-content layout-padding="" layout="column" layout-align="start start">
+                        <md-button style="text-align:left" ng-click="show('dashboard')" class="md-primary">Dashboard</md-button>
+                        <md-button style="text-align:left" ng-click="show('chart')" class="md-primary">Chart</md-button>
+
+                    </md-content>
+                </md-sidenav>
+
             </section>
         </div>
     </md-content>
