@@ -33,6 +33,12 @@
 			"revisionTime": "2017-01-03T08:10:50Z"
 		},
 		{
+			"checksumSHA1": "x2Km0Qy3WgJJnV19Zv25VwTJcBM=",
+			"path": "github.com/fsnotify/fsnotify",
+			"revision": "4da3e2cfbabc9f751898f250b49f2439785783a1",
+			"revisionTime": "2017-03-29T04:21:07Z"
+		},
+		{
 			"checksumSHA1": "kBeNcaKk56FguvPSUCEaH6AxpRc=",
 			"path": "github.com/golang/protobuf/proto",
 			"revision": "c9c7427a2a70d2eb3bafa0ab2dc163e45f143317",
@@ -157,6 +163,12 @@
 			"path": "golang.org/x/net/websocket",
 			"revision": "40d3034e575b6eafbca34e64224da61de35ae04c",
 			"revisionTime": "2016-11-01T21:56:08Z"
+		},
+		{
+			"checksumSHA1": "kR/wjQqZuhwnPZgVG6RIj9SFChU=",
+			"path": "golang.org/x/sys",
+			"revision": "ebfc5b4631820b793c9010c87fd8fef0f39eb082",
+			"revisionTime": "2017-10-06T15:06:24Z"
 		},
 		{
 			"checksumSHA1": "To5eWGIjHQcw3pQ0N1uFepqaxmE=",
