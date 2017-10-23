@@ -1,5 +1,7 @@
 smartpi.controller('MainCtrl', function($scope, $Momentary, $Linechart, $GetDatabaseData, $GetDayData, $interval, $GetSoftwareInformations, $mdSidenav) {
 
+    $scope.nodelocation = window.location.protocol + '//' + window.location.hostname + ':1880';
+
     $scope.toShow = "dashboard";
 
 

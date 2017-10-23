@@ -1,5 +1,7 @@
 smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, UserData, $GetConfigData, $SetConfigData, $GetUserData, $GetSoftwareInformations) {
 
+        $scope.nodelocation = window.location.protocol + '//' + window.location.hostname + ':1880';
+
         $scope.smartpi = {};
         $scope.smartpi.location = {};
 

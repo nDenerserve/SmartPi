@@ -1,6 +1,6 @@
 smartpi.controller('MainCtrl', function($scope, $Momentary, $http, $interval, FileSaver, Blob, $GetSoftwareInformations){
 
-
+  $scope.nodelocation = window.location.protocol + '//' + window.location.hostname + ':1880';
 
 
   $scope.startDate = moment().startOf('day').toDate();
