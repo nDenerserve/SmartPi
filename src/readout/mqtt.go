@@ -15,7 +15,7 @@ func newMQTTClient(c *smartpi.Config) (mqttclient MQTT.Client) {
 	log.Debugf("Connecting to MQTT broker at %s", (c.MQTTbroker + ":" + c.MQTTbrokerport))
 	//create a MQTTClientOptions struct setting the broker address, clientid, user and password
 	opts := MQTT.NewClientOptions().AddBroker("tcp://" + c.MQTTbroker + ":" + c.MQTTbrokerport)
-	opts.SetClientID("SmartPi")
+	opts.SetClientID(c.Config)
 	opts.SetUsername(c.MQTTuser)
 	opts.SetPassword(c.MQTTpass)
 	opts.SetAutoReconnect(true)
