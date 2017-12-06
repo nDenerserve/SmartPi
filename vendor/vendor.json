@@ -143,26 +143,26 @@
 		{
 			"checksumSHA1": "cdQmT5TaSM6NcsOZ3kqQ+K32KYY=",
 			"path": "golang.org/x/exp/io/i2c",
-			"revision": "d4689a43552e1860762018feebe0ccf6a290980e",
-			"revisionTime": "2016-10-26T05:02:10Z"
+			"revision": "a05f2c1e93dc0743a12c519ef35f386b8c095d91",
+			"revisionTime": "2017-11-26T13:25:32Z"
 		},
 		{
 			"checksumSHA1": "dJnnn8GW7JBnsCMTia/EsCWM7sE=",
 			"path": "golang.org/x/exp/io/i2c/driver",
-			"revision": "d4689a43552e1860762018feebe0ccf6a290980e",
-			"revisionTime": "2016-10-26T05:02:10Z"
+			"revision": "a05f2c1e93dc0743a12c519ef35f386b8c095d91",
+			"revisionTime": "2017-11-26T13:25:32Z"
 		},
 		{
-			"checksumSHA1": "9jjO5GjLa0XF/nfWihF02RoH4qc=",
+			"checksumSHA1": "GtamqiJoL7PGHsN454AoffBFMa8=",
 			"path": "golang.org/x/net/context",
-			"revision": "40d3034e575b6eafbca34e64224da61de35ae04c",
-			"revisionTime": "2016-11-01T21:56:08Z"
+			"revision": "a8b9294777976932365dabb6640cf1468d95c70f",
+			"revisionTime": "2017-11-29T19:21:16Z"
 		},
 		{
-			"checksumSHA1": "O2sws+miRriMPObINsbwa0jnXxE=",
+			"checksumSHA1": "7EZyXN0EmZLgGxZxK01IJua4c8o=",
 			"path": "golang.org/x/net/websocket",
-			"revision": "40d3034e575b6eafbca34e64224da61de35ae04c",
-			"revisionTime": "2016-11-01T21:56:08Z"
+			"revision": "a8b9294777976932365dabb6640cf1468d95c70f",
+			"revisionTime": "2017-11-29T19:21:16Z"
 		},
 		{
 			"checksumSHA1": "kR/wjQqZuhwnPZgVG6RIj9SFChU=",
@@ -171,10 +171,10 @@
 			"revisionTime": "2017-10-06T15:06:24Z"
 		},
 		{
-			"checksumSHA1": "To5eWGIjHQcw3pQ0N1uFepqaxmE=",
+			"checksumSHA1": "DsCMhn2brLPL1B56SJkykedW7jE=",
 			"path": "golang.org/x/sys/unix",
-			"revision": "739734461d1c916b6c72a63d7efda2b27edb369f",
-			"revisionTime": "2017-07-07T11:51:12Z"
+			"revision": "9167dbfd0f8e88b731dd88cbf73a270701a37bb4",
+			"revisionTime": "2017-12-06T08:53:10Z"
 		},
 		{
 			"checksumSHA1": "YRD335tkMvgHzkfbfveMUpsE3Bw=",
