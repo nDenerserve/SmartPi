@@ -15,16 +15,20 @@
 			"revisionTime": "2016-08-04T10:47:26Z"
 		},
 		{
-			"checksumSHA1": "PzqUa3HAaeyzDw87wACb15/tMkI=",
+			"checksumSHA1": "8b9glpyYcuJQI9PDc94aM4S3vv0=",
 			"path": "github.com/eclipse/paho.mqtt.golang",
-			"revision": "c37a0a275c2de30bf1c7eb072dd6bef09a93c666",
-			"revisionTime": "2017-04-13T21:40:49Z"
+			"revision": "aff15770515e3c57fc6109da73d42b0d46f7f483",
+			"revisionTime": "2017-08-01T15:01:06Z",
+			"version": "v1.1.0",
+			"versionExact": "v1.1.0"
 		},
 		{
-			"checksumSHA1": "wPreCwXsA/oU2R+lkOGpR6skdA0=",
+			"checksumSHA1": "IspH3LxM+IUGQ/umxdSwLxj2oVw=",
 			"path": "github.com/eclipse/paho.mqtt.golang/packets",
-			"revision": "c37a0a275c2de30bf1c7eb072dd6bef09a93c666",
-			"revisionTime": "2017-04-13T21:40:49Z"
+			"revision": "aff15770515e3c57fc6109da73d42b0d46f7f483",
+			"revisionTime": "2017-08-01T15:01:06Z",
+			"version": "v1.1.0",
+			"versionExact": "v1.1.0"
 		},
 		{
 			"checksumSHA1": "40Ns85VYa4smQPcewZ7SOdfLnKU=",
@@ -155,6 +159,12 @@
 		{
 			"checksumSHA1": "GtamqiJoL7PGHsN454AoffBFMa8=",
 			"path": "golang.org/x/net/context",
+			"revision": "a8b9294777976932365dabb6640cf1468d95c70f",
+			"revisionTime": "2017-11-29T19:21:16Z"
+		},
+		{
+			"checksumSHA1": "r9l4r3H6FOLQ0c2JaoXpopFjpnw=",
+			"path": "golang.org/x/net/proxy",
 			"revision": "a8b9294777976932365dabb6640cf1468d95c70f",
 			"revisionTime": "2017-11-29T19:21:16Z"
 		},
