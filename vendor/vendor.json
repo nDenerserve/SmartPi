@@ -34,7 +34,9 @@
 			"checksumSHA1": "40Ns85VYa4smQPcewZ7SOdfLnKU=",
 			"path": "github.com/fatih/structs",
 			"revision": "a720dfa8df582c51dee1b36feabb906bde1588bd",
-			"revisionTime": "2017-01-03T08:10:50Z"
+			"revisionTime": "2017-01-03T08:10:50Z",
+			"version": "v1.0.0",
+			"versionExact": "v1.0.0"
 		},
 		{
 			"checksumSHA1": "x2Km0Qy3WgJJnV19Zv25VwTJcBM=",
