@@ -15,34 +15,34 @@
 			"revisionTime": "2016-08-04T10:47:26Z"
 		},
 		{
-			"checksumSHA1": "PzqUa3HAaeyzDw87wACb15/tMkI=",
+			"checksumSHA1": "8b9glpyYcuJQI9PDc94aM4S3vv0=",
 			"path": "github.com/eclipse/paho.mqtt.golang",
-			"revision": "c37a0a275c2de30bf1c7eb072dd6bef09a93c666",
-			"revisionTime": "2017-04-13T21:40:49Z"
+			"revision": "aff15770515e3c57fc6109da73d42b0d46f7f483",
+			"revisionTime": "2017-08-01T15:01:06Z",
+			"version": "v1.1.0",
+			"versionExact": "v1.1.0"
 		},
 		{
-			"checksumSHA1": "wPreCwXsA/oU2R+lkOGpR6skdA0=",
+			"checksumSHA1": "IspH3LxM+IUGQ/umxdSwLxj2oVw=",
 			"path": "github.com/eclipse/paho.mqtt.golang/packets",
-			"revision": "c37a0a275c2de30bf1c7eb072dd6bef09a93c666",
-			"revisionTime": "2017-04-13T21:40:49Z"
+			"revision": "aff15770515e3c57fc6109da73d42b0d46f7f483",
+			"revisionTime": "2017-08-01T15:01:06Z",
+			"version": "v1.1.0",
+			"versionExact": "v1.1.0"
 		},
 		{
 			"checksumSHA1": "40Ns85VYa4smQPcewZ7SOdfLnKU=",
 			"path": "github.com/fatih/structs",
 			"revision": "a720dfa8df582c51dee1b36feabb906bde1588bd",
-			"revisionTime": "2017-01-03T08:10:50Z"
+			"revisionTime": "2017-01-03T08:10:50Z",
+			"version": "v1.0.0",
+			"versionExact": "v1.0.0"
 		},
 		{
-			"checksumSHA1": "x2Km0Qy3WgJJnV19Zv25VwTJcBM=",
-			"path": "github.com/fsnotify/fsnotify",
-			"revision": "4da3e2cfbabc9f751898f250b49f2439785783a1",
-			"revisionTime": "2017-03-29T04:21:07Z"
-		},
-		{
-			"checksumSHA1": "kBeNcaKk56FguvPSUCEaH6AxpRc=",
+			"checksumSHA1": "yqF125xVSkmfLpIVGrLlfE05IUk=",
 			"path": "github.com/golang/protobuf/proto",
-			"revision": "c9c7427a2a70d2eb3bafa0ab2dc163e45f143317",
-			"revisionTime": "2017-03-07T00:15:33Z"
+			"revision": "1e59b77b52bf8e4b449a57e6f79f21226d571845",
+			"revisionTime": "2017-11-13T18:07:20Z"
 		},
 		{
 			"checksumSHA1": "g/V4qrXjUGG9B+e3hB+4NAYJ5Gs=",
@@ -51,22 +51,28 @@
 			"revisionTime": "2016-08-17T18:46:32Z"
 		},
 		{
-			"checksumSHA1": "zmCk+lgIeiOf0Ng9aFP9aFy8ksE=",
+			"checksumSHA1": "hUTpkQKTPpTUll9JmFj9NyQ+wjs=",
 			"path": "github.com/gorilla/mux",
-			"revision": "599cba5e7b6137d46ddf58fb1765f5d928e69604",
-			"revisionTime": "2017-02-28T22:43:54Z"
+			"revision": "7f08801859139f86dfafd1c296e2cba9a80d292e",
+			"revisionTime": "2017-11-05T17:23:20Z",
+			"version": "v1.6.0",
+			"versionExact": "v1.6.0"
 		},
 		{
-			"checksumSHA1": "6ZV/m7lRaCJMopHqHHjmcOy9s2A=",
+			"checksumSHA1": "RMW0+Tz7M7mMQKXWpn4H1v+f5MY=",
 			"path": "github.com/mattn/go-sqlite3",
-			"revision": "cf7286f069c3ef596efcc87781a4653a2e7607bd",
-			"revisionTime": "2017-04-07T15:46:27Z"
+			"revision": "ed69081a91fd053f17672236b0dd52ba7485e1a3",
+			"revisionTime": "2017-11-14T08:56:34Z",
+			"version": "v1.4.0",
+			"versionExact": "v1.4.0"
 		},
 		{
-			"checksumSHA1": "bKMZjd2wPw13VwoE7mBeSv5djFA=",
+			"checksumSHA1": "aodj/cITRyuaZSh84DDhrZjh76U=",
 			"path": "github.com/matttproud/golang_protobuf_extensions/pbutil",
-			"revision": "c12348ce28de40eed0136aa2b644d0ee0650e56c",
-			"revisionTime": "2016-04-24T11:30:07Z"
+			"revision": "3247c84500bff8d9fb6d579d800f20b3e091582c",
+			"revisionTime": "2016-04-23T17:36:17Z",
+			"version": "v1.0.0",
+			"versionExact": "v1.0.0"
 		},
 		{
 			"checksumSHA1": "lfOuMiAdiqc/dalUSBTvD5ZMSzA=",
@@ -87,10 +93,10 @@
 			"revisionTime": "2016-08-17T07:03:35Z"
 		},
 		{
-			"checksumSHA1": "XsTWgEVHkRZ4xSvUYZ7ECXbfA8E=",
+			"checksumSHA1": "hu0MsbTdFzZxNRyAxe2HmTFFFak=",
 			"path": "github.com/prometheus/client_golang/prometheus",
-			"revision": "738ed6c0b9b30ec936d4b74c1600ae76324efff5",
-			"revisionTime": "2017-03-22T13:40:44Z"
+			"revision": "661e31bf844dfca9aeba15f27ea8aa0d485ad212",
+			"revisionTime": "2017-12-01T12:22:22Z"
 		},
 		{
 			"checksumSHA1": "DvwvOlPNAgRntBzt3b3OSRMS2N4=",
@@ -99,70 +105,76 @@
 			"revisionTime": "2017-02-16T18:52:47Z"
 		},
 		{
-			"checksumSHA1": "Wtpzndm/+bdwwNU5PCTfb4oUhc8=",
+			"checksumSHA1": "xfnn0THnqNwjwimeTClsxahYrIo=",
 			"path": "github.com/prometheus/common/expfmt",
-			"revision": "49fee292b27bfff7f354ee0f64e1bc4850462edf",
-			"revisionTime": "2017-02-20T10:38:46Z"
+			"revision": "2e54d0b93cba2fd133edc32211dcc32c06ef72ca",
+			"revisionTime": "2017-11-17T16:30:51Z"
 		},
 		{
 			"checksumSHA1": "GWlM3d2vPYyNATtTFgftS10/A9w=",
 			"path": "github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg",
-			"revision": "49fee292b27bfff7f354ee0f64e1bc4850462edf",
-			"revisionTime": "2017-02-20T10:38:46Z"
+			"revision": "2e54d0b93cba2fd133edc32211dcc32c06ef72ca",
+			"revisionTime": "2017-11-17T16:30:51Z"
 		},
 		{
-			"checksumSHA1": "0LL9u9tfv1KPBjNEiMDP6q7lpog=",
+			"checksumSHA1": "YU+/K48IMawQnToO4ETE6a+hhj4=",
 			"path": "github.com/prometheus/common/model",
-			"revision": "49fee292b27bfff7f354ee0f64e1bc4850462edf",
-			"revisionTime": "2017-02-20T10:38:46Z"
+			"revision": "2e54d0b93cba2fd133edc32211dcc32c06ef72ca",
+			"revisionTime": "2017-11-17T16:30:51Z"
 		},
 		{
 			"checksumSHA1": "91KYK0SpvkaMJJA2+BcxbVnyRO0=",
 			"path": "github.com/prometheus/common/version",
-			"revision": "49fee292b27bfff7f354ee0f64e1bc4850462edf",
-			"revisionTime": "2017-02-20T10:38:46Z"
+			"revision": "2e54d0b93cba2fd133edc32211dcc32c06ef72ca",
+			"revisionTime": "2017-11-17T16:30:51Z"
 		},
 		{
-			"checksumSHA1": "dA8hiwcAbubYRxTnpocR5VZkqAY=",
+			"checksumSHA1": "pW1yt1G1J9jnQMCxr1TDI7LQr3s=",
 			"path": "github.com/prometheus/procfs",
-			"revision": "6ac8c5d890d415025dd5aae7595bcb2a6e7e2fad",
-			"revisionTime": "2017-04-24T20:45:52Z"
+			"revision": "a6e9df898b1336106c743392c48ee0b71f5c4efa",
+			"revisionTime": "2017-10-17T21:40:25Z"
 		},
 		{
 			"checksumSHA1": "xCiFAAwVTrjsfZT1BIJQ3DgeNCY=",
 			"path": "github.com/prometheus/procfs/xfs",
-			"revision": "6ac8c5d890d415025dd5aae7595bcb2a6e7e2fad",
-			"revisionTime": "2017-04-24T20:45:52Z"
+			"revision": "a6e9df898b1336106c743392c48ee0b71f5c4efa",
+			"revisionTime": "2017-10-17T21:40:25Z"
 		},
 		{
-			"checksumSHA1": "2Lgy7iHdKVQCPPxdZ9T1gPOm2r0=",
+			"checksumSHA1": "m/cvF5dvlye++MIRQbq2yL47miI=",
 			"path": "github.com/secsy/goftp",
-			"revision": "848bd83f73185175b43f6093f1639af3b463b889",
-			"revisionTime": "2016-02-21T17:19:53Z"
+			"revision": "503caa01c039d70e4597a23cf5c663cc1d8a53b6",
+			"revisionTime": "2017-07-29T07:34:33Z"
 		},
 		{
 			"checksumSHA1": "cdQmT5TaSM6NcsOZ3kqQ+K32KYY=",
 			"path": "golang.org/x/exp/io/i2c",
-			"revision": "d4689a43552e1860762018feebe0ccf6a290980e",
-			"revisionTime": "2016-10-26T05:02:10Z"
+			"revision": "a05f2c1e93dc0743a12c519ef35f386b8c095d91",
+			"revisionTime": "2017-11-26T13:25:32Z"
 		},
 		{
 			"checksumSHA1": "dJnnn8GW7JBnsCMTia/EsCWM7sE=",
 			"path": "golang.org/x/exp/io/i2c/driver",
-			"revision": "d4689a43552e1860762018feebe0ccf6a290980e",
-			"revisionTime": "2016-10-26T05:02:10Z"
+			"revision": "a05f2c1e93dc0743a12c519ef35f386b8c095d91",
+			"revisionTime": "2017-11-26T13:25:32Z"
 		},
 		{
-			"checksumSHA1": "9jjO5GjLa0XF/nfWihF02RoH4qc=",
+			"checksumSHA1": "GtamqiJoL7PGHsN454AoffBFMa8=",
 			"path": "golang.org/x/net/context",
-			"revision": "40d3034e575b6eafbca34e64224da61de35ae04c",
-			"revisionTime": "2016-11-01T21:56:08Z"
+			"revision": "a8b9294777976932365dabb6640cf1468d95c70f",
+			"revisionTime": "2017-11-29T19:21:16Z"
 		},
 		{
-			"checksumSHA1": "O2sws+miRriMPObINsbwa0jnXxE=",
+			"checksumSHA1": "r9l4r3H6FOLQ0c2JaoXpopFjpnw=",
+			"path": "golang.org/x/net/proxy",
+			"revision": "a8b9294777976932365dabb6640cf1468d95c70f",
+			"revisionTime": "2017-11-29T19:21:16Z"
+		},
+		{
+			"checksumSHA1": "7EZyXN0EmZLgGxZxK01IJua4c8o=",
 			"path": "golang.org/x/net/websocket",
-			"revision": "40d3034e575b6eafbca34e64224da61de35ae04c",
-			"revisionTime": "2016-11-01T21:56:08Z"
+			"revision": "a8b9294777976932365dabb6640cf1468d95c70f",
+			"revisionTime": "2017-11-29T19:21:16Z"
 		},
 		{
 			"checksumSHA1": "kR/wjQqZuhwnPZgVG6RIj9SFChU=",
@@ -171,16 +183,16 @@
 			"revisionTime": "2017-10-06T15:06:24Z"
 		},
 		{
-			"checksumSHA1": "To5eWGIjHQcw3pQ0N1uFepqaxmE=",
+			"checksumSHA1": "DsCMhn2brLPL1B56SJkykedW7jE=",
 			"path": "golang.org/x/sys/unix",
-			"revision": "739734461d1c916b6c72a63d7efda2b27edb369f",
-			"revisionTime": "2017-07-07T11:51:12Z"
+			"revision": "9167dbfd0f8e88b731dd88cbf73a270701a37bb4",
+			"revisionTime": "2017-12-06T08:53:10Z"
 		},
 		{
-			"checksumSHA1": "YRD335tkMvgHzkfbfveMUpsE3Bw=",
+			"checksumSHA1": "P4LsadWqFYNCs98XRAiacey3q1U=",
 			"path": "gopkg.in/ini.v1",
-			"revision": "6e4869b434bd001f6983749881c7ead3545887d8",
-			"revisionTime": "2016-08-27T06:11:18Z"
+			"revision": "32e4c1e6bc4e7d0d8451aa6b75200d19e37a536a",
+			"revisionTime": "2017-11-19T05:34:21Z"
 		}
 	],
 	"rootPath": "github.com/nDenerserve/SmartPi"
