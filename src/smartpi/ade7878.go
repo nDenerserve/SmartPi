@@ -245,13 +245,15 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 	}
 
 	// 0x4383 (BVGAIN-REGISTER)
-	err = WriteRegister(d, "BVGAIN", 0xFF, 0xFB, 0xCA, 0x60)
+	// err = WriteRegister(d, "BVGAIN", 0xFF, 0xFB, 0xCA, 0x60)
+	err = WriteRegister(d, "BVGAIN", 0xFF, 0xFC, 0x1C, 0xC2)
 	if err != nil {
 		panic(err)
 	}
 
 	// 0x4385 (CVGAIN-REGISTER)
-	err = WriteRegister(d, "CVGAIN", 0xFF, 0xFC, 0x12, 0xDE)
+	//err = WriteRegister(d, "CVGAIN", 0xFF, 0xFC, 0x12, 0xDE)
+	err = WriteRegister(d, "CVGAIN", 0xFF, 0xFC, 0x1C, 0xC2)
 	if err != nil {
 		panic(err)
 	}
