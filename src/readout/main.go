@@ -39,6 +39,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"golang.org/x/exp/io/i2c"
 
+	"github.com/fsnotify/fsnotify"
+
 	//import the Paho Go MQTT library
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 
@@ -128,6 +130,40 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 	}
 }
 
+
+func configWatcher(config *smartpi.Config) {
+	log.Debug("Start SmartPi watcher")
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer watcher.Close()
+	log.Debug("init done 1")
+	done := make(chan bool)
+	go func() {
+		for {
+			select {
+			case event := <-watcher.Events:
+				log.Println("event:", event)
+				if event.Op&fsnotify.Write == fsnotify.Write {
+					log.Println("modified file:", event.Name)
+					config.ReadParameterFromFile()
+				}
+			case err := <-watcher.Errors:
+				log.Println("error:", err)
+			}
+		}
+	}()
+
+	log.Debug("init done 2")
+	err = watcher.Add("/etc/smartpi")
+	if err != nil {
+		log.Fatal(err)
+	}
+	<-done
+	log.Debug("init done 3")
+}
+
 func init() {
 	log.SetFormatter(&log.TextFormatter{})
 	log.SetOutput(os.Stdout)
@@ -148,6 +184,8 @@ var appVersion = "No Version Provided"
 
 func main() {
 	config := smartpi.NewConfig()
+
+	go configWatcher(config)
 
 	version := flag.Bool("v", false, "prints current version information")
 	flag.Parse()

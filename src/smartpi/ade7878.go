@@ -386,9 +386,17 @@ func ReadActiveWatts(d *i2c.Device, c *Config, phase string) (watts float64) {
 		panic(fmt.Errorf("Invalid phase %q", phase))
 	}
 
+	var pcf float64
+	if c.CTType[phase] == "YHDC_SCT013" {
+		pcf = 1.0
+	} else {
+		pcf = 200.0 / (float64(c.CTTypePrimaryCurrent[phase]))
+	}
+
+
 	outcome := float64(DeviceFetchInt(d, 4, command))
 	if c.MeasureCurrent[phase] {
-		watts = outcome * CTTypes[c.CTType[phase]].PowerCorrectionFactor
+		watts = outcome * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf
 	} else {
 		watts = 0.0
 	}
@@ -412,9 +420,16 @@ func ReadActiveEnergy(d *i2c.Device, c *Config, phase string) (energy float64) {
 		panic(fmt.Errorf("Invalid phase %q", phase))
 	}
 
+		var pcf float64
+	if c.CTType[phase] == "YHDC_SCT013" {
+		pcf = 1.0
+	} else {
+		pcf = 200.0 / (float64(c.CTTypePrimaryCurrent[phase]))
+	}
+
 	outcome := float64(DeviceFetchInt(d, 4, command))
 
-	energy = outcome
+	energy = outcome / pcf
 
 	// if c.CurrentDirection[phase] {
 	// 	watts *= -1
@@ -487,8 +502,16 @@ func ReadApparentPower(d *i2c.Device, c *Config, phase string) float64 {
 		panic(fmt.Errorf("Invalid phase %q", phase))
 	}
 
+	var pcf float64
+	if c.CTType[phase] == "YHDC_SCT013" {
+		pcf = 1.0
+	} else {
+		pcf = 200.0 / (float64(c.CTTypePrimaryCurrent[phase]))
+	}
+
 	if c.MeasureCurrent[phase] {
-		return float64(DeviceFetchInt(d, 4, command))
+		outcome := float64(DeviceFetchInt(d, 4, command))
+		return outcome * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf
 	} else {
 		return 0.0
 	}
@@ -507,12 +530,21 @@ func ReadReactivePower(d *i2c.Device, c *Config, phase string) float64 {
 		panic(fmt.Errorf("Invalid phase %q", phase))
 	}
 
+
+	var pcf float64
+	if c.CTType[phase] == "YHDC_SCT013" {
+		pcf = 1.0
+	} else {
+		pcf = 200.0 / (float64(c.CTTypePrimaryCurrent[phase]))
+	}
+
 	if c.MeasureCurrent[phase] {
+		
 		outcome := float64(DeviceFetchInt(d, 4, command))
 		if c.CurrentDirection[phase] {
-			return outcome * -1
+			return outcome * -1 /pcf
 		} else {
-			return outcome
+			return outcome / pcf
 		}
 	} else {
 		return 0.0
