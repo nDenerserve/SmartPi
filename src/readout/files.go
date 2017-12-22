@@ -40,13 +40,13 @@ func writeSharedFile(c *smartpi.Config, values [28]float64) {
 			panic(err)
 		}
 	} else {
-		f, err = os.OpenFile(sharedFile, os.O_WRONLY, 0666)
+		f, err = os.OpenFile(sharedFile, os.O_WRONLY|os.O_TRUNC, 0666)
 		if err != nil {
 			panic(err)
 		}
 	}
 	defer f.Close()
-	_, err = f.WriteString(timeStamp + ";" + strings.Join(s, ";"))
+	_, err = f.WriteString(timeStamp + ";" + strings.Join(s, ";") + ";")
 	if err != nil {
 		panic(err)
 	}
