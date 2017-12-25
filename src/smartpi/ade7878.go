@@ -272,7 +272,7 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 
 	// Line cycle mode count
 	// 0xE60C LINECYC
-	err = WriteRegister(d, "LCYCMODE", 0xC8)
+	err = WriteRegister(d, "LINECYC", 0xC8)
 	if err != nil {
 		panic(err)
 	}
