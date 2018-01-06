@@ -109,7 +109,7 @@ func (p *Config) ReadParameterFromFile() {
 
 	// [base]
 	p.Serial = cfg.Section("base").Key("serial").String()
-	p.Name = cfg.Section("base").Key("name").String()
+	p.Name = cfg.Section("base").Key("name").MustString("House")
 	// Handle logging levels
 	p.LogLevel, err = log.ParseLevel(cfg.Section("base").Key("loglevel").MustString("info"))
 	if err != nil {
