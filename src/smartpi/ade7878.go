@@ -272,7 +272,7 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 
 	// Line cycle mode count
 	// 0xE60C LINECYC
-	err = WriteRegister(d, "LCYCMODE", 0xC8)
+	err = WriteRegister(d, "LINECYC", 0xC8)
 	if err != nil {
 		panic(err)
 	}
@@ -393,7 +393,6 @@ func ReadActiveWatts(d *i2c.Device, c *Config, phase string) (watts float64) {
 		pcf = 200.0 / (float64(c.CTTypePrimaryCurrent[phase]))
 	}
 
-
 	outcome := float64(DeviceFetchInt(d, 4, command))
 	if c.MeasureCurrent[phase] {
 		watts = outcome * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf
@@ -420,7 +419,7 @@ func ReadActiveEnergy(d *i2c.Device, c *Config, phase string) (energy float64) {
 		panic(fmt.Errorf("Invalid phase %q", phase))
 	}
 
-		var pcf float64
+	var pcf float64
 	if c.CTType[phase] == "YHDC_SCT013" {
 		pcf = 1.0
 	} else {
@@ -530,7 +529,6 @@ func ReadReactivePower(d *i2c.Device, c *Config, phase string) float64 {
 		panic(fmt.Errorf("Invalid phase %q", phase))
 	}
 
-
 	var pcf float64
 	if c.CTType[phase] == "YHDC_SCT013" {
 		pcf = 1.0
@@ -539,10 +537,10 @@ func ReadReactivePower(d *i2c.Device, c *Config, phase string) float64 {
 	}
 
 	if c.MeasureCurrent[phase] {
-		
+
 		outcome := float64(DeviceFetchInt(d, 4, command))
 		if c.CurrentDirection[phase] {
-			return outcome * -1 /pcf
+			return outcome * -1 / pcf
 		} else {
 			return outcome / pcf
 		}
