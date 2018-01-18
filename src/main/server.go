@@ -45,7 +45,7 @@ import (
 	// "golang.org/x/net/context"
 )
 
-type JSONError struct {
+type JSONMessage struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
@@ -118,7 +118,7 @@ func BasicAuth(realm string, handler http.HandlerFunc, c *smartpi.Config, u *sma
 			w.Header().Set("WWW-Authenticate", `Basic realm="`+realm+`"`)
 			w.WriteHeader(400)
 			// w.Write([]byte("Unauthorised.\n"))
-			if err := json.NewEncoder(w).Encode(JSONError{Code: 401, Message: "Unauthorized"}); err != nil {
+			if err := json.NewEncoder(w).Encode(JSONMessage{Code: 401, Message: "Unauthorized"}); err != nil {
 				panic(err)
 			}
 			return
@@ -174,6 +174,10 @@ func main() {
 	r.HandleFunc("/api/config/read", BasicAuth("Please enter your username and password for this site", smartpi.ReadConfig, config, user, "smartpiadmin")).Methods("GET")
 	r.HandleFunc("/api/config/write", BasicAuth("Please enter your username and password for this site", smartpi.WriteConfig, config, user, "smartpiadmin")).Methods("POST")
 	r.HandleFunc("/api/config/user/read", BasicAuth("Please enter your username and password for this site", smartpi.ReadUserData, config, user, "smartpiadmin")).Methods("GET")
+	r.HandleFunc("/api/config/network/scanwifi", BasicAuth("Please enter your username and password for this site", smartpi.WifiList, config, user, "smartpiadmin")).Methods("GET")
+	r.HandleFunc("/api/config/network/networkconnections", BasicAuth("Please enter your username and password for this site", smartpi.NetworkConnections, config, user, "smartpiadmin")).Methods("GET")
+	r.HandleFunc("/api/config/network/wifi", BasicAuth("Please enter your username and password for this site", smartpi.CreateWifi, config, user, "smartpiadmin")).Methods("POST")
+	r.HandleFunc("/api/config/network/wifi/{name}", BasicAuth("Please enter your username and password for this site", smartpi.RemoveWifi, config, user, "smartpiadmin")).Methods("DELETE")
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(config.DocRoot)))
 	http.Handle("/metrics", prometheus.Handler())
 	http.Handle("/", prometheus.InstrumentHandler("smartpi", r))

@@ -1,6 +1,5 @@
 /*
-    Copyright (C) Jens Ramhorst
-  	This file is part of SmartPi.
+	This file is part of SmartPi.
     SmartPi is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -23,53 +22,24 @@
     Sie sollten eine Kopie der GNU General Public License zusammen mit diesem
     Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>.
 */
+package network
 
-package smartpi
+import (
+	"net"
+)
 
-// import (
-//     "net/http"
-//
-//     "github.com/gorilla/mux"
-// )
-//
-// type Route struct {
-//     Name        string
-//     Method      string
-//     Pattern     string
-//     HandlerFunc http.HandlerFunc
-// }
-//
-// type Routes []Route
-//
-// func NewRouter() *mux.Router {
-//
-//     router := mux.NewRouter().StrictSlash(true)
-//     for _, route := range routes {
-//         router.
-//             Methods(route.Method).
-//             Path(route.Pattern).
-//             Name(route.Name).
-//             Handler(route.HandlerFunc)
-//     }
-//     return router
-// }
-//
-// var routes = Routes{
-//     Route{
-//         "Index",
-//         "GET",
-//         "/",
-//         ServeFiles,
-//     },
-//     Route{
-//         "ServeMomentaryValues",
-//         "GET",
-//         "/api/{phaseId}/{valueId}/now",
-//         ServeMomentaryValues,
-//     }, Route{
-//         "ServeMomentaryValues",
-//         "GET",
-//         "/api/chart/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}",
-//         ServeChartValues,
-//     },
-// }
+func GetLocalIP() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return ""
+	}
+	for _, address := range addrs {
+		// check the address type and if it is not a loopback the display it
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+		}
+	}
+	return ""
+}

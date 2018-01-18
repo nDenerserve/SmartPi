@@ -2,26 +2,22 @@ package main
 
 import (
 	"fmt"
-	"os/exec"
+	// "os/exec"
+	"github.com/nDenerserve/SmartPi/src/smartpi/network"
 )
 
 func main() {
 
-	// var param smartpi.Udhcpdparams
-	//
-	// param.Ipstart = "192.168.7.2"
-	// param.Ipend = "192.168.7.254"
-	// param.Dns = "8.8.8.8"
-	// param.Subnet = "255.255.255.0"
-	// param.Router = "192.168.7.1"
-	// param.Leasetime = 604800
-	//
-	// fmt.Println(smartpi.CreateUDHCPD(param))
+	// wifiNetworks := []smartpi.Wpa{}
 
-	var v = "192.168.0.1"
-	out, err := exec.Command("/bin/sh", "-c", "echo \"Hallo"+v+"\" > test.txt").Output()
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(out)
+	// n := smartpi.Wpa{"dev_zg_wlan", "Thorsten04041975Krakau"}
+
+	// wifiNetworks = append (wifiNetworks,n)
+	// smartpi.AddWPASupplicant(wifiNetworks)
+//  smartpi.DeleteWPASupplicant("dev_zg_wlan")
+	// fmt.Println(smartpi.ScanWIFI())
+	// smartpi.RemoveWifi("dev_zg_wlan")
+	network.AddWifi("dev_zg_wlan","dev_zg_wlan","Thorsten04041975Krakau")
+	fmt.Println(network.ListNetworkConnections())
+	// fmt.Println(smartpi.ReadWPASupplicant())
 }

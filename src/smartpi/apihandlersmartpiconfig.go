@@ -32,7 +32,7 @@ package smartpi
 
 import (
 	"fmt"
-	// "github.com/gorilla/mux"
+	"github.com/gorilla/mux"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -43,13 +43,28 @@ import (
 	"github.com/fatih/structs"
 	"github.com/gorilla/context"
 	"github.com/oleiade/reflections"
+	"github.com/nDenerserve/SmartPi/src/smartpi/network"
 )
 
+type JSONMessage struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
 type writeconfiguration struct {
 	Type string
 	Msg  interface{}
 }
-
+type wifiList struct {
+	Wifilist []network.WifiInfo `json:"wifilist"`
+}
+type networkList struct {
+	Networklist []network.NetworkInfo `json:"networklist"`
+}
+type wifiSettings struct {
+	Name string `json:"name"`
+	Ssid string `json:"ssid"`
+	Key string `json:"key"`
+}
 func ReadConfig(w http.ResponseWriter, r *http.Request) {
 	// vars := mux.Vars(r)
 	// name := vars["name"]
@@ -59,12 +74,6 @@ func ReadConfig(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(configuration.(*Config)); err != nil {
 		panic(err)
 	}
-
-	// if configuration := r.Context().Value("Config"); configuration != nil {
-	// 	if err := json.NewEncoder(w).Encode(configuration.(*Config)); err != nil {
-	// 		panic(err)
-	// 	}
-	// }
 }
 
 func WriteConfig(w http.ResponseWriter, r *http.Request) {
@@ -235,6 +244,87 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 	configuration.(*Config).SaveParameterToFile()
 	// }
 }
+
+
+func WifiList(w http.ResponseWriter, r *http.Request) {
+	// vars := mux.Vars(r)
+	// name := vars["name"]
+
+	wifi, err := network.ScanWifi()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := json.NewEncoder(w).Encode(wifiList {Wifilist: wifi}); err != nil {
+		panic(err)
+	}
+
+}
+
+func NetworkConnections(w http.ResponseWriter, r *http.Request) {
+	// vars := mux.Vars(r)
+	// name := vars["name"]
+
+	network, err := network.ListNetworkConnections()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := json.NewEncoder(w).Encode(networkList {Networklist: network}); err != nil {
+		panic(err)
+	}
+}
+
+func CreateWifi(w http.ResponseWriter, r *http.Request) {
+
+	var ws wifiSettings
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&ws)
+
+	if err != nil {
+		log.Fatal(err)
+		if err = json.NewEncoder(w).Encode(JSONMessage{Code: 400, Message: "Bad Request"}); err != nil {
+			panic(err)
+		}
+		return
+	}
+
+	err = network.AddWifi(ws.Ssid, ws.Name, ws.Key)
+	if err != nil {
+		log.Fatal(err)
+		if err := json.NewEncoder(w).Encode(JSONMessage{Code: 500, Message: "Internal Server Error"}); err != nil {
+				panic(err)
+			}
+			return
+	}
+
+	if err := json.NewEncoder(w).Encode(JSONMessage{Code: 200, Message: "Ok"}); err != nil {
+		panic(err)
+	}
+}
+
+func RemoveWifi(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+    name := vars["name"]
+
+
+	err := network.RemoveWifi(name)
+	if err != nil {
+		log.Fatal(err)
+		if err := json.NewEncoder(w).Encode(JSONMessage{Code: 500, Message: "Internal Server Error"}); err != nil {
+				panic(err)
+			}
+			return
+	}
+
+	if err := json.NewEncoder(w).Encode(JSONMessage{Code: 200, Message: "Ok"}); err != nil {
+		panic(err)
+	}
+
+}
+
 
 func b2i(b bool) int {
 	if b {

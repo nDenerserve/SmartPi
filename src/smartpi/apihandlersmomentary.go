@@ -39,8 +39,8 @@ import (
 	"os"
 	"strconv"
 	"time"
-
 	"github.com/gorilla/mux"
+	"github.com/nDenerserve/SmartPi/src/smartpi/network"
 )
 
 func Index(w http.ResponseWriter, r *http.Request) {
@@ -376,7 +376,7 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 		Lng:             config.Lng,
 		Time:            t.Format("2006-01-02 15:04:05"),
 		Softwareversion: "",
-		Ipaddress:       GetLocalIP(),
+		Ipaddress:       network.GetLocalIP(),
 		Datasets:        datasets,
 	}
 

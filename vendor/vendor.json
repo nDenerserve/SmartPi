@@ -39,6 +39,12 @@
 			"versionExact": "v1.0.0"
 		},
 		{
+			"checksumSHA1": "x2Km0Qy3WgJJnV19Zv25VwTJcBM=",
+			"path": "github.com/fsnotify/fsnotify",
+			"revision": "4da3e2cfbabc9f751898f250b49f2439785783a1",
+			"revisionTime": "2017-03-29T04:21:07Z"
+		},
+		{
 			"checksumSHA1": "yqF125xVSkmfLpIVGrLlfE05IUk=",
 			"path": "github.com/golang/protobuf/proto",
 			"revision": "1e59b77b52bf8e4b449a57e6f79f21226d571845",
@@ -193,6 +199,12 @@
 			"path": "gopkg.in/ini.v1",
 			"revision": "32e4c1e6bc4e7d0d8451aa6b75200d19e37a536a",
 			"revisionTime": "2017-11-19T05:34:21Z"
+		},
+		{
+			"checksumSHA1": "JrA0TsyzZL4UiWtVsvd0Fx2NgFw=",
+			"path": "pifke.org/wpasupplicant",
+			"revision": "d8b63b5cd99002c46f8ea6897084f069ba138738",
+			"revisionTime": "2017-12-20T23:41:24Z"
 		}
 	],
 	"rootPath": "github.com/nDenerserve/SmartPi"
