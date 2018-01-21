@@ -157,32 +157,32 @@
 		{
 			"checksumSHA1": "cdQmT5TaSM6NcsOZ3kqQ+K32KYY=",
 			"path": "golang.org/x/exp/io/i2c",
-			"revision": "a05f2c1e93dc0743a12c519ef35f386b8c095d91",
-			"revisionTime": "2017-11-26T13:25:32Z"
+			"revision": "072991165226c11c888c881218850e8318c2b32e",
+			"revisionTime": "2016-10-23T06:49:24Z"
 		},
 		{
 			"checksumSHA1": "dJnnn8GW7JBnsCMTia/EsCWM7sE=",
 			"path": "golang.org/x/exp/io/i2c/driver",
-			"revision": "a05f2c1e93dc0743a12c519ef35f386b8c095d91",
-			"revisionTime": "2017-11-26T13:25:32Z"
+			"revision": "072991165226c11c888c881218850e8318c2b32e",
+			"revisionTime": "2016-10-23T06:49:24Z"
 		},
 		{
 			"checksumSHA1": "GtamqiJoL7PGHsN454AoffBFMa8=",
 			"path": "golang.org/x/net/context",
-			"revision": "a8b9294777976932365dabb6640cf1468d95c70f",
-			"revisionTime": "2017-11-29T19:21:16Z"
+			"revision": "5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec",
+			"revisionTime": "2018-01-12T01:53:59Z"
 		},
 		{
 			"checksumSHA1": "r9l4r3H6FOLQ0c2JaoXpopFjpnw=",
 			"path": "golang.org/x/net/proxy",
-			"revision": "a8b9294777976932365dabb6640cf1468d95c70f",
-			"revisionTime": "2017-11-29T19:21:16Z"
+			"revision": "5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec",
+			"revisionTime": "2018-01-12T01:53:59Z"
 		},
 		{
 			"checksumSHA1": "7EZyXN0EmZLgGxZxK01IJua4c8o=",
 			"path": "golang.org/x/net/websocket",
-			"revision": "a8b9294777976932365dabb6640cf1468d95c70f",
-			"revisionTime": "2017-11-29T19:21:16Z"
+			"revision": "5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec",
+			"revisionTime": "2018-01-12T01:53:59Z"
 		},
 		{
 			"checksumSHA1": "kR/wjQqZuhwnPZgVG6RIj9SFChU=",
@@ -191,10 +191,10 @@
 			"revisionTime": "2017-10-06T15:06:24Z"
 		},
 		{
-			"checksumSHA1": "DsCMhn2brLPL1B56SJkykedW7jE=",
+			"checksumSHA1": "42qS6PkS0wONJq2+UPE9YzfE46A=",
 			"path": "golang.org/x/sys/unix",
-			"revision": "9167dbfd0f8e88b731dd88cbf73a270701a37bb4",
-			"revisionTime": "2017-12-06T08:53:10Z"
+			"revision": "2c42eef0765b9837fbdab12011af7830f55f88f0",
+			"revisionTime": "2018-01-16T19:39:04Z"
 		},
 		{
 			"checksumSHA1": "P4LsadWqFYNCs98XRAiacey3q1U=",
