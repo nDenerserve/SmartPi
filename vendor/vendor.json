@@ -69,12 +69,12 @@
 			"versionExact": "v1.6.0"
 		},
 		{
-			"checksumSHA1": "RMW0+Tz7M7mMQKXWpn4H1v+f5MY=",
+			"checksumSHA1": "z+O5JNjzHISYP1V+1v6SAKkrz7M=",
 			"path": "github.com/mattn/go-sqlite3",
-			"revision": "ed69081a91fd053f17672236b0dd52ba7485e1a3",
-			"revisionTime": "2017-11-14T08:56:34Z",
-			"version": "v1.4.0",
-			"versionExact": "v1.4.0"
+			"revision": "6c771bb9887719704b210e87e934f08be014bdb1",
+			"revisionTime": "2018-01-12T08:58:26Z",
+			"version": "v1.6.0",
+			"versionExact": "v1.6.0"
 		},
 		{
 			"checksumSHA1": "aodj/cITRyuaZSh84DDhrZjh76U=",
