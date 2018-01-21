@@ -3,10 +3,12 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "m+iiamnbukzE8kFPfBche6D0FmQ=",
+			"checksumSHA1": "CWLxwFSj7MNed2MzAOSm0Cg9p+o=",
 			"path": "github.com/Sirupsen/logrus",
-			"revision": "5b60b3d3ee017ed00bcd0225fcca7acab767844b",
-			"revisionTime": "2017-05-04T07:10:19Z"
+			"revision": "d682213848ed68c0a260ca37d6dd5ace8423f5ba",
+			"revisionTime": "2017-12-05T20:32:29Z",
+			"version": "v1.0.4",
+			"versionExact": "v1.0.4"
 		},
 		{
 			"checksumSHA1": "spyv5/YFBjYyZLZa1U2LBfDR8PM=",
@@ -155,6 +157,12 @@
 			"revisionTime": "2017-07-29T07:34:33Z"
 		},
 		{
+			"checksumSHA1": "X1NTlfcau2XcV6WtAHF6b/DECOA=",
+			"path": "golang.org/x/crypto/ssh/terminal",
+			"revision": "a6600008915114d9c087fad9f03d75087b1a74df",
+			"revisionTime": "2018-01-19T09:51:11Z"
+		},
+		{
 			"checksumSHA1": "cdQmT5TaSM6NcsOZ3kqQ+K32KYY=",
 			"path": "golang.org/x/exp/io/i2c",
 			"revision": "072991165226c11c888c881218850e8318c2b32e",
@@ -193,6 +201,12 @@
 		{
 			"checksumSHA1": "42qS6PkS0wONJq2+UPE9YzfE46A=",
 			"path": "golang.org/x/sys/unix",
+			"revision": "2c42eef0765b9837fbdab12011af7830f55f88f0",
+			"revisionTime": "2018-01-16T19:39:04Z"
+		},
+		{
+			"checksumSHA1": "eQq+ZoTWPjyizS9XalhZwfGjQao=",
+			"path": "golang.org/x/sys/windows",
 			"revision": "2c42eef0765b9837fbdab12011af7830f55f88f0",
 			"revisionTime": "2018-01-16T19:39:04Z"
 		},
