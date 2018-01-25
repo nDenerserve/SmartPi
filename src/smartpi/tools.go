@@ -38,7 +38,7 @@ func Checkpanic(e error) {
 
 func Checklog(e error) {
 	if e != nil {
-		log.Fatal(e)
+		log.Println(e)
 	}
 }
 

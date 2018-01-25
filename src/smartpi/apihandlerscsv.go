@@ -49,12 +49,12 @@ func ServeCSVValues(w http.ResponseWriter, r *http.Request) {
 
 	end, err := time.ParseInLocation(time.RFC3339, to, location)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	end = end.In(location)
 	start, err := time.ParseInLocation(time.RFC3339, from, location)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	start = start.In(location)
 

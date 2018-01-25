@@ -73,12 +73,12 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 
 	end, err := time.Parse(time.RFC3339, to)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	end = end.In(location)
 	start, err := time.ParseInLocation(time.RFC3339, from, location)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	start = start.In(location)
 
@@ -204,12 +204,12 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 
 	end, err := time.Parse(time.RFC3339, to)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	// end = end.In(location)
 	start, err := time.Parse(time.RFC3339, from)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	// start = start.In(location)
 

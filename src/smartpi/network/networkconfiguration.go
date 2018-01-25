@@ -25,6 +25,7 @@
 package network
 
 import (
+	"errors"
 	// log "github.com/Sirupsen/logrus"
 	"bufio"
 	"fmt"
@@ -42,9 +43,10 @@ type WifiInfo struct {
 	SSID     string `json:"ssid"`
 	RSSI     int    `json:"rssi"`
 	Channel  int    `json:"channel"`
-	Security string   `json:"security"`
+	Security string `json:"security"`
 	Mode	 string `json:"mode"`
 	Bars	 string `json:"bars"`
+	Active   bool	`json:"active"`
 }
 
 type NetworkInfo struct {
@@ -61,6 +63,7 @@ func ScanWifi() ([]WifiInfo, error) {
 	var wifisignal = 0
 	var wifibars = ""
 	var wifimode = ""
+	var active = false
 
 	out, err := exec.Command("/bin/sh", "-c", `nmcli -t -f in-use,ssid,mode,chan,signal,bars,security dev wifi`).Output()
 	if err != nil {
@@ -73,6 +76,12 @@ func ScanWifi() ([]WifiInfo, error) {
 
 		for i := range parts {
 			switch i {
+				case 0:
+					if parts[i]=="*" {
+						active = true
+					} else {
+						active = false
+					}
 				case 1:
 					wifissid = parts[i]
 				case 2:
@@ -87,7 +96,7 @@ func ScanWifi() ([]WifiInfo, error) {
 					wifisecurity = parts[i]
 			}
 		}
-		wifilist = append(wifilist, WifiInfo{SSID: wifissid, Mode: wifimode, Channel: wifichannel, RSSI: wifisignal, Bars: wifibars, Security: wifisecurity})
+		wifilist = append(wifilist, WifiInfo{SSID: wifissid, Mode: wifimode, Channel: wifichannel, RSSI: wifisignal, Bars: wifibars, Security: wifisecurity, Active: active})
        
 	}
 	return wifilist, nil
@@ -104,7 +113,7 @@ func ListNetworkConnections() ([]NetworkInfo, error) {
 
 	out, err := exec.Command("/bin/sh", "-c", `sudo nmcli -t -f name,type,device connection show`).Output()	
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return networklist, err
 	}
 	scanner := bufio.NewScanner(strings.NewReader(string(out)))
@@ -140,17 +149,17 @@ func AddWifi(ssid string, name string, key string) error {
 
 	_, err := exec.Command("/bin/sh", "-c", `sudo nmcli con add con-name `+name+` ifname wlan0 type wifi ssid `+ssid).Output()	
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return err
 	}
 	err = ChangeWifiSecurity(ssid,name,key,"wpa-psk")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return err
 	}
-	err = activateWifi(name)
+	err = ActivateWifi(name)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return err
 	}
 	return nil
@@ -159,24 +168,33 @@ func AddWifi(ssid string, name string, key string) error {
 func ChangeWifiSecurity(ssid string, name string, newkey string, keymgmt string) error {
 	_, err := exec.Command("/bin/sh", "-c", `sudo nmcli con modify `+name+` 802-11-wireless-security.key-mgmt `+keymgmt).Output()	
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return err
 	}
 	
 	_, err = exec.Command("/bin/sh", "-c", `sudo nmcli con modify `+name+` 802-11-wireless-security.psk `+newkey).Output()	
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	// sudo nmcli con modify dev_zg_wlan 802-11-wireless-security.key-mgmt wpa-psk
 	// sudo nmcli con modify dev_zg_wlan 802-11-wireless-security.psk pskkey
 	return nil
 }
 
-func activateWifi(name string) error {
+func ActivateWifi(name string) error {
 	_, err := exec.Command("/bin/sh", "-c", `sudo nmcli -p con up '`+name+`' ifname wlan0`).Output()	
 	if err != nil {
-		log.Fatal(err)
-		return err
+		log.Println(err)
+		return errors.New("activation faild")
+	}
+	return nil
+}
+
+func DeactivateWifi(name string) error {
+	_, err := exec.Command("/bin/sh", "-c", `sudo nmcli -p con down '`+name+`'`).Output()	
+	if err != nil {
+		log.Println(err)
+		return errors.New("activation faild")
 	}
 	return nil
 }
@@ -184,7 +202,7 @@ func activateWifi(name string) error {
 func RemoveWifi(name string) error {
 	_, err := exec.Command("/bin/sh", "-c", `sudo nmcli connection delete id `+name).Output()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return err
 	}
 	return nil

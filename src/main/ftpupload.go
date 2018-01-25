@@ -70,7 +70,7 @@ func main() {
 	if err == nil {
 		startDate, err = time.ParseInLocation("2006-01-02 15:04:05", string(lastdate), location)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 
 	} else {
