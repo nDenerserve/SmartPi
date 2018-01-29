@@ -64,6 +64,8 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 	data := make([]float32, 22)
 	i := 0
 
+	tick := time.Tick(time.Second)
+
 	for {
 		// Restart the accumulator loop every 60 seconds.
 		if i > 59 {
@@ -124,8 +126,8 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 			log.Errorf("Sleep duration negative: %s", sleepFor)
 		} else {
 			log.Debugf("Sleeping for %s", sleepFor)
-			time.Sleep(sleepFor)
 		}
+		<- tick
 		i++
 	}
 }
