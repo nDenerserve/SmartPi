@@ -64,6 +64,10 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 	data := make([]float32, 22)
 	i := 0
 
+	// Pin the accumulator loop to full minutes.
+	startAt := time.Now().Truncate(time.Minute).Add(time.Minute)
+	<- time.After(time.Until(startAt))
+
 	tick := time.Tick(time.Second)
 
 	for {
