@@ -25,8 +25,47 @@
 package network
 
 import (
-	"net"
+    "net"
+    log "github.com/Sirupsen/logrus"
+    "fmt"
 )
+
+
+type NetworkInfo struct {
+    Name string `json:"name"`
+    Flags string `json:"flags"`
+    Addrs []string `json:"addrs"`
+ }
+
+
+
+func LocalAddresses() ([]NetworkInfo, error) {
+
+    var networklist []NetworkInfo
+    var addrlist []string
+
+    ifaces, err := net.Interfaces()
+    if err != nil {
+        log.Print(fmt.Errorf("localAddresses: %v\n", err.Error()))
+        return nil, err
+    }
+    for _, i := range ifaces {
+        addrs, err := i.Addrs()
+        if err != nil {
+            log.Print(fmt.Errorf("localAddresses: %v\n", err.Error()))
+            return nil, err
+        }
+        addrlist = nil
+        for _, addr := range addrs {
+            if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+                    addrlist = append(addrlist,ipnet.IP.String())
+            }
+        }
+        networklist = append(networklist, NetworkInfo{Name: i.Name, Flags: i.Flags.String(),  Addrs: addrlist})
+    }
+    return networklist, nil
+}
+
 
 func GetLocalIP() string {
 	addrs, err := net.InterfaceAddrs()

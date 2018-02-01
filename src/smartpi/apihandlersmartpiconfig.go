@@ -31,7 +31,7 @@ Description: Handels API requests
 package smartpi
 
 import (
-	"fmt"
+	// "fmt"
 	"github.com/gorilla/mux"
 	"encoding/json"
 	"io/ioutil"
@@ -61,7 +61,6 @@ type networkList struct {
 	Networklist []network.NetworkInfo `json:"networklist"`
 }
 type wifiSettings struct {
-	Name string `json:"name"`
 	Ssid string `json:"ssid"`
 	Key string `json:"key"`
 }
@@ -92,7 +91,6 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 	for k := range wc.Msg.(map[string]interface{}) {
 		keys = append(keys, k)
 	}
-	fmt.Printf("%+v\n", keys)
 
 	confignames := structs.Names(configuration.(*Config))
 
@@ -240,7 +238,6 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	fmt.Printf("%+v\n", configuration.(*Config))
 	configuration.(*Config).SaveParameterToFile()
 	// }
 }
@@ -249,7 +246,6 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 func WifiList(w http.ResponseWriter, r *http.Request) {
 	// vars := mux.Vars(r)
 	// name := vars["name"]
-
 	wifi, err := network.ScanWifi()
 	if err != nil {
 		log.Println(err)
@@ -290,7 +286,7 @@ func CreateWifi(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = network.AddWifi(ws.Ssid, ws.Name, ws.Key)
+	err = network.AddWifi(ws.Ssid, ws.Key)
 	if err != nil {
 		log.Println(err)
 		if err := json.NewEncoder(w).Encode(JSONMessage{Code: 500, Message: "Internal Server Error"}); err != nil {
@@ -325,76 +321,76 @@ func RemoveWifi(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func ActivateWifi(w http.ResponseWriter, r *http.Request) {
+// func ActivateWifi(w http.ResponseWriter, r *http.Request) {
 
-	vars := mux.Vars(r)
-    name := vars["name"]
-
-
-	err := network.ActivateWifi(name)
-	if err != nil {
-		log.Println(err)
-		if err := json.NewEncoder(w).Encode(JSONMessage{Code: 500, Message: "Internal Server Error"}); err != nil {
-				panic(err)
-			}
-			return
-	}
-
-	if err := json.NewEncoder(w).Encode(JSONMessage{Code: 200, Message: "Ok"}); err != nil {
-		panic(err)
-	}
-
-}
-
-func DeactivateWifi(w http.ResponseWriter, r *http.Request) {
-
-	vars := mux.Vars(r)
-    name := vars["name"]
+// 	vars := mux.Vars(r)
+//     name := vars["name"]
 
 
-	err := network.DeactivateWifi(name)
-	if err != nil {
-		log.Println(err)
-		if err := json.NewEncoder(w).Encode(JSONMessage{Code: 500, Message: "Internal Server Error"}); err != nil {
-				panic(err)
-			}
-			return
-	}
+// 	err := network.ActivateWifi(name)
+// 	if err != nil {
+// 		log.Println(err)
+// 		if err := json.NewEncoder(w).Encode(JSONMessage{Code: 500, Message: "Internal Server Error"}); err != nil {
+// 				panic(err)
+// 			}
+// 			return
+// 	}
 
-	if err := json.NewEncoder(w).Encode(JSONMessage{Code: 200, Message: "Ok"}); err != nil {
-		panic(err)
-	}
+// 	if err := json.NewEncoder(w).Encode(JSONMessage{Code: 200, Message: "Ok"}); err != nil {
+// 		panic(err)
+// 	}
 
-}
+// }
 
-func ChangeWifiKey(w http.ResponseWriter, r *http.Request) {
+// func DeactivateWifi(w http.ResponseWriter, r *http.Request) {
 
-	var ws wifiSettings
+// 	vars := mux.Vars(r)
+//     name := vars["name"]
 
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&ws)
 
-	if err != nil {
-		log.Println(err)
-		if err = json.NewEncoder(w).Encode(JSONMessage{Code: 400, Message: "Bad Request"}); err != nil {
-			panic(err)
-		}
-		return
-	}
+// 	err := network.DeactivateWifi(name)
+// 	if err != nil {
+// 		log.Println(err)
+// 		if err := json.NewEncoder(w).Encode(JSONMessage{Code: 500, Message: "Internal Server Error"}); err != nil {
+// 				panic(err)
+// 			}
+// 			return
+// 	}
 
-	err = network.ChangeWifiSecurity(ws.Ssid, ws.Name, ws.Key, "wpa-psk")
-	if err != nil {
-		log.Println(err)
-		if err := json.NewEncoder(w).Encode(JSONMessage{Code: 500, Message: "Internal Server Error"}); err != nil {
-				panic(err)
-			}
-			return
-	}
+// 	if err := json.NewEncoder(w).Encode(JSONMessage{Code: 200, Message: "Ok"}); err != nil {
+// 		panic(err)
+// 	}
 
-	if err := json.NewEncoder(w).Encode(JSONMessage{Code: 200, Message: "Ok"}); err != nil {
-		panic(err)
-	}
-}
+// }
+
+// func ChangeWifiKey(w http.ResponseWriter, r *http.Request) {
+
+// 	var ws wifiSettings
+
+// 	decoder := json.NewDecoder(r.Body)
+// 	err := decoder.Decode(&ws)
+
+// 	if err != nil {
+// 		log.Println(err)
+// 		if err = json.NewEncoder(w).Encode(JSONMessage{Code: 400, Message: "Bad Request"}); err != nil {
+// 			panic(err)
+// 		}
+// 		return
+// 	}
+
+// 	err = network.ChangeWifiSecurity(ws.Ssid, ws.Name, ws.Key, "wpa-psk")
+// 	if err != nil {
+// 		log.Println(err)
+// 		if err := json.NewEncoder(w).Encode(JSONMessage{Code: 500, Message: "Internal Server Error"}); err != nil {
+// 				panic(err)
+// 			}
+// 			return
+// 	}
+
+// 	if err := json.NewEncoder(w).Encode(JSONMessage{Code: 200, Message: "Ok"}); err != nil {
+// 		panic(err)
+// 	}
+// }
 
 
 

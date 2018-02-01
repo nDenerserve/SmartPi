@@ -157,6 +157,12 @@
 			"revisionTime": "2017-07-29T07:34:33Z"
 		},
 		{
+			"checksumSHA1": "36tnDqUlzt2ieZ4jYYirS+kPwJY=",
+			"path": "github.com/typetypetype/conntrack",
+			"revision": "927209d9a0128719d38062528ba35296ec0e6853",
+			"revisionTime": "2018-01-26T01:19:06Z"
+		},
+		{
 			"checksumSHA1": "X1NTlfcau2XcV6WtAHF6b/DECOA=",
 			"path": "golang.org/x/crypto/ssh/terminal",
 			"revision": "a6600008915114d9c087fad9f03d75087b1a74df",

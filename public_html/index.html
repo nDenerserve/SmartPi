@@ -12,6 +12,8 @@
     <!-- MetisMenu CSS -->
     <link rel="stylesheet" href="bower_components/nvd3/build/nv.d3.css">
     <link rel="stylesheet" href="css/stretchy.css">
+
+    <link href="vendor/md-data-table/dist/md-data-table.min.css" rel="stylesheet" type="text/css" />
     <!-- Resource style -->
     <link rel="stylesheet" href="css/styles.css?v=1" />
     <!-- Custom CSS -->
@@ -19,6 +21,9 @@
     <!-- <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.css"> -->
     <script>
         document.write("<link rel='stylesheet' href='css/angular-material.min.css?v=" + Date.now() + "'/>");
+    </script>
+    <script>
+        document.write(" <script type = 'text/javascript' src='vendor/md-data-table/dist/md-data-table.min.js?v=" + Date.now() + "'><\/script>");
     </script>
     <!--<link rel="stylesheet" href="css/smartpi.css?v=1" /> -->
     <script>
@@ -52,6 +57,9 @@
     <script>
         document.write("<script type='text/javascript' src='js/angular-material.min.js?v=" + Date.now() + "'><\/script>");
     </script>
+    <script>
+        document.write(" <script type = 'text/javascript' src='vendor/md-data-table/dist/md-data-table.min.js?v=" + Date.now() + "'><\/script>");
+    </script>
     <!--<script src="js/app.js?v=1"></script>-->
     <script>
         document.write("<script type='text/javascript' src='js/app.js?v=" + Date.now() + "'><\/script>");
@@ -77,16 +85,16 @@
         <nav class="cd-stretchy-nav">
             <a class="cd-nav-trigger" href="#0">
 
-            <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
             </a>
             <ul>
                 <li><a href="index.html" class="active"><span></span></a></li>
                 <li><a href="export.html"><span></span></a></li>
                 <li><a ng-href="{{nodelocation}}" target="_blank"><span></span></a>
-                <li><a href="settings.html"><span></span></a></li>
-                <!-- <li><a href="#0"><span></span></a></li> -->
-                <!-- <li><a href="#0"><span></span></a></li> -->
-                <!-- <li><a href="#0"><span></span></a></li> -->
+                    <li><a href="settings.html"><span></span></a></li>
+                    <!-- <li><a href="#0"><span></span></a></li> -->
+                    <!-- <li><a href="#0"><span></span></a></li> -->
+                    <!-- <li><a href="#0"><span></span></a></li> -->
             </ul>
             <span aria-hidden="true" class="stretchy-nav-bg"></span>
         </nav>

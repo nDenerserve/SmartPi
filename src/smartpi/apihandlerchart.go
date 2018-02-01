@@ -57,7 +57,6 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 		Values []tChartValue `json:"values"`
 	}
 
-	// type tChartSeries []tChartSerie
 
 	var timeSeries []tChartSerie
 
@@ -71,16 +70,15 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 
 	location := time.Now().Location()
 
-	end, err := time.Parse(time.RFC3339, to)
+	end, err := time.ParseInLocation(time.RFC3339, to, location)
 	if err != nil {
 		log.Println(err)
 	}
-	end = end.In(location)
+
 	start, err := time.ParseInLocation(time.RFC3339, from, location)
 	if err != nil {
 		log.Println(err)
 	}
-	start = start.In(location)
 
 	if end.Before(start) {
 		start = start.AddDate(0, 0, -1)
@@ -98,7 +96,7 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 		export = append(export, valueId+"_sum")
 	}
 
-	fmt.Println("ReadChartData " + config.DatabaseDir + " " + start.Format(time.RFC3339) + " " + end.Format(time.RFC3339))
+	fmt.Println("ReadChartData " + config.DatabaseDir + " " + start.Format(time.RFC3339) + " " + end.Format(time.RFC3339)+" "+start.Format("2006-01-02 15:04:05")+" "+end.Format("2006-01-02 15:04:05"))
 
 	data := ReadChartData(config.DatabaseDir, start, end)
 
@@ -163,10 +161,10 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 			if math.IsNaN(val) {
 				val = 0.0
 			}
-			values = append(values, tChartValue{Time: ti.Format(time.RFC3339), Value: float32(val)})
+			// values = append(values, tChartValue{Time: ti.Format(time.RFC3339), Value: float32(val)})
+			values = append(values, tChartValue{Time: ti.Local().Format("2006-01-02T15:04:05-0700"), Value: float32(val)})
 			row++
 		}
-		// fmt.Println(strconv.Itoa(index)+" "+valueelement)
 		timeSeries = append(timeSeries, tChartSerie{Key: valueelement, Values: values})
 	}
 
@@ -188,7 +186,6 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 		Values []tChartValue `json:"values"`
 	}
 
-	// type tChartSeries []tChartSerie
 
 	var timeSeries []tChartSerie
 
@@ -200,18 +197,16 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 
 	config := NewConfig()
 
-	// location := time.Now().Location()
+	location := time.Now().Location()
 
-	end, err := time.Parse(time.RFC3339, to)
+	end, err := time.ParseInLocation(time.RFC3339, to, location)
 	if err != nil {
 		log.Println(err)
 	}
-	// end = end.In(location)
-	start, err := time.Parse(time.RFC3339, from)
+	start, err := time.ParseInLocation(time.RFC3339, from, location)
 	if err != nil {
 		log.Println(err)
 	}
-	// start = start.In(location)
 
 	if end.Before(start) {
 		start = start.AddDate(0, 0, -1)
@@ -229,11 +224,10 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 		export = append(export, valueId+"_sum")
 	}
 
-	fmt.Println("ReadDayData " + config.DatabaseDir + " " + start.Format(time.RFC3339) + " " + end.Format(time.RFC3339) + " |" + start.Location().String() + "|| " + start.Local().String())
+	// fmt.Println("ReadDayData " + config.DatabaseDir + " " + start.Format(time.RFC3339) + " " + end.Format(time.RFC3339) + " |" + start.Location().String() + "|| " + start.Local().String()+" "+start.Format("2006-01-02 15:04:05")+" "+end.Format("2006-01-02 15:04:05"))
 
 	data := ReadDayData(config.DatabaseDir, start, end)
 
-	// fmt.Printf("%v", export)
 
 	for _, valueelement := range export {
 		row := 0
@@ -241,7 +235,7 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 		var values []tChartValue
 		for _, dataelement := range data {
 			ti := dataelement.Date
-			fmt.Println(ti.Format(time.RFC3339))
+
 			switch valueelement {
 			case "current_1":
 				val = dataelement.Current_1
@@ -294,7 +288,9 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 			if math.IsNaN(val) {
 				val = 0.0
 			}
-			values = append(values, tChartValue{Time: ti.Format(time.RFC3339), Value: float32(val)})
+			// values = append(values, tChartValue{Time: ti.Format(time.RFC3339), Value: float32(val)})
+			values = append(values, tChartValue{Time: ti.Local().Format("2006-01-02T15:04:05-0700"), Value: float32(val)})
+			
 			row++
 		}
 		// fmt.Println(strconv.Itoa(index)+" "+valueelement)
