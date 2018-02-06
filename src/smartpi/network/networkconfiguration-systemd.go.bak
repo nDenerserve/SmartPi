@@ -75,6 +75,13 @@ func ScanWIFI(adapter string) ([]WifiInfo, error) {
 	var wifisecurity = false
 	var wifisignal = 0
 
+
+
+	out, err := exec.Command("/bin/sh", "-c", `sudo iwgetid wlan0 | sed -e "s#^.*ESSID:##" | tr -d '"'`).Output()
+	if err != nil {
+		return wifilist, err
+	}
+
 	out, err := exec.Command("/bin/sh", "-c", `sudo iwlist `+adapter+` scan | egrep "ESSID:|Address:|Quality=|Encryption key:|Channel:" | sed -e  "s#^.*Channel:##" -e "s#^.*ESSID:##" -e "s#^.*Encryption key:##" -e "s#^.*Address: ##" -e "s#^.*Signal level=##" -e "s/\"//" -e "s/\"//"`).Output()
 	if err != nil {
 		return wifilist, err

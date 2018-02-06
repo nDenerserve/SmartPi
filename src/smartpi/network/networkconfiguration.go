@@ -43,6 +43,7 @@ type WifiInfo struct {
 	BSSID    string	`json:"bssid"`
 	Channel  int    `json:"channel"`
 	Security bool   `json:"security"`
+	Active   bool   `json:"active"`
 }
 
 func ScanWifi() ([]WifiInfo, error) {
@@ -52,7 +53,18 @@ func ScanWifi() ([]WifiInfo, error) {
 	var wifichannel = 0
 	var wifisecurity = false
 	var wifisignal = 0
-	out, err := exec.Command("/bin/sh", "-c", `sudo iwlist wlan0 scan | egrep "ESSID:|Address:|Quality=|Encryption key:|Channel:" | sed -e  "s#^.*Channel:##" -e "s#^.*ESSID:##" -e "s#^.*Encryption key:##" -e "s#^.*Address: ##" -e "s#^.*Signal level=##" -e "s/\"//" -e "s/\"//"`).Output()
+	var wifiactive = false
+
+	var activessid = ""
+
+	out, err := exec.Command("/bin/sh", "-c", `sudo iwgetid wlan0 | sed -e "s#^.*ESSID:##" | tr -d '"'`).Output()
+	if err != nil {
+		return wifilist, err
+	}
+	activessid = string(out)
+
+
+	out, err = exec.Command("/bin/sh", "-c", `sudo iwlist wlan0 scan | egrep "ESSID:|Address:|Quality=|Encryption key:|Channel:" | sed -e  "s#^.*Channel:##" -e "s#^.*ESSID:##" -e "s#^.*Encryption key:##" -e "s#^.*Address: ##" -e "s#^.*Signal level=##" -e "s/\"//" -e "s/\"//"`).Output()
 	if err != nil {
 		return wifilist, err
 	}
@@ -73,8 +85,12 @@ func ScanWifi() ([]WifiInfo, error) {
 		case 4:
 			wifisecurity, _ = parseBool(line)
 		case 5:
+			wifiactive = false
 			wifissid = line
-			wifilist = append(wifilist, WifiInfo{SSID: wifissid, BSSID: wifibssid, RSSI: wifisignal, Channel: wifichannel, Security: wifisecurity})
+			if (strings.Contains(activessid,wifissid)) {
+				wifiactive = true
+			}
+			wifilist = append(wifilist, WifiInfo{SSID: wifissid, BSSID: wifibssid, RSSI: wifisignal, Channel: wifichannel, Security: wifisecurity, Active: wifiactive})
 			linenumber = 0
 		}
 	}
@@ -92,7 +108,6 @@ func ListNetworkConnections() ([]NetworkInfo, error) {
 		log.Println(err)
 		return networklist, err
 	}
-
 
 	for _, i := range networklist {
 		if len(i.Addrs) > 1 {
@@ -149,6 +164,12 @@ func RemoveWifi(ssid string) error {
 		log.Println(err)
 		return errors.New("Remove faild")
 	}
+
+	if err = ReconfigureWifi(); err != nil {
+		log.Println(err)
+		return err
+	}
+	
 	return nil
 } 
 
