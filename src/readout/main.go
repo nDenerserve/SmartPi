@@ -125,11 +125,9 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 			}
 		}
 
-		sleepFor := (1000 * time.Millisecond) - time.Since(startTime)
-		if int64(sleepFor) <= 0 {
-			log.Errorf("Sleep duration negative: %s", sleepFor)
-		} else {
-			log.Debugf("Sleeping for %s", sleepFor)
+		delay := time.Since(startTime) - (1000 * time.Millisecond)
+		if int64(delay) > 0 {
+			log.Errorf("Readout delayed: %s", delay)
 		}
 		<- tick
 		i++
