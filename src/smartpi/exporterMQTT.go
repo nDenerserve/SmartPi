@@ -53,7 +53,7 @@ func (exporter MQTTExporter) Connect(config *Config) {
 	}
 }
 
-func (exporter MQTTExporter) PublishReadouts(config *Config, values []float32, readouts []string) {
+func (exporter MQTTExporter) PublishReadouts(config *Config, values []float64, readouts []string) {
 	//TODO: Check length readouts >= values. If not stop with a warning.
 	//TODO: Consider definition of slice of struct for data
 	//					- value

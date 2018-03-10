@@ -12,7 +12,7 @@ import (
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 )
 
-func updateSQLiteDatabase(c *smartpi.Config, data []float32) {
+func updateSQLiteDatabase(c *smartpi.Config, data []float64) {
 	t := time.Now()
 	logLine := "## SQLITE Database Update ##"
 	logLine += fmt.Sprintf(t.Format(" 2006-01-02 15:04:05 "))

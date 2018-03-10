@@ -29,12 +29,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/nDenerserve/SmartPi/src/smartpi"
 	"math"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/nDenerserve/SmartPi/src/smartpi"
 
 	log "github.com/Sirupsen/logrus"
 	"golang.org/x/exp/io/i2c"
@@ -61,47 +62,78 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		mqttclient = newMQTTClient(config)
 	}
 
-	data := make([]float32, 22)
+	data := make([]float64, 22)
 	i := 0
 
 	for {
+		values := smartpi.ADE7878Readout{}
+		values.Current = make(smartpi.Readings)
+		values.Voltage = make(smartpi.Readings)
+		values.ActiveWatts = make(smartpi.Readings)
+		values.CosPhi = make(smartpi.Readings)
+		values.Frequency = make(smartpi.Readings)
+		values.ApparentPower = make(smartpi.Readings)
+		values.ReactivePower = make(smartpi.Readings)
+		values.PowerFactor = make(smartpi.Readings)
+		values.ActiveEnergy = make(smartpi.Readings)
 		// Restart the accumulator loop every 60 seconds.
 		if i > 59 {
 			i = 0
-			data = make([]float32, 22)
+			data = make([]float64, 22)
 		}
 
 		startTime := time.Now()
-		valuesr := smartpi.ReadoutValues(device, config)
+		smartpi.ReadPhase(device, config, smartpi.PhaseA, &values)
+		smartpi.ReadPhase(device, config, smartpi.PhaseB, &values)
+		smartpi.ReadPhase(device, config, smartpi.PhaseA, &values)
+		smartpi.ReadPhase(device, config, smartpi.PhaseN, &values)
 
 		// Update the accumlator.
-		for index, _ := range data {
-			switch index {
-			case 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15:
-				data[index] += float32(valuesr[index] / 60.0)
-			case 16, 17, 18:
-				if valuesr[index-9] >= 0 {
-					data[index] += float32(math.Abs(valuesr[index-9]) / 3600.0)
-				}
-			case 19, 20, 21:
-				if valuesr[index-12] < 0 {
-					data[index] += float32(math.Abs(valuesr[index-12]) / 3600.0)
-				}
-			}
+		data[0] += values.Current[smartpi.PhaseA] / 60.0
+		data[1] += values.Current[smartpi.PhaseB] / 60.0
+		data[2] += values.Current[smartpi.PhaseC] / 60.0
+		data[3] += values.Current[smartpi.PhaseN] / 60.0
+		data[4] += values.Voltage[smartpi.PhaseA] / 60.0
+		data[5] += values.Voltage[smartpi.PhaseB] / 60.0
+		data[6] += values.Voltage[smartpi.PhaseC] / 60.0
+		data[7] += values.ActiveWatts[smartpi.PhaseA] / 60.0
+		data[8] += values.ActiveWatts[smartpi.PhaseB] / 60.0
+		data[9] += values.ActiveWatts[smartpi.PhaseC] / 60.0
+		data[10] += values.CosPhi[smartpi.PhaseA] / 60.0
+		data[11] += values.CosPhi[smartpi.PhaseB] / 60.0
+		data[12] += values.CosPhi[smartpi.PhaseC] / 60.0
+		data[13] += values.Frequency[smartpi.PhaseA] / 60.0
+		data[14] += values.Frequency[smartpi.PhaseB] / 60.0
+		data[15] += values.Frequency[smartpi.PhaseC] / 60.0
+
+		if values.ActiveWatts[smartpi.PhaseA] >= 0 {
+			data[16] += math.Abs(values.ActiveWatts[smartpi.PhaseA]) / 3600.0
+		} else {
+			data[19] += math.Abs(values.ActiveWatts[smartpi.PhaseA]) / 3600.0
+		}
+		if values.ActiveWatts[smartpi.PhaseB] >= 0 {
+			data[17] += math.Abs(values.ActiveWatts[smartpi.PhaseB]) / 3600.0
+		} else {
+			data[20] += math.Abs(values.ActiveWatts[smartpi.PhaseA]) / 3600.0
+		}
+		if values.ActiveWatts[smartpi.PhaseC] >= 0 {
+			data[18] += math.Abs(values.ActiveWatts[smartpi.PhaseC]) / 3600.0
+		} else {
+			data[21] += math.Abs(values.ActiveWatts[smartpi.PhaseA]) / 3600.0
 		}
 
 		// Update metrics endpoint.
-		updatePrometheusMetrics(valuesr)
+		updatePrometheusMetrics(&values)
 
 		// Every 5 seconds
 		if i%5 == 0 {
 			if config.SharedFileEnabled {
-				writeSharedFile(config, valuesr)
+				writeSharedFile(config, &values)
 			}
 
 			// Publish readouts to MQTT.
 			if config.MQTTenabled {
-				publishMQTTReadouts(config, mqttclient, valuesr)
+				publishMQTTReadouts(config, mqttclient, &values)
 			}
 		}
 
@@ -129,7 +161,6 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		i++
 	}
 }
-
 
 func configWatcher(config *smartpi.Config) {
 	log.Debug("Start SmartPi watcher")
