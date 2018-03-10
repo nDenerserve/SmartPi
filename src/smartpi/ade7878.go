@@ -518,7 +518,8 @@ func ReadFrequency(d *i2c.Device, c *Config, phase Phase) (frequency float64) {
 	if err != nil {
 		panic(err)
 	}
-	time.Sleep(50 * time.Millisecond)
+	// Make sure we capture 3 full cycles at ~50Hz, 4 cycles at ~60Hz.
+	time.Sleep(70 * time.Millisecond)
 	// 0xE607 (PERIOD)
 	outcome := float64(DeviceFetchInt(d, 2, []byte{0xE6, 0x07}))
 	frequency = ade7878Clock / (outcome + 1)
@@ -628,19 +629,20 @@ func ReadPhase(d *i2c.Device, c *Config, p Phase, v *ADE7878Readout) {
 	// Measure cosphi.
 	v.CosPhi[p] = ReadAngle(d, c, p)
 
-	// Measure frequency.
-	v.Frequency[p] = ReadFrequency(d, c, p)
-
 	// Measure apparent power (volt-amps).
 	v.ApparentPower[p] = ReadApparentPower(d, c, p)
 
 	// Measure reactive power (volt-ampere reactive).
 	v.ReactivePower[p] = ReadReactivePower(d, c, p)
 
+	// Measure active energy.
+	v.ActiveEnergy[p] = ReadActiveEnergy(d, c, p)
+
+	// Measure frequency.
+	v.Frequency[p] = ReadFrequency(d, c, p)
+
 	// Calculate power factor.
 	v.PowerFactor[p] = CalculatePowerFactor(c, p, v.ActiveWatts[p], v.ApparentPower[p], v.ReactivePower[p])
-
-	v.ActiveEnergy[p] = ReadActiveEnergy(d, c, p)
 
 	logLine := fmt.Sprintf("ReadValues: %s phase: %g", time.Since(startTime), p)
 	logLine += fmt.Sprintf("I: %g  V: %g  P: %g ", v.Current[p], v.Voltage[p], v.ActiveWatts[p])
