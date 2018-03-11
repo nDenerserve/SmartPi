@@ -101,7 +101,7 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 
 		startTime := time.Now()
 
-		// Update the accumlator.
+		// Update readouts and the accumlator.
 		smartpi.ReadPhase(device, config, smartpi.PhaseN, &readouts)
 		accumulator.Current[smartpi.PhaseN] += readouts.Current[smartpi.PhaseN] / 60.0
 		for _, p = range smartpi.MainPhases {
