@@ -625,7 +625,7 @@ func ReadPhase(d *i2c.Device, c *Config, p Phase, v *ADE7878Readout) {
 
 	// Neutral phase has no other updates.
 	if p == PhaseN {
-		logLine := fmt.Sprintf("ReadValues: %s phase: %g", time.Since(startTime), p)
+		logLine := fmt.Sprintf("ReadValues: %s phase: %s", time.Since(startTime), p)
 		logLine += fmt.Sprintf("I: %g", v.Current[p])
 		log.Debug(logLine)
 		return
@@ -660,7 +660,7 @@ func ReadPhase(d *i2c.Device, c *Config, p Phase, v *ADE7878Readout) {
 	// Calculate power factor.
 	v.PowerFactor[p] = CalculatePowerFactor(c, p, v.ActiveWatts[p], v.ApparentPower[p], v.ReactivePower[p])
 
-	logLine := fmt.Sprintf("ReadValues: %s phase: %g", time.Since(startTime), p)
+	logLine := fmt.Sprintf("ReadValues: %s phase: %s", time.Since(startTime), p)
 	logLine += fmt.Sprintf("I: %g  V: %g  P: %g ", v.Current[p], v.Voltage[p], v.ActiveWatts[p])
 	logLine += fmt.Sprintf("COS: %g  F: %g  VA: %g  ", v.CosPhi[p], v.Frequency[p], v.ApparentPower[p])
 	logLine += fmt.Sprintf("VAR: %g  PF: %g  WATTHR: %g  ", v.ReactivePower[p], v.PowerFactor[p], v.ActiveEnergy[p])
