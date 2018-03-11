@@ -358,14 +358,8 @@ func ReadVoltage(d *i2c.Device, c *Config, phase string) (voltage float64, measu
 
 	voltage = float64(DeviceFetchInt(d, 4, command)) / 1e+4
 
-	// Ignore voltage reading if disalbed or less than 10 volts.
 	measureVoltage = true
-	// if !c.MeasureVoltage[phase] || voltage < 10 {
-	// 	voltage = c.Voltage[phase]
-	// 	measureVoltage = false
-	// }
-
-	if !c.MeasureVoltage[phase] { // || voltage < 10 {
+	if !c.MeasureVoltage[phase] {
 		voltage = c.Voltage[phase]
 		measureVoltage = false
 	}
