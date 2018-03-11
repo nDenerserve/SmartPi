@@ -32,8 +32,8 @@ func newMQTTClient(c *smartpi.Config) (mqttclient MQTT.Client) {
 	return mqttclient
 }
 
-func publishMQTT(m MQTT.Client, status bool, t string, v float64) bool {
-	if status {
+func publishMQTT(m MQTT.Client, status *bool, t string, v float64) bool {
+	if *status {
 		log.Debugf("  -> ", t, ":", v)
 		token := m.Publish(t, 1, false, strconv.FormatFloat(v, 'f', 2, 32))
 
@@ -62,22 +62,15 @@ func publishMQTTReadouts(c *smartpi.Config, mqttclient MQTT.Client, values *smar
 
 		// Status is used to stop MQTT publication sequence in case of first error.
 		var status = true
-		publishMQTT(mqttclient, status, c.MQTTtopic+"/"+"I1", values.Current[smartpi.PhaseA])
-		publishMQTT(mqttclient, status, c.MQTTtopic+"/"+"I2", values.Current[smartpi.PhaseB])
-		publishMQTT(mqttclient, status, c.MQTTtopic+"/"+"I3", values.Current[smartpi.PhaseC])
-		publishMQTT(mqttclient, status, c.MQTTtopic+"/"+"I4", values.Current[smartpi.PhaseN])
-		publishMQTT(mqttclient, status, c.MQTTtopic+"/"+"V1", values.Voltage[smartpi.PhaseA])
-		publishMQTT(mqttclient, status, c.MQTTtopic+"/"+"V2", values.Voltage[smartpi.PhaseB])
-		publishMQTT(mqttclient, status, c.MQTTtopic+"/"+"V3", values.Voltage[smartpi.PhaseC])
-		publishMQTT(mqttclient, status, c.MQTTtopic+"/"+"P1", values.ActiveWatts[smartpi.PhaseA])
-		publishMQTT(mqttclient, status, c.MQTTtopic+"/"+"P2", values.ActiveWatts[smartpi.PhaseB])
-		publishMQTT(mqttclient, status, c.MQTTtopic+"/"+"P3", values.ActiveWatts[smartpi.PhaseC])
-		publishMQTT(mqttclient, status, c.MQTTtopic+"/"+"COS1", values.CosPhi[smartpi.PhaseA])
-		publishMQTT(mqttclient, status, c.MQTTtopic+"/"+"COS2", values.CosPhi[smartpi.PhaseB])
-		publishMQTT(mqttclient, status, c.MQTTtopic+"/"+"COS3", values.CosPhi[smartpi.PhaseC])
-		publishMQTT(mqttclient, status, c.MQTTtopic+"/"+"F1", values.Frequency[smartpi.PhaseA])
-		publishMQTT(mqttclient, status, c.MQTTtopic+"/"+"F2", values.Frequency[smartpi.PhaseB])
-		publishMQTT(mqttclient, status, c.MQTTtopic+"/"+"F3", values.Frequency[smartpi.PhaseC])
+		publishMQTT(mqttclient, &status, c.MQTTtopic+"/I4", values.Current[smartpi.PhaseN])
+		for _, p := range smartpi.MainPhases {
+			label := p.PhaseNumber()
+			publishMQTT(mqttclient, &status, c.MQTTtopic+"/I"+label, values.Current[p])
+			publishMQTT(mqttclient, &status, c.MQTTtopic+"/V"+label, values.Voltage[p])
+			publishMQTT(mqttclient, &status, c.MQTTtopic+"/P"+label, values.ActiveWatts[p])
+			publishMQTT(mqttclient, &status, c.MQTTtopic+"/COS"+label, values.CosPhi[p])
+			publishMQTT(mqttclient, &status, c.MQTTtopic+"/F"+label, values.Frequency[p])
+		}
 
 		log.Debug("MQTT done.")
 	}

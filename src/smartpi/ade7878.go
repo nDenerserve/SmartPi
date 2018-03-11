@@ -69,6 +69,20 @@ func (p Phase) String() string {
 	panic("Unreachable")
 }
 
+func (p Phase) PhaseNumber() string {
+	switch p {
+	case PhaseA:
+		return "1"
+	case PhaseB:
+		return "2"
+	case PhaseC:
+		return "3"
+	case PhaseN:
+		return "4"
+	}
+	panic("Unreachable")
+}
+
 var MainPhases = []Phase{PhaseA, PhaseB, PhaseC}
 
 type Readings map[Phase]float64
