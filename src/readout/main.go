@@ -49,9 +49,6 @@ import (
 	"github.com/prometheus/common/version"
 )
 
-var readouts = [...]string{
-	"I1", "I2", "I3", "I4", "V1", "V2", "V3", "P1", "P2", "P3", "COS1", "COS2", "COS3", "F1", "F2", "F3"}
-
 func makeReadoutAccumulator() (r smartpi.ReadoutAccumulator) {
 	r.Current = make(smartpi.Readings)
 	r.Voltage = make(smartpi.Readings)
