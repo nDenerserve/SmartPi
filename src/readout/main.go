@@ -88,49 +88,49 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		mqttclient = newMQTTClient(config)
 	}
 
-	dataAccumulator := makeReadoutAccumulator()
+	accumulator := makeReadoutAccumulator()
 	i := 0
 
 	for {
-		values := makeReadout()
+		readouts := makeReadout()
 		// Restart the accumulator loop every 60 seconds.
 		if i > 59 {
 			i = 0
-			dataAccumulator = makeReadoutAccumulator()
+			accumulator = makeReadoutAccumulator()
 		}
 
 		startTime := time.Now()
 
 		// Update the accumlator.
-		smartpi.ReadPhase(device, config, smartpi.PhaseN, &values)
-		dataAccumulator.Current[smartpi.PhaseN] += values.Current[smartpi.PhaseN] / 60.0
+		smartpi.ReadPhase(device, config, smartpi.PhaseN, &readouts)
+		accumulator.Current[smartpi.PhaseN] += readouts.Current[smartpi.PhaseN] / 60.0
 		for _, p = range smartpi.MainPhases {
-			smartpi.ReadPhase(device, config, p, &values)
-			dataAccumulator.Current[p] += values.Current[p] / 60.0
-			dataAccumulator.Voltage[p] += values.Voltage[p] / 60.0
-			dataAccumulator.ActiveWatts[p] += values.ActiveWatts[p] / 60.0
-			dataAccumulator.CosPhi[p] += values.CosPhi[p] / 60.0
-			dataAccumulator.Frequency[p] += values.Frequency[p] / 60.0
+			smartpi.ReadPhase(device, config, p, &readouts)
+			accumulator.Current[p] += readouts.Current[p] / 60.0
+			accumulator.Voltage[p] += readouts.Voltage[p] / 60.0
+			accumulator.ActiveWatts[p] += readouts.ActiveWatts[p] / 60.0
+			accumulator.CosPhi[p] += readouts.CosPhi[p] / 60.0
+			accumulator.Frequency[p] += readouts.Frequency[p] / 60.0
 
-			if values.ActiveWatts[p] >= 0 {
-				dataAccumulator.WattHoursConsumed[p] += math.Abs(values.ActiveWatts[p]) / 3600.0
+			if readouts.ActiveWatts[p] >= 0 {
+				accumulator.WattHoursConsumed[p] += math.Abs(readouts.ActiveWatts[p]) / 3600.0
 			} else {
-				dataAccumulator.WattHoursProduced[p] += math.Abs(values.ActiveWatts[p]) / 3600.0
+				accumulator.WattHoursProduced[p] += math.Abs(readouts.ActiveWatts[p]) / 3600.0
 			}
 		}
 
 		// Update metrics endpoint.
-		updatePrometheusMetrics(&values)
+		updatePrometheusMetrics(&readouts)
 
 		// Every 5 seconds
 		if i%5 == 0 {
 			if config.SharedFileEnabled {
-				writeSharedFile(config, &values)
+				writeSharedFile(config, &readouts)
 			}
 
 			// Publish readouts to MQTT.
 			if config.MQTTenabled {
-				publishMQTTReadouts(config, mqttclient, &values)
+				publishMQTTReadouts(config, mqttclient, &readouts)
 			}
 		}
 
@@ -138,19 +138,19 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		if i == 59 {
 			// Update SQLlite database.
 			if config.DatabaseEnabled {
-				updateSQLiteDatabase(config, dataAccumulator)
+				updateSQLiteDatabase(config, accumulator)
 			}
 
 			// Update persistent counter files.
 			if config.CounterEnabled {
 				consumed = 0.0
 				for _, p = range smartpi.MainPhases {
-					consumed += dataAccumulator.WattHoursConsumed[p]
+					consumed += accumulator.WattHoursConsumed[p]
 				}
 				updateCounterFile(config, consumerCounterFile, consumed)
 				produced = 0.0
 				for _, p = range smartpi.MainPhases {
-					produced += dataAccumulator.WattHoursProduced[p]
+					produced += accumulator.WattHoursProduced[p]
 				}
 				updateCounterFile(config, producerCounterFile, produced)
 			}
