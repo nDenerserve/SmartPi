@@ -52,8 +52,34 @@ import (
 var readouts = [...]string{
 	"I1", "I2", "I3", "I4", "V1", "V2", "V3", "P1", "P2", "P3", "COS1", "COS2", "COS3", "F1", "F2", "F3"}
 
+func makeReadoutAccumulator() (r smartpi.ReadoutAccumulator) {
+	r.Current = make(smartpi.Readings)
+	r.Voltage = make(smartpi.Readings)
+	r.ActiveWatts = make(smartpi.Readings)
+	r.CosPhi = make(smartpi.Readings)
+	r.Frequency = make(smartpi.Readings)
+	r.WattHoursConsumed = make(smartpi.Readings)
+	r.WattHoursProduced = make(smartpi.Readings)
+	return r
+}
+
+func makeReadout() (r smartpi.ADE7878Readout) {
+	r.Current = make(smartpi.Readings)
+	r.Voltage = make(smartpi.Readings)
+	r.ActiveWatts = make(smartpi.Readings)
+	r.CosPhi = make(smartpi.Readings)
+	r.Frequency = make(smartpi.Readings)
+	r.ApparentPower = make(smartpi.Readings)
+	r.ReactivePower = make(smartpi.Readings)
+	r.PowerFactor = make(smartpi.Readings)
+	r.ActiveEnergy = make(smartpi.Readings)
+	return r
+}
+
 func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 	var mqttclient MQTT.Client
+	var consumed, produced float64
+	var p smartpi.Phase
 
 	consumerCounterFile := filepath.Join(config.CounterDir, "consumecounter")
 	producerCounterFile := filepath.Join(config.CounterDir, "producecounter")
@@ -62,64 +88,35 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		mqttclient = newMQTTClient(config)
 	}
 
-	data := make([]float64, 22)
+	dataAccumulator := makeReadoutAccumulator()
 	i := 0
 
 	for {
-		values := smartpi.ADE7878Readout{}
-		values.Current = make(smartpi.Readings)
-		values.Voltage = make(smartpi.Readings)
-		values.ActiveWatts = make(smartpi.Readings)
-		values.CosPhi = make(smartpi.Readings)
-		values.Frequency = make(smartpi.Readings)
-		values.ApparentPower = make(smartpi.Readings)
-		values.ReactivePower = make(smartpi.Readings)
-		values.PowerFactor = make(smartpi.Readings)
-		values.ActiveEnergy = make(smartpi.Readings)
+		values := makeReadout()
 		// Restart the accumulator loop every 60 seconds.
 		if i > 59 {
 			i = 0
-			data = make([]float64, 22)
+			dataAccumulator = makeReadoutAccumulator()
 		}
 
 		startTime := time.Now()
-		smartpi.ReadPhase(device, config, smartpi.PhaseA, &values)
-		smartpi.ReadPhase(device, config, smartpi.PhaseB, &values)
-		smartpi.ReadPhase(device, config, smartpi.PhaseA, &values)
-		smartpi.ReadPhase(device, config, smartpi.PhaseN, &values)
 
 		// Update the accumlator.
-		data[0] += values.Current[smartpi.PhaseA] / 60.0
-		data[1] += values.Current[smartpi.PhaseB] / 60.0
-		data[2] += values.Current[smartpi.PhaseC] / 60.0
-		data[3] += values.Current[smartpi.PhaseN] / 60.0
-		data[4] += values.Voltage[smartpi.PhaseA] / 60.0
-		data[5] += values.Voltage[smartpi.PhaseB] / 60.0
-		data[6] += values.Voltage[smartpi.PhaseC] / 60.0
-		data[7] += values.ActiveWatts[smartpi.PhaseA] / 60.0
-		data[8] += values.ActiveWatts[smartpi.PhaseB] / 60.0
-		data[9] += values.ActiveWatts[smartpi.PhaseC] / 60.0
-		data[10] += values.CosPhi[smartpi.PhaseA] / 60.0
-		data[11] += values.CosPhi[smartpi.PhaseB] / 60.0
-		data[12] += values.CosPhi[smartpi.PhaseC] / 60.0
-		data[13] += values.Frequency[smartpi.PhaseA] / 60.0
-		data[14] += values.Frequency[smartpi.PhaseB] / 60.0
-		data[15] += values.Frequency[smartpi.PhaseC] / 60.0
+		smartpi.ReadPhase(device, config, smartpi.PhaseN, &values)
+		dataAccumulator.Current[smartpi.PhaseN] += values.Current[smartpi.PhaseN] / 60.0
+		for _, p = range smartpi.MainPhases {
+			smartpi.ReadPhase(device, config, p, &values)
+			dataAccumulator.Current[p] += values.Current[p] / 60.0
+			dataAccumulator.Voltage[p] += values.Voltage[p] / 60.0
+			dataAccumulator.ActiveWatts[p] += values.ActiveWatts[p] / 60.0
+			dataAccumulator.CosPhi[p] += values.CosPhi[p] / 60.0
+			dataAccumulator.Frequency[p] += values.Frequency[p] / 60.0
 
-		if values.ActiveWatts[smartpi.PhaseA] >= 0 {
-			data[16] += math.Abs(values.ActiveWatts[smartpi.PhaseA]) / 3600.0
-		} else {
-			data[19] += math.Abs(values.ActiveWatts[smartpi.PhaseA]) / 3600.0
-		}
-		if values.ActiveWatts[smartpi.PhaseB] >= 0 {
-			data[17] += math.Abs(values.ActiveWatts[smartpi.PhaseB]) / 3600.0
-		} else {
-			data[20] += math.Abs(values.ActiveWatts[smartpi.PhaseA]) / 3600.0
-		}
-		if values.ActiveWatts[smartpi.PhaseC] >= 0 {
-			data[18] += math.Abs(values.ActiveWatts[smartpi.PhaseC]) / 3600.0
-		} else {
-			data[21] += math.Abs(values.ActiveWatts[smartpi.PhaseA]) / 3600.0
+			if values.ActiveWatts[p] >= 0 {
+				dataAccumulator.WattHoursConsumed[p] += math.Abs(values.ActiveWatts[p]) / 3600.0
+			} else {
+				dataAccumulator.WattHoursProduced[p] += math.Abs(values.ActiveWatts[p]) / 3600.0
+			}
 		}
 
 		// Update metrics endpoint.
@@ -141,13 +138,21 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		if i == 59 {
 			// Update SQLlite database.
 			if config.DatabaseEnabled {
-				updateSQLiteDatabase(config, data)
+				updateSQLiteDatabase(config, dataAccumulator)
 			}
 
 			// Update persistent counter files.
 			if config.CounterEnabled {
-				updateCounterFile(config, consumerCounterFile, float64(data[16]+data[17]+data[18]))
-				updateCounterFile(config, producerCounterFile, float64(data[19]+data[20]+data[21]))
+				consumed = 0.0
+				for _, p = range smartpi.MainPhases {
+					consumed += dataAccumulator.WattHoursConsumed[p]
+				}
+				updateCounterFile(config, consumerCounterFile, consumed)
+				produced = 0.0
+				for _, p = range smartpi.MainPhases {
+					produced += dataAccumulator.WattHoursProduced[p]
+				}
+				updateCounterFile(config, producerCounterFile, produced)
 			}
 		}
 

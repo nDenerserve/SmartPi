@@ -30,6 +30,16 @@ import (
 	"time"
 )
 
+type ReadoutAccumulator struct {
+	Current           Readings
+	Voltage           Readings
+	ActiveWatts       Readings
+	CosPhi            Readings
+	Frequency         Readings
+	WattHoursConsumed Readings
+	WattHoursProduced Readings
+}
+
 func Checkpanic(e error) {
 	if e != nil {
 		panic(e)
