@@ -69,6 +69,8 @@ func (p Phase) String() string {
 	panic("Unreachable")
 }
 
+var MainPhases = []Phase{PhaseA, PhaseB, PhaseC}
+
 type Readings map[Phase]float64
 
 type ADE7878Readout struct {
