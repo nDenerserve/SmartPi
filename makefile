@@ -13,7 +13,9 @@ GOINSTALL=$(GO) install
 GOCLEAN=$(GO) clean
 GOGET=$(GO) get
 
-all: makedir get buildsmartpireadout buildsmartpiserver buildsmartpiftpupload
+pkgs = $(shell $(GO) list ./src/...)
+
+all: format makedir get buildsmartpireadout buildsmartpiserver buildsmartpiftpupload
 #all: makedir get buildsmartpireadout
 
 makedir:
@@ -22,6 +24,10 @@ makedir:
 	@if [ ! -d $(BUILDPATH)/pkg ] ; then mkdir -p $(BUILDPATH)/pkg ; fi
 
 get:
+
+format:
+	@echo "formatting code..."
+	@$(GO) fmt $(pkgs)
 
 buildsmartpireadout:
 	@echo "start building smartpireadout..."
