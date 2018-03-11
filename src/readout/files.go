@@ -18,23 +18,31 @@ import (
 func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout) {
 	var f *os.File
 	var err error
+	var p smartpi.Phase
 	s := make([]string, 16)
-	s[0] = fmt.Sprintf("%g", values.Current[smartpi.PhaseA])
-	s[1] = fmt.Sprintf("%g", values.Current[smartpi.PhaseB])
-	s[2] = fmt.Sprintf("%g", values.Current[smartpi.PhaseC])
-	s[3] = fmt.Sprintf("%g", values.Current[smartpi.PhaseN])
-	s[4] = fmt.Sprintf("%g", values.Voltage[smartpi.PhaseA])
-	s[5] = fmt.Sprintf("%g", values.Voltage[smartpi.PhaseB])
-	s[6] = fmt.Sprintf("%g", values.Voltage[smartpi.PhaseC])
-	s[7] = fmt.Sprintf("%g", values.ActiveWatts[smartpi.PhaseA])
-	s[8] = fmt.Sprintf("%g", values.ActiveWatts[smartpi.PhaseB])
-	s[9] = fmt.Sprintf("%g", values.ActiveWatts[smartpi.PhaseC])
-	s[10] = fmt.Sprintf("%g", values.CosPhi[smartpi.PhaseA])
-	s[11] = fmt.Sprintf("%g", values.CosPhi[smartpi.PhaseB])
-	s[12] = fmt.Sprintf("%g", values.CosPhi[smartpi.PhaseC])
-	s[13] = fmt.Sprintf("%g", values.Frequency[smartpi.PhaseA])
-	s[14] = fmt.Sprintf("%g", values.Frequency[smartpi.PhaseB])
-	s[15] = fmt.Sprintf("%g", values.Frequency[smartpi.PhaseC])
+	i := 0
+	for _, p = range smartpi.MainPhases {
+		s[i] = fmt.Sprint(values.Current[p])
+		i++
+	}
+	s[i] = fmt.Sprint(values.Current[smartpi.PhaseN])
+	i++
+	for _, p = range smartpi.MainPhases {
+		s[i] = fmt.Sprint(values.Voltage[p])
+		i++
+	}
+	for _, p = range smartpi.MainPhases {
+		s[i] = fmt.Sprint(values.ActiveWatts[p])
+		i++
+	}
+	for _, p = range smartpi.MainPhases {
+		s[i] = fmt.Sprint(values.CosPhi[p])
+		i++
+	}
+	for _, p = range smartpi.MainPhases {
+		s[i] = fmt.Sprint(values.Frequency[p])
+		i++
+	}
 	t := time.Now()
 	timeStamp := t.Format("2006-01-02 15:04:05")
 	logLine := "## Shared File Update ## "
