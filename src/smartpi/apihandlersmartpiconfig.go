@@ -32,7 +32,6 @@ package smartpi
 
 import (
 	// "fmt"
-	"github.com/gorilla/mux"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -42,8 +41,9 @@ import (
 
 	"github.com/fatih/structs"
 	"github.com/gorilla/context"
-	"github.com/oleiade/reflections"
+	"github.com/gorilla/mux"
 	"github.com/nDenerserve/SmartPi/src/smartpi/network"
+	"github.com/oleiade/reflections"
 )
 
 type JSONMessage struct {
@@ -62,8 +62,9 @@ type networkList struct {
 }
 type wifiSettings struct {
 	Ssid string `json:"ssid"`
-	Key string `json:"key"`
+	Key  string `json:"key"`
 }
+
 func ReadConfig(w http.ResponseWriter, r *http.Request) {
 	// vars := mux.Vars(r)
 	// name := vars["name"]
@@ -242,7 +243,6 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 	// }
 }
 
-
 func WifiList(w http.ResponseWriter, r *http.Request) {
 	// vars := mux.Vars(r)
 	// name := vars["name"]
@@ -251,7 +251,7 @@ func WifiList(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 
-	if err := json.NewEncoder(w).Encode(wifiList {Wifilist: wifi}); err != nil {
+	if err := json.NewEncoder(w).Encode(wifiList{Wifilist: wifi}); err != nil {
 		panic(err)
 	}
 
@@ -266,7 +266,7 @@ func NetworkConnections(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 
-	if err := json.NewEncoder(w).Encode(networkList {Networklist: network}); err != nil {
+	if err := json.NewEncoder(w).Encode(networkList{Networklist: network}); err != nil {
 		panic(err)
 	}
 }
@@ -290,9 +290,9 @@ func CreateWifi(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 		if err := json.NewEncoder(w).Encode(JSONMessage{Code: 500, Message: "Internal Server Error"}); err != nil {
-				panic(err)
-			}
-			return
+			panic(err)
+		}
+		return
 	}
 
 	if err := json.NewEncoder(w).Encode(JSONMessage{Code: 200, Message: "Ok"}); err != nil {
@@ -303,16 +303,15 @@ func CreateWifi(w http.ResponseWriter, r *http.Request) {
 func RemoveWifi(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
-    name := vars["name"]
-
+	name := vars["name"]
 
 	err := network.RemoveWifi(name)
 	if err != nil {
 		log.Println(err)
 		if err := json.NewEncoder(w).Encode(JSONMessage{Code: 500, Message: "Internal Server Error"}); err != nil {
-				panic(err)
-			}
-			return
+			panic(err)
+		}
+		return
 	}
 
 	if err := json.NewEncoder(w).Encode(JSONMessage{Code: 200, Message: "Ok"}); err != nil {
@@ -325,7 +324,6 @@ func RemoveWifi(w http.ResponseWriter, r *http.Request) {
 
 // 	vars := mux.Vars(r)
 //     name := vars["name"]
-
 
 // 	err := network.ActivateWifi(name)
 // 	if err != nil {
@@ -346,7 +344,6 @@ func RemoveWifi(w http.ResponseWriter, r *http.Request) {
 
 // 	vars := mux.Vars(r)
 //     name := vars["name"]
-
 
 // 	err := network.DeactivateWifi(name)
 // 	if err != nil {
@@ -391,8 +388,6 @@ func RemoveWifi(w http.ResponseWriter, r *http.Request) {
 // 		panic(err)
 // 	}
 // }
-
-
 
 func b2i(b bool) int {
 	if b {
