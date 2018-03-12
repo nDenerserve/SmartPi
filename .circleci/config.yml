@@ -4,7 +4,7 @@ version: 2
 jobs:
   build_arm:
     docker:
-    - image:: circleci/golang:1.9
+    - image: circleci/golang:1.9
     working_directory: /go/src/github.com/nDenerserve/SmartPi
 
     environment:
