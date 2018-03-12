@@ -25,22 +25,22 @@
 package network
 
 import (
-	"errors"
-	log "github.com/Sirupsen/logrus"
 	"bufio"
+	"errors"
 	"fmt"
 	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
-)
 
+	log "github.com/Sirupsen/logrus"
+)
 
 // WifiInfo represents meta data about a WIFI network
 type WifiInfo struct {
 	SSID     string `json:"ssid"`
 	RSSI     int    `json:"rssi"`
-	BSSID    string	`json:"bssid"`
+	BSSID    string `json:"bssid"`
 	Channel  int    `json:"channel"`
 	Security bool   `json:"security"`
 	Active   bool   `json:"active"`
@@ -62,7 +62,6 @@ func ScanWifi() ([]WifiInfo, error) {
 		return wifilist, err
 	}
 	activessid = string(out)
-
 
 	out, err = exec.Command("/bin/sh", "-c", `sudo iwlist wlan0 scan | egrep "ESSID:|Address:|Quality=|Encryption key:|Channel:" | sed -e  "s#^.*Channel:##" -e "s#^.*ESSID:##" -e "s#^.*Encryption key:##" -e "s#^.*Address: ##" -e "s#^.*Signal level=##" -e "s/\"//" -e "s/\"//"`).Output()
 	if err != nil {
@@ -87,7 +86,7 @@ func ScanWifi() ([]WifiInfo, error) {
 		case 5:
 			wifiactive = false
 			wifissid = line
-			if (strings.Contains(activessid,wifissid)) {
+			if strings.Contains(activessid, wifissid) {
 				wifiactive = true
 			}
 			wifilist = append(wifilist, WifiInfo{SSID: wifissid, BSSID: wifibssid, RSSI: wifisignal, Channel: wifichannel, Security: wifisecurity, Active: wifiactive})
@@ -97,12 +96,10 @@ func ScanWifi() ([]WifiInfo, error) {
 	return wifilist, nil
 }
 
-
-
 func ListNetworkConnections() ([]NetworkInfo, error) {
-	
+
 	var listOfActiveDevices []NetworkInfo
-	
+
 	networklist, err := LocalAddresses()
 	if err != nil {
 		log.Println(err)
@@ -113,23 +110,23 @@ func ListNetworkConnections() ([]NetworkInfo, error) {
 		if len(i.Addrs) > 1 {
 			listOfActiveDevices = append(listOfActiveDevices, i)
 		}
-	} 
-	
+	}
+
 	return listOfActiveDevices, nil
 }
 
 func AddWifi(ssid string, key string) error {
 
 	text :=
-	`
+		`
 	network={
-			ssid=\"`+ssid+`\"
-			psk=\"`+key+`\"
+			ssid=\"` + ssid + `\"
+			psk=\"` + key + `\"
 			key_mgmt=WPA-PSK
 	}
 	`
 
-	_, err := exec.Command("/bin/sh", "-c", `echo "`+text+`" | sudo tee --append /etc/wpa_supplicant/wpa_supplicant.conf > /dev/null`).Output()	
+	_, err := exec.Command("/bin/sh", "-c", `echo "`+text+`" | sudo tee --append /etc/wpa_supplicant/wpa_supplicant.conf > /dev/null`).Output()
 	if err != nil {
 		log.Println(err)
 		return errors.New("activation faild")
@@ -139,13 +136,12 @@ func AddWifi(ssid string, key string) error {
 		log.Println(err)
 		return err
 	}
-	
+
 	return nil
 }
 
-
 func ReconfigureWifi() error {
-	_, err := exec.Command("/bin/sh", "-c", `sudo wpa_cli -i wlan0 reconfigure`).Output()	
+	_, err := exec.Command("/bin/sh", "-c", `sudo wpa_cli -i wlan0 reconfigure`).Output()
 	if err != nil {
 		log.Println(err)
 		return errors.New("activation faild")
@@ -159,7 +155,7 @@ func RemoveWifi(ssid string) error {
 		log.Println(err)
 		return err
 	}
-	_, err = exec.Command("/bin/sh", "-c", `echo "`+string(out)+`" | sudo tee /etc/wpa_supplicant/wpa_supplicant.conf > /dev/null`).Output()	
+	_, err = exec.Command("/bin/sh", "-c", `echo "`+string(out)+`" | sudo tee /etc/wpa_supplicant/wpa_supplicant.conf > /dev/null`).Output()
 	if err != nil {
 		log.Println(err)
 		return errors.New("Remove faild")
@@ -169,12 +165,9 @@ func RemoveWifi(ssid string) error {
 		log.Println(err)
 		return err
 	}
-	
+
 	return nil
-} 
-
-
-
+}
 
 func parseBool(str string) (value bool, err error) {
 	switch str {
