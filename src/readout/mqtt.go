@@ -32,7 +32,24 @@ func newMQTTClient(c *smartpi.Config) (mqttclient MQTT.Client) {
 	return mqttclient
 }
 
-func publishMQTTReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [28]float64) {
+func publishMQTT(m MQTT.Client, status *bool, t string, v float64) bool {
+	if *status {
+		log.Debugf("  -> ", t, ":", v)
+		token := m.Publish(t, 1, false, strconv.FormatFloat(v, 'f', 2, 32))
+
+		if !token.WaitTimeout(2 * time.Second) {
+			log.Debugf("  MQTT Timeout. Stopping MQTT sequence.")
+			return false
+		} else if token.Error() != nil {
+			log.Error(token.Error())
+			return false
+		}
+		return true
+	}
+	return false
+}
+
+func publishMQTTReadouts(c *smartpi.Config, mqttclient MQTT.Client, values *smartpi.ADE7878Readout) {
 	//[basetopic]/[node]/[keyname]
 	// Let's try to (re-)connect if MQTT connection was lost.
 	if !mqttclient.IsConnected() {
@@ -45,23 +62,16 @@ func publishMQTTReadouts(c *smartpi.Config, mqttclient MQTT.Client, values [28]f
 
 		// Status is used to stop MQTT publication sequence in case of first error.
 		var status = true
-
-		for i := 0; i < len(readouts); i++ {
-			topic := c.MQTTtopic + "/" + readouts[i]
-
-			if status {
-				log.Debugf("  -> ", topic, ":", values[i])
-				token := mqttclient.Publish(topic, 1, false, strconv.FormatFloat(values[i], 'f', 2, 32))
-
-				if !token.WaitTimeout(2 * time.Second) {
-					log.Debugf("  MQTT Timeout. Stopping MQTT sequence.")
-					status = false
-				} else if token.Error() != nil {
-					log.Error(token.Error())
-					status = false
-				}
-			}
+		publishMQTT(mqttclient, &status, c.MQTTtopic+"/I4", values.Current[smartpi.PhaseN])
+		for _, p := range smartpi.MainPhases {
+			label := p.PhaseNumber()
+			publishMQTT(mqttclient, &status, c.MQTTtopic+"/I"+label, values.Current[p])
+			publishMQTT(mqttclient, &status, c.MQTTtopic+"/V"+label, values.Voltage[p])
+			publishMQTT(mqttclient, &status, c.MQTTtopic+"/P"+label, values.ActiveWatts[p])
+			publishMQTT(mqttclient, &status, c.MQTTtopic+"/COS"+label, values.CosPhi[p])
+			publishMQTT(mqttclient, &status, c.MQTTtopic+"/F"+label, values.Frequency[p])
 		}
+
 		log.Debug("MQTT done.")
 	}
 }

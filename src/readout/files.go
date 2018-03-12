@@ -15,12 +15,33 @@ import (
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 )
 
-func writeSharedFile(c *smartpi.Config, values [28]float64) {
+func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout) {
 	var f *os.File
 	var err error
+	var p smartpi.Phase
 	s := make([]string, 16)
-	for i, v := range values[0:16] {
-		s[i] = fmt.Sprintf("%g", v)
+	i := 0
+	for _, p = range smartpi.MainPhases {
+		s[i] = fmt.Sprint(values.Current[p])
+		i++
+	}
+	s[i] = fmt.Sprint(values.Current[smartpi.PhaseN])
+	i++
+	for _, p = range smartpi.MainPhases {
+		s[i] = fmt.Sprint(values.Voltage[p])
+		i++
+	}
+	for _, p = range smartpi.MainPhases {
+		s[i] = fmt.Sprint(values.ActiveWatts[p])
+		i++
+	}
+	for _, p = range smartpi.MainPhases {
+		s[i] = fmt.Sprint(values.CosPhi[p])
+		i++
+	}
+	for _, p = range smartpi.MainPhases {
+		s[i] = fmt.Sprint(values.Frequency[p])
+		i++
 	}
 	t := time.Now()
 	timeStamp := t.Format("2006-01-02 15:04:05")

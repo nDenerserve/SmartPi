@@ -56,12 +56,12 @@ type Config struct {
 	// [device]
 	I2CDevice            string
 	PowerFrequency       float64
-	CTType               map[string]string
-	CTTypePrimaryCurrent map[string]int
-	CurrentDirection     map[string]bool
-	MeasureCurrent       map[string]bool
-	MeasureVoltage       map[string]bool
-	Voltage              map[string]float64
+	CTType               map[Phase]string
+	CTTypePrimaryCurrent map[Phase]int
+	CurrentDirection     map[Phase]bool
+	MeasureCurrent       map[Phase]bool
+	MeasureVoltage       map[Phase]bool
+	Voltage              map[Phase]float64
 
 	// [ftp]
 	FTPupload bool
@@ -138,33 +138,33 @@ func (p *Config) ReadParameterFromFile() {
 	// [device]
 	p.I2CDevice = cfg.Section("device").Key("i2c_device").MustString("/dev/i2c-1")
 	p.PowerFrequency = cfg.Section("device").Key("power_frequency").MustFloat64(50)
-	p.CTType = make(map[string]string)
-	p.CTType["A"] = cfg.Section("device").Key("ct_type_1").MustString("YHDC_SCT013")
-	p.CTType["B"] = cfg.Section("device").Key("ct_type_2").MustString("YHDC_SCT013")
-	p.CTType["C"] = cfg.Section("device").Key("ct_type_3").MustString("YHDC_SCT013")
-	p.CTType["N"] = cfg.Section("device").Key("ct_type_4").MustString("YHDC_SCT013")
-	p.CTTypePrimaryCurrent = make(map[string]int)
-	p.CTTypePrimaryCurrent["A"] = cfg.Section("device").Key("ct_type_1_primary_current").MustInt(100)
-	p.CTTypePrimaryCurrent["B"] = cfg.Section("device").Key("ct_type_2_primary_current").MustInt(100)
-	p.CTTypePrimaryCurrent["C"] = cfg.Section("device").Key("ct_type_3_primary_current").MustInt(100)
-	p.CTTypePrimaryCurrent["N"] = cfg.Section("device").Key("ct_type_4_primary_current").MustInt(100)
-	p.CurrentDirection = make(map[string]bool)
-	p.CurrentDirection["A"] = cfg.Section("device").Key("change_current_direction_1").MustBool(false)
-	p.CurrentDirection["B"] = cfg.Section("device").Key("change_current_direction_2").MustBool(false)
-	p.CurrentDirection["C"] = cfg.Section("device").Key("change_current_direction_3").MustBool(false)
-	p.MeasureCurrent = make(map[string]bool)
-	p.MeasureCurrent["A"] = cfg.Section("device").Key("measure_current_1").MustBool(true)
-	p.MeasureCurrent["B"] = cfg.Section("device").Key("measure_current_2").MustBool(true)
-	p.MeasureCurrent["C"] = cfg.Section("device").Key("measure_current_3").MustBool(true)
-	p.MeasureCurrent["N"] = true // Always measure Neutral.
-	p.MeasureVoltage = make(map[string]bool)
-	p.MeasureVoltage["A"] = cfg.Section("device").Key("measure_voltage_1").MustBool(true)
-	p.MeasureVoltage["B"] = cfg.Section("device").Key("measure_voltage_2").MustBool(true)
-	p.MeasureVoltage["C"] = cfg.Section("device").Key("measure_voltage_3").MustBool(true)
-	p.Voltage = make(map[string]float64)
-	p.Voltage["A"] = cfg.Section("device").Key("voltage_1").MustFloat64(230)
-	p.Voltage["B"] = cfg.Section("device").Key("voltage_2").MustFloat64(230)
-	p.Voltage["C"] = cfg.Section("device").Key("voltage_3").MustFloat64(230)
+	p.CTType = make(map[Phase]string)
+	p.CTType[PhaseA] = cfg.Section("device").Key("ct_type_1").MustString("YHDC_SCT013")
+	p.CTType[PhaseB] = cfg.Section("device").Key("ct_type_2").MustString("YHDC_SCT013")
+	p.CTType[PhaseC] = cfg.Section("device").Key("ct_type_3").MustString("YHDC_SCT013")
+	p.CTType[PhaseN] = cfg.Section("device").Key("ct_type_4").MustString("YHDC_SCT013")
+	p.CTTypePrimaryCurrent = make(map[Phase]int)
+	p.CTTypePrimaryCurrent[PhaseA] = cfg.Section("device").Key("ct_type_1_primary_current").MustInt(100)
+	p.CTTypePrimaryCurrent[PhaseB] = cfg.Section("device").Key("ct_type_2_primary_current").MustInt(100)
+	p.CTTypePrimaryCurrent[PhaseC] = cfg.Section("device").Key("ct_type_3_primary_current").MustInt(100)
+	p.CTTypePrimaryCurrent[PhaseN] = cfg.Section("device").Key("ct_type_4_primary_current").MustInt(100)
+	p.CurrentDirection = make(map[Phase]bool)
+	p.CurrentDirection[PhaseA] = cfg.Section("device").Key("change_current_direction_1").MustBool(false)
+	p.CurrentDirection[PhaseB] = cfg.Section("device").Key("change_current_direction_2").MustBool(false)
+	p.CurrentDirection[PhaseC] = cfg.Section("device").Key("change_current_direction_3").MustBool(false)
+	p.MeasureCurrent = make(map[Phase]bool)
+	p.MeasureCurrent[PhaseA] = cfg.Section("device").Key("measure_current_1").MustBool(true)
+	p.MeasureCurrent[PhaseB] = cfg.Section("device").Key("measure_current_2").MustBool(true)
+	p.MeasureCurrent[PhaseC] = cfg.Section("device").Key("measure_current_3").MustBool(true)
+	p.MeasureCurrent[PhaseN] = true // Always measure Neutral.
+	p.MeasureVoltage = make(map[Phase]bool)
+	p.MeasureVoltage[PhaseA] = cfg.Section("device").Key("measure_voltage_1").MustBool(true)
+	p.MeasureVoltage[PhaseB] = cfg.Section("device").Key("measure_voltage_2").MustBool(true)
+	p.MeasureVoltage[PhaseC] = cfg.Section("device").Key("measure_voltage_3").MustBool(true)
+	p.Voltage = make(map[Phase]float64)
+	p.Voltage[PhaseA] = cfg.Section("device").Key("voltage_1").MustFloat64(230)
+	p.Voltage[PhaseB] = cfg.Section("device").Key("voltage_2").MustFloat64(230)
+	p.Voltage[PhaseC] = cfg.Section("device").Key("voltage_3").MustFloat64(230)
 
 	// [ftp]
 	p.FTPupload = cfg.Section("ftp").Key("ftp_upload").MustBool(false)
@@ -221,31 +221,31 @@ func (p *Config) SaveParameterToFile() {
 	// [device]
 	_, err = cfg.Section("device").NewKey("i2c_device", p.I2CDevice)
 	_, err = cfg.Section("device").NewKey("power_frequency", strconv.FormatInt(int64(p.PowerFrequency), 10))
-	_, err = cfg.Section("device").NewKey("ct_type_1", p.CTType["A"])
-	_, err = cfg.Section("device").NewKey("ct_type_2", p.CTType["B"])
-	_, err = cfg.Section("device").NewKey("ct_type_3", p.CTType["C"])
-	_, err = cfg.Section("device").NewKey("ct_type_4", p.CTType["N"])
+	_, err = cfg.Section("device").NewKey("ct_type_1", p.CTType[PhaseA])
+	_, err = cfg.Section("device").NewKey("ct_type_2", p.CTType[PhaseB])
+	_, err = cfg.Section("device").NewKey("ct_type_3", p.CTType[PhaseC])
+	_, err = cfg.Section("device").NewKey("ct_type_4", p.CTType[PhaseN])
 
-	_, err = cfg.Section("device").NewKey("ct_type_1_primary_current", strconv.FormatInt(int64(p.CTTypePrimaryCurrent["A"]), 10))
-	_, err = cfg.Section("device").NewKey("ct_type_2_primary_current", strconv.FormatInt(int64(p.CTTypePrimaryCurrent["B"]), 10))
-	_, err = cfg.Section("device").NewKey("ct_type_3_primary_current", strconv.FormatInt(int64(p.CTTypePrimaryCurrent["C"]), 10))
-	_, err = cfg.Section("device").NewKey("ct_type_4_primary_current", strconv.FormatInt(int64(p.CTTypePrimaryCurrent["N"]), 10))
+	_, err = cfg.Section("device").NewKey("ct_type_1_primary_current", strconv.FormatInt(int64(p.CTTypePrimaryCurrent[PhaseA]), 10))
+	_, err = cfg.Section("device").NewKey("ct_type_2_primary_current", strconv.FormatInt(int64(p.CTTypePrimaryCurrent[PhaseB]), 10))
+	_, err = cfg.Section("device").NewKey("ct_type_3_primary_current", strconv.FormatInt(int64(p.CTTypePrimaryCurrent[PhaseC]), 10))
+	_, err = cfg.Section("device").NewKey("ct_type_4_primary_current", strconv.FormatInt(int64(p.CTTypePrimaryCurrent[PhaseN]), 10))
 
-	_, err = cfg.Section("device").NewKey("change_current_direction_1", strconv.FormatBool(p.CurrentDirection["A"]))
-	_, err = cfg.Section("device").NewKey("change_current_direction_2", strconv.FormatBool(p.CurrentDirection["B"]))
-	_, err = cfg.Section("device").NewKey("change_current_direction_3", strconv.FormatBool(p.CurrentDirection["C"]))
+	_, err = cfg.Section("device").NewKey("change_current_direction_1", strconv.FormatBool(p.CurrentDirection[PhaseA]))
+	_, err = cfg.Section("device").NewKey("change_current_direction_2", strconv.FormatBool(p.CurrentDirection[PhaseB]))
+	_, err = cfg.Section("device").NewKey("change_current_direction_3", strconv.FormatBool(p.CurrentDirection[PhaseC]))
 
-	_, err = cfg.Section("device").NewKey("measure_current_1", strconv.FormatBool(p.MeasureCurrent["A"]))
-	_, err = cfg.Section("device").NewKey("measure_current_2", strconv.FormatBool(p.MeasureCurrent["B"]))
-	_, err = cfg.Section("device").NewKey("measure_current_3", strconv.FormatBool(p.MeasureCurrent["C"]))
+	_, err = cfg.Section("device").NewKey("measure_current_1", strconv.FormatBool(p.MeasureCurrent[PhaseA]))
+	_, err = cfg.Section("device").NewKey("measure_current_2", strconv.FormatBool(p.MeasureCurrent[PhaseB]))
+	_, err = cfg.Section("device").NewKey("measure_current_3", strconv.FormatBool(p.MeasureCurrent[PhaseC]))
 
-	_, err = cfg.Section("device").NewKey("measure_voltage_1", strconv.FormatBool(p.MeasureVoltage["A"]))
-	_, err = cfg.Section("device").NewKey("measure_voltage_2", strconv.FormatBool(p.MeasureVoltage["B"]))
-	_, err = cfg.Section("device").NewKey("measure_voltage_3", strconv.FormatBool(p.MeasureVoltage["C"]))
+	_, err = cfg.Section("device").NewKey("measure_voltage_1", strconv.FormatBool(p.MeasureVoltage[PhaseA]))
+	_, err = cfg.Section("device").NewKey("measure_voltage_2", strconv.FormatBool(p.MeasureVoltage[PhaseB]))
+	_, err = cfg.Section("device").NewKey("measure_voltage_3", strconv.FormatBool(p.MeasureVoltage[PhaseC]))
 
-	_, err = cfg.Section("device").NewKey("voltage_1", strconv.FormatFloat(p.Voltage["A"], 'f', -1, 64))
-	_, err = cfg.Section("device").NewKey("voltage_2", strconv.FormatFloat(p.Voltage["B"], 'f', -1, 64))
-	_, err = cfg.Section("device").NewKey("voltage_3", strconv.FormatFloat(p.Voltage["C"], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("voltage_1", strconv.FormatFloat(p.Voltage[PhaseA], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("voltage_2", strconv.FormatFloat(p.Voltage[PhaseB], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("voltage_3", strconv.FormatFloat(p.Voltage[PhaseC], 'f', -1, 64))
 
 	// [ftp]
 	_, err = cfg.Section("ftp").NewKey("ftp_upload", strconv.FormatBool(p.FTPupload))

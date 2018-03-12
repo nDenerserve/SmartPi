@@ -41,7 +41,7 @@ func CreateSQlDatabase(databasedir string, t time.Time) {
 
 }
 
-func InsertData(databasedir string, t time.Time, v []float32) {
+func InsertData(databasedir string, t time.Time, v ReadoutAccumulator) {
 	db, err := sql.Open("sqlite3", databasedir+"/smartpi_logdata_"+t.Format("200601")+".db")
 	if err != nil {
 		log.Println(err)
@@ -68,7 +68,6 @@ func InsertData(databasedir string, t time.Time, v []float32) {
 		log.Println(err)
 	}
 
-
 	stmt, err := tx.Prepare("INSERT INTO smartpi_logdata_" + t.Format("200601") + " (date, current_1, current_2, current_3, current_4, voltage_1, voltage_2, voltage_3, power_1, power_2, power_3, cosphi_1, cosphi_2, cosphi_3, frequency_1, frequency_2, frequency_3, energy_pos_1, energy_pos_2, energy_pos_3, energy_neg_1, energy_neg_2, energy_neg_3) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
 
 	if err != nil {
@@ -76,7 +75,31 @@ func InsertData(databasedir string, t time.Time, v []float32) {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(t.Format("2006-01-02 15:04:05"), fmt.Sprintf("%f", v[0]), fmt.Sprintf("%f", v[1]), fmt.Sprintf("%f", v[2]), fmt.Sprintf("%f", v[3]), fmt.Sprintf("%f", v[4]), fmt.Sprintf("%f", v[5]), fmt.Sprintf("%f", v[6]), fmt.Sprintf("%f", v[7]), fmt.Sprintf("%f", v[8]), fmt.Sprintf("%f", v[9]), fmt.Sprintf("%f", v[10]), fmt.Sprintf("%f", v[11]), fmt.Sprintf("%f", v[12]), fmt.Sprintf("%f", v[13]), fmt.Sprintf("%f", v[14]), fmt.Sprintf("%f", v[15]), fmt.Sprintf("%f", v[16]), fmt.Sprintf("%f", v[17]), fmt.Sprintf("%f", v[18]), fmt.Sprintf("%f", v[19]), fmt.Sprintf("%f", v[20]), fmt.Sprintf("%f", v[21]))
+	_, err = stmt.Exec(
+		t.Format("2006-01-02 15:04:05"),
+		fmt.Sprintf("%f", v.Current[PhaseA]),
+		fmt.Sprintf("%f", v.Current[PhaseB]),
+		fmt.Sprintf("%f", v.Current[PhaseC]),
+		fmt.Sprintf("%f", v.Current[PhaseN]),
+		fmt.Sprintf("%f", v.Voltage[PhaseA]),
+		fmt.Sprintf("%f", v.Voltage[PhaseB]),
+		fmt.Sprintf("%f", v.Voltage[PhaseC]),
+		fmt.Sprintf("%f", v.ActiveWatts[PhaseA]),
+		fmt.Sprintf("%f", v.ActiveWatts[PhaseB]),
+		fmt.Sprintf("%f", v.ActiveWatts[PhaseC]),
+		fmt.Sprintf("%f", v.CosPhi[PhaseA]),
+		fmt.Sprintf("%f", v.CosPhi[PhaseB]),
+		fmt.Sprintf("%f", v.CosPhi[PhaseC]),
+		fmt.Sprintf("%f", v.Frequency[PhaseA]),
+		fmt.Sprintf("%f", v.Frequency[PhaseB]),
+		fmt.Sprintf("%f", v.Frequency[PhaseC]),
+		fmt.Sprintf("%f", v.WattHoursConsumed[PhaseA]),
+		fmt.Sprintf("%f", v.WattHoursConsumed[PhaseB]),
+		fmt.Sprintf("%f", v.WattHoursConsumed[PhaseC]),
+		fmt.Sprintf("%f", v.WattHoursProduced[PhaseA]),
+		fmt.Sprintf("%f", v.WattHoursProduced[PhaseB]),
+		fmt.Sprintf("%f", v.WattHoursProduced[PhaseC]),
+	)
 	if err != nil {
 		log.Println(err)
 	}
@@ -90,7 +113,6 @@ func ReadChartData(databasedir string, starttime time.Time, endtime time.Time) [
 	diffmonth := Monthchange(starttime, endtime)
 
 	elapsedtime := endtime
-
 
 	for i := 0; i <= diffmonth; i++ {
 
@@ -211,7 +233,7 @@ func ReadDayData(databasedir string, starttime time.Time, endtime time.Time) []*
 			val := new(MinuteValues)
 			insert := 1
 
-			entrydate,_ := time.ParseInLocation("2006-01-02T15:04:05Z",dateentry,time.Now().Location())
+			entrydate, _ := time.ParseInLocation("2006-01-02T15:04:05Z", dateentry, time.Now().Location())
 
 			for i := 0; i < len(values); i++ {
 
@@ -247,7 +269,7 @@ func ReadDayData(databasedir string, starttime time.Time, endtime time.Time) []*
 
 			if insert == 1 {
 
-				val.Date, err = time.ParseInLocation("2006-01-02T15:04:05Z",dateentry,time.Now().Location())
+				val.Date, err = time.ParseInLocation("2006-01-02T15:04:05Z", dateentry, time.Now().Location())
 				val.Current_1 = current_1
 				val.Current_2 = current_2
 				val.Current_3 = current_3
