@@ -32,6 +32,7 @@ package smartpi
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"log"
 	"math"
@@ -48,22 +49,24 @@ var Configfile string
 func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 
 	type tChartValue struct {
-		Time  string  `json:"time"`
-		Value float32 `json:"value"`
+		Time  string  `json:"time" xml:"time"`
+		Value float32 `json:"value" xml:"value"`
 	}
 
 	type tChartSerie struct {
-		Key    string        `json:"key"`
-		Values []tChartValue `json:"values"`
+		Key    string        `json:"key" xml:"key"`
+		Values []tChartValue `json:"values" xml:"values"`
 	}
 
 	var timeSeries []tChartSerie
 
+	format := "json"
 	vars := mux.Vars(r)
 	from := vars["fromDate"]
 	to := vars["toDate"]
 	phaseId := vars["phaseId"]
 	valueId := vars["valueId"]
+	format = vars["format"]
 
 	config := NewConfig()
 
@@ -167,31 +170,40 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 		timeSeries = append(timeSeries, tChartSerie{Key: valueelement, Values: values})
 	}
 
-	// JSON output of request
-	if err := json.NewEncoder(w).Encode(timeSeries); err != nil {
-		panic(err)
+	if (format == "xml") {
+		// XML output of request
+		if err := xml.NewEncoder(w).Encode(timeSeries); err != nil {
+			panic(err)
+		}
+	} else {
+		// JSON output of request
+		if err := json.NewEncoder(w).Encode(timeSeries); err != nil {
+			panic(err)
+		}
 	}
 }
 
 func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 
 	type tChartValue struct {
-		Time  string  `json:"time"`
-		Value float32 `json:"value"`
+		Time  string  `json:"time" xml:"time"`
+		Value float32 `json:"value" xml:"value"`
 	}
 
 	type tChartSerie struct {
-		Key    string        `json:"key"`
-		Values []tChartValue `json:"values"`
+		Key    string        `json:"key" xml:"key"`
+		Values []tChartValue `json:"values" xml:"values"`
 	}
 
 	var timeSeries []tChartSerie
 
+	format := "json"
 	vars := mux.Vars(r)
 	from := vars["fromDate"]
 	to := vars["toDate"]
 	phaseId := vars["phaseId"]
 	valueId := vars["valueId"]
+	format = vars["format"]
 
 	config := NewConfig()
 
@@ -294,8 +306,15 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 		timeSeries = append(timeSeries, tChartSerie{Key: valueelement, Values: values})
 	}
 
-	// JSON output of request
-	if err := json.NewEncoder(w).Encode(timeSeries); err != nil {
-		panic(err)
+	if (format == "xml") {
+		// XML output of request	
+		if err := xml.NewEncoder(w).Encode(timeSeries); err != nil {
+			panic(err)
+		}
+	} else {
+		// JSON output of request
+		if err := json.NewEncoder(w).Encode(timeSeries); err != nil {
+			panic(err)
+		}
 	}
 }

@@ -33,6 +33,7 @@ package smartpi
 import (
 	"encoding/csv"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"math"
 	"net/http"
@@ -55,9 +56,13 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 	var tempPhase *tPhase
 	var tempDataset *tDataset
 
+	format := "json"
 	vars := mux.Vars(r)
 	phaseId := vars["phaseId"]
 	valueId := vars["valueId"]
+	format = vars["format"]
+
+
 
 	config := NewConfig()
 	file, err := os.Open(config.SharedDir + "/" + config.SharedFile)
@@ -381,9 +386,20 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 		Datasets:        datasets,
 	}
 
-	// JSON output of request
-	if err := json.NewEncoder(w).Encode(measurement); err != nil {
-		panic(err)
-	}
+
+	if (format == "xml") {
+		// XML output of request
+		type response struct {
+			tMeasurement 
+		}		
+		if err := xml.NewEncoder(w).Encode(response{measurement}); err != nil {
+			panic(err)
+		}
+	} else {
+		// JSON output of request
+		if err := json.NewEncoder(w).Encode(measurement); err != nil {
+			panic(err)
+		}
+	}	
 
 }
