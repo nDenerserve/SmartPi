@@ -171,8 +171,14 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if (format == "xml") {
+
+		type serie []tChartSerie
+
 		// XML output of request
-		if err := xml.NewEncoder(w).Encode(timeSeries); err != nil {
+		type response struct {
+			serie
+		}		
+		if err := xml.NewEncoder(w).Encode(response{timeSeries}); err != nil {
 			panic(err)
 		}
 	} else {
@@ -307,10 +313,16 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if (format == "xml") {
-		// XML output of request	
-		if err := xml.NewEncoder(w).Encode(timeSeries); err != nil {
+		
+		type serie []tChartSerie
+
+		// XML output of request
+		type response struct {
+			serie
+		}		
+		if err := xml.NewEncoder(w).Encode(response{timeSeries}); err != nil {
 			panic(err)
-		}
+		}	
 	} else {
 		// JSON output of request
 		if err := json.NewEncoder(w).Encode(timeSeries); err != nil {
