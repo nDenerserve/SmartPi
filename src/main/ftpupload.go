@@ -83,65 +83,138 @@ func main() {
 	log.Debugf("Startdate: " + startDate.Format("2006-01-02 15:04:05"))
 	log.Debugf("Enddate: " + endDate.Format("2006-01-02 15:04:05"))
 
-	csvfile := bytes.NewBufferString(smartpi.CreateCSV(startDate, endDate))
+	if config.FTPcsv {
 
-	ftpconfig := goftp.Config{
-		User:               config.FTPuser,
-		Password:           config.FTPpass,
-		ConnectionsPerHost: 10,
-		Timeout:            60 * time.Second,
-		Logger:             os.Stderr,
-	}
+		csvfile := bytes.NewBufferString(smartpi.CreateCSV(startDate, endDate))
 
-	client, err := goftp.DialConfig(ftpconfig, config.FTPserver)
-	if err != nil {
-		panic(err)
-	}
 
-	// ftp_path := config.FTPpath + config.Serial
-	ftp_path := config.FTPpath
-	pathlist := strings.Split(ftp_path, "/")
-	for i := 0; i < len(pathlist); i++ {
-		if len(pathlist[i]) == 0 {
-			pathlist = append(pathlist[:i], pathlist[i+1:]...)
+		ftpconfig := goftp.Config{
+			User:               config.FTPuser,
+			Password:           config.FTPpass,
+			ConnectionsPerHost: 10,
+			Timeout:            60 * time.Second,
+			Logger:             os.Stderr,
 		}
-	}
 
-	workingpath := "/"
-	createpath := ""
-
-	for j := 0; j < len(pathlist); j++ {
-		if j > 0 {
-			workingpath = workingpath + pathlist[j-1] + "/"
+		client, err := goftp.DialConfig(ftpconfig, config.FTPserver)
+		if err != nil {
+			panic(err)
 		}
-		createpath = createpath + "/" + pathlist[j]
 
-		files, err := client.ReadDir(workingpath)
-		smartpi.Checklog(err)
-		fileexist := 0
-		for _, file := range files {
-			if file.IsDir() && file.Name() == pathlist[j] {
-				fileexist = 1
+		// ftp_path := config.FTPpath + config.Serial
+		ftp_path := config.FTPpath
+		pathlist := strings.Split(ftp_path, "/")
+		for i := 0; i < len(pathlist); i++ {
+			if len(pathlist[i]) == 0 {
+				pathlist = append(pathlist[:i], pathlist[i+1:]...)
+			}
+		}
+
+		workingpath := "/"
+		createpath := ""
+
+		for j := 0; j < len(pathlist); j++ {
+			if j > 0 {
+				workingpath = workingpath + pathlist[j-1] + "/"
+			}
+			createpath = createpath + "/" + pathlist[j]
+
+			files, err := client.ReadDir(workingpath)
+			smartpi.Checklog(err)
+			fileexist := 0
+			for _, file := range files {
+				if file.IsDir() && file.Name() == pathlist[j] {
+					fileexist = 1
+				}
+
+			}
+
+			if fileexist == 0 {
+				dir, _ := client.Mkdir(createpath)
+				fmt.Println("\n\n\n" + dir)
 			}
 
 		}
 
-		if fileexist == 0 {
-			dir, _ := client.Mkdir(createpath)
-			fmt.Println("\n\n\n" + dir)
+		filename := time.Now().Format("20060102150405") + "_" + config.Serial + ".csv"
+		err = client.Store(createpath+"/"+filename, csvfile)
+		if err != nil {
+			panic(err)
+		} else {
+			err = ioutil.WriteFile("/var/smartpi/csvftp", []byte(endDate.Local().Format("2006-01-02 15:04:05")), 0644)
+			if err != nil {
+				panic(err)
+			}
 		}
 
 	}
 
-	filename := time.Now().Format("20060102150405") + "_" + config.Serial + ".csv"
-	err = client.Store(createpath+"/"+filename, csvfile)
-	if err != nil {
-		panic(err)
-	} else {
-		err = ioutil.WriteFile("/var/smartpi/csvftp", []byte(endDate.Local().Format("2006-01-02 15:04:05")), 0644)
+	if config.FTPxml {
+
+		xmlfile := bytes.NewBufferString(smartpi.CreateXML(startDate, endDate))
+
+
+		ftpconfig := goftp.Config{
+			User:               config.FTPuser,
+			Password:           config.FTPpass,
+			ConnectionsPerHost: 10,
+			Timeout:            60 * time.Second,
+			Logger:             os.Stderr,
+		}
+
+		client, err := goftp.DialConfig(ftpconfig, config.FTPserver)
 		if err != nil {
 			panic(err)
 		}
+
+		// ftp_path := config.FTPpath + config.Serial
+		ftp_path := config.FTPpath
+		pathlist := strings.Split(ftp_path, "/")
+		for i := 0; i < len(pathlist); i++ {
+			if len(pathlist[i]) == 0 {
+				pathlist = append(pathlist[:i], pathlist[i+1:]...)
+			}
+		}
+
+		workingpath := "/"
+		createpath := ""
+
+		for j := 0; j < len(pathlist); j++ {
+			if j > 0 {
+				workingpath = workingpath + pathlist[j-1] + "/"
+			}
+			createpath = createpath + "/" + pathlist[j]
+
+			files, err := client.ReadDir(workingpath)
+			smartpi.Checklog(err)
+			fileexist := 0
+			for _, file := range files {
+				if file.IsDir() && file.Name() == pathlist[j] {
+					fileexist = 1
+				}
+
+			}
+
+			if fileexist == 0 {
+				dir, _ := client.Mkdir(createpath)
+				fmt.Println("\n\n\n" + dir)
+			}
+
+		}
+
+		filename := time.Now().Format("20060102150405") + "_" + config.Serial + ".csv"
+		err = client.Store(createpath+"/"+filename, xmlfile)
+		if err != nil {
+			panic(err)
+		} else {
+			err = ioutil.WriteFile("/var/smartpi/csvftp", []byte(endDate.Local().Format("2006-01-02 15:04:05")), 0644)
+			if err != nil {
+				panic(err)
+			}
+		}
+
 	}
+
+	
 
 }

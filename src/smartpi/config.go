@@ -69,6 +69,8 @@ type Config struct {
 	FTPuser   string
 	FTPpass   string
 	FTPpath   string
+	FTPcsv    bool
+	FTPxml    bool
 
 	// [webserver]
 	SharedFileEnabled bool
@@ -172,6 +174,8 @@ func (p *Config) ReadParameterFromFile() {
 	p.FTPuser = cfg.Section("ftp").Key("ftp_user").String()
 	p.FTPpass = cfg.Section("ftp").Key("ftp_pass").String()
 	p.FTPpath = cfg.Section("ftp").Key("ftp_path").String()
+	p.FTPcsv = cfg.Section("ftp").Key("ftp_csv").MustBool(true)
+	p.FTPxml = cfg.Section("ftp").Key("ftp_xml").MustBool(true)
 
 	// [webserver]
 	p.SharedFileEnabled = cfg.Section("webserver").Key("shared_file_enabled").MustBool(true)
