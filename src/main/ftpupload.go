@@ -202,7 +202,7 @@ func main() {
 
 		}
 
-		filename := time.Now().Format("20060102150405") + "_" + config.Serial + ".csv"
+		filename := time.Now().Format("20060102150405") + "_" + config.Serial + ".xml"
 		err = client.Store(createpath+"/"+filename, xmlfile)
 		if err != nil {
 			panic(err)
