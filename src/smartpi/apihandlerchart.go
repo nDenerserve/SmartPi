@@ -98,7 +98,7 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 		export = append(export, valueId+"_sum")
 	}
 
-	fmt.Println("ReadChartData " + config.DatabaseDir + " " + start.Format(time.RFC3339) + " " + end.Format(time.RFC3339) + " " + start.Format("2006-01-02 15:04:05") + " " + end.Format("2006-01-02 15:04:05"))
+	// fmt.Println("ReadChartData " + config.DatabaseDir + " " + start.Format(time.RFC3339) + " " + end.Format(time.RFC3339) + " " + start.Format("2006-01-02 15:04:05") + " " + end.Format("2006-01-02 15:04:05"))
 
 	data := ReadChartData(config.DatabaseDir, start, end)
 
