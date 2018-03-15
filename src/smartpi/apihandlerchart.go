@@ -33,14 +33,12 @@ package smartpi
 import (
 	"encoding/json"
 	"encoding/xml"
-	"fmt"
 	"log"
 	"math"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
-
 	"github.com/gorilla/mux"
 )
 
@@ -98,12 +96,10 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 		export = append(export, valueId+"_sum")
 	}
 
-	// fmt.Println("ReadChartData " + config.DatabaseDir + " " + start.Format(time.RFC3339) + " " + end.Format(time.RFC3339) + " " + start.Format("2006-01-02 15:04:05") + " " + end.Format("2006-01-02 15:04:05"))
-
+	
 	data := ReadChartData(config.DatabaseDir, start, end)
 
-	// fmt.Printf("%v", export)
-
+	
 	for _, valueelement := range export {
 		row := 0
 		val := 0.0
@@ -240,8 +236,7 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 		export = append(export, valueId+"_sum")
 	}
 
-	// fmt.Println("ReadDayData " + config.DatabaseDir + " " + start.Format(time.RFC3339) + " " + end.Format(time.RFC3339) + " |" + start.Location().String() + "|| " + start.Local().String()+" "+start.Format("2006-01-02 15:04:05")+" "+end.Format("2006-01-02 15:04:05"))
-
+	
 	data := ReadDayData(config.DatabaseDir, start, end)
 
 	for _, valueelement := range export {
