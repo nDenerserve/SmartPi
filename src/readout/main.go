@@ -182,7 +182,7 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		if int64(delay) > 0 {
 			log.Errorf("Readout delayed: %s", delay)
 		}
-		<- tick
+		<-tick
 		i++
 	}
 }

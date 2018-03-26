@@ -30,7 +30,6 @@ Description: Defines the structure of of the json-api-file
 
 package smartpi
 
-
 type tValue struct {
 	Type  string  `json:"type" xml:"type"`
 	Unity string  `json:"unity" xml:"unity"`
