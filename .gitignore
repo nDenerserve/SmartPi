@@ -9,4 +9,6 @@ src/snippets
 *.DS_Store
 .DS_Store
 
+# Ignore VS-Code files.
 .vscode
+._*.go
