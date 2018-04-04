@@ -11,4 +11,4 @@ src/snippets
 
 # Ignore VS-Code files.
 .vscode
-._*.go
+._*
