@@ -231,9 +231,9 @@
                                 <label>Secondary current [A]</label>
                                 <input name="PrimarycurrentPhase4" ng-model="measurement.current.phase4.primarycurrent" ng-change="showSaveButton('measurement')">
                             </md-input-container>
-                            <!-- <md-switch ng-model="measurement.current.phase4.direction" aria-label="Current direction neutral" flex="20">
-                                    Change current direction phase 4
-                                </md-switch> -->
+                            <md-switch ng-model="measurement.current.phase4.direction" aria-label="Current direction neutral" flex="20">
+                                Change current direction phase 4
+                            </md-switch>
                         </div>
                         <h2>Voltage</h2>
                         <div layout="row" layout-xs="column">
@@ -391,11 +391,7 @@
                                                     </div>
                                                 </td>
                                                 <td md-cell>
-                                                    <div ng-if="w.wireless == true">
-                                                        <div ng-if="showButtons == true">
-                                                            <md-icon ng-click="removeWifi(w.name)" class="md-avatar-icon " md-svg-icon="../img/icons/ic_delete_black_24px.svg"></md-icon>
-                                                        </div>
-                                                    </div>
+
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -450,6 +446,11 @@
                                                 <td md-cell>{{x.rssi}}</td>
                                                 <td md-cell>
                                                     <md-button class="md-raised md-primary" ng-click="createWifi(x.ssid)">Add Wifi</md-button>
+                                                </td>
+                                                <td md-cell>
+                                                    <div ng-if="x.active==true">
+                                                        <md-icon ng-click="removeWifi(x.ssid)" class="md-avatar-icon " md-svg-icon="../img/icons/ic_delete_black_24px.svg"></md-icon>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         </tbody>

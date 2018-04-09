@@ -42,9 +42,9 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, $interval
 
         $scope.initNetworkConfig = function() {
             $scope.loadNetworkConfig();
-            // timer = $interval(function() {
-            //     $scope.loadNetworkConfig();
-            // }, 5000);
+            timer = $interval(function() {
+                $scope.loadNetworkConfig();
+            }, 5000);
         }
 
         $scope.loadNetworkConfig = function() {
@@ -99,7 +99,7 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, $interval
                     },
                     function(data) {
                         console.log(data);
-                        $scope.loadNetworkConnections();
+                        $scope.loadNetworkConfig;
                     },
                     function(error) {});
             }, function() {
@@ -294,7 +294,7 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, $interval
                     jsonMeasureCurrentObj.N = $scope.measurement.current.phase4.measure;
                     jsonCTTypeObj.N = $scope.measurement.current.phase4.sensor;
                     jsonCTTypePrimaryCurrentObj.N = parseInt($scope.measurement.current.phase4.primarycurrent);
-                    // jsonCurrentDirectionObj.N = $scope.measurement.current.phase4.direction;
+                    jsonCurrentDirectionObj.N = $scope.measurement.current.phase4.direction;
 
                     var jsonMeasureVoltageObj = new Object();
                     jsonConfigObj.MeasureVoltage = jsonMeasureVoltageObj;
@@ -402,29 +402,29 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, $interval
                     $scope.smartpi.location.lat = data.Lat;
                     $scope.smartpi.location.lng = data.Lng;
                     $scope.measurement.frequency = data.PowerFrequency;
-                    $scope.measurement.current.phase1.measure = data.MeasureCurrent.A;
-                    $scope.measurement.current.phase2.measure = data.MeasureCurrent.B;
-                    $scope.measurement.current.phase3.measure = data.MeasureCurrent.C;
-                    $scope.measurement.current.phase4.measure = data.MeasureCurrent.N;
-                    $scope.measurement.current.phase1.sensor = data.CTType.A;
-                    $scope.measurement.current.phase2.sensor = data.CTType.B;
-                    $scope.measurement.current.phase3.sensor = data.CTType.C;
-                    $scope.measurement.current.phase4.sensor = data.CTType.N;
-                    $scope.measurement.current.phase1.primarycurrent = data.CTTypePrimaryCurrent.A;
-                    $scope.measurement.current.phase2.primarycurrent = data.CTTypePrimaryCurrent.B;
-                    $scope.measurement.current.phase3.primarycurrent = data.CTTypePrimaryCurrent.C;
-                    $scope.measurement.current.phase4.primarycurrent = data.CTTypePrimaryCurrent.N;
+                    $scope.measurement.current.phase1.measure = data.MeasureCurrent[1];
+                    $scope.measurement.current.phase2.measure = data.MeasureCurrent[2];
+                    $scope.measurement.current.phase3.measure = data.MeasureCurrent[3];
+                    $scope.measurement.current.phase4.measure = data.MeasureCurrent[4];
+                    $scope.measurement.current.phase1.sensor = data.CTType[1];
+                    $scope.measurement.current.phase2.sensor = data.CTType[2];
+                    $scope.measurement.current.phase3.sensor = data.CTType[3];
+                    $scope.measurement.current.phase4.sensor = data.CTType[4];
+                    $scope.measurement.current.phase1.primarycurrent = data.CTTypePrimaryCurrent[1];
+                    $scope.measurement.current.phase2.primarycurrent = data.CTTypePrimaryCurrent[2];
+                    $scope.measurement.current.phase3.primarycurrent = data.CTTypePrimaryCurrent[3];
+                    $scope.measurement.current.phase4.primarycurrent = data.CTTypePrimaryCurrent[4];
                     $scope.measurement.frequency = data.PowerFrequency;
-                    $scope.measurement.current.phase1.direction = data.CurrentDirection.A;
-                    $scope.measurement.current.phase2.direction = data.CurrentDirection.B;
-                    $scope.measurement.current.phase3.direction = data.CurrentDirection.C;
-                    // $scope.measurement.current.phase4.measure = data.CurrentDirection.N;
-                    $scope.measurement.voltage.phase1.measure = data.MeasureVoltage.A;
-                    $scope.measurement.voltage.phase2.measure = data.MeasureVoltage.B;
-                    $scope.measurement.voltage.phase3.measure = data.MeasureVoltage.C;
-                    $scope.measurement.voltage.phase1.suppose = data.Voltage.A;
-                    $scope.measurement.voltage.phase2.suppose = data.Voltage.B;
-                    $scope.measurement.voltage.phase3.suppose = data.Voltage.C;
+                    $scope.measurement.current.phase1.direction = data.CurrentDirection[1];
+                    $scope.measurement.current.phase2.direction = data.CurrentDirection[2];
+                    $scope.measurement.current.phase3.direction = data.CurrentDirection[3];
+                    $scope.measurement.current.phase4.measure = data.CurrentDirection[4];
+                    $scope.measurement.voltage.phase1.measure = data.MeasureVoltage[1];
+                    $scope.measurement.voltage.phase2.measure = data.MeasureVoltage[2];
+                    $scope.measurement.voltage.phase3.measure = data.MeasureVoltage[3];
+                    $scope.measurement.voltage.phase1.suppose = data.Voltage[1];
+                    $scope.measurement.voltage.phase2.suppose = data.Voltage[2];
+                    $scope.measurement.voltage.phase3.suppose = data.Voltage[3];
                     $scope.mqtt.enabled = data.MQTTenabled;
                     $scope.mqtt.brokerUrl = data.MQTTbroker;
                     $scope.mqtt.brokerPort = data.MQTTbrokerport;

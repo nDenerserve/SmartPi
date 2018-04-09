@@ -41,6 +41,8 @@ ftp_server=ftp.xxxxx.xx
 ftp_user=xxxxxxxxxxx
 ftp_pass=xxxxxxxxxxxx
 ftp_path=smartpi/
+ftp_csv=1
+ftp_xml=1
 
 [csv]
 decimalpoint=,

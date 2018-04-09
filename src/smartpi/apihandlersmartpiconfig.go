@@ -38,7 +38,7 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
-
+	"fmt"
 	"github.com/fatih/structs"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -99,14 +99,14 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 		for j := range keys {
 			if keys[j] == confignames[i] {
 
-				// fmt.Println("Treffer: Key: " + keys[j] + " Configname: " + confignames[i])
-				// fmt.Println(reflect.TypeOf(wc.Msg.(map[string]interface{})[keys[j]]))
-				// fmt.Println(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]))
+				fmt.Println("Treffer: Key: " + keys[j] + " Configname: " + confignames[i])
+				fmt.Println(reflect.TypeOf(wc.Msg.(map[string]interface{})[keys[j]]))
+				fmt.Println(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]))
 
 				var err error
 				var fieldtype string
 				fieldtype, err = reflections.GetFieldType(configuration.(*Config), confignames[i])
-				// fmt.Println("Fieldtype: " + fieldtype)
+				fmt.Println("Fieldtype: " + fieldtype)
 
 				switch fieldtype {
 				case "int":
@@ -175,6 +175,34 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 						// fmt.Printf("key[%s] value[%s]\n", k, v)
 					}
 					err = reflections.SetField(configuration.(*Config), confignames[i], aData)
+				case "map[smartpi.Phase]int":
+					values := reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Interface().(map[string]interface{})
+					var ind Phase
+					aData := make(map[Phase]int)
+					for k, v := range values {
+						if k=="A" || k=="1" {
+							ind = PhaseA
+						} else if k=="B" || k=="2" {
+							ind = PhaseB
+						} else if k=="C" || k=="3" {
+							ind = PhaseC
+						} else if k=="N" || k=="4" {
+							ind = PhaseN
+						}
+						switch v.(type) {
+						case float64:
+							aData[ind] = int(v.(float64))
+						case string:
+							intval, _ := strconv.Atoi(v.(string))
+							aData[ind] = intval
+						case int:
+							aData[ind] = int(v.(int))
+						case bool:
+							aData[ind] = b2i(v.(bool))
+						}
+						fmt.Printf("key[%s] value[%s]\n", ind, v)
+					}
+					err = reflections.SetField(configuration.(*Config), confignames[i], aData)
 				case "map[string]float":
 					values := reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Interface().(map[string]interface{})
 					aData := make(map[string]float64)
@@ -191,7 +219,82 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 						case bool:
 							aData[k] = float64(b2i(v.(bool)))
 						}
-						// fmt.Printf("key[%s] value[%s]\n", k, v)
+						fmt.Printf("key[%s] value[%s]\n", k, v)
+					}
+					err = reflections.SetField(configuration.(*Config), confignames[i], aData)
+				case "map[smartpi.Phase]float":
+					values := reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Interface().(map[string]interface{})
+					var ind Phase
+					aData := make(map[Phase]float64)
+					for k, v := range values {
+						if k=="A" || k=="1" {
+							ind = PhaseA
+						} else if k=="B" || k=="2" {
+							ind = PhaseB
+						} else if k=="C" || k=="3" {
+							ind = PhaseC
+						} else if k=="N" || k=="4" {
+							ind = PhaseN
+						}
+						switch v.(type) {
+						case float64:
+							aData[ind] = float64(v.(float64))
+						case string:
+							floatval, _ := strconv.ParseFloat(v.(string), 64)
+							aData[ind] = floatval
+						case int:
+							aData[ind] = float64(v.(int))
+						case bool:
+							aData[ind] = float64(b2i(v.(bool)))
+						}
+						fmt.Printf("key[%s] value[%s]\n", ind, v)
+					}
+					err = reflections.SetField(configuration.(*Config), confignames[i], aData)
+				case "map[string]float64":
+					values := reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Interface().(map[string]interface{})
+					aData := make(map[string]float64)
+					for k, v := range values {
+						switch v.(type) {
+						case float64:
+							aData[k] = float64(v.(float64))
+						case string:
+							floatval, _ := strconv.ParseFloat(v.(string), 64)
+							aData[k] = floatval
+						case int:
+							aData[k] = float64(v.(int))
+						case bool:
+							aData[k] = float64(b2i(v.(bool)))
+						}
+						fmt.Printf("key[%s] value[%s]\n", k, v)
+					}
+					err = reflections.SetField(configuration.(*Config), confignames[i], aData)
+				case "map[smartpi.Phase]float64":
+					values := reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Interface().(map[string]interface{})
+					aData := make(map[Phase]float64)
+					var ind Phase
+					for k, v := range values {
+						if k=="A" || k=="1" {
+							ind = PhaseA
+						} else if k=="B" || k=="2" {
+							ind = PhaseB
+						} else if k=="C" || k=="3" {
+							ind = PhaseC
+						} else if k=="N" || k=="4" {
+							ind = PhaseN
+						}
+						switch v.(type) {
+						case float64:
+							// aData[k] = float64(v.(float64))
+							aData[ind] = float64(v.(float64))
+						case string:
+							floatval, _ := strconv.ParseFloat(v.(string), 64)
+							aData[ind] = floatval
+						case int:
+							aData[ind] = float64(v.(int))
+						case bool:
+							aData[ind] = float64(b2i(v.(bool)))
+						}
+						fmt.Printf("key[%s] value[%s]\n", ind, v)
 					}
 					err = reflections.SetField(configuration.(*Config), confignames[i], aData)
 				case "map[string]string":
@@ -209,14 +312,40 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 						case bool:
 							aData[k] = strconv.FormatBool(v.(bool))
 						}
-						// fmt.Printf("key[%s] value[%s]\n", k, v)
+						fmt.Printf("key[%s] value[%s]\n", k, v)
+					}
+					err = reflections.SetField(configuration.(*Config), confignames[i], aData)
+				case "map[smartpi.Phase]string":
+					values := reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Interface().(map[string]interface{})
+					var ind Phase
+					aData := make(map[Phase]string)
+					for k, v := range values {
+						if k=="A" || k=="1" {
+							ind = PhaseA
+						} else if k=="B" || k=="2" {
+							ind = PhaseB
+						} else if k=="C" || k=="3" {
+							ind = PhaseC
+						} else if k=="N" || k=="4" {
+							ind = PhaseN
+						}
+						switch v.(type) {
+						case float64:
+							aData[ind] = strconv.FormatFloat(v.(float64), 'f', -1, 64)
+						case string:
+							aData[ind] = v.(string)
+						case int:
+							aData[ind] = strconv.FormatInt(v.(int64), 16)
+						case bool:
+							aData[ind] = strconv.FormatBool(v.(bool))
+						}
+						fmt.Printf("key[%s] value[%s]\n", ind, v)
 					}
 					err = reflections.SetField(configuration.(*Config), confignames[i], aData)
 				case "map[string]bool":
 					values := reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Interface().(map[string]interface{})
 					aData := make(map[string]bool)
 					for k, v := range values {
-						// fmt.Println(reflect.TypeOf(v))
 						switch v.(type) {
 						case float64:
 							aData[k] = !(int(v.(float64)) == 0)
@@ -228,7 +357,35 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 						case bool:
 							aData[k] = v.(bool)
 						}
-						// fmt.Printf("key[%s] value[%s]\n", k, v)
+						fmt.Printf("key[%s] value[%s]\n", k, v)
+					}
+					err = reflections.SetField(configuration.(*Config), confignames[i], aData)
+				case "map[smartpi.Phase]bool":
+					values := reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Interface().(map[string]interface{})
+					var ind Phase
+					aData := make(map[Phase]bool)
+					for k, v := range values {
+						if k=="A" || k=="1" {
+							ind = PhaseA
+						} else if k=="B" || k=="2" {
+							ind = PhaseB
+						} else if k=="C" || k=="3" {
+							ind = PhaseC
+						} else if k=="N" || k=="4" {
+							ind = PhaseN
+						}
+						switch v.(type) {
+						case float64:
+							aData[ind] = !(int(v.(float64)) == 0)
+						case string:
+							boolval, _ := strconv.ParseBool(v.(string))
+							aData[ind] = boolval
+						case int:
+							aData[ind] = !(int(v.(int)) == 0)
+						case bool:
+							aData[ind] = v.(bool)
+						}
+						fmt.Printf("key[%s] value[%s]\n", ind, v)
 					}
 					err = reflections.SetField(configuration.(*Config), confignames[i], aData)
 				}

@@ -154,6 +154,7 @@ func (p *Config) ReadParameterFromFile() {
 	p.CurrentDirection[PhaseA] = cfg.Section("device").Key("change_current_direction_1").MustBool(false)
 	p.CurrentDirection[PhaseB] = cfg.Section("device").Key("change_current_direction_2").MustBool(false)
 	p.CurrentDirection[PhaseC] = cfg.Section("device").Key("change_current_direction_3").MustBool(false)
+	p.CurrentDirection[PhaseN] = cfg.Section("device").Key("change_current_direction_4").MustBool(false)
 	p.MeasureCurrent = make(map[Phase]bool)
 	p.MeasureCurrent[PhaseA] = cfg.Section("device").Key("measure_current_1").MustBool(true)
 	p.MeasureCurrent[PhaseB] = cfg.Section("device").Key("measure_current_2").MustBool(true)
@@ -238,6 +239,7 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("device").NewKey("change_current_direction_1", strconv.FormatBool(p.CurrentDirection[PhaseA]))
 	_, err = cfg.Section("device").NewKey("change_current_direction_2", strconv.FormatBool(p.CurrentDirection[PhaseB]))
 	_, err = cfg.Section("device").NewKey("change_current_direction_3", strconv.FormatBool(p.CurrentDirection[PhaseC]))
+	_, err = cfg.Section("device").NewKey("change_current_direction_4", strconv.FormatBool(p.CurrentDirection[PhaseN]))
 
 	_, err = cfg.Section("device").NewKey("measure_current_1", strconv.FormatBool(p.MeasureCurrent[PhaseA]))
 	_, err = cfg.Section("device").NewKey("measure_current_2", strconv.FormatBool(p.MeasureCurrent[PhaseB]))
