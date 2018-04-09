@@ -9,3 +9,4 @@ src/snippets
 *.DS_Store
 .DS_Store
 
+.vscode
