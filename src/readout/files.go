@@ -15,11 +15,11 @@ import (
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 )
 
-func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout) {
+func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout, balancedvalue float64) {
 	var f *os.File
 	var err error
 	var p smartpi.Phase
-	s := make([]string, 16)
+	s := make([]string, 17)
 	i := 0
 	for _, p = range smartpi.MainPhases {
 		s[i] = fmt.Sprint(values.Current[p])
@@ -43,6 +43,9 @@ func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout) {
 		s[i] = fmt.Sprint(values.Frequency[p])
 		i++
 	}
+	// sald Values
+	s[i] = fmt.Sprint(balancedvalue)
+
 	t := time.Now()
 	timeStamp := t.Format("2006-01-02 15:04:05")
 	logLine := "## Shared File Update ## "
@@ -52,6 +55,7 @@ func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout) {
 	logLine += fmt.Sprintf("P1: %s  P2: %s  P3: %s  ", s[7], s[8], s[9])
 	logLine += fmt.Sprintf("COS1: %s  COS2: %s  COS3: %s  ", s[10], s[11], s[12])
 	logLine += fmt.Sprintf("F1: %s  F2: %s  F3: %s  ", s[13], s[14], s[15])
+	logLine += fmt.Sprintf("Balanced: %s  ", s[16])
 	log.Info(logLine)
 	sharedFile := filepath.Join(c.SharedDir, c.SharedFile)
 	if _, err = os.Stat(sharedFile); os.IsNotExist(err) {

@@ -12,7 +12,7 @@ import (
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 )
 
-func updateSQLiteDatabase(c *smartpi.Config, data smartpi.ReadoutAccumulator) {
+func updateSQLiteDatabase(c *smartpi.Config, data smartpi.ReadoutAccumulator, consumedWattHourBalanced float64, producedWattHourBalanced float64) {
 	t := time.Now()
 	dbFileName := "smartpi_logdata_" + t.Format("200601") + ".db"
 
@@ -25,5 +25,5 @@ func updateSQLiteDatabase(c *smartpi.Config, data smartpi.ReadoutAccumulator) {
 		log.Debug("Creating new database file.")
 		smartpi.CreateSQlDatabase(c.DatabaseDir, t)
 	}
-	smartpi.InsertData(c.DatabaseDir, t, data)
+	smartpi.InsertData(c.DatabaseDir, t, data, consumedWattHourBalanced, producedWattHourBalanced)
 }

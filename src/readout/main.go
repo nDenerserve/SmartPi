@@ -75,7 +75,7 @@ func makeReadout() (r smartpi.ADE7878Readout) {
 
 func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 	var mqttclient MQTT.Client
-	var consumed, produced float64
+	var consumed, produced, wattHourBalanced5s, consumedWattHourBalanced60s, producedWattHourBalanced60s float64
 	var p smartpi.Phase
 
 	consumerCounterFile := filepath.Join(config.CounterDir, "consumecounter")
@@ -116,7 +116,9 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 			} else {
 				accumulator.WattHoursProduced[p] += math.Abs(readouts.ActiveWatts[p]) / 3600.0
 			}
+			wattHourBalanced5s += readouts.ActiveWatts[p] / 3600.0
 		}
+
 
 		// Update metrics endpoint.
 		updatePrometheusMetrics(&readouts)
@@ -124,20 +126,41 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		// Every 5 seconds
 		if i%5 == 0 {
 			if config.SharedFileEnabled {
-				writeSharedFile(config, &readouts)
+				writeSharedFile(config, &readouts, wattHourBalanced5s)
 			}
 
 			// Publish readouts to MQTT.
 			if config.MQTTenabled {
 				publishMQTTReadouts(config, mqttclient, &readouts)
 			}
+
+			wattHourBalanced5s = 0
 		}
 
 		// Every 60 seconds.
 		if i == 59 {
+
+			
+			
+			// balanced value
+			var wattHourBalanced60s float64
+			consumedWattHourBalanced60s = 0.0
+			producedWattHourBalanced60s = 0.0
+
+			for _, p = range smartpi.MainPhases {
+				wattHourBalanced60s += accumulator.WattHoursConsumed[p]
+				wattHourBalanced60s -= accumulator.WattHoursProduced[p]
+			}
+			if wattHourBalanced60s >=0 {
+				consumedWattHourBalanced60s = wattHourBalanced60s
+			} else {
+				producedWattHourBalanced60s = wattHourBalanced60s
+			}
+
+
 			// Update SQLlite database.
 			if config.DatabaseEnabled {
-				updateSQLiteDatabase(config, accumulator)
+				updateSQLiteDatabase(config, accumulator, consumedWattHourBalanced60s, producedWattHourBalanced60s)
 			}
 
 			// Update persistent counter files.
@@ -228,6 +251,9 @@ func main() {
 	}
 
 	log.SetLevel(config.LogLevel)
+
+
+	smartpi.CheckDatabase(config.DatabaseDir)
 
 	listenAddress := config.MetricsListenAddress
 
