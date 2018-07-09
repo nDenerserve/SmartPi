@@ -8,6 +8,7 @@ BUILD_TIME := $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
 
 BUILDPATH=$(CURDIR)
 GO=$(shell which go)
+GOFMT?=$(GO)fmt
 GOBUILD=$(GO) build
 GOINSTALL=$(GO) install
 GOCLEAN=$(GO) clean
@@ -24,6 +25,10 @@ makedir:
 	@if [ ! -d $(BUILDPATH)/pkg ] ; then mkdir -p $(BUILDPATH)/pkg ; fi
 
 get:
+
+style:
+	@echo "checking code style"
+	! $(GOFMT) -d $$(find . -path ./vendor -prune -o -name '*.go' -print) | grep '^'
 
 format:
 	@echo "formatting code..."

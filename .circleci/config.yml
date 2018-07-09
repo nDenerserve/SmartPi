@@ -10,6 +10,7 @@ jobs:
     steps:
     - checkout
     - run: sudo apt-get install -y libpam0g-dev
+    - run: make style
     - run: make
     - store_artifacts:
         path: bin
