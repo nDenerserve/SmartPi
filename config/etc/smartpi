@@ -56,12 +56,12 @@ port=1080
 docroot="../public_html"
 
 [mqtt]
-mqtt_enabled=0
-mqtt_broker_url=""
-mqtt_broker_port=""
-mqtt_username=""
+mqtt_enabled=1
+mqtt_broker_url="mqtt.flespi.io"
+mqtt_broker_port="1833"
+mqtt_username="FH4RR7dTu1AdFazGhKPBfytz7iXkLPgek8T16XIqM7rg7OMcorDrNUPK0CUzhZDr"
 mqtt_password=""
-mqtt_topic=""
+mqtt_topic="main"
 
 [umts]
 umts=0
