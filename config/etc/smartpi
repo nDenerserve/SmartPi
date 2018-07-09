@@ -11,9 +11,9 @@ lng=9.7167
 
 [database]
 counter_enabled=true
-counterdir="/var/smartpi"
+counterdir="../run/smartpi"
 database_enabled=true
-dir="/var/smartpi/db"
+dir="../run/smartpi/db"
 
 [device]
 i2c_device="/dev/i2c-1"
@@ -50,10 +50,10 @@ timeformat=2006-01-02 15:04:05
 
 [webserver]
 shared_file_enabled=true
-shared_dir="/var/run"
+shared_dir="../run"
 shared_file="smartpi_values"
 port=1080
-docroot="/var/smartpi/www"
+docroot="../public_html"
 
 [mqtt]
 mqtt_enabled=0

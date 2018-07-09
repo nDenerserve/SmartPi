@@ -104,7 +104,7 @@ var err error
 
 func (p *Config) ReadParameterFromFile() {
 
-	cfg, err = ini.Load("/etc/smartpi")
+	cfg, err = ini.Load("../config/etc/smartpi")
 	if err != nil {
 		panic(err)
 	}
