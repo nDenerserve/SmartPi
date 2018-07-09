@@ -33,16 +33,18 @@ package smartpi
 import (
 	// "fmt"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"reflect"
 	"strconv"
-	"fmt"
+
+	"github.com/Nitroman605/SmartPi/src/smartpi/network"
+
 	"github.com/fatih/structs"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"github.com/nDenerserve/SmartPi/src/smartpi/network"
 	"github.com/oleiade/reflections"
 )
 
@@ -180,13 +182,13 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 					var ind Phase
 					aData := make(map[Phase]int)
 					for k, v := range values {
-						if k=="A" || k=="1" {
+						if k == "A" || k == "1" {
 							ind = PhaseA
-						} else if k=="B" || k=="2" {
+						} else if k == "B" || k == "2" {
 							ind = PhaseB
-						} else if k=="C" || k=="3" {
+						} else if k == "C" || k == "3" {
 							ind = PhaseC
-						} else if k=="N" || k=="4" {
+						} else if k == "N" || k == "4" {
 							ind = PhaseN
 						}
 						switch v.(type) {
@@ -227,13 +229,13 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 					var ind Phase
 					aData := make(map[Phase]float64)
 					for k, v := range values {
-						if k=="A" || k=="1" {
+						if k == "A" || k == "1" {
 							ind = PhaseA
-						} else if k=="B" || k=="2" {
+						} else if k == "B" || k == "2" {
 							ind = PhaseB
-						} else if k=="C" || k=="3" {
+						} else if k == "C" || k == "3" {
 							ind = PhaseC
-						} else if k=="N" || k=="4" {
+						} else if k == "N" || k == "4" {
 							ind = PhaseN
 						}
 						switch v.(type) {
@@ -273,13 +275,13 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 					aData := make(map[Phase]float64)
 					var ind Phase
 					for k, v := range values {
-						if k=="A" || k=="1" {
+						if k == "A" || k == "1" {
 							ind = PhaseA
-						} else if k=="B" || k=="2" {
+						} else if k == "B" || k == "2" {
 							ind = PhaseB
-						} else if k=="C" || k=="3" {
+						} else if k == "C" || k == "3" {
 							ind = PhaseC
-						} else if k=="N" || k=="4" {
+						} else if k == "N" || k == "4" {
 							ind = PhaseN
 						}
 						switch v.(type) {
@@ -320,13 +322,13 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 					var ind Phase
 					aData := make(map[Phase]string)
 					for k, v := range values {
-						if k=="A" || k=="1" {
+						if k == "A" || k == "1" {
 							ind = PhaseA
-						} else if k=="B" || k=="2" {
+						} else if k == "B" || k == "2" {
 							ind = PhaseB
-						} else if k=="C" || k=="3" {
+						} else if k == "C" || k == "3" {
 							ind = PhaseC
-						} else if k=="N" || k=="4" {
+						} else if k == "N" || k == "4" {
 							ind = PhaseN
 						}
 						switch v.(type) {
@@ -365,13 +367,13 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 					var ind Phase
 					aData := make(map[Phase]bool)
 					for k, v := range values {
-						if k=="A" || k=="1" {
+						if k == "A" || k == "1" {
 							ind = PhaseA
-						} else if k=="B" || k=="2" {
+						} else if k == "B" || k == "2" {
 							ind = PhaseB
-						} else if k=="C" || k=="3" {
+						} else if k == "C" || k == "3" {
 							ind = PhaseC
-						} else if k=="N" || k=="4" {
+						} else if k == "N" || k == "4" {
 							ind = PhaseN
 						}
 						switch v.(type) {

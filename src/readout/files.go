@@ -11,8 +11,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Nitroman605/SmartPi/src/smartpi"
+
 	log "github.com/Sirupsen/logrus"
-	"github.com/nDenerserve/SmartPi/src/smartpi"
 )
 
 func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout, balancedvalue float64) {

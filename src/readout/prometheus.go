@@ -3,7 +3,8 @@
 package main
 
 import (
-	"github.com/nDenerserve/SmartPi/src/smartpi"
+	"github.com/Nitroman605/SmartPi/src/smartpi"
+
 	"github.com/prometheus/client_golang/prometheus"
 )
 

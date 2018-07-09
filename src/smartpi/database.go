@@ -3,21 +3,22 @@ package smartpi
 import (
 	"database/sql"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 	"os"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 type MinuteValues struct {
-	Date                                                                                                                                                                                                     														time.Time
+	Date                                                                                                                                                                                                                                                            time.Time
 	Current_1, Current_2, Current_3, Current_4, Voltage_1, Voltage_2, Voltage_3, Power_1, Power_2, Power_3, Cosphi_1, Cosphi_2, Cosphi_3, Frequency_1, Frequency_2, Frequency_3, Energy_pos_1, Energy_pos_2, Energy_pos_3, Energy_neg_1, Energy_neg_2, Energy_neg_3 float64
 }
 
 func CheckDatabase(databasedir string) {
 
-	sqlColumns := [...][2]string{ {"current_1","DOUBLE"}, {"current_2","DOUBLE"}, {"current_3","DOUBLE"}, {"current_4","DOUBLE"}, {"voltage_1","DOUBLE"}, {"voltage_2","DOUBLE"}, {"voltage_3","DOUBLE"}, {"power_1","DOUBLE"}, {"power_2","DOUBLE"}, {"power_3","DOUBLE"}, {"cosphi_1","DOUBLE"}, {"cosphi_2","DOUBLE"}, {"cosphi_3","DOUBLE"}, {"frequency_1","DOUBLE"}, {"frequency_2","DOUBLE"}, {"frequency_3","DOUBLE"}, {"energy_pos_1","DOUBLE"}, {"energy_pos_2","DOUBLE"}, {"energy_pos_3","DOUBLE"}, {"energy_neg_1","DOUBLE"}, {"energy_neg_2","DOUBLE"}, {"energy_neg_3","DOUBLE"}, {"energy_pos_balanced","DOUBLE"}, {"energy_neg_balanced","DOUBLE"} }
+	sqlColumns := [...][2]string{{"current_1", "DOUBLE"}, {"current_2", "DOUBLE"}, {"current_3", "DOUBLE"}, {"current_4", "DOUBLE"}, {"voltage_1", "DOUBLE"}, {"voltage_2", "DOUBLE"}, {"voltage_3", "DOUBLE"}, {"power_1", "DOUBLE"}, {"power_2", "DOUBLE"}, {"power_3", "DOUBLE"}, {"cosphi_1", "DOUBLE"}, {"cosphi_2", "DOUBLE"}, {"cosphi_3", "DOUBLE"}, {"frequency_1", "DOUBLE"}, {"frequency_2", "DOUBLE"}, {"frequency_3", "DOUBLE"}, {"energy_pos_1", "DOUBLE"}, {"energy_pos_2", "DOUBLE"}, {"energy_pos_3", "DOUBLE"}, {"energy_neg_1", "DOUBLE"}, {"energy_neg_2", "DOUBLE"}, {"energy_neg_3", "DOUBLE"}, {"energy_pos_balanced", "DOUBLE"}, {"energy_neg_balanced", "DOUBLE"}}
 
 	t := time.Now()
 	dbFileName := "smartpi_logdata_" + t.Format("200601") + ".db"
@@ -28,7 +29,7 @@ func CheckDatabase(databasedir string) {
 	}
 	defer db.Close()
 
-	sqlStmt := "PRAGMA table_info(smartpi_logdata_"+t.Format("200601")+")"
+	sqlStmt := "PRAGMA table_info(smartpi_logdata_" + t.Format("200601") + ")"
 
 	rows, err := db.Query(sqlStmt)
 	if err != nil {
@@ -54,7 +55,6 @@ func CheckDatabase(databasedir string) {
 		rowcounter++
 	}
 
-
 	if rowcounter == 0 {
 		CreateSQlDatabase(databasedir, t)
 	} else {
@@ -73,21 +73,19 @@ func CheckDatabase(databasedir string) {
 			}
 
 			if addColumn == true {
-				log.Debug("Add database column: "+element[0])
-				
-				createStmt := "ALTER TABLE smartpi_logdata_" + t.Format("200601") + " ADD COLUMN " + element[0] + " "+element[1]+""
+				log.Debug("Add database column: " + element[0])
+
+				createStmt := "ALTER TABLE smartpi_logdata_" + t.Format("200601") + " ADD COLUMN " + element[0] + " " + element[1] + ""
 
 				_, err = db.Exec(createStmt)
 				if err != nil {
 					log.Printf("%q: %s\n", err, createStmt)
 					return
 				}
-				
 
 			}
 		}
 	}
-
 
 }
 

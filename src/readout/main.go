@@ -35,7 +35,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/nDenerserve/SmartPi/src/smartpi"
+	"github.com/Nitroman605/SmartPi/src/smartpi"
 
 	log "github.com/Sirupsen/logrus"
 	"golang.org/x/exp/io/i2c"
@@ -119,10 +119,11 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 			wattHourBalanced5s += readouts.ActiveWatts[p] / 3600.0
 		}
 
-
 		// Update metrics endpoint.
 		updatePrometheusMetrics(&readouts)
-
+		if config.MQTTenabled {
+			publishMQTTReadouts(config, mqttclient, &readouts)
+		}
 		// Every 5 seconds
 		if i%5 == 0 {
 			if config.SharedFileEnabled {
@@ -130,18 +131,12 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 			}
 
 			// Publish readouts to MQTT.
-			if config.MQTTenabled {
-				publishMQTTReadouts(config, mqttclient, &readouts)
-			}
-
 			wattHourBalanced5s = 0
 		}
 
 		// Every 60 seconds.
 		if i == 59 {
 
-			
-			
 			// balanced value
 			var wattHourBalanced60s float64
 			consumedWattHourBalanced60s = 0.0
@@ -151,12 +146,11 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 				wattHourBalanced60s += accumulator.WattHoursConsumed[p]
 				wattHourBalanced60s -= accumulator.WattHoursProduced[p]
 			}
-			if wattHourBalanced60s >=0 {
+			if wattHourBalanced60s >= 0 {
 				consumedWattHourBalanced60s = wattHourBalanced60s
 			} else {
 				producedWattHourBalanced60s = wattHourBalanced60s
 			}
-
 
 			// Update SQLlite database.
 			if config.DatabaseEnabled {
@@ -182,7 +176,7 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		if int64(delay) > 0 {
 			log.Errorf("Readout delayed: %s", delay)
 		}
-		<- tick
+		<-tick
 		i++
 	}
 }
@@ -212,7 +206,7 @@ func configWatcher(config *smartpi.Config) {
 	}()
 
 	log.Debug("init done 2")
-	err = watcher.Add("/etc/smartpi")
+	err = watcher.Add("../config/etc/smartpi")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -251,7 +245,6 @@ func main() {
 	}
 
 	log.SetLevel(config.LogLevel)
-
 
 	smartpi.CheckDatabase(config.DatabaseDir)
 

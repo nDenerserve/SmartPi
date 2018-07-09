@@ -30,13 +30,14 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
-	"github.com/nDenerserve/SmartPi/src/smartpi"
-	"github.com/secsy/goftp"
 	"io/ioutil"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/Nitroman605/SmartPi/src/smartpi"
+	log "github.com/Sirupsen/logrus"
+	"github.com/secsy/goftp"
 )
 
 func init() {
@@ -86,7 +87,6 @@ func main() {
 	if config.FTPcsv {
 
 		csvfile := bytes.NewBufferString(smartpi.CreateCSV(startDate, endDate))
-
 
 		ftpconfig := goftp.Config{
 			User:               config.FTPuser,
@@ -153,7 +153,6 @@ func main() {
 
 		xmlfile := bytes.NewBufferString(smartpi.CreateXML(startDate, endDate))
 
-
 		ftpconfig := goftp.Config{
 			User:               config.FTPuser,
 			Password:           config.FTPpass,
@@ -214,7 +213,5 @@ func main() {
 		}
 
 	}
-
-	
 
 }

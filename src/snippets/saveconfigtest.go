@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/nDenerserve/SmartPi/src/smartpi"
+
+	"github.com/Nitroman605/SmartPi/src/smartpi"
 )
 
 func main() {
