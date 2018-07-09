@@ -35,7 +35,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"smartpi"
+	"github.com/Nitroman605/SmartPi/src/smartpi"
 
 	log "github.com/Sirupsen/logrus"
 	"golang.org/x/exp/io/i2c"

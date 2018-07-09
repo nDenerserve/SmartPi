@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"smartpi"
+	"github.com/Nitroman605/SmartPi/src/smartpi"
 
 	log "github.com/Sirupsen/logrus"
 )

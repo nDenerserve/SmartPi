@@ -41,7 +41,7 @@ import (
 	"strconv"
 	"time"
 
-	"smartpi/network"
+	"github.com/Nitroman605/SmartPi/src/smartpi/network"
 
 	"github.com/gorilla/mux"
 )

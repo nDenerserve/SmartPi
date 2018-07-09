@@ -4,8 +4,9 @@ package main
 
 import (
 	"encoding/json"
-	"smartpi"
 	"time"
+
+	"github.com/Nitroman605/SmartPi/src/smartpi"
 
 	log "github.com/Sirupsen/logrus"
 	MQTT "github.com/eclipse/paho.mqtt.golang"

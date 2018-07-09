@@ -38,8 +38,9 @@ import (
 	"log"
 	"net/http"
 	"reflect"
-	"smartpi/network"
 	"strconv"
+
+	"github.com/Nitroman605/SmartPi/src/smartpi/network"
 
 	"github.com/fatih/structs"
 	"github.com/gorilla/context"
