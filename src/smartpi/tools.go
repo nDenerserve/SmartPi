@@ -31,13 +31,13 @@ import (
 )
 
 type ReadoutAccumulator struct {
-	Current           		Readings
-	Voltage           		Readings
-	ActiveWatts       		Readings
-	CosPhi            		Readings
-	Frequency         		Readings
-	WattHoursConsumed 		Readings
-	WattHoursProduced 		Readings
+	Current           Readings
+	Voltage           Readings
+	ActiveWatts       Readings
+	CosPhi            Readings
+	Frequency         Readings
+	WattHoursConsumed Readings
+	WattHoursProduced Readings
 }
 
 func Checkpanic(e error) {
