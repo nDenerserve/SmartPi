@@ -3,12 +3,12 @@
 package main
 
 import (
-	"strconv"
+	"encoding/json"
+	"smartpi"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
-	"github.com/nDenerserve/SmartPi/src/smartpi"
 )
 
 func newMQTTClient(c *smartpi.Config) (mqttclient MQTT.Client) {
@@ -32,10 +32,10 @@ func newMQTTClient(c *smartpi.Config) (mqttclient MQTT.Client) {
 	return mqttclient
 }
 
-func publishMQTT(m MQTT.Client, status *bool, t string, v float64) bool {
+func publishMQTT(m MQTT.Client, status *bool, t string, v string) bool {
 	if *status {
 		log.Debugf("  -> ", t, ":", v)
-		token := m.Publish(t, 1, false, strconv.FormatFloat(v, 'f', 2, 32))
+		token := m.Publish(t, 1, false, v)
 
 		if !token.WaitTimeout(2 * time.Second) {
 			log.Debugf("  MQTT Timeout. Stopping MQTT sequence.")
@@ -62,15 +62,8 @@ func publishMQTTReadouts(c *smartpi.Config, mqttclient MQTT.Client, values *smar
 
 		// Status is used to stop MQTT publication sequence in case of first error.
 		var status = true
-		publishMQTT(mqttclient, &status, c.MQTTtopic+"/I4", values.Current[smartpi.PhaseN])
-		for _, p := range smartpi.MainPhases {
-			label := p.PhaseNumber()
-			publishMQTT(mqttclient, &status, c.MQTTtopic+"/I"+label, values.Current[p])
-			publishMQTT(mqttclient, &status, c.MQTTtopic+"/V"+label, values.Voltage[p])
-			publishMQTT(mqttclient, &status, c.MQTTtopic+"/P"+label, values.ActiveWatts[p])
-			publishMQTT(mqttclient, &status, c.MQTTtopic+"/COS"+label, values.CosPhi[p])
-			publishMQTT(mqttclient, &status, c.MQTTtopic+"/F"+label, values.Frequency[p])
-		}
+		jsonReadout, _ := json.Marshal(values)
+		publishMQTT(mqttclient, &status, c.MQTTtopic, string(jsonReadout))
 
 		log.Debug("MQTT done.")
 	}

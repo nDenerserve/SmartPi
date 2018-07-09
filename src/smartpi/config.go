@@ -32,7 +32,6 @@ import (
 	"strconv"
 
 	log "github.com/Sirupsen/logrus"
-	"gopkg.in/ini.v1"
 )
 
 type Config struct {

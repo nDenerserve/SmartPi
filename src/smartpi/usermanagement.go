@@ -27,7 +27,7 @@
 package smartpi
 
 import (
-	"github.com/nDenerserve/SmartPi/src/linuxtools"
+	"linuxtools"
 )
 
 // "path/filepath"

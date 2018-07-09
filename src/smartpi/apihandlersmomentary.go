@@ -41,8 +41,9 @@ import (
 	"strconv"
 	"time"
 
+	"smartpi/network"
+
 	"github.com/gorilla/mux"
-	"github.com/nDenerserve/SmartPi/src/smartpi/network"
 )
 
 func Index(w http.ResponseWriter, r *http.Request) {
@@ -61,8 +62,6 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 	phaseId := vars["phaseId"]
 	valueId := vars["valueId"]
 	format = vars["format"]
-
-
 
 	config := NewConfig()
 	file, err := os.Open(config.SharedDir + "/" + config.SharedFile)
@@ -386,12 +385,11 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 		Datasets:        datasets,
 	}
 
-
-	if (format == "xml") {
+	if format == "xml" {
 		// XML output of request
 		type response struct {
-			tMeasurement 
-		}		
+			tMeasurement
+		}
 		if err := xml.NewEncoder(w).Encode(response{measurement}); err != nil {
 			panic(err)
 		}
@@ -400,6 +398,6 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(measurement); err != nil {
 			panic(err)
 		}
-	}	
+	}
 
 }
