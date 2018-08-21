@@ -87,7 +87,6 @@ func main() {
 
 		csvfile := bytes.NewBufferString(smartpi.CreateCSV(startDate, endDate))
 
-
 		ftpconfig := goftp.Config{
 			User:               config.FTPuser,
 			Password:           config.FTPpass,
@@ -153,7 +152,6 @@ func main() {
 
 		xmlfile := bytes.NewBufferString(smartpi.CreateXML(startDate, endDate))
 
-
 		ftpconfig := goftp.Config{
 			User:               config.FTPuser,
 			Password:           config.FTPpass,
@@ -214,7 +212,5 @@ func main() {
 		}
 
 	}
-
-	
 
 }

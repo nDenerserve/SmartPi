@@ -1,5 +1,0 @@
-{
-    "terminal.integrated.env.osx": {
-        "PATH": "/Users/jens/.platformio/penv/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin:/usr/local/go/bin:/opt/ImageMagick/bin:/Users/jens/Library/Android/sdk/tools:/Users/jens/Library/Android/sdk/platform-tools"
-    }
-}

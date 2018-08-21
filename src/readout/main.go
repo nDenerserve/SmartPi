@@ -119,7 +119,6 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 			wattHourBalanced5s += readouts.ActiveWatts[p] / 3600.0
 		}
 
-
 		// Update metrics endpoint.
 		updatePrometheusMetrics(&readouts)
 
@@ -140,8 +139,6 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		// Every 60 seconds.
 		if i == 59 {
 
-			
-			
 			// balanced value
 			var wattHourBalanced60s float64
 			consumedWattHourBalanced60s = 0.0
@@ -151,12 +148,11 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 				wattHourBalanced60s += accumulator.WattHoursConsumed[p]
 				wattHourBalanced60s -= accumulator.WattHoursProduced[p]
 			}
-			if wattHourBalanced60s >=0 {
+			if wattHourBalanced60s >= 0 {
 				consumedWattHourBalanced60s = wattHourBalanced60s
 			} else {
 				producedWattHourBalanced60s = wattHourBalanced60s
 			}
-
 
 			// Update SQLlite database.
 			if config.DatabaseEnabled {
@@ -182,7 +178,7 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		if int64(delay) > 0 {
 			log.Errorf("Readout delayed: %s", delay)
 		}
-		<- tick
+		<-tick
 		i++
 	}
 }
@@ -251,7 +247,6 @@ func main() {
 	}
 
 	log.SetLevel(config.LogLevel)
-
 
 	smartpi.CheckDatabase(config.DatabaseDir)
 

@@ -39,6 +39,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	"github.com/gorilla/mux"
 )
 
@@ -96,10 +97,8 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 		export = append(export, valueId+"_sum")
 	}
 
-	
 	data := ReadChartData(config.DatabaseDir, start, end)
 
-	
 	for _, valueelement := range export {
 		row := 0
 		val := 0.0
@@ -166,14 +165,14 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 		timeSeries = append(timeSeries, tChartSerie{Key: valueelement, Values: values})
 	}
 
-	if (format == "xml") {
+	if format == "xml" {
 
 		type serie []tChartSerie
 
 		// XML output of request
 		type response struct {
 			serie
-		}		
+		}
 		if err := xml.NewEncoder(w).Encode(response{timeSeries}); err != nil {
 			panic(err)
 		}
@@ -236,7 +235,6 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 		export = append(export, valueId+"_sum")
 	}
 
-	
 	data := ReadDayData(config.DatabaseDir, start, end)
 
 	for _, valueelement := range export {
@@ -298,26 +296,24 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 			if math.IsNaN(val) {
 				val = 0.0
 			}
-			// values = append(values, tChartValue{Time: ti.Format(time.RFC3339), Value: float32(val)})
 			values = append(values, tChartValue{Time: ti.Local().Format("2006-01-02T15:04:05-0700"), Value: float32(val)})
 
 			row++
 		}
-		// fmt.Println(strconv.Itoa(index)+" "+valueelement)
 		timeSeries = append(timeSeries, tChartSerie{Key: valueelement, Values: values})
 	}
 
-	if (format == "xml") {
-		
+	if format == "xml" {
+
 		type serie []tChartSerie
 
 		// XML output of request
 		type response struct {
 			serie
-		}		
+		}
 		if err := xml.NewEncoder(w).Encode(response{timeSeries}); err != nil {
 			panic(err)
-		}	
+		}
 	} else {
 		// JSON output of request
 		if err := json.NewEncoder(w).Encode(timeSeries); err != nil {
