@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
+	log "github.com/sirupsen/logrus"
 )
 
 func updateSQLiteDatabase(c *smartpi.Config, data smartpi.ReadoutAccumulator, consumedWattHourBalanced float64, producedWattHourBalanced float64) {

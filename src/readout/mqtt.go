@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
+	log "github.com/sirupsen/logrus"
 )
 
 func newMQTTClient(c *smartpi.Config) (mqttclient MQTT.Client) {

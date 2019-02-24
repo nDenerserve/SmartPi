@@ -35,7 +35,7 @@ import (
 	"github.com/nathan-osman/go-rpigpio"
 	"golang.org/x/exp/io/i2c"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 const (

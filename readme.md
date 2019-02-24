@@ -1,4 +1,6 @@
-# SmartPi Energy Monitor [![Build Status](https://circleci.com/gh/nDenerserve/SmartPi/tree/master.svg?style=shield)][circleci]
+# SmartPi Energy Monitor 
+
+[![CircleCI](https://circleci.com/gh/nDenerserve/SmartPi.svg?style=svg)](https://circleci.com/gh/nDenerserve/SmartPi)
 
 [SmartPi open source](http://www.emanager.eu/en/products/smartpi).
 

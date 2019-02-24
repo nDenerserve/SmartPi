@@ -3,7 +3,7 @@ package smartpi
 import (
 	"database/sql"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"time"
 

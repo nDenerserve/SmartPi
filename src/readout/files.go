@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
+	log "github.com/sirupsen/logrus"
 )
 
 func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout, balancedvalue float64) {
@@ -85,8 +85,8 @@ func updateCounterFile(c *smartpi.Config, f string, v float64) {
 	if err == nil {
 		counter, err = strconv.ParseFloat(string(counterFile), 64)
 		if err != nil {
+			log.Errorf("unable to read counter file %q, %q", f, err)
 			counter = 0.0
-			log.Fatal(err)
 		}
 	} else {
 		counter = 0.0
