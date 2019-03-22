@@ -22,6 +22,7 @@ import (
 	"net/url"
 	"os"
 	"reflect"
+	"sync/atomic"
 	"time"
 
 	"github.com/eclipse/paho.mqtt.golang/packets"
@@ -63,15 +64,20 @@ func openConnection(uri *url.URL, tlsc *tls.Config, timeout time.Duration) (net.
 				return nil, err
 			}
 			return conn, nil
-		} else {
-			proxyDialer := proxy.FromEnvironment()
-
-			conn, err := proxyDialer.Dial("tcp", uri.Host)
-			if err != nil {
-				return nil, err
-			}
-			return conn, nil
 		}
+		proxyDialer := proxy.FromEnvironment()
+
+		conn, err := proxyDialer.Dial("tcp", uri.Host)
+		if err != nil {
+			return nil, err
+		}
+		return conn, nil
+	case "unix":
+		conn, err := net.DialTimeout("unix", uri.Host, timeout)
+		if err != nil {
+			return nil, err
+		}
+		return conn, nil
 	case "ssl":
 		fallthrough
 	case "tls":
@@ -84,24 +90,23 @@ func openConnection(uri *url.URL, tlsc *tls.Config, timeout time.Duration) (net.
 				return nil, err
 			}
 			return conn, nil
-		} else {
-			proxyDialer := proxy.FromEnvironment()
-
-			conn, err := proxyDialer.Dial("tcp", uri.Host)
-			if err != nil {
-				return nil, err
-			}
-
-			tlsConn := tls.Client(conn, tlsc)
-
-			err = tlsConn.Handshake()
-			if err != nil {
-				conn.Close()
-				return nil, err
-			}
-
-			return tlsConn, nil
 		}
+		proxyDialer := proxy.FromEnvironment()
+
+		conn, err := proxyDialer.Dial("tcp", uri.Host)
+		if err != nil {
+			return nil, err
+		}
+
+		tlsConn := tls.Client(conn, tlsc)
+
+		err = tlsConn.Handshake()
+		if err != nil {
+			conn.Close()
+			return nil, err
+		}
+
+		return tlsConn, nil
 	}
 	return nil, errors.New("Unknown protocol")
 }
@@ -125,7 +130,7 @@ func incoming(c *client) {
 		case c.ibound <- cp:
 			// Notify keepalive logic that we recently received a packet
 			if c.options.KeepAlive != 0 {
-				c.packetResp.Broadcast()
+				atomic.StoreInt64(&c.lastReceived, time.Now().Unix())
 			}
 		case <-c.stop:
 			// This avoids a deadlock should a message arrive while shutting down.
@@ -169,6 +174,7 @@ func outgoing(c *client) {
 
 			if err := msg.Write(c.conn); err != nil {
 				ERROR.Println(NET, "outgoing stopped with error", err)
+				pub.t.setError(err)
 				signalError(c.errors, err)
 				return
 			}
@@ -193,6 +199,7 @@ func outgoing(c *client) {
 			DEBUG.Println(NET, "obound priority msg to write, type", reflect.TypeOf(msg.p))
 			if err := msg.p.Write(c.conn); err != nil {
 				ERROR.Println(NET, "outgoing stopped with error", err)
+				msg.t.setError(err)
 				signalError(c.errors, err)
 				return
 			}
@@ -205,7 +212,7 @@ func outgoing(c *client) {
 		}
 		// Reset ping timer after sending control packet.
 		if c.options.KeepAlive != 0 {
-			c.keepaliveReset.Broadcast()
+			atomic.StoreInt64(&c.lastSent, time.Now().Unix())
 		}
 	}
 }
@@ -228,7 +235,7 @@ func alllogic(c *client) {
 			switch m := msg.(type) {
 			case *packets.PingrespPacket:
 				DEBUG.Println(NET, "received pingresp")
-				c.pingResp.Broadcast()
+				atomic.StoreInt32(&c.pingOutstanding, 0)
 			case *packets.SubackPacket:
 				DEBUG.Println(NET, "received suback, id:", m.MessageID)
 				token := c.getToken(m.MessageID)
@@ -266,6 +273,7 @@ func alllogic(c *client) {
 					pa := packets.NewControlPacket(packets.Puback).(*packets.PubackPacket)
 					pa.MessageID = m.MessageID
 					DEBUG.Println(NET, "putting puback msg on obound")
+					persistOutbound(c.persist, pa)
 					select {
 					case c.oboundP <- &PacketAndToken{p: pa, t: nil}:
 					case <-c.stop:
@@ -296,6 +304,7 @@ func alllogic(c *client) {
 				DEBUG.Println(NET, "received pubrel, id:", m.MessageID)
 				pc := packets.NewControlPacket(packets.Pubcomp).(*packets.PubcompPacket)
 				pc.MessageID = m.MessageID
+				persistOutbound(c.persist, pc)
 				select {
 				case c.oboundP <- &PacketAndToken{p: pc, t: nil}:
 				case <-c.stop:
@@ -313,6 +322,7 @@ func alllogic(c *client) {
 }
 
 func errorWatch(c *client) {
+	defer c.workers.Done()
 	select {
 	case <-c.stop:
 		WARN.Println(NET, "errorWatch stopped")

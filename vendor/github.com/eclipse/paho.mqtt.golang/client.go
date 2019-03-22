@@ -52,18 +52,47 @@ const (
 // Numerous connection options may be specified by configuring a
 // and then supplying a ClientOptions type.
 type Client interface {
+	// IsConnected returns a bool signifying whether
+	// the client is connected or not.
 	IsConnected() bool
+	// Connect will create a connection to the message broker, by default
+	// it will attempt to connect at v3.1.1 and auto retry at v3.1 if that
+	// fails
 	Connect() Token
+	// Disconnect will end the connection with the server, but not before waiting
+	// the specified number of milliseconds to wait for existing work to be
+	// completed.
 	Disconnect(quiesce uint)
+	// Publish will publish a message with the specified QoS and content
+	// to the specified topic.
+	// Returns a token to track delivery of the message to the broker
 	Publish(topic string, qos byte, retained bool, payload interface{}) Token
+	// Subscribe starts a new subscription. Provide a MessageHandler to be executed when
+	// a message is published on the topic provided, or nil for the default handler
 	Subscribe(topic string, qos byte, callback MessageHandler) Token
+	// SubscribeMultiple starts a new subscription for multiple topics. Provide a MessageHandler to
+	// be executed when a message is published on one of the topics provided, or nil for the
+	// default handler
 	SubscribeMultiple(filters map[string]byte, callback MessageHandler) Token
+	// Unsubscribe will end the subscription from each of the topics provided.
+	// Messages published to those topics from other clients will no longer be
+	// received.
 	Unsubscribe(topics ...string) Token
+	// AddRoute allows you to add a handler for messages on a specific topic
+	// without making a subscription. For example having a different handler
+	// for parts of a wildcard subscription
 	AddRoute(topic string, callback MessageHandler)
+	// OptionsReader returns a ClientOptionsReader which is a copy of the clientoptions
+	// in use by the client.
+	OptionsReader() ClientOptionsReader
 }
 
 // client implements the Client interface
 type client struct {
+	lastSent        int64
+	lastReceived    int64
+	pingOutstanding int32
+	status          uint32
 	sync.RWMutex
 	messageIds
 	conn            net.Conn
@@ -77,10 +106,6 @@ type client struct {
 	stop            chan struct{}
 	persist         Store
 	options         ClientOptions
-	pingResp        *sync.Cond
-	packetResp      *sync.Cond
-	keepaliveReset  *sync.Cond
-	status          uint32
 	workers         sync.WaitGroup
 }
 
@@ -104,7 +129,7 @@ func NewClient(o *ClientOptions) Client {
 	}
 	c.persist = c.options.Store
 	c.status = disconnected
-	c.messageIds = messageIds{index: make(map[uint16]Token)}
+	c.messageIds = messageIds{index: make(map[uint16]tokenCompletor)}
 	c.msgRouter, c.stopRouter = newRouter()
 	c.msgRouter.setDefaultHandler(c.options.DefaultPublishHandler)
 	if !c.options.AutoReconnect {
@@ -113,6 +138,9 @@ func NewClient(o *ClientOptions) Client {
 	return c
 }
 
+// AddRoute allows you to add a handler for messages on a specific topic
+// without making a subscription. For example having a different handler
+// for parts of a wildcard subscription
 func (c *client) AddRoute(topic string, callback MessageHandler) {
 	if callback != nil {
 		c.msgRouter.addRoute(topic, callback)
@@ -152,16 +180,17 @@ func (c *client) setConnected(status uint32) {
 //made when the client is not connected to a broker
 var ErrNotConnected = errors.New("Not Connected")
 
-// Connect will create a connection to the message broker
-// If clean session is false, then a slice will
-// be returned containing Receipts for all messages
-// that were in-flight at the last disconnect.
-// If clean session is true, then any existing client
-// state will be removed.
+// Connect will create a connection to the message broker, by default
+// it will attempt to connect at v3.1.1 and auto retry at v3.1 if that
+// fails
 func (c *client) Connect() Token {
 	var err error
 	t := newToken(packets.Connect).(*ConnectToken)
 	DEBUG.Println(CLI, "Connect()")
+
+	c.obound = make(chan *PacketAndToken, c.options.MessageChannelDepth)
+	c.oboundP = make(chan *PacketAndToken, c.options.MessageChannelDepth)
+	c.ibound = make(chan packets.ControlPacket)
 
 	go func() {
 		c.persist.Open()
@@ -232,16 +261,13 @@ func (c *client) Connect() Token {
 
 		c.options.protocolVersionExplicit = true
 
-		c.obound = make(chan *PacketAndToken, c.options.MessageChannelDepth)
-		c.oboundP = make(chan *PacketAndToken, c.options.MessageChannelDepth)
-		c.ibound = make(chan packets.ControlPacket)
 		c.errors = make(chan error, 1)
 		c.stop = make(chan struct{})
-		c.pingResp = sync.NewCond(&sync.Mutex{})
-		c.packetResp = sync.NewCond(&sync.Mutex{})
-		c.keepaliveReset = sync.NewCond(&sync.Mutex{})
 
 		if c.options.KeepAlive != 0 {
+			atomic.StoreInt32(&c.pingOutstanding, 0)
+			atomic.StoreInt64(&c.lastReceived, time.Now().Unix())
+			atomic.StoreInt64(&c.lastSent, time.Now().Unix())
 			c.workers.Add(1)
 			go keepalive(c)
 		}
@@ -263,10 +289,8 @@ func (c *client) Connect() Token {
 			c.persist.Reset()
 		}
 
+		c.workers.Add(4)
 		go errorWatch(c)
-
-		// Do not start incoming until resume has completed
-		c.workers.Add(3)
 		go alllogic(c)
 		go outgoing(c)
 		go incoming(c)
@@ -343,6 +367,9 @@ func (c *client) reconnect() {
 	}
 
 	if c.options.KeepAlive != 0 {
+		atomic.StoreInt32(&c.pingOutstanding, 0)
+		atomic.StoreInt64(&c.lastReceived, time.Now().Unix())
+		atomic.StoreInt64(&c.lastSent, time.Now().Unix())
 		c.workers.Add(1)
 		go keepalive(c)
 	}
@@ -355,9 +382,8 @@ func (c *client) reconnect() {
 		go c.options.OnConnect(c)
 	}
 
+	c.workers.Add(4)
 	go errorWatch(c)
-
-	c.workers.Add(3)
 	go alllogic(c)
 	go outgoing(c)
 	go incoming(c)
@@ -433,9 +459,7 @@ func (c *client) internalConnLost(err error) {
 		c.closeStop()
 		c.conn.Close()
 		c.workers.Wait()
-		if c.options.CleanSession {
-			c.messageIds.cleanUp()
-		}
+		c.messageIds.cleanUp()
 		if c.options.AutoReconnect {
 			c.setConnected(reconnecting)
 			go c.reconnect()
@@ -471,6 +495,7 @@ func (c *client) disconnect() {
 	c.closeStop()
 	c.closeConn()
 	c.workers.Wait()
+	c.messageIds.cleanUp()
 	close(c.stopRouter)
 	DEBUG.Println(CLI, "disconnected")
 	c.persist.Close()
@@ -598,6 +623,8 @@ func (c *client) Unsubscribe(topics ...string) Token {
 	return token
 }
 
+// OptionsReader returns a ClientOptionsReader which is a copy of the clientoptions
+// in use by the client.
 func (c *client) OptionsReader() ClientOptionsReader {
 	r := ClientOptionsReader{options: &c.options}
 	return r

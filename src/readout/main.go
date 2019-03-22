@@ -37,7 +37,7 @@ import (
 
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/exp/io/i2c"
 
 	"github.com/fsnotify/fsnotify"
