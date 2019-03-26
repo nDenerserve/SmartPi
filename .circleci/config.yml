@@ -1,11 +1,14 @@
 ---
-version: 2
+version: 2.1
+
+executors:
+  golang:
+    docker:
+    - image: circleci/golang:1.12
 
 jobs:
   build:
-    docker:
-    - image: circleci/golang:1.10
-    working_directory: /go/src/github.com/nDenerserve/SmartPi
+    executor: golang
 
     steps:
     - checkout

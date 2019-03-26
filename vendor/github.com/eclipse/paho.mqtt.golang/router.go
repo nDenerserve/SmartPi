@@ -57,12 +57,23 @@ func match(route []string, topic []string) bool {
 	if (route[0] == "+") || (route[0] == topic[0]) {
 		return match(route[1:], topic[1:])
 	}
-
 	return false
 }
 
 func routeIncludesTopic(route, topic string) bool {
-	return match(strings.Split(route, "/"), strings.Split(topic, "/"))
+	return match(routeSplit(route), strings.Split(topic, "/"))
+}
+
+// removes $share and sharename when splitting the route to allow
+// shared subscription routes to correctly match the topic
+func routeSplit(route string) []string {
+	var result []string
+	if strings.HasPrefix(route, "$share") {
+		result = strings.Split(route, "/")[2:]
+	} else {
+		result = strings.Split(route, "/")
+	}
+	return result
 }
 
 // match takes the topic string of the published message and does a basic compare to the
@@ -135,10 +146,11 @@ func (r *router) matchAndDispatch(messages <-chan *packets.PublishPacket, order 
 			case message := <-messages:
 				sent := false
 				r.RLock()
+				handlers := []MessageHandler{}
 				for e := r.routes.Front(); e != nil; e = e.Next() {
 					if e.Value.(*route).match(message.TopicName) {
 						if order {
-							e.Value.(*route).callback(client, messageFromPublish(message))
+							handlers = append(handlers, e.Value.(*route).callback)
 						} else {
 							go e.Value.(*route).callback(client, messageFromPublish(message))
 						}
@@ -147,12 +159,15 @@ func (r *router) matchAndDispatch(messages <-chan *packets.PublishPacket, order 
 				}
 				if !sent && r.defaultHandler != nil {
 					if order {
-						r.defaultHandler(client, messageFromPublish(message))
+						handlers = append(handlers, r.defaultHandler)
 					} else {
 						go r.defaultHandler(client, messageFromPublish(message))
 					}
 				}
 				r.RUnlock()
+				for _, handler := range handlers {
+					handler(client, messageFromPublish(message))
+				}
 			case <-r.stop:
 				return
 			}
