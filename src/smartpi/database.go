@@ -96,7 +96,7 @@ func CreateSQlDatabase(databasedir string, t time.Time) {
 	}
 	defer db.Close()
 
-	sqlStmt := "CREATE TABLE IF NOT EXISTS smartpi_logdata_" + t.Format("200601") + " (id INTEGER NOT NULL PRIMARY KEY, date DATETIME, current_1 DOUBLE, current_2 DOUBLE, current_3 DOUBLE, current_4 DOUBLE, voltage_1 DOUBLE, voltage_2 DOUBLE, voltage_3 DOUBLE, power_1 DOUBLE, power_2 DOUBLE, power_3 DOUBLE, cosphi_1 DOUBLE, cosphi_2 DOUBLE, cosphi_3 DOUBLE, frequency_1 DOUBLE, frequency_2 DOUBLE, frequency_3 DOUBLE, energy_pos_1 DOUBLE, energy_pos_2 DOUBLE, energy_pos_3 DOUBLE, energy_neg_1 DOUBLE, energy_neg_2 DOUBLE, energy_neg_3 DOUBLE)"
+	sqlStmt := "CREATE TABLE IF NOT EXISTS smartpi_logdata_" + t.Format("200601") + " (id INTEGER NOT NULL PRIMARY KEY, date DATETIME, current_1 DOUBLE, current_2 DOUBLE, current_3 DOUBLE, current_4 DOUBLE, voltage_1 DOUBLE, voltage_2 DOUBLE, voltage_3 DOUBLE, power_1 DOUBLE, power_2 DOUBLE, power_3 DOUBLE, cosphi_1 DOUBLE, cosphi_2 DOUBLE, cosphi_3 DOUBLE, frequency_1 DOUBLE, frequency_2 DOUBLE, frequency_3 DOUBLE, energy_pos_1 DOUBLE, energy_pos_2 DOUBLE, energy_pos_3 DOUBLE, energy_neg_1 DOUBLE, energy_neg_2 DOUBLE, energy_neg_3 DOUBLE, energy_pos_balanced DOUBLE, energy_neg_balanced DOUBLE)"
 
 	_, err = db.Exec(sqlStmt)
 	if err != nil {
