@@ -1,6 +1,7 @@
 BINARY_READOUT=smartpireadout
 BINARY_SERVER=smartpiserver
 BINARY_FTPUPLOAD=smartpiftpupload
+BINARY_MODBUSSERVER=smartpimodbusserver
 
 #VERSION=0.3.7
 VERSION := $(shell git describe --always --long --dirty)
@@ -51,7 +52,7 @@ buildsmartpiftpupload:
 
 buildsmartpimodbusserver:
 	@echo "start building smartpimodbusserver..."
-	$(GOBUILD) -o bin/$(BINARY_FTPUPLOAD) -ldflags="-X main.appVersion=${VERSION}_${BUILD_TIME}" src/modbus/modbusserver.go
+	$(GOBUILD) -o bin/$(BINARY_MODBUSSERVER) -ldflags="-X main.appVersion=${VERSION}_${BUILD_TIME}" src/modbus/modbusserver.go
 	@echo "building smartpimodbusserver done"
 
 install:
