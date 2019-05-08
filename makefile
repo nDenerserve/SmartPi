@@ -49,6 +49,11 @@ buildsmartpiftpupload:
 	$(GOBUILD) -o bin/$(BINARY_FTPUPLOAD) -ldflags="-X main.appVersion=${VERSION}_${BUILD_TIME}" src/main/ftpupload.go
 	@echo "building smartpiftpupload done"
 
+buildsmartpimodbusserver:
+	@echo "start building smartpimodbusserver..."
+	$(GOBUILD) -o bin/$(BINARY_FTPUPLOAD) -ldflags="-X main.appVersion=${VERSION}_${BUILD_TIME}" src/modbus/modbusserver.go
+	@echo "building smartpimodbusserver done"
+
 install:
 	@echo install
 
@@ -58,6 +63,10 @@ install:
 #
 #	if [ `pidof smartpiserver` > "0" ]
 #		then killall smartpiserver
+#	fi
+#
+#	if [ `pidof smartpimodbusserver` > "0" ]
+#		then killall smartpimodbusserver
 #	fi
 #
 #	if [ `pidof smartpiftpupload` > "0" ]
