@@ -92,11 +92,11 @@ type Config struct {
 	MQTTtopic      string
 
 	// [modbus slave]
-	ModbusRTUenabled	bool
-	ModbusTCPenabled	bool
-	ModbusRTUAddress	uint8
-	ModbusRTUDevice		string
-	ModbusTCPAddress	string
+	ModbusRTUenabled bool
+	ModbusTCPenabled bool
+	ModbusRTUAddress uint8
+	ModbusRTUDevice  string
+	ModbusTCPAddress string
 
 	// [mobile]
 	MobileEnabled bool

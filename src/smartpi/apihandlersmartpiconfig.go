@@ -408,7 +408,7 @@ func WifiList(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
-w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if err := json.NewEncoder(w).Encode(wifiList{Wifilist: wifi}); err != nil {
 		panic(err)
 	}
@@ -423,7 +423,7 @@ func NetworkConnections(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
-w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if err := json.NewEncoder(w).Encode(networkList{Networklist: network}); err != nil {
 		panic(err)
 	}
@@ -464,7 +464,7 @@ func RemoveWifi(w http.ResponseWriter, r *http.Request) {
 	name := vars["name"]
 
 	err := network.RemoveWifi(name)
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if err != nil {
 		log.Println(err)
 		if err := json.NewEncoder(w).Encode(JSONMessage{Code: 500, Message: "Internal Server Error"}); err != nil {

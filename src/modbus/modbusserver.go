@@ -1,18 +1,18 @@
 package main
 
 import (
-	log "github.com/sirupsen/logrus"
+	"bufio"
+	"encoding/csv"
+	"flag"
 	"fmt"
-	"math"
+	"github.com/fsnotify/fsnotify"
+	"github.com/goburrow/serial"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 	"github.com/nDenerserve/mbserver"
-	"github.com/goburrow/serial"
+	log "github.com/sirupsen/logrus"
+	"math"
 	"os"
-	"bufio"
-	"flag"
 	"strconv"
-	"encoding/csv"
-	"github.com/fsnotify/fsnotify"
 	"time"
 )
 
@@ -23,7 +23,6 @@ func init() {
 }
 
 var appVersion = "No Version Provided"
-
 
 // main
 func main() {
@@ -53,26 +52,26 @@ func main() {
 		err := serv.ListenTCP(config.ModbusTCPAddress)
 		if err != nil {
 			log.Fatal("%v\n", err)
-    } else {
+		} else {
 			log.Info("Modbus TCP started on: ")
 			log.Info(config.ModbusTCPAddress)
 		}
 	}
-	
+
 	if config.ModbusRTUenabled {
 		err := serv.ListenRTU(&serial.Config{
-		Address:  config.ModbusRTUDevice,
-		BaudRate: 19200,
-		DataBits: 8,
-		StopBits: 1,
-		Parity:   "N"},config.ModbusRTUAddress)
+			Address:  config.ModbusRTUDevice,
+			BaudRate: 19200,
+			DataBits: 8,
+			StopBits: 1,
+			Parity:   "N"}, config.ModbusRTUAddress)
 		if err != nil {
 			log.Fatal("failed to listen, got %v\n", err)
 		} else {
 			log.Info("Modbus RTU started on address: ")
 			log.Info(config.ModbusRTUAddress)
 		}
-	}    
+	}
 	defer serv.Close()
 
 	var registervalue uint32
@@ -96,7 +95,7 @@ func main() {
 				if len(records) >= 19 {
 					for i := 1; i < len(records)-1; i++ {
 						registervalue = 0
-						val, err := strconv.ParseFloat(records[i],32)
+						val, err := strconv.ParseFloat(records[i], 32)
 						if err != nil {
 							log.Fatal("error converting value", err)
 						} else {
@@ -108,7 +107,7 @@ func main() {
 				} else {
 					log.Fatal("Values not written")
 				}
-				
+
 				file.Close()
 
 				// watch for errors
@@ -121,7 +120,7 @@ func main() {
 	// out of the box fsnotify can watch a single file, or a single directory
 	if err := watcher.Add(config.SharedDir + "/" + config.SharedFile); err != nil {
 		log.Fatal("ERROR", err)
-		
+
 	}
 
 	<-done
