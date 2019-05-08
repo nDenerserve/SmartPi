@@ -18,7 +18,6 @@ import (
 	"errors"
 	"sync/atomic"
 	"time"
-
 	"github.com/eclipse/paho.mqtt.golang/packets"
 )
 
@@ -27,6 +26,7 @@ func keepalive(c *client) {
 	DEBUG.Println(PNG, "keepalive starting")
 	var checkInterval int64
 	var pingSent time.Time
+
 
 	if c.options.KeepAlive > 10 {
 		checkInterval = 5

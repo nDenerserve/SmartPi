@@ -165,6 +165,8 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 		timeSeries = append(timeSeries, tChartSerie{Key: valueelement, Values: values})
 	}
 
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	if format == "xml" {
 
 		type serie []tChartSerie
@@ -302,7 +304,9 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 		}
 		timeSeries = append(timeSeries, tChartSerie{Key: valueelement, Values: values})
 	}
-
+	
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	
 	if format == "xml" {
 
 		type serie []tChartSerie

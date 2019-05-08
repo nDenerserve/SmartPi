@@ -44,6 +44,7 @@ func ServeCSVValues(w http.ResponseWriter, r *http.Request) {
 	from := vars["fromDate"]
 	to := vars["toDate"]
 	w.Header().Set("Content-Type", "application/text")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	location := time.Now().Location()
 

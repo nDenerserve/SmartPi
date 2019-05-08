@@ -383,7 +383,7 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 		Ipaddress:       network.GetLocalIP(),
 		Datasets:        datasets,
 	}
-
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if format == "xml" {
 		// XML output of request
 		type response struct {

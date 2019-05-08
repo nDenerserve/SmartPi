@@ -21,7 +21,7 @@ func newMQTTClient(c *smartpi.Config) (mqttclient MQTT.Client) {
 	opts.SetAutoReconnect(true)
 	opts.SetConnectTimeout(3 * time.Second)
 	opts.SetPingTimeout(1 * time.Second)
-	opts.SetKeepAlive(1 * time.Second)
+	opts.SetKeepAlive(2 * time.Second) // Min value has to be 2
 	opts.SetMaxReconnectInterval(3 * time.Second)
 	//create and start a client using the above ClientOptions
 	mqttclient = MQTT.NewClient(opts)

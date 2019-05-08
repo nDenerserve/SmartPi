@@ -91,6 +91,13 @@ type Config struct {
 	MQTTpass       string
 	MQTTtopic      string
 
+	// [modbus slave]
+	ModbusRTUenabled	bool
+	ModbusTCPenabled	bool
+	ModbusRTUAddress	uint8
+	ModbusRTUDevice		string
+	ModbusTCPAddress	string
+
 	// [mobile]
 	MobileEnabled bool
 	MobileAPN     string
@@ -197,6 +204,13 @@ func (p *Config) ReadParameterFromFile() {
 	p.MQTTpass = cfg.Section("mqtt").Key("mqtt_password").String()
 	p.MQTTtopic = cfg.Section("mqtt").Key("mqtt_topic").String()
 
+	// [modbus slave]
+	p.ModbusRTUenabled = cfg.Section("modbus").Key("modbus_mtu_enabled").MustBool(false)
+	p.ModbusTCPenabled = cfg.Section("modbus").Key("modbus_tcp_enabled").MustBool(false)
+	p.ModbusRTUAddress = uint8(cfg.Section("modbus").Key("modbus_rtu_address").MustInt(1))
+	p.ModbusRTUDevice = cfg.Section("modbus").Key("modbus_rtu_device_id").MustString("/dev/serial0")
+	p.ModbusTCPAddress = cfg.Section("modbus").Key("modbus_tcp_address").MustString(":502")
+
 	// [mobile]
 	p.MobileEnabled = cfg.Section("umts").Key("umts").MustBool(false)
 	p.MobileAPN = cfg.Section("umts").Key("umts_apn").String()
@@ -278,6 +292,13 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("mqtt").NewKey("mqtt_username", p.MQTTuser)
 	_, err = cfg.Section("mqtt").NewKey("mqtt_password", p.MQTTpass)
 	_, err = cfg.Section("mqtt").NewKey("mqtt_topic", p.MQTTtopic)
+
+	// [modbus slave]
+	_, err = cfg.Section("modbus").NewKey("modbus_mtu_enabled", strconv.FormatBool(p.ModbusRTUenabled))
+	_, err = cfg.Section("modbus").NewKey("modbus_tcp_enabled", strconv.FormatBool(p.ModbusTCPenabled))
+	_, err = cfg.Section("modbus").NewKey("modbus_rtu_address", strconv.FormatUint(uint64(p.ModbusRTUAddress), 10))
+	_, err = cfg.Section("modbus").NewKey("modbus_rtu_device_id", p.ModbusRTUDevice)
+	_, err = cfg.Section("modbus").NewKey("modbus_tcp_address", p.ModbusTCPAddress)
 
 	// [mobile]
 	_, err = cfg.Section("umts").NewKey("umts", strconv.FormatBool(p.MobileEnabled))

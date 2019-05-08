@@ -61,6 +61,7 @@ smartpi.controller('MainCtrl', function($scope, $Momentary, $Linechart, $GetData
     $scope.show = function(toShow) {
         if (toShow == "chart") {
             getLinechart('power', '123sum', moment().startOf('day').format(), moment().format());
+            $scope.showLinechartPower = true;
             $scope.btnpowerline = 'btn-primary';
         }
         $scope.toShow = toShow;

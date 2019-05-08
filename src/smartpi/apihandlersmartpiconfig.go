@@ -70,6 +70,7 @@ func ReadConfig(w http.ResponseWriter, r *http.Request) {
 	// name := vars["name"]
 
 	// user := context.Get(r,"Username")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	configuration := context.Get(r, "Config")
 	if err := json.NewEncoder(w).Encode(configuration.(*Config)); err != nil {
 		panic(err)
@@ -407,7 +408,7 @@ func WifiList(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
-
+w.Header().Set("Access-Control-Allow-Origin", "*")
 	if err := json.NewEncoder(w).Encode(wifiList{Wifilist: wifi}); err != nil {
 		panic(err)
 	}
@@ -422,7 +423,7 @@ func NetworkConnections(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
-
+w.Header().Set("Access-Control-Allow-Origin", "*")
 	if err := json.NewEncoder(w).Encode(networkList{Networklist: network}); err != nil {
 		panic(err)
 	}
@@ -434,7 +435,7 @@ func CreateWifi(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&ws)
-
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if err != nil {
 		log.Println(err)
 		if err = json.NewEncoder(w).Encode(JSONMessage{Code: 400, Message: "Bad Request"}); err != nil {
@@ -463,6 +464,7 @@ func RemoveWifi(w http.ResponseWriter, r *http.Request) {
 	name := vars["name"]
 
 	err := network.RemoveWifi(name)
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 	if err != nil {
 		log.Println(err)
 		if err := json.NewEncoder(w).Encode(JSONMessage{Code: 500, Message: "Internal Server Error"}); err != nil {

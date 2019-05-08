@@ -63,6 +63,14 @@ mqtt_username=""
 mqtt_password=""
 mqtt_topic=""
 
+[modbus]
+modbus_rtu_enabled=0
+modbus_tcp_enabled=0
+modbus_rtu_address=1
+modbus_rtu_device_id="/dev/serial0"
+modbus_tcp_address=":502"
+
+
 [umts]
 umts=0
 umts_apn=""
