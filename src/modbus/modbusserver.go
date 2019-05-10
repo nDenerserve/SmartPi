@@ -59,6 +59,7 @@ func main() {
 	}
 
 	if config.ModbusRTUenabled {
+		fmt.Println("Device: ",config.ModbusRTUDevice,"  Address: ",config.ModbusRTUAddress)
 		err := serv.ListenRTU(&serial.Config{
 			Address:  config.ModbusRTUDevice,
 			BaudRate: 19200,

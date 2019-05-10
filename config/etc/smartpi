@@ -16,6 +16,7 @@ database_enabled=true
 dir="/var/smartpi/db"
 
 [device]
+samplerate=1
 i2c_device="/dev/i2c-1"
 power_frequency=50
 ct_type_1=YHDC_SCT013

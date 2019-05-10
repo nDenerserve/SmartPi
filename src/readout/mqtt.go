@@ -35,7 +35,7 @@ func newMQTTClient(c *smartpi.Config) (mqttclient MQTT.Client) {
 func publishMQTT(m MQTT.Client, status *bool, t string, v float64) bool {
 	if *status {
 		log.Debugf("  -> ", t, ":", v)
-		token := m.Publish(t, 1, false, strconv.FormatFloat(v, 'f', 2, 32))
+		token := m.Publish(t, 0, false, strconv.FormatFloat(v, 'f', 2, 32))
 
 		if !token.WaitTimeout(2 * time.Second) {
 			log.Debugf("  MQTT Timeout. Stopping MQTT sequence.")

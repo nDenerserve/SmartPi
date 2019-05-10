@@ -56,6 +56,7 @@ type Config struct {
 	// [device]
 	I2CDevice            string
 	PowerFrequency       float64
+	Samplerate           int
 	CTType               map[Phase]string
 	CTTypePrimaryCurrent map[Phase]int
 	CurrentDirection     map[Phase]bool
@@ -147,6 +148,7 @@ func (p *Config) ReadParameterFromFile() {
 	// [device]
 	p.I2CDevice = cfg.Section("device").Key("i2c_device").MustString("/dev/i2c-1")
 	p.PowerFrequency = cfg.Section("device").Key("power_frequency").MustFloat64(50)
+	p.Samplerate = cfg.Section("device").Key("samplerate").MustInt(1)
 	p.CTType = make(map[Phase]string)
 	p.CTType[PhaseA] = cfg.Section("device").Key("ct_type_1").MustString("YHDC_SCT013")
 	p.CTType[PhaseB] = cfg.Section("device").Key("ct_type_2").MustString("YHDC_SCT013")
@@ -205,7 +207,7 @@ func (p *Config) ReadParameterFromFile() {
 	p.MQTTtopic = cfg.Section("mqtt").Key("mqtt_topic").String()
 
 	// [modbus slave]
-	p.ModbusRTUenabled = cfg.Section("modbus").Key("modbus_mtu_enabled").MustBool(false)
+	p.ModbusRTUenabled = cfg.Section("modbus").Key("modbus_rtu_enabled").MustBool(false)
 	p.ModbusTCPenabled = cfg.Section("modbus").Key("modbus_tcp_enabled").MustBool(false)
 	p.ModbusRTUAddress = uint8(cfg.Section("modbus").Key("modbus_rtu_address").MustInt(1))
 	p.ModbusRTUDevice = cfg.Section("modbus").Key("modbus_rtu_device_id").MustString("/dev/serial0")
@@ -240,6 +242,7 @@ func (p *Config) SaveParameterToFile() {
 	// [device]
 	_, err = cfg.Section("device").NewKey("i2c_device", p.I2CDevice)
 	_, err = cfg.Section("device").NewKey("power_frequency", strconv.FormatInt(int64(p.PowerFrequency), 10))
+	_, err = cfg.Section("device").NewKey("samplerate", strconv.FormatInt(int64(p.Samplerate), 10))
 	_, err = cfg.Section("device").NewKey("ct_type_1", p.CTType[PhaseA])
 	_, err = cfg.Section("device").NewKey("ct_type_2", p.CTType[PhaseB])
 	_, err = cfg.Section("device").NewKey("ct_type_3", p.CTType[PhaseC])
@@ -294,7 +297,7 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("mqtt").NewKey("mqtt_topic", p.MQTTtopic)
 
 	// [modbus slave]
-	_, err = cfg.Section("modbus").NewKey("modbus_mtu_enabled", strconv.FormatBool(p.ModbusRTUenabled))
+	_, err = cfg.Section("modbus").NewKey("modbus_rtu_enabled", strconv.FormatBool(p.ModbusRTUenabled))
 	_, err = cfg.Section("modbus").NewKey("modbus_tcp_enabled", strconv.FormatBool(p.ModbusTCPenabled))
 	_, err = cfg.Section("modbus").NewKey("modbus_rtu_address", strconv.FormatUint(uint64(p.ModbusRTUAddress), 10))
 	_, err = cfg.Section("modbus").NewKey("modbus_rtu_device_id", p.ModbusRTUDevice)
