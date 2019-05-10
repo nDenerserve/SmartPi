@@ -93,7 +93,7 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 	for {
 		readouts := makeReadout()
 		// Restart the accumulator loop every 60 seconds.
-		if i > (60*config.Samplerate-1) {
+		if i > (60*config.Samplerate - 1) {
 			i = 0
 			accumulator = makeReadoutAccumulator()
 		}
@@ -137,7 +137,7 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		}
 
 		// Every 60 seconds.
-		if i == (60*config.Samplerate-1) {
+		if i == (60*config.Samplerate - 1) {
 
 			// balanced value
 			var wattHourBalanced60s float64
