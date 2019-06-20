@@ -12,3 +12,6 @@ src/snippets
 # Ignore VS-Code files.
 .vscode
 ._*
+
+go.mod.bak
+go.sum.bak
