@@ -34,4 +34,5 @@ require (
 	golang.org/x/net v0.0.0-20190313220215-9f648a60d977 // indirect
 	gopkg.in/ini.v1 v1.42.0
 	pifke.org/wpasupplicant v0.0.0-20171220234234-d8b63b5cd990
+	github.com/influxdata/influxdb1-client/v2
 )
