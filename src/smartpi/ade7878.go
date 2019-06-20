@@ -231,25 +231,13 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 		panic(err)
 	}
 
-	fmt.Println("TEST Integrator:  ", c.Integrator)
 	if c.Integrator == true {
-		fmt.Println("Integrator: ", c.Integrator)
+
 		// 0xE618 (CONFIG-REGISTER)
 		err = WriteRegister(d, "CONFIG", 0x00, 0x01)
 		if err != nil {
 			panic(err)
 		}
-
-		err := d.Write(ADE7878REG["CONFIG"])
-		if err != nil {
-			panic(err)
-		}
-		data := make([]byte, 2)
-		err = d.Read(data)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("Register:  %b\n", data)
 
 	}
 
