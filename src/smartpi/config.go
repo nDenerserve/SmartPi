@@ -52,11 +52,15 @@ type Config struct {
 	CounterDir      string
 	DatabaseEnabled bool
 	DatabaseDir     string
+	Influxuser      string
+	Influxpassword  string
+	Influxdatabase  string
 
 	// [device]
 	I2CDevice            string
 	PowerFrequency       float64
 	Samplerate           int
+	Integrator           bool
 	CTType               map[Phase]string
 	CTTypePrimaryCurrent map[Phase]int
 	CurrentDirection     map[Phase]bool
@@ -105,6 +109,10 @@ type Config struct {
 	MobilePIN     string
 	MobileUser    string
 	MobilePass    string
+
+	// [calibration]
+	CalibrationfactorI map[Phase]float64
+	CalibrationfactorU map[Phase]float64
 }
 
 var cfg *ini.File
@@ -144,11 +152,15 @@ func (p *Config) ReadParameterFromFile() {
 	p.CounterDir = cfg.Section("database").Key("counterdir").MustString("/var/smartpi")
 	p.DatabaseEnabled = cfg.Section("database").Key("database_enabled").MustBool(true)
 	p.DatabaseDir = cfg.Section("database").Key("dir").MustString("/var/smartpi/db")
+	p.Influxuser = cfg.Section("database").Key("influxuser").MustString("smartpi")
+	p.Influxpassword = cfg.Section("database").Key("influxpassword").MustString("smart4pi")
+	p.Influxdatabase = cfg.Section("database").Key("influxdatabase").MustString("http://localhost:8086")
 
 	// [device]
 	p.I2CDevice = cfg.Section("device").Key("i2c_device").MustString("/dev/i2c-1")
 	p.PowerFrequency = cfg.Section("device").Key("power_frequency").MustFloat64(50)
 	p.Samplerate = cfg.Section("device").Key("samplerate").MustInt(1)
+	p.Integrator = cfg.Section("device").Key("integrator").MustBool(false)
 	p.CTType = make(map[Phase]string)
 	p.CTType[PhaseA] = cfg.Section("device").Key("ct_type_1").MustString("YHDC_SCT013")
 	p.CTType[PhaseB] = cfg.Section("device").Key("ct_type_2").MustString("YHDC_SCT013")
@@ -168,7 +180,7 @@ func (p *Config) ReadParameterFromFile() {
 	p.MeasureCurrent[PhaseA] = cfg.Section("device").Key("measure_current_1").MustBool(true)
 	p.MeasureCurrent[PhaseB] = cfg.Section("device").Key("measure_current_2").MustBool(true)
 	p.MeasureCurrent[PhaseC] = cfg.Section("device").Key("measure_current_3").MustBool(true)
-	p.MeasureCurrent[PhaseN] = true // Always measure Neutral.
+	p.MeasureCurrent[PhaseN] = cfg.Section("device").Key("measure_current_4").MustBool(true)
 	p.MeasureVoltage = make(map[Phase]bool)
 	p.MeasureVoltage[PhaseA] = cfg.Section("device").Key("measure_voltage_1").MustBool(true)
 	p.MeasureVoltage[PhaseB] = cfg.Section("device").Key("measure_voltage_2").MustBool(true)
@@ -220,6 +232,17 @@ func (p *Config) ReadParameterFromFile() {
 	p.MobileUser = cfg.Section("umts").Key("umts_username").String()
 	p.MobilePass = cfg.Section("umts").Key("umts_password").String()
 
+	// [calibration]
+	p.CalibrationfactorI = make(map[Phase]float64)
+	p.CalibrationfactorI[PhaseA] = cfg.Section("calibration").Key("calibrationfactorI_1").MustFloat64(1)
+	p.CalibrationfactorI[PhaseB] = cfg.Section("calibration").Key("calibrationfactorI_2").MustFloat64(1)
+	p.CalibrationfactorI[PhaseC] = cfg.Section("calibration").Key("calibrationfactorI_3").MustFloat64(1)
+	p.CalibrationfactorI[PhaseN] = cfg.Section("calibration").Key("calibrationfactorI_4").MustFloat64(1)
+	p.CalibrationfactorU = make(map[Phase]float64)
+	p.CalibrationfactorU[PhaseA] = cfg.Section("calibration").Key("calibrationfactorU_1").MustFloat64(1)
+	p.CalibrationfactorU[PhaseB] = cfg.Section("calibration").Key("calibrationfactorU_2").MustFloat64(1)
+	p.CalibrationfactorU[PhaseC] = cfg.Section("calibration").Key("calibrationfactorU_3").MustFloat64(1)
+
 }
 
 func (p *Config) SaveParameterToFile() {
@@ -238,11 +261,15 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("database").NewKey("counterdir", p.CounterDir)
 	_, err = cfg.Section("database").NewKey("database_enabled", strconv.FormatBool(p.DatabaseEnabled))
 	_, err = cfg.Section("database").NewKey("dir", p.DatabaseDir)
+	_, err = cfg.Section("database").NewKey("influxuser", p.Influxuser)
+	_, err = cfg.Section("database").NewKey("influxpassword", p.Influxpassword)
+	_, err = cfg.Section("database").NewKey("influxdatabase", p.Influxdatabase)
 
 	// [device]
 	_, err = cfg.Section("device").NewKey("i2c_device", p.I2CDevice)
 	_, err = cfg.Section("device").NewKey("power_frequency", strconv.FormatInt(int64(p.PowerFrequency), 10))
 	_, err = cfg.Section("device").NewKey("samplerate", strconv.FormatInt(int64(p.Samplerate), 10))
+	_, err = cfg.Section("device").NewKey("integrator", strconv.FormatBool(p.Integrator))
 	_, err = cfg.Section("device").NewKey("ct_type_1", p.CTType[PhaseA])
 	_, err = cfg.Section("device").NewKey("ct_type_2", p.CTType[PhaseB])
 	_, err = cfg.Section("device").NewKey("ct_type_3", p.CTType[PhaseC])
@@ -261,6 +288,7 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("device").NewKey("measure_current_1", strconv.FormatBool(p.MeasureCurrent[PhaseA]))
 	_, err = cfg.Section("device").NewKey("measure_current_2", strconv.FormatBool(p.MeasureCurrent[PhaseB]))
 	_, err = cfg.Section("device").NewKey("measure_current_3", strconv.FormatBool(p.MeasureCurrent[PhaseC]))
+	_, err = cfg.Section("device").NewKey("measure_current_3", strconv.FormatBool(p.MeasureCurrent[PhaseN]))
 
 	_, err = cfg.Section("device").NewKey("measure_voltage_1", strconv.FormatBool(p.MeasureVoltage[PhaseA]))
 	_, err = cfg.Section("device").NewKey("measure_voltage_2", strconv.FormatBool(p.MeasureVoltage[PhaseB]))
@@ -309,6 +337,15 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("umts").NewKey("umts_pin", p.MobilePIN)
 	_, err = cfg.Section("umts").NewKey("umts_username", p.MobileUser)
 	_, err = cfg.Section("umts").NewKey("umts_password", p.MobilePass)
+
+	// [calibration]
+	_, err = cfg.Section("device").NewKey("calibrationfactorI_1", strconv.FormatFloat(p.CalibrationfactorI[PhaseA], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("calibrationfactorI_2", strconv.FormatFloat(p.CalibrationfactorI[PhaseB], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("calibrationfactorI_3", strconv.FormatFloat(p.CalibrationfactorI[PhaseC], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("calibrationfactorI_4", strconv.FormatFloat(p.CalibrationfactorI[PhaseN], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("calibrationfactorU_1", strconv.FormatFloat(p.CalibrationfactorU[PhaseA], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("calibrationfactorU_2", strconv.FormatFloat(p.CalibrationfactorU[PhaseB], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("calibrationfactorU_3", strconv.FormatFloat(p.CalibrationfactorU[PhaseC], 'f', -1, 64))
 
 	tmpFile := "/tmp/smartpi"
 	err := cfg.SaveTo(tmpFile)

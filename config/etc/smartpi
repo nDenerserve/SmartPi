@@ -14,6 +14,8 @@ counter_enabled=true
 counterdir="/var/smartpi"
 database_enabled=true
 dir="/var/smartpi/db"
+influxuser="smartpi"
+influxpassword="smart4pi"
 
 [device]
 samplerate=1
@@ -78,3 +80,12 @@ umts_apn=""
 umts_pin=""
 umts_username=""
 umts_password=""
+
+[calibration]
+calibrationfactorI_1=1.0
+calibrationfactorI_2=1.0
+calibrationfactorI_3=1.0
+calibrationfactorI_4=1.0
+calibrationfactorU_1=1.0
+calibrationfactorU_2=1.0
+calibrationfactorU_3=1.0

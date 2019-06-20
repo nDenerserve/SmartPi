@@ -1,1 +1,0 @@
-var smartpi = angular.module('smartpi', ['smartpi.services', 'smartpi.controllers', 'ngMaterial', 'md.data.table', 'ngMessages', 'nvd3', 'base64']);

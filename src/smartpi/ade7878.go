@@ -32,7 +32,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/nathan-osman/go-rpigpio"
+	rpi "github.com/nathan-osman/go-rpigpio"
 	"golang.org/x/exp/io/i2c"
 
 	log "github.com/sirupsen/logrus"
@@ -225,6 +225,34 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 	//     panic(err)
 	// }
 
+	// 0x43B5 (DICOEFF-REGISTER)
+	err = WriteRegister(d, "DICOEFF", 0xFF, 0xFF, 0x80, 0x00)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("TEST Integrator:  ", c.Integrator)
+	if c.Integrator == true {
+		fmt.Println("Integrator: ", c.Integrator)
+		// 0xE618 (CONFIG-REGISTER)
+		err = WriteRegister(d, "CONFIG", 0x00, 0x01)
+		if err != nil {
+			panic(err)
+		}
+
+		err := d.Write(ADE7878REG["CONFIG"])
+		if err != nil {
+			panic(err)
+		}
+		data := make([]byte, 2)
+		err = d.Read(data)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("Register:  %b\n", data)
+
+	}
+
 	// Set the right power frequency to the COMPMODE-REGISTER.
 	// 0xE60E (COMPMODE-REGISTER)
 	if c.PowerFrequency == 60 {
@@ -234,12 +262,6 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 		// 0x01FF 50Hz
 		err = WriteRegister(d, "COMPMODE", 0x01, 0xFF)
 	}
-	if err != nil {
-		panic(err)
-	}
-
-	// 0x43B5 (DICOEFF-REGISTER)
-	err = WriteRegister(d, "DICOEFF", 0xFF, 0x80, 0x00)
 	if err != nil {
 		panic(err)
 	}
@@ -299,15 +321,15 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 	}
 
 	// 0x4383 (BVGAIN-REGISTER)
-	// err = WriteRegister(d, "BVGAIN", 0xFF, 0xFB, 0xCA, 0x60)
-	err = WriteRegister(d, "BVGAIN", 0xFF, 0xFC, 0x1C, 0xC2)
+	err = WriteRegister(d, "BVGAIN", 0xFF, 0xFB, 0xCA, 0x60)
+	// err = WriteRegister(d, "BVGAIN", 0xFF, 0xFC, 0x1C, 0xC2)
 	if err != nil {
 		panic(err)
 	}
 
 	// 0x4385 (CVGAIN-REGISTER)
-	//err = WriteRegister(d, "CVGAIN", 0xFF, 0xFC, 0x12, 0xDE)
-	err = WriteRegister(d, "CVGAIN", 0xFF, 0xFC, 0x1C, 0xC2)
+	err = WriteRegister(d, "CVGAIN", 0xFF, 0xFC, 0x12, 0xDE)
+	// err = WriteRegister(d, "CVGAIN", 0xFF, 0xFC, 0x1C, 0xC2)
 	if err != nil {
 		panic(err)
 	}
@@ -387,10 +409,10 @@ func ReadCurrent(d *i2c.Device, c *Config, phase Phase) (current float64) {
 		} else {
 			ccf = 1.0 / (float64(c.CTTypePrimaryCurrent[phase]) / 100.0)
 		}
-
+		// fmt.Println("CalibrationfactorI: ", phase, "  ", c.CalibrationfactorI[phase])
 		oc := CTTypes[c.CTType[phase]].OffsetCurrent
 		outcome = outcome - 7300
-		current = ((((outcome * 0.3535) / rmsFactor) / cr) / ccf) * 100.0 * oc
+		current = ((((outcome * 0.3535) / rmsFactor) / cr) / ccf) * 100.0 * oc * c.CalibrationfactorI[phase]
 	} else {
 		current = 0.0
 	}
@@ -409,8 +431,8 @@ func ReadVoltage(d *i2c.Device, c *Config, phase Phase) (voltage float64, measur
 	default:
 		panic(fmt.Errorf("Invalid phase %q", phase))
 	}
-
-	voltage = float64(DeviceFetchInt(d, 4, command)) / 1e+4
+	// fmt.Println("CalibrationfactorU: ", phase, "  ", c.CalibrationfactorU[phase])
+	voltage = (float64(DeviceFetchInt(d, 4, command)) / 1e+4) * c.CalibrationfactorU[phase]
 
 	measureVoltage = true
 	if !c.MeasureVoltage[phase] {
@@ -559,13 +581,13 @@ func ReadApparentPower(d *i2c.Device, c *Config, phase Phase) float64 {
 
 	if c.MeasureCurrent[phase] {
 		outcome := float64(DeviceFetchInt(d, 4, command))
-		return outcome * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf
+		return outcome * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf * 1.14989234
 	} else {
 		return 0.0
 	}
 }
 
-func ReadReactivePower(d *i2c.Device, c *Config, phase Phase) float64 {
+func ReadReactivePower(d *i2c.Device, c *Config, phase Phase) (rewatts float64) {
 	command := make([]byte, 2)
 	switch phase {
 	case PhaseA:
@@ -585,17 +607,17 @@ func ReadReactivePower(d *i2c.Device, c *Config, phase Phase) float64 {
 		pcf = 200.0 / (float64(c.CTTypePrimaryCurrent[phase]))
 	}
 
+	outcome := float64(DeviceFetchInt(d, 4, command))
 	if c.MeasureCurrent[phase] {
-
-		outcome := float64(DeviceFetchInt(d, 4, command))
-		if c.CurrentDirection[phase] {
-			return outcome * -1 / pcf
-		} else {
-			return outcome / pcf
-		}
+		rewatts = outcome * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf * 2.560177029
 	} else {
-		return 0.0
+		rewatts = 0.0
 	}
+	if c.CurrentDirection[phase] {
+		rewatts *= -1
+	}
+
+	return rewatts
 }
 
 func CalculatePowerFactor(c *Config, phase Phase, watts float64, voltAmps float64, voltAmpsReactive float64) float64 {

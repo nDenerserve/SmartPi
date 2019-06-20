@@ -25,5 +25,16 @@ func updateSQLiteDatabase(c *smartpi.Config, data smartpi.ReadoutAccumulator, co
 		log.Debug("Creating new database file.")
 		smartpi.CreateSQlDatabase(c.DatabaseDir, t)
 	}
-	smartpi.InsertData(c.DatabaseDir, t, data, consumedWattHourBalanced, producedWattHourBalanced)
+	smartpi.InsertSQLData(c.DatabaseDir, t, data, consumedWattHourBalanced, producedWattHourBalanced)
+}
+
+func updateInfluxDatabase(c *smartpi.Config, data smartpi.ReadoutAccumulator, consumedWattHourBalanced float64, producedWattHourBalanced float64) {
+	t := time.Now()
+
+	logLine := "## SQLITE Database Update ##"
+	logLine += fmt.Sprintf(t.Format(" 2006-01-02 15:04:05 "))
+	// logLine += dbFileName
+	log.Info(logLine)
+
+	smartpi.InsertInfluxData(c, t, data, consumedWattHourBalanced, producedWattHourBalanced)
 }

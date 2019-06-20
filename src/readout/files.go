@@ -78,7 +78,7 @@ func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout, balanced
 	f.Close()
 }
 
-func updateCounterFile(c *smartpi.Config, f string, v float64) {
+func updateCounterFile(c *smartpi.Config, f string, v float64) (float64){
 	t := time.Now()
 	var counter float64
 	counterFile, err := ioutil.ReadFile(f)
@@ -101,4 +101,5 @@ func updateCounterFile(c *smartpi.Config, f string, v float64) {
 	if err != nil {
 		panic(err)
 	}
+	return counter+v
 }

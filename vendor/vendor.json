@@ -45,6 +45,24 @@
 			"revisionTime": "2017-10-03T20:18:52Z"
 		},
 		{
+			"checksumSHA1": "2zG6JquRI6VtYsYW9xa++NIbYro=",
+			"path": "github.com/influxdata/influxdb1-client/models",
+			"revision": "8ff2fc3824fcb533795f9a2f233275f0bb18d6c5",
+			"revisionTime": "2019-04-02T20:47:10Z"
+		},
+		{
+			"checksumSHA1": "AX6NmBR2XhdMpMDNDBXOKcptgcw=",
+			"path": "github.com/influxdata/influxdb1-client/pkg/escape",
+			"revision": "8ff2fc3824fcb533795f9a2f233275f0bb18d6c5",
+			"revisionTime": "2019-04-02T20:47:10Z"
+		},
+		{
+			"checksumSHA1": "tKfu1mMs5rMXpfPvDdALe5DaqFM=",
+			"path": "github.com/influxdata/influxdb1-client/v2",
+			"revision": "8ff2fc3824fcb533795f9a2f233275f0bb18d6c5",
+			"revisionTime": "2019-04-02T20:47:10Z"
+		},
+		{
 			"checksumSHA1": "WPHK2GUYafqOR7lNyaSYs74L/A8=",
 			"path": "github.com/mattn/go-colorable",
 			"revision": "3a70a971f94a22f2fa562ffcc7a0eb45f5daf045",

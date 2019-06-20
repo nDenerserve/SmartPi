@@ -3,9 +3,10 @@ package smartpi
 import (
 	"database/sql"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -114,7 +115,7 @@ func CreateSQlDatabase(databasedir string, t time.Time) {
 
 }
 
-func InsertData(databasedir string, t time.Time, v ReadoutAccumulator, consumedWattHourBalanced float64, producedWattHourBalanced float64) {
+func InsertSQLData(databasedir string, t time.Time, v ReadoutAccumulator, consumedWattHourBalanced float64, producedWattHourBalanced float64) {
 	db, err := sql.Open("sqlite3", databasedir+"/smartpi_logdata_"+t.Format("200601")+".db")
 	if err != nil {
 		log.Println(err)

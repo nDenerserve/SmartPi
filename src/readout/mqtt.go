@@ -49,7 +49,8 @@ func publishMQTT(m MQTT.Client, status *bool, t string, v float64) bool {
 	return false
 }
 
-func publishMQTTReadouts(c *smartpi.Config, mqttclient MQTT.Client, values *smartpi.ADE7878Readout) {
+func publishMQTTReadouts(c *smartpi.Config, mqttclient MQTT.Client, values *smartpi.ADE7878Readout, accuvalues *smartpi.ReadoutAccumulator) {
+	var pTotalBalanced float64
 	//[basetopic]/[node]/[keyname]
 	// Let's try to (re-)connect if MQTT connection was lost.
 	if !mqttclient.IsConnected() {
@@ -70,8 +71,37 @@ func publishMQTTReadouts(c *smartpi.Config, mqttclient MQTT.Client, values *smar
 			publishMQTT(mqttclient, &status, c.MQTTtopic+"/P"+label, values.ActiveWatts[p])
 			publishMQTT(mqttclient, &status, c.MQTTtopic+"/COS"+label, values.CosPhi[p])
 			publishMQTT(mqttclient, &status, c.MQTTtopic+"/F"+label, values.Frequency[p])
+			publishMQTT(mqttclient, &status, c.MQTTtopic+"/Ec"+label, accuvalues.WattHoursConsumed[p])
+			publishMQTT(mqttclient, &status, c.MQTTtopic+"/Ep"+label, accuvalues.WattHoursProduced[p])
 		}
-
+		pTotalBalanced = 0.0;
+		for _, p := range smartpi.MainPhases {
+			pTotalBalanced = pTotalBalanced + values.ActiveWatts[p]
+		}
+		publishMQTT(mqttclient, &status, c.MQTTtopic+"/Ptot", pTotalBalanced)
 		log.Debug("MQTT done.")
+	}
+}
+
+func publishMQTTCalculations(c *smartpi.Config, mqttclient MQTT.Client, ec1m float64, ep1m float64, cc float64, pc float64) {
+
+	//[basetopic]/[node]/[keyname]
+	// Let's try to (re-)connect if MQTT connection was lost.
+	if !mqttclient.IsConnected() {
+		if mqtttoken := mqttclient.Connect(); mqtttoken.Wait() && mqtttoken.Error() != nil {
+			log.Debugf("Connecting to MQTT broker failed. %q", mqtttoken.Error())
+		}
+	}
+	if mqttclient.IsConnected() {
+		log.Debug("Publishing calculations via MQTT...")
+
+		// Status is used to stop MQTT publication sequence in case of first error.
+		var status = true
+		publishMQTT(mqttclient, &status, c.MQTTtopic+"/Ec1m", ec1m)
+		publishMQTT(mqttclient, &status, c.MQTTtopic+"/Ep1m", ep1m)
+		publishMQTT(mqttclient, &status, c.MQTTtopic+"/EcTot", cc)
+		publishMQTT(mqttclient, &status, c.MQTTtopic+"/EpTot", pc)
+
+		log.Debug("MQTT calculations done.")
 	}
 }

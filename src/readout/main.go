@@ -77,6 +77,7 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 	var mqttclient MQTT.Client
 	var consumed, produced, wattHourBalanced, consumedWattHourBalanced60s, producedWattHourBalanced60s float64
 	var p smartpi.Phase
+	var consumedCounter, producedCounter float64
 
 	consumerCounterFile := filepath.Join(config.CounterDir, "consumecounter")
 	producerCounterFile := filepath.Join(config.CounterDir, "producecounter")
@@ -130,7 +131,7 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 
 			// Publish readouts to MQTT.
 			if config.MQTTenabled {
-				publishMQTTReadouts(config, mqttclient, &readouts)
+				publishMQTTReadouts(config, mqttclient, &readouts, &accumulator)
 			}
 
 			wattHourBalanced = 0
@@ -157,7 +158,11 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 			// Update SQLlite database.
 			if config.DatabaseEnabled {
 				updateSQLiteDatabase(config, accumulator, consumedWattHourBalanced60s, producedWattHourBalanced60s)
+				updateInfluxDatabase(config, accumulator, consumedWattHourBalanced60s, producedWattHourBalanced60s)
 			}
+
+			consumedCounter = 0.0
+			producedCounter = 0.0
 
 			// Update persistent counter files.
 			if config.CounterEnabled {
@@ -165,14 +170,18 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 				for _, p = range smartpi.MainPhases {
 					consumed += accumulator.WattHoursConsumed[p]
 				}
-				updateCounterFile(config, consumerCounterFile, consumed)
+				consumedCounter = updateCounterFile(config, consumerCounterFile, consumed)
 				produced = 0.0
 				for _, p = range smartpi.MainPhases {
 					produced += accumulator.WattHoursProduced[p]
 				}
-				updateCounterFile(config, producerCounterFile, produced)
+				producedCounter = updateCounterFile(config, producerCounterFile, produced)
+			}
+			if config.MQTTenabled {
+				publishMQTTCalculations(config, mqttclient, consumedWattHourBalanced60s, producedWattHourBalanced60s, consumedCounter, producedCounter)
 			}
 		}
+		
 
 		delay := time.Since(startTime) - (time.Duration(1000/config.Samplerate) * time.Millisecond)
 		if int64(delay) > 0 {
