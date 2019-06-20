@@ -181,7 +181,6 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 				publishMQTTCalculations(config, mqttclient, consumedWattHourBalanced60s, producedWattHourBalanced60s, consumedCounter, producedCounter)
 			}
 		}
-		
 
 		delay := time.Since(startTime) - (time.Duration(1000/config.Samplerate) * time.Millisecond)
 		if int64(delay) > 0 {

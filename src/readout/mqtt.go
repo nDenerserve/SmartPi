@@ -74,7 +74,7 @@ func publishMQTTReadouts(c *smartpi.Config, mqttclient MQTT.Client, values *smar
 			publishMQTT(mqttclient, &status, c.MQTTtopic+"/Ec"+label, accuvalues.WattHoursConsumed[p])
 			publishMQTT(mqttclient, &status, c.MQTTtopic+"/Ep"+label, accuvalues.WattHoursProduced[p])
 		}
-		pTotalBalanced = 0.0;
+		pTotalBalanced = 0.0
 		for _, p := range smartpi.MainPhases {
 			pTotalBalanced = pTotalBalanced + values.ActiveWatts[p]
 		}
