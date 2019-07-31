@@ -20,7 +20,6 @@ func (s *Server) ListenRTU(serialConfig *serial.Config, deviceId uint8) (err err
 }
 
 func (s *Server) acceptSerialRequests(port serial.Port, deviceId uint8) {
-
 	for {
 		buffer := make([]byte, 512)
 
@@ -33,6 +32,7 @@ func (s *Server) acceptSerialRequests(port serial.Port, deviceId uint8) {
 		}
 
 		if bytesRead != 0 {
+
 			// Set the length of the packet to the number of read bytes.
 			packet := buffer[:bytesRead]
 
@@ -48,6 +48,7 @@ func (s *Server) acceptSerialRequests(port serial.Port, deviceId uint8) {
 				log.Printf("wrong slave address")
 			}
 
+			
 		}
 	}
 }

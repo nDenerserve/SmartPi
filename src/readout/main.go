@@ -46,6 +46,7 @@ import (
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 )
 
@@ -266,7 +267,7 @@ func main() {
 
 	go pollSmartPi(config, device)
 
-	http.Handle("/metrics", prometheus.Handler())
+	http.Handle("/metrics", promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>
             <head><title>SmartPi Readout Metrics Server</title></head>
