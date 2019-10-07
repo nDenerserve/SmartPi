@@ -32,14 +32,15 @@ package smartpi
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/gorilla/mux"
+	"encoding/xml"
 	"log"
 	"math"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 var Configfile string
@@ -47,39 +48,38 @@ var Configfile string
 func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 
 	type tChartValue struct {
-		Time  string  `json:"time"`
-		Value float32 `json:"value"`
+		Time  string  `json:"time" xml:"time"`
+		Value float32 `json:"value" xml:"value"`
 	}
 
 	type tChartSerie struct {
-		Key    string        `json:"key"`
-		Values []tChartValue `json:"values"`
+		Key    string        `json:"key" xml:"key"`
+		Values []tChartValue `json:"values" xml:"values"`
 	}
-
-	// type tChartSeries []tChartSerie
 
 	var timeSeries []tChartSerie
 
+	format := "json"
 	vars := mux.Vars(r)
 	from := vars["fromDate"]
 	to := vars["toDate"]
 	phaseId := vars["phaseId"]
 	valueId := vars["valueId"]
+	format = vars["format"]
 
 	config := NewConfig()
 
 	location := time.Now().Location()
 
-	end, err := time.Parse(time.RFC3339, to)
+	end, err := time.ParseInLocation(time.RFC3339, to, location)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
-	end = end.In(location)
+
 	start, err := time.ParseInLocation(time.RFC3339, from, location)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
-	start = start.In(location)
 
 	if end.Before(start) {
 		start = start.AddDate(0, 0, -1)
@@ -93,11 +93,11 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	fmt.Println("ReadChartData " + config.DatabaseDir + " " + start.Format(time.RFC3339) + " " + end.Format(time.RFC3339))
+	if strings.Contains(phaseId, "sum") {
+		export = append(export, valueId+"_sum")
+	}
 
 	data := ReadChartData(config.DatabaseDir, start, end)
-
-	// fmt.Printf("%v", export)
 
 	for _, valueelement := range export {
 		row := 0
@@ -126,6 +126,8 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 				val = dataelement.Power_2
 			case "power_3":
 				val = dataelement.Power_3
+			case "power_sum":
+				val = dataelement.Power_1 + dataelement.Power_2 + dataelement.Power_3
 			case "cosphi_1":
 				val = dataelement.Cosphi_1
 			case "cosphi_2":
@@ -156,55 +158,68 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 			if math.IsNaN(val) {
 				val = 0.0
 			}
-			values = append(values, tChartValue{Time: ti.Format(time.RFC3339), Value: float32(val)})
+			// values = append(values, tChartValue{Time: ti.Format(time.RFC3339), Value: float32(val)})
+			values = append(values, tChartValue{Time: ti.Local().Format("2006-01-02T15:04:05-0700"), Value: float32(val)})
 			row++
 		}
-		// fmt.Println(strconv.Itoa(index)+" "+valueelement)
 		timeSeries = append(timeSeries, tChartSerie{Key: valueelement, Values: values})
 	}
 
-	// JSON output of request
-	if err := json.NewEncoder(w).Encode(timeSeries); err != nil {
-		panic(err)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	if format == "xml" {
+
+		type serie []tChartSerie
+
+		// XML output of request
+		type response struct {
+			serie
+		}
+		if err := xml.NewEncoder(w).Encode(response{timeSeries}); err != nil {
+			panic(err)
+		}
+	} else {
+		// JSON output of request
+		if err := json.NewEncoder(w).Encode(timeSeries); err != nil {
+			panic(err)
+		}
 	}
 }
 
 func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 
 	type tChartValue struct {
-		Time  string  `json:"time"`
-		Value float32 `json:"value"`
+		Time  string  `json:"time" xml:"time"`
+		Value float32 `json:"value" xml:"value"`
 	}
 
 	type tChartSerie struct {
-		Key    string        `json:"key"`
-		Values []tChartValue `json:"values"`
+		Key    string        `json:"key" xml:"key"`
+		Values []tChartValue `json:"values" xml:"values"`
 	}
-
-	// type tChartSeries []tChartSerie
 
 	var timeSeries []tChartSerie
 
+	format := "json"
 	vars := mux.Vars(r)
 	from := vars["fromDate"]
 	to := vars["toDate"]
 	phaseId := vars["phaseId"]
 	valueId := vars["valueId"]
+	format = vars["format"]
 
 	config := NewConfig()
 
-	// location := time.Now().Location()
+	location := time.Now().Location()
 
-	end, err := time.Parse(time.RFC3339, to)
+	end, err := time.ParseInLocation(time.RFC3339, to, location)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
-	// end = end.In(location)
-	start, err := time.Parse(time.RFC3339, from)
+	start, err := time.ParseInLocation(time.RFC3339, from, location)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
-	// start = start.In(location)
 
 	if end.Before(start) {
 		start = start.AddDate(0, 0, -1)
@@ -218,11 +233,11 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	fmt.Println("ReadDayData " + config.DatabaseDir + " " + start.Format(time.RFC3339) + " " + end.Format(time.RFC3339) + " |" + start.Location().String() + "|| " + start.Local().String())
+	if strings.Contains(phaseId, "sum") {
+		export = append(export, valueId+"_sum")
+	}
 
 	data := ReadDayData(config.DatabaseDir, start, end)
-
-	// fmt.Printf("%v", export)
 
 	for _, valueelement := range export {
 		row := 0
@@ -230,7 +245,7 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 		var values []tChartValue
 		for _, dataelement := range data {
 			ti := dataelement.Date
-			fmt.Println(ti.Format(time.RFC3339))
+
 			switch valueelement {
 			case "current_1":
 				val = dataelement.Current_1
@@ -252,6 +267,8 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 				val = dataelement.Power_2
 			case "power_3":
 				val = dataelement.Power_3
+			case "power_sum":
+				val = dataelement.Power_1 + dataelement.Power_2 + dataelement.Power_3
 			case "cosphi_1":
 				val = dataelement.Cosphi_1
 			case "cosphi_2":
@@ -281,15 +298,30 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 			if math.IsNaN(val) {
 				val = 0.0
 			}
-			values = append(values, tChartValue{Time: ti.Format(time.RFC3339), Value: float32(val)})
+			values = append(values, tChartValue{Time: ti.Local().Format("2006-01-02T15:04:05-0700"), Value: float32(val)})
+
 			row++
 		}
-		// fmt.Println(strconv.Itoa(index)+" "+valueelement)
 		timeSeries = append(timeSeries, tChartSerie{Key: valueelement, Values: values})
 	}
 
-	// JSON output of request
-	if err := json.NewEncoder(w).Encode(timeSeries); err != nil {
-		panic(err)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	if format == "xml" {
+
+		type serie []tChartSerie
+
+		// XML output of request
+		type response struct {
+			serie
+		}
+		if err := xml.NewEncoder(w).Encode(response{timeSeries}); err != nil {
+			panic(err)
+		}
+	} else {
+		// JSON output of request
+		if err := json.NewEncoder(w).Encode(timeSeries); err != nil {
+			panic(err)
+		}
 	}
 }

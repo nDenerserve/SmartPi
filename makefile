@@ -1,6 +1,7 @@
 BINARY_READOUT=smartpireadout
 BINARY_SERVER=smartpiserver
 BINARY_FTPUPLOAD=smartpiftpupload
+BINARY_MODBUSSERVER=smartpimodbusserver
 
 #VERSION=0.3.7
 VERSION := $(shell git describe --always --long --dirty)
@@ -8,12 +9,15 @@ BUILD_TIME := $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
 
 BUILDPATH=$(CURDIR)
 GO=$(shell which go)
+GOFMT?=$(GO)fmt
 GOBUILD=$(GO) build
 GOINSTALL=$(GO) install
 GOCLEAN=$(GO) clean
 GOGET=$(GO) get
 
-all: makedir get buildsmartpireadout buildsmartpiserver buildsmartpiftpupload
+pkgs = $(shell $(GO) list ./src/...)
+
+all: format makedir get buildsmartpireadout buildsmartpiserver buildsmartpiftpupload buildsmartpimodbusserver
 #all: makedir get buildsmartpireadout
 
 makedir:
@@ -22,6 +26,14 @@ makedir:
 	@if [ ! -d $(BUILDPATH)/pkg ] ; then mkdir -p $(BUILDPATH)/pkg ; fi
 
 get:
+
+style:
+	@echo "checking code style"
+	! $(GOFMT) -d $$(find . -path ./vendor -prune -o -name '*.go' -print) | grep '^'
+
+format:
+	@echo "formatting code..."
+	@$(GO) fmt $(pkgs)
 
 buildsmartpireadout:
 	@echo "start building smartpireadout..."
@@ -38,6 +50,11 @@ buildsmartpiftpupload:
 	$(GOBUILD) -o bin/$(BINARY_FTPUPLOAD) -ldflags="-X main.appVersion=${VERSION}_${BUILD_TIME}" src/main/ftpupload.go
 	@echo "building smartpiftpupload done"
 
+buildsmartpimodbusserver:
+	@echo "start building smartpimodbusserver..."
+	$(GOBUILD) -o bin/$(BINARY_MODBUSSERVER) -ldflags="-X main.appVersion=${VERSION}_${BUILD_TIME}" src/modbus/modbusserver.go
+	@echo "building smartpimodbusserver done"
+
 install:
 	@echo install
 
@@ -47,6 +64,10 @@ install:
 #
 #	if [ `pidof smartpiserver` > "0" ]
 #		then killall smartpiserver
+#	fi
+#
+#	if [ `pidof smartpimodbusserver` > "0" ]
+#		then killall smartpimodbusserver
 #	fi
 #
 #	if [ `pidof smartpiftpupload` > "0" ]

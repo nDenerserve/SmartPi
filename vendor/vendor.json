@@ -1,174 +1,138 @@
 {
 	"comment": "",
-	"ignore": "test",
+	"ignore": "",
 	"package": [
 		{
-			"checksumSHA1": "m+iiamnbukzE8kFPfBche6D0FmQ=",
-			"path": "github.com/Sirupsen/logrus",
-			"revision": "5b60b3d3ee017ed00bcd0225fcca7acab767844b",
-			"revisionTime": "2017-05-04T07:10:19Z"
+			"checksumSHA1": "3KhDEC5MM0iyN+FsLfxpnvFVeuY=",
+			"path": "github.com/davecgh/go-spew/spew",
+			"revision": "d8f796af33cc11cb798c1aaeb27a4ebc5099927d",
+			"revisionTime": "2018-08-30T19:11:22Z"
 		},
 		{
-			"checksumSHA1": "spyv5/YFBjYyZLZa1U2LBfDR8PM=",
-			"path": "github.com/beorn7/perks/quantile",
-			"revision": "4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9",
-			"revisionTime": "2016-08-04T10:47:26Z"
+			"checksumSHA1": "a2yC46a1qsJomgY6rb+FkTFiqmE=",
+			"path": "github.com/davecgh/go-spew/spew/testdata",
+			"revision": "d8f796af33cc11cb798c1aaeb27a4ebc5099927d",
+			"revisionTime": "2018-08-30T19:11:22Z"
 		},
 		{
-			"checksumSHA1": "PzqUa3HAaeyzDw87wACb15/tMkI=",
+			"checksumSHA1": "Fvywnf6n60AuXX8MUHRmaWcT7A0=",
 			"path": "github.com/eclipse/paho.mqtt.golang",
-			"revision": "c37a0a275c2de30bf1c7eb072dd6bef09a93c666",
-			"revisionTime": "2017-04-13T21:40:49Z"
+			"revision": "20337d8c394721c308cc6ec096990ee451a7cd7f",
+			"revisionTime": "2019-03-22T15:20:51Z"
 		},
 		{
-			"checksumSHA1": "wPreCwXsA/oU2R+lkOGpR6skdA0=",
-			"path": "github.com/eclipse/paho.mqtt.golang/packets",
-			"revision": "c37a0a275c2de30bf1c7eb072dd6bef09a93c666",
-			"revisionTime": "2017-04-13T21:40:49Z"
+			"checksumSHA1": "SY56fjHVAKJngn3PrmkNeMDazfk=",
+			"path": "github.com/fatih/color",
+			"revision": "3f9d52f7176a6927daacff70a3e8d1dc2025c53e",
+			"revisionTime": "2018-10-10T23:13:11Z"
 		},
 		{
-			"checksumSHA1": "40Ns85VYa4smQPcewZ7SOdfLnKU=",
-			"path": "github.com/fatih/structs",
-			"revision": "a720dfa8df582c51dee1b36feabb906bde1588bd",
-			"revisionTime": "2017-01-03T08:10:50Z"
+			"checksumSHA1": "r9UqWSbEUPnSGAGuaxVZk7JUnNg=",
+			"path": "github.com/fsnotify/fsnotify",
+			"revision": "1485a34d5d5723fea214f5710708e19a831720e4",
+			"revisionTime": "2019-03-12T18:14:46Z"
 		},
 		{
-			"checksumSHA1": "kBeNcaKk56FguvPSUCEaH6AxpRc=",
-			"path": "github.com/golang/protobuf/proto",
-			"revision": "c9c7427a2a70d2eb3bafa0ab2dc163e45f143317",
-			"revisionTime": "2017-03-07T00:15:33Z"
+			"checksumSHA1": "OBUCMLlXolb+boADS9Q/zeg4LGs=",
+			"path": "github.com/goburrow/modbus",
+			"revision": "606c02f4eef527a1d4cf7d8733d5fd7ba34f91d8",
+			"revisionTime": "2018-09-19T09:23:05Z"
 		},
 		{
-			"checksumSHA1": "g/V4qrXjUGG9B+e3hB+4NAYJ5Gs=",
-			"path": "github.com/gorilla/context",
-			"revision": "08b5f424b9271eedf6f9f0ce86cb9396ed337a42",
-			"revisionTime": "2016-08-17T18:46:32Z"
+			"checksumSHA1": "v78g/lVkR74mD+NuFhIjZZttbfo=",
+			"path": "github.com/goburrow/serial",
+			"revision": "5efbe925ecf714f8ba147bf2226f2e7afc7111bc",
+			"revisionTime": "2017-10-03T20:18:52Z"
 		},
 		{
-			"checksumSHA1": "zmCk+lgIeiOf0Ng9aFP9aFy8ksE=",
-			"path": "github.com/gorilla/mux",
-			"revision": "599cba5e7b6137d46ddf58fb1765f5d928e69604",
-			"revisionTime": "2017-02-28T22:43:54Z"
+			"checksumSHA1": "2zG6JquRI6VtYsYW9xa++NIbYro=",
+			"path": "github.com/influxdata/influxdb1-client/models",
+			"revision": "8ff2fc3824fcb533795f9a2f233275f0bb18d6c5",
+			"revisionTime": "2019-04-02T20:47:10Z"
 		},
 		{
-			"checksumSHA1": "6ZV/m7lRaCJMopHqHHjmcOy9s2A=",
-			"path": "github.com/mattn/go-sqlite3",
-			"revision": "cf7286f069c3ef596efcc87781a4653a2e7607bd",
-			"revisionTime": "2017-04-07T15:46:27Z"
+			"checksumSHA1": "AX6NmBR2XhdMpMDNDBXOKcptgcw=",
+			"path": "github.com/influxdata/influxdb1-client/pkg/escape",
+			"revision": "8ff2fc3824fcb533795f9a2f233275f0bb18d6c5",
+			"revisionTime": "2019-04-02T20:47:10Z"
 		},
 		{
-			"checksumSHA1": "bKMZjd2wPw13VwoE7mBeSv5djFA=",
-			"path": "github.com/matttproud/golang_protobuf_extensions/pbutil",
-			"revision": "c12348ce28de40eed0136aa2b644d0ee0650e56c",
-			"revisionTime": "2016-04-24T11:30:07Z"
+			"checksumSHA1": "tKfu1mMs5rMXpfPvDdALe5DaqFM=",
+			"path": "github.com/influxdata/influxdb1-client/v2",
+			"revision": "8ff2fc3824fcb533795f9a2f233275f0bb18d6c5",
+			"revisionTime": "2019-04-02T20:47:10Z"
 		},
 		{
-			"checksumSHA1": "lfOuMiAdiqc/dalUSBTvD5ZMSzA=",
-			"path": "github.com/msteinert/pam",
-			"revision": "2c288b3ef8272766b4243917240e04e4221eb4a5",
-			"revisionTime": "2017-07-05T14:26:45Z"
+			"checksumSHA1": "WPHK2GUYafqOR7lNyaSYs74L/A8=",
+			"path": "github.com/mattn/go-colorable",
+			"revision": "3a70a971f94a22f2fa562ffcc7a0eb45f5daf045",
+			"revisionTime": "2019-02-22T16:30:38Z"
 		},
 		{
-			"checksumSHA1": "dw+Q0K2sjGCfpjZjptVFxBF6Qhg=",
-			"path": "github.com/nathan-osman/go-rpigpio",
-			"revision": "bce6190607da242de6cd7c566aceb73e32b0a25a",
-			"revisionTime": "2016-07-01T02:51:23Z"
+			"checksumSHA1": "4qTBwgYPbeN+9v4CXyhjbWwDhZQ=",
+			"path": "github.com/mattn/go-isatty",
+			"revision": "c1975dc15c1d481e8da23f6ed313bb071136b98f",
+			"revisionTime": "2019-04-24T07:51:23Z"
 		},
 		{
-			"checksumSHA1": "R8z+BOS81hOWgcqymuVWHNta/yc=",
-			"path": "github.com/oleiade/reflections",
-			"revision": "0e86b3c98b2ff33e30c85cfe97d9a63d439fe7eb",
-			"revisionTime": "2016-08-17T07:03:35Z"
+			"checksumSHA1": "GRzTlSo7uzz2bsKY1TeEPH49jVY=",
+			"path": "github.com/nDenerserve/mbserver",
+			"revision": "5ba17eeab6ce1919a46f509fa218ee0ebac126e3",
+			"revisionTime": "2019-04-24T13:04:45Z"
 		},
 		{
-			"checksumSHA1": "XsTWgEVHkRZ4xSvUYZ7ECXbfA8E=",
-			"path": "github.com/prometheus/client_golang/prometheus",
-			"revision": "738ed6c0b9b30ec936d4b74c1600ae76324efff5",
-			"revisionTime": "2017-03-22T13:40:44Z"
+			"checksumSHA1": "RZOdTSZN/PgcTqko5LzIAzw+UT4=",
+			"path": "github.com/pmezard/go-difflib/difflib",
+			"revision": "5d4384ee4fb2527b0a1256a821ebfc92f91efefc",
+			"revisionTime": "2018-12-26T10:54:42Z"
 		},
 		{
-			"checksumSHA1": "DvwvOlPNAgRntBzt3b3OSRMS2N4=",
-			"path": "github.com/prometheus/client_model/go",
-			"revision": "6f3806018612930941127f2a7c6c453ba2c527d2",
-			"revisionTime": "2017-02-16T18:52:47Z"
+			"checksumSHA1": "f8LIK0reEKHr9FAiq/plECRP5VQ=",
+			"path": "github.com/sirupsen/logrus",
+			"revision": "dae0fa8d5b0c810a8ab733fbd5510c7cae84eca4",
+			"revisionTime": "2019-03-11T16:20:41Z"
 		},
 		{
-			"checksumSHA1": "Wtpzndm/+bdwwNU5PCTfb4oUhc8=",
-			"path": "github.com/prometheus/common/expfmt",
-			"revision": "49fee292b27bfff7f354ee0f64e1bc4850462edf",
-			"revisionTime": "2017-02-20T10:38:46Z"
+			"checksumSHA1": "jDsR9gpxYB6YBduE5qD8FmLiYv0=",
+			"path": "github.com/sirupsen/logrus/hooks/syslog",
+			"revision": "dae0fa8d5b0c810a8ab733fbd5510c7cae84eca4",
+			"revisionTime": "2019-03-11T16:20:41Z"
 		},
 		{
-			"checksumSHA1": "GWlM3d2vPYyNATtTFgftS10/A9w=",
-			"path": "github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg",
-			"revision": "49fee292b27bfff7f354ee0f64e1bc4850462edf",
-			"revisionTime": "2017-02-20T10:38:46Z"
+			"checksumSHA1": "+SEEYlQ3V1UFOYrcM+5xsO9ow0U=",
+			"path": "github.com/sirupsen/logrus/internal/testutils",
+			"revision": "dae0fa8d5b0c810a8ab733fbd5510c7cae84eca4",
+			"revisionTime": "2019-03-11T16:20:41Z"
 		},
 		{
-			"checksumSHA1": "0LL9u9tfv1KPBjNEiMDP6q7lpog=",
-			"path": "github.com/prometheus/common/model",
-			"revision": "49fee292b27bfff7f354ee0f64e1bc4850462edf",
-			"revisionTime": "2017-02-20T10:38:46Z"
+			"checksumSHA1": "HcKMR0fFgCLPhYzkwVVHgSGsezQ=",
+			"path": "github.com/stretchr/testify/assert",
+			"revision": "34c6fa2dc70986bccbbffcc6130f6920a924b075",
+			"revisionTime": "2019-03-04T09:57:49Z"
 		},
 		{
-			"checksumSHA1": "91KYK0SpvkaMJJA2+BcxbVnyRO0=",
-			"path": "github.com/prometheus/common/version",
-			"revision": "49fee292b27bfff7f354ee0f64e1bc4850462edf",
-			"revisionTime": "2017-02-20T10:38:46Z"
+			"checksumSHA1": "Xolss22hiad7/0XkStk0WM5LdgQ=",
+			"path": "github.com/stretchr/testify/require",
+			"revision": "34c6fa2dc70986bccbbffcc6130f6920a924b075",
+			"revisionTime": "2019-03-04T09:57:49Z"
 		},
 		{
-			"checksumSHA1": "dA8hiwcAbubYRxTnpocR5VZkqAY=",
-			"path": "github.com/prometheus/procfs",
-			"revision": "6ac8c5d890d415025dd5aae7595bcb2a6e7e2fad",
-			"revisionTime": "2017-04-24T20:45:52Z"
+			"checksumSHA1": "WhaDh0b4bEENP0xpHg167aWBG2s=",
+			"path": "github.com/xiegeo/coloredgoroutine",
+			"revision": "8e8801d947a9668855ef319566780c941deea326",
+			"revisionTime": "2018-09-03T02:40:31Z"
 		},
 		{
-			"checksumSHA1": "xCiFAAwVTrjsfZT1BIJQ3DgeNCY=",
-			"path": "github.com/prometheus/procfs/xfs",
-			"revision": "6ac8c5d890d415025dd5aae7595bcb2a6e7e2fad",
-			"revisionTime": "2017-04-24T20:45:52Z"
+			"checksumSHA1": "/kixPQGR/xoi+PR8GGhE267zt3E=",
+			"path": "github.com/xiegeo/coloredgoroutine/goid",
+			"revision": "8e8801d947a9668855ef319566780c941deea326",
+			"revisionTime": "2018-09-03T02:40:31Z"
 		},
 		{
-			"checksumSHA1": "2Lgy7iHdKVQCPPxdZ9T1gPOm2r0=",
-			"path": "github.com/secsy/goftp",
-			"revision": "848bd83f73185175b43f6093f1639af3b463b889",
-			"revisionTime": "2016-02-21T17:19:53Z"
-		},
-		{
-			"checksumSHA1": "cdQmT5TaSM6NcsOZ3kqQ+K32KYY=",
-			"path": "golang.org/x/exp/io/i2c",
-			"revision": "d4689a43552e1860762018feebe0ccf6a290980e",
-			"revisionTime": "2016-10-26T05:02:10Z"
-		},
-		{
-			"checksumSHA1": "dJnnn8GW7JBnsCMTia/EsCWM7sE=",
-			"path": "golang.org/x/exp/io/i2c/driver",
-			"revision": "d4689a43552e1860762018feebe0ccf6a290980e",
-			"revisionTime": "2016-10-26T05:02:10Z"
-		},
-		{
-			"checksumSHA1": "9jjO5GjLa0XF/nfWihF02RoH4qc=",
-			"path": "golang.org/x/net/context",
-			"revision": "40d3034e575b6eafbca34e64224da61de35ae04c",
-			"revisionTime": "2016-11-01T21:56:08Z"
-		},
-		{
-			"checksumSHA1": "O2sws+miRriMPObINsbwa0jnXxE=",
-			"path": "golang.org/x/net/websocket",
-			"revision": "40d3034e575b6eafbca34e64224da61de35ae04c",
-			"revisionTime": "2016-11-01T21:56:08Z"
-		},
-		{
-			"checksumSHA1": "To5eWGIjHQcw3pQ0N1uFepqaxmE=",
-			"path": "golang.org/x/sys/unix",
-			"revision": "739734461d1c916b6c72a63d7efda2b27edb369f",
-			"revisionTime": "2017-07-07T11:51:12Z"
-		},
-		{
-			"checksumSHA1": "YRD335tkMvgHzkfbfveMUpsE3Bw=",
-			"path": "gopkg.in/ini.v1",
-			"revision": "6e4869b434bd001f6983749881c7ead3545887d8",
-			"revisionTime": "2016-08-27T06:11:18Z"
+			"checksumSHA1": "4hGgmGAL0uMPLlOXn1L0ASIcPfo=",
+			"path": "github.com/xiegeo/modbusone/crc",
+			"revision": "adb53db85f5c50e0cbf37ee45c109519b5d357b5",
+			"revisionTime": "2019-02-02T03:24:49Z"
 		}
 	],
 	"rootPath": "github.com/nDenerserve/SmartPi"

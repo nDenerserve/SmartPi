@@ -1,7 +1,13 @@
-# Forum
+# SmartPi Energy Monitor 
+
+[![CircleCI](https://circleci.com/gh/nDenerserve/SmartPi.svg?style=svg)](https://circleci.com/gh/nDenerserve/SmartPi)
+
+[SmartPi open source](http://www.emanager.eu/en/products/smartpi).
+
+## Forum
 https://forum.enerserve.eu
 
-# Installation
+## Installation
 Download Raspbian Jessie Lite from https://www.raspberrypi.org/downloads/raspbian/ and copy it on your SD card.
 Alternatively, you may download EmonSD, a pre-built SD card image for Raspberry Pi running as an emonPi/emonBase
 Download https://github.com/openenergymonitor/emonpi/wiki/emonSD-pre-built-SD-card-Download-&-Change-Log
@@ -63,6 +69,7 @@ In case of an SmartPi connected to an RPI3, the output should look like this:
     70: -- -- -- -- -- -- -- --
 
 ##### Remove old go version
+
     sudo apt-get remove golang
     sudo apt-get autoremove
 

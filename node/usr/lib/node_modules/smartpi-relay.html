@@ -1,0 +1,68 @@
+<script type="text/javascript">
+	RED.nodes.registerType('smartpi-relay', {
+		category: 'SmartPi',
+		color: '#a6bbcf',
+		defaults: {
+			name: { value:"" },
+			set: {value: ""},
+			level: {value: "0"}
+		},
+		inputs: 1,
+		outputs: 0,
+		icon: "rpi.png",
+		label: function() {
+			var suf = "";
+      if (this.set == true) { suf = (this.level === "1") ? " ¹" : " ₀"; }
+			if (this.name == "") {
+				this.name = "smartpi-relay";
+			}
+      return this.name + suf || "smartpi-relay" + suf;
+		},
+
+	oneditprepare: function() {
+			var setstate = function () {
+			                if ($('#node-input-set').is(":checked")) {
+			                    $("#node-set-state").show();
+			                } else {
+			                    $("#node-set-state").hide();
+			                }
+			            };
+			            $("#node-input-set").change(function () { setstate(); });
+			            setstate();
+								}
+
+	});
+</script>
+
+<script type="text/x-red" data-template-name="smartpi-relay">
+	<div class="form-row" id="node-set-tick">
+		<label>&nbsp;</label>
+		<input type="checkbox" id="node-input-set" style="display: inline-block; width: auto; vertical-align: top;">
+		<label for="node-input-set" style="width: 70%;">Initialise relay state?</label>
+	</div>
+	<div class="form-row" id="node-set-state">
+		<label for="node-input-level">&nbsp;</label>
+		<select id="node-input-level" style="width: 250px;">
+            <option value="0">"initial level of relay - off (0)"</option>
+            <option value="1">"initial level of relay - on (1)"</option>
+        </select>
+	</div>
+	<div class="form-row">
+		<label for="node-input-name"><i class="icon-tag"></i> Name</label>
+		<input type="text" id="node-input-name" placeholder="Name">
+	</div>
+	<div class="form-tips" id="pin-tip">
+		</span>Pin12 (GPIO18) in use</div>
+</script>
+
+<script type="text/x-red" data-help-name="smartpi-relay">
+	<p>SmartPi relay node. Can be used in Digital modes.
+		<h3>Inputs</h3>
+		<dl class="message-properties">
+			<dt>payload <span class="property-type">number | string | boolean</span></dt>
+		</dl>
+		<h3>Details</h3>
+		<p>Expects a <code>msg.payload</code> with either a 0 or 1 (or true or false), and will set the relay on or off depending on the value passed in.</p>
+		<p>The initial value of the relay at deploy time can also be set to 0 or 1.</p>
+		<p>Requires the RPi.GPIO python library version 0.5.10 (or better) in order to work.</p>
+</script>

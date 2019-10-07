@@ -33,7 +33,7 @@ package smartpi
 import (
 	"encoding/json"
 	"github.com/gorilla/context"
-	// "log"
+	"log"
 	"net/http"
 )
 
@@ -47,8 +47,9 @@ func ReadUserData(w http.ResponseWriter, r *http.Request) {
 	// name := vars["name"]
 
 	user := context.Get(r, "Username")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if err := json.NewEncoder(w).Encode(user.(*User)); err != nil {
-		panic(err)
+		log.Println(err)
 	}
 }
 

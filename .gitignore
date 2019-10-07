@@ -4,3 +4,14 @@ src/snippets
 
 # Ignore CSV logs.
 *.csv
+
+#Ignore Mac-Files
+*.DS_Store
+.DS_Store
+
+# Ignore VS-Code files.
+.vscode
+._*
+
+go.mod.bak
+go.sum.bak

@@ -29,15 +29,18 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/nDenerserve/SmartPi/src/smartpi"
 	"math"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/nDenerserve/SmartPi/src/smartpi"
+
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/exp/io/i2c"
+
+	"github.com/fsnotify/fsnotify"
 
 	//import the Paho Go MQTT library
 	MQTT "github.com/eclipse/paho.mqtt.golang"
@@ -46,11 +49,35 @@ import (
 	"github.com/prometheus/common/version"
 )
 
-var readouts = [...]string{
-	"I1", "I2", "I3", "I4", "V1", "V2", "V3", "P1", "P2", "P3", "COS1", "COS2", "COS3", "F1", "F2", "F3"}
+func makeReadoutAccumulator() (r smartpi.ReadoutAccumulator) {
+	r.Current = make(smartpi.Readings)
+	r.Voltage = make(smartpi.Readings)
+	r.ActiveWatts = make(smartpi.Readings)
+	r.CosPhi = make(smartpi.Readings)
+	r.Frequency = make(smartpi.Readings)
+	r.WattHoursConsumed = make(smartpi.Readings)
+	r.WattHoursProduced = make(smartpi.Readings)
+	return r
+}
+
+func makeReadout() (r smartpi.ADE7878Readout) {
+	r.Current = make(smartpi.Readings)
+	r.Voltage = make(smartpi.Readings)
+	r.ActiveWatts = make(smartpi.Readings)
+	r.CosPhi = make(smartpi.Readings)
+	r.Frequency = make(smartpi.Readings)
+	r.ApparentPower = make(smartpi.Readings)
+	r.ReactivePower = make(smartpi.Readings)
+	r.PowerFactor = make(smartpi.Readings)
+	r.ActiveEnergy = make(smartpi.Readings)
+	return r
+}
 
 func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 	var mqttclient MQTT.Client
+	var consumed, produced, wattHourBalanced, consumedWattHourBalanced60s, producedWattHourBalanced60s float64
+	var p smartpi.Phase
+	var consumedCounter, producedCounter float64
 
 	consumerCounterFile := filepath.Join(config.CounterDir, "consumecounter")
 	producerCounterFile := filepath.Join(config.CounterDir, "producecounter")
@@ -59,73 +86,142 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		mqttclient = newMQTTClient(config)
 	}
 
-	data := make([]float32, 22)
+	accumulator := makeReadoutAccumulator()
 	i := 0
 
+	tick := time.Tick(time.Duration(1000/config.Samplerate) * time.Millisecond)
+
 	for {
+		readouts := makeReadout()
 		// Restart the accumulator loop every 60 seconds.
-		if i > 59 {
+		if i > (60*config.Samplerate - 1) {
 			i = 0
-			data = make([]float32, 22)
+			accumulator = makeReadoutAccumulator()
 		}
 
 		startTime := time.Now()
-		valuesr := smartpi.ReadoutValues(device, config)
 
-		// Update the accumlator.
-		for index, _ := range data {
-			switch index {
-			case 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15:
-				data[index] += float32(valuesr[index] / 60.0)
-			case 16, 17, 18:
-				if valuesr[index-9] >= 0 {
-					data[index] += float32(math.Abs(valuesr[index-9]) / 3600.0)
-				}
-			case 19, 20, 21:
-				if valuesr[index-12] < 0 {
-					data[index] += float32(math.Abs(valuesr[index-12]) / 3600.0)
-				}
+		// Update readouts and the accumlator.
+		smartpi.ReadPhase(device, config, smartpi.PhaseN, &readouts)
+		accumulator.Current[smartpi.PhaseN] += readouts.Current[smartpi.PhaseN] / (60.0 * float64(config.Samplerate))
+		for _, p = range smartpi.MainPhases {
+			smartpi.ReadPhase(device, config, p, &readouts)
+			accumulator.Current[p] += readouts.Current[p] / (60.0 * float64(config.Samplerate))
+			accumulator.Voltage[p] += readouts.Voltage[p] / (60.0 * float64(config.Samplerate))
+			accumulator.ActiveWatts[p] += readouts.ActiveWatts[p] / (60.0 * float64(config.Samplerate))
+			accumulator.CosPhi[p] += readouts.CosPhi[p] / (60.0 * float64(config.Samplerate))
+			accumulator.Frequency[p] += readouts.Frequency[p] / (60.0 * float64(config.Samplerate))
+
+			if readouts.ActiveWatts[p] >= 0 {
+				accumulator.WattHoursConsumed[p] += math.Abs(readouts.ActiveWatts[p]) / (3600.0 * float64(config.Samplerate))
+			} else {
+				accumulator.WattHoursProduced[p] += math.Abs(readouts.ActiveWatts[p]) / (3600.0 * float64(config.Samplerate))
 			}
+			wattHourBalanced += readouts.ActiveWatts[p] / (3600.0 * float64(config.Samplerate))
 		}
 
 		// Update metrics endpoint.
-		updatePrometheusMetrics(valuesr)
+		updatePrometheusMetrics(&readouts)
 
-		// Every 5 seconds
-		if i%5 == 0 {
+		// Every sample
+		if i%1 == 0 {
 			if config.SharedFileEnabled {
-				writeSharedFile(config, valuesr)
+				writeSharedFile(config, &readouts, wattHourBalanced)
 			}
 
 			// Publish readouts to MQTT.
 			if config.MQTTenabled {
-				publishMQTTReadouts(config, mqttclient, valuesr)
+				publishMQTTReadouts(config, mqttclient, &readouts, &accumulator)
 			}
+
+			wattHourBalanced = 0
 		}
 
 		// Every 60 seconds.
-		if i == 59 {
+		if i == (60*config.Samplerate - 1) {
+
+			// balanced value
+			var wattHourBalanced60s float64
+			consumedWattHourBalanced60s = 0.0
+			producedWattHourBalanced60s = 0.0
+
+			for _, p = range smartpi.MainPhases {
+				wattHourBalanced60s += accumulator.WattHoursConsumed[p]
+				wattHourBalanced60s -= accumulator.WattHoursProduced[p]
+			}
+			if wattHourBalanced60s >= 0 {
+				consumedWattHourBalanced60s = wattHourBalanced60s
+			} else {
+				producedWattHourBalanced60s = wattHourBalanced60s
+			}
+
 			// Update SQLlite database.
 			if config.DatabaseEnabled {
-				updateSQLiteDatabase(config, data)
+				updateSQLiteDatabase(config, accumulator, consumedWattHourBalanced60s, producedWattHourBalanced60s)
+				updateInfluxDatabase(config, accumulator, consumedWattHourBalanced60s, producedWattHourBalanced60s)
 			}
+
+			consumedCounter = 0.0
+			producedCounter = 0.0
 
 			// Update persistent counter files.
 			if config.CounterEnabled {
-				updateCounterFile(config, consumerCounterFile, float64(data[16]+data[17]+data[18]))
-				updateCounterFile(config, producerCounterFile, float64(data[19]+data[20]+data[21]))
+				consumed = 0.0
+				for _, p = range smartpi.MainPhases {
+					consumed += accumulator.WattHoursConsumed[p]
+				}
+				consumedCounter = updateCounterFile(config, consumerCounterFile, consumed)
+				produced = 0.0
+				for _, p = range smartpi.MainPhases {
+					produced += accumulator.WattHoursProduced[p]
+				}
+				producedCounter = updateCounterFile(config, producerCounterFile, produced)
+			}
+			if config.MQTTenabled {
+				publishMQTTCalculations(config, mqttclient, consumedWattHourBalanced60s, producedWattHourBalanced60s, consumedCounter, producedCounter)
 			}
 		}
 
-		sleepFor := (1000 * time.Millisecond) - time.Since(startTime)
-		if int64(sleepFor) <= 0 {
-			log.Errorf("Sleep duration negative: %s", sleepFor)
-		} else {
-			log.Debugf("Sleeping for %s", sleepFor)
-			time.Sleep(sleepFor)
+		delay := time.Since(startTime) - (time.Duration(1000/config.Samplerate) * time.Millisecond)
+		if int64(delay) > 0 {
+			log.Errorf("Readout delayed: %s", delay)
 		}
+		<-tick
 		i++
 	}
+}
+
+func configWatcher(config *smartpi.Config) {
+	log.Debug("Start SmartPi watcher")
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer watcher.Close()
+	log.Debug("init done 1")
+	done := make(chan bool)
+	go func() {
+		for {
+			select {
+			case event := <-watcher.Events:
+				log.Println("event:", event)
+				if event.Op&fsnotify.Write == fsnotify.Write {
+					log.Println("modified file:", event.Name)
+					config.ReadParameterFromFile()
+				}
+			case err := <-watcher.Errors:
+				log.Println("error:", err)
+			}
+		}
+	}()
+
+	log.Debug("init done 2")
+	err = watcher.Add("/etc/smartpi")
+	if err != nil {
+		log.Fatal(err)
+	}
+	<-done
+	log.Debug("init done 3")
 }
 
 func init() {
@@ -149,6 +245,8 @@ var appVersion = "No Version Provided"
 func main() {
 	config := smartpi.NewConfig()
 
+	go configWatcher(config)
+
 	version := flag.Bool("v", false, "prints current version information")
 	flag.Parse()
 	if *version {
@@ -157,6 +255,8 @@ func main() {
 	}
 
 	log.SetLevel(config.LogLevel)
+
+	smartpi.CheckDatabase(config.DatabaseDir)
 
 	listenAddress := config.MetricsListenAddress
 

@@ -3,9 +3,10 @@ package smartpi
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -15,15 +16,88 @@ type MinuteValues struct {
 	Current_1, Current_2, Current_3, Current_4, Voltage_1, Voltage_2, Voltage_3, Power_1, Power_2, Power_3, Cosphi_1, Cosphi_2, Cosphi_3, Frequency_1, Frequency_2, Frequency_3, Energy_pos_1, Energy_pos_2, Energy_pos_3, Energy_neg_1, Energy_neg_2, Energy_neg_3 float64
 }
 
-func CreateSQlDatabase(databasedir string, t time.Time) {
-	fmt.Println(t.Format("2006-01-02 15:04:05"))
-	db, err := sql.Open("sqlite3", databasedir+"/smartpi_logdata_"+t.Format("200601")+".db")
+func CheckDatabase(databasedir string) {
+
+	sqlColumns := [...][2]string{{"current_1", "DOUBLE"}, {"current_2", "DOUBLE"}, {"current_3", "DOUBLE"}, {"current_4", "DOUBLE"}, {"voltage_1", "DOUBLE"}, {"voltage_2", "DOUBLE"}, {"voltage_3", "DOUBLE"}, {"power_1", "DOUBLE"}, {"power_2", "DOUBLE"}, {"power_3", "DOUBLE"}, {"cosphi_1", "DOUBLE"}, {"cosphi_2", "DOUBLE"}, {"cosphi_3", "DOUBLE"}, {"frequency_1", "DOUBLE"}, {"frequency_2", "DOUBLE"}, {"frequency_3", "DOUBLE"}, {"energy_pos_1", "DOUBLE"}, {"energy_pos_2", "DOUBLE"}, {"energy_pos_3", "DOUBLE"}, {"energy_neg_1", "DOUBLE"}, {"energy_neg_2", "DOUBLE"}, {"energy_neg_3", "DOUBLE"}, {"energy_pos_balanced", "DOUBLE"}, {"energy_neg_balanced", "DOUBLE"}}
+
+	t := time.Now()
+	dbFileName := "smartpi_logdata_" + t.Format("200601") + ".db"
+
+	db, err := sql.Open("sqlite3", databasedir+"/"+dbFileName)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	defer db.Close()
 
-	sqlStmt := "CREATE TABLE IF NOT EXISTS smartpi_logdata_" + t.Format("200601") + " (id INTEGER NOT NULL PRIMARY KEY, date DATETIME, current_1 DOUBLE, current_2 DOUBLE, current_3 DOUBLE, current_4 DOUBLE, voltage_1 DOUBLE, voltage_2 DOUBLE, voltage_3 DOUBLE, power_1 DOUBLE, power_2 DOUBLE, power_3 DOUBLE, cosphi_1 DOUBLE, cosphi_2 DOUBLE, cosphi_3 DOUBLE, frequency_1 DOUBLE, frequency_2 DOUBLE, frequency_3 DOUBLE, energy_pos_1 DOUBLE, energy_pos_2 DOUBLE, energy_pos_3 DOUBLE, energy_neg_1 DOUBLE, energy_neg_2 DOUBLE, energy_neg_3 DOUBLE)"
+	sqlStmt := "PRAGMA table_info(smartpi_logdata_" + t.Format("200601") + ")"
+
+	rows, err := db.Query(sqlStmt)
+	if err != nil {
+		log.Println(err)
+	}
+	defer rows.Close()
+
+	var rowcounter = 0
+	var existColumns []string
+
+	for rows.Next() {
+		var cid int
+		var name string
+		var dbtype string
+		var notnull int
+		var dflt_value sql.NullString
+		var pk int
+		err = rows.Scan(&cid, &name, &dbtype, &notnull, &dflt_value, &pk)
+		if err != nil {
+			log.Println(err)
+		}
+		existColumns = append(existColumns, name)
+		rowcounter++
+	}
+
+	if rowcounter == 0 {
+		CreateSQlDatabase(databasedir, t)
+	} else {
+		for _, element := range sqlColumns {
+
+			addColumn := false
+
+			for _, existelement := range existColumns {
+
+				if element[0] != existelement {
+					addColumn = true
+				} else if element[0] == existelement {
+					addColumn = false
+					break
+				}
+			}
+
+			if addColumn == true {
+				log.Debug("Add database column: " + element[0])
+
+				createStmt := "ALTER TABLE smartpi_logdata_" + t.Format("200601") + " ADD COLUMN " + element[0] + " " + element[1] + ""
+
+				_, err = db.Exec(createStmt)
+				if err != nil {
+					log.Printf("%q: %s\n", err, createStmt)
+					return
+				}
+
+			}
+		}
+	}
+
+}
+
+func CreateSQlDatabase(databasedir string, t time.Time) {
+
+	db, err := sql.Open("sqlite3", databasedir+"/smartpi_logdata_"+t.Format("200601")+".db")
+	if err != nil {
+		log.Println(err)
+	}
+	defer db.Close()
+
+	sqlStmt := "CREATE TABLE IF NOT EXISTS smartpi_logdata_" + t.Format("200601") + " (id INTEGER NOT NULL PRIMARY KEY, date DATETIME, current_1 DOUBLE, current_2 DOUBLE, current_3 DOUBLE, current_4 DOUBLE, voltage_1 DOUBLE, voltage_2 DOUBLE, voltage_3 DOUBLE, power_1 DOUBLE, power_2 DOUBLE, power_3 DOUBLE, cosphi_1 DOUBLE, cosphi_2 DOUBLE, cosphi_3 DOUBLE, frequency_1 DOUBLE, frequency_2 DOUBLE, frequency_3 DOUBLE, energy_pos_1 DOUBLE, energy_pos_2 DOUBLE, energy_pos_3 DOUBLE, energy_neg_1 DOUBLE, energy_neg_2 DOUBLE, energy_neg_3 DOUBLE, energy_pos_balanced DOUBLE, energy_neg_balanced DOUBLE)"
 
 	_, err = db.Exec(sqlStmt)
 	if err != nil {
@@ -41,14 +115,14 @@ func CreateSQlDatabase(databasedir string, t time.Time) {
 
 }
 
-func InsertData(databasedir string, t time.Time, v []float32) {
+func InsertSQLData(databasedir string, t time.Time, v ReadoutAccumulator, consumedWattHourBalanced float64, producedWattHourBalanced float64) {
 	db, err := sql.Open("sqlite3", databasedir+"/smartpi_logdata_"+t.Format("200601")+".db")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	defer db.Close()
 
-	sqlStmt := "CREATE TABLE IF NOT EXISTS smartpi_logdata_" + t.Format("200601") + " (id INTEGER NOT NULL PRIMARY KEY, date DATETIME, current_1 DOUBLE, current_2 DOUBLE, current_3 DOUBLE, current_4 DOUBLE, voltage_1 DOUBLE, voltage_2 DOUBLE, voltage_3 DOUBLE, power_1 DOUBLE, power_2 DOUBLE, power_3 DOUBLE, cosphi_1 DOUBLE, cosphi_2 DOUBLE, cosphi_3 DOUBLE, frequency_1 DOUBLE, frequency_2 DOUBLE, frequency_3 DOUBLE, energy_pos_1 DOUBLE, energy_pos_2 DOUBLE, energy_pos_3 DOUBLE, energy_neg_1 DOUBLE, energy_neg_2 DOUBLE, energy_neg_3 DOUBLE)"
+	sqlStmt := "CREATE TABLE IF NOT EXISTS smartpi_logdata_" + t.Format("200601") + " (id INTEGER NOT NULL PRIMARY KEY, date DATETIME, current_1 DOUBLE, current_2 DOUBLE, current_3 DOUBLE, current_4 DOUBLE, voltage_1 DOUBLE, voltage_2 DOUBLE, voltage_3 DOUBLE, power_1 DOUBLE, power_2 DOUBLE, power_3 DOUBLE, cosphi_1 DOUBLE, cosphi_2 DOUBLE, cosphi_3 DOUBLE, frequency_1 DOUBLE, frequency_2 DOUBLE, frequency_3 DOUBLE, energy_pos_1 DOUBLE, energy_pos_2 DOUBLE, energy_pos_3 DOUBLE, energy_neg_1 DOUBLE, energy_neg_2 DOUBLE, energy_neg_3 DOUBLE, energy_pos_balanced DOUBLE, energy_neg_balanced DOUBLE)"
 	_, err = db.Exec(sqlStmt)
 	if err != nil {
 		log.Printf("%q: %s\n", err, sqlStmt)
@@ -65,23 +139,45 @@ func InsertData(databasedir string, t time.Time, v []float32) {
 
 	tx, err := db.Begin()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
-	// if (config.DebugLevel > 0){
-	fmt.Printf("INSERT INTO smartpi_logdata_%s (date, current_1, current_2, current_3, current_4, voltage_1, voltage_2, voltage_3, power_1, power_2, power_3, cosphi_1, cosphi_2, cosphi_3, frequency_1, frequency_2, frequency_3, energy_pos_1, energy_pos_2, energy_pos_3, energy_neg_1, energy_neg_2, energy_neg_3) values (%s,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f)\n", t.Format("200601"), t.Format("2006-01-02 15:04:05"), v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11], v[12], v[13], v[14], v[15], v[16], v[17], v[18], v[19], v[20], v[21])
-	// }
-
-	stmt, err := tx.Prepare("INSERT INTO smartpi_logdata_" + t.Format("200601") + " (date, current_1, current_2, current_3, current_4, voltage_1, voltage_2, voltage_3, power_1, power_2, power_3, cosphi_1, cosphi_2, cosphi_3, frequency_1, frequency_2, frequency_3, energy_pos_1, energy_pos_2, energy_pos_3, energy_neg_1, energy_neg_2, energy_neg_3) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+	stmt, err := tx.Prepare("INSERT INTO smartpi_logdata_" + t.Format("200601") + " (date, current_1, current_2, current_3, current_4, voltage_1, voltage_2, voltage_3, power_1, power_2, power_3, cosphi_1, cosphi_2, cosphi_3, frequency_1, frequency_2, frequency_3, energy_pos_1, energy_pos_2, energy_pos_3, energy_neg_1, energy_neg_2, energy_neg_3, energy_pos_balanced, energy_neg_balanced) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(t.Format("2006-01-02 15:04:05"), fmt.Sprintf("%f", v[0]), fmt.Sprintf("%f", v[1]), fmt.Sprintf("%f", v[2]), fmt.Sprintf("%f", v[3]), fmt.Sprintf("%f", v[4]), fmt.Sprintf("%f", v[5]), fmt.Sprintf("%f", v[6]), fmt.Sprintf("%f", v[7]), fmt.Sprintf("%f", v[8]), fmt.Sprintf("%f", v[9]), fmt.Sprintf("%f", v[10]), fmt.Sprintf("%f", v[11]), fmt.Sprintf("%f", v[12]), fmt.Sprintf("%f", v[13]), fmt.Sprintf("%f", v[14]), fmt.Sprintf("%f", v[15]), fmt.Sprintf("%f", v[16]), fmt.Sprintf("%f", v[17]), fmt.Sprintf("%f", v[18]), fmt.Sprintf("%f", v[19]), fmt.Sprintf("%f", v[20]), fmt.Sprintf("%f", v[21]))
+	_, err = stmt.Exec(
+		t.Format("2006-01-02 15:04:05"),
+		fmt.Sprintf("%f", v.Current[PhaseA]),
+		fmt.Sprintf("%f", v.Current[PhaseB]),
+		fmt.Sprintf("%f", v.Current[PhaseC]),
+		fmt.Sprintf("%f", v.Current[PhaseN]),
+		fmt.Sprintf("%f", v.Voltage[PhaseA]),
+		fmt.Sprintf("%f", v.Voltage[PhaseB]),
+		fmt.Sprintf("%f", v.Voltage[PhaseC]),
+		fmt.Sprintf("%f", v.ActiveWatts[PhaseA]),
+		fmt.Sprintf("%f", v.ActiveWatts[PhaseB]),
+		fmt.Sprintf("%f", v.ActiveWatts[PhaseC]),
+		fmt.Sprintf("%f", v.CosPhi[PhaseA]),
+		fmt.Sprintf("%f", v.CosPhi[PhaseB]),
+		fmt.Sprintf("%f", v.CosPhi[PhaseC]),
+		fmt.Sprintf("%f", v.Frequency[PhaseA]),
+		fmt.Sprintf("%f", v.Frequency[PhaseB]),
+		fmt.Sprintf("%f", v.Frequency[PhaseC]),
+		fmt.Sprintf("%f", v.WattHoursConsumed[PhaseA]),
+		fmt.Sprintf("%f", v.WattHoursConsumed[PhaseB]),
+		fmt.Sprintf("%f", v.WattHoursConsumed[PhaseC]),
+		fmt.Sprintf("%f", v.WattHoursProduced[PhaseA]),
+		fmt.Sprintf("%f", v.WattHoursProduced[PhaseB]),
+		fmt.Sprintf("%f", v.WattHoursProduced[PhaseC]),
+		fmt.Sprintf("%f", consumedWattHourBalanced),
+		fmt.Sprintf("%f", producedWattHourBalanced),
+	)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	tx.Commit()
 }
@@ -102,18 +198,18 @@ func ReadChartData(databasedir string, starttime time.Time, endtime time.Time) [
 
 		db, err := sql.Open("sqlite3", databasedir+"/smartpi_logdata_"+elapsedtime.Format("200601")+".db")
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 		defer db.Close()
 
 		stmt, err := db.Prepare("SELECT date, current_1, current_2, current_3, current_4, voltage_1, voltage_2, voltage_3, power_1, power_2, power_3, cosphi_1, cosphi_2, cosphi_3, frequency_1, frequency_2, frequency_3, energy_pos_1, energy_pos_2, energy_pos_3, energy_neg_1, energy_neg_2, energy_neg_3 FROM smartpi_logdata_" + elapsedtime.Format("200601") + " WHERE date BETWEEN ? AND ? ORDER BY date")
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 		defer stmt.Close()
 		rows, err := stmt.Query(starttime.Format("2006-01-02 15:04:05"), endtime.Format("2006-01-02 15:04:05"))
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 		defer rows.Close()
 
@@ -124,7 +220,7 @@ func ReadChartData(databasedir string, starttime time.Time, endtime time.Time) [
 			var current_1, current_2, current_3, current_4, voltage_1, voltage_2, voltage_3, power_1, power_2, power_3, cosphi_1, cosphi_2, cosphi_3, frequency_1, frequency_2, frequency_3, energy_pos_1, energy_pos_2, energy_pos_3, energy_neg_1, energy_neg_2, energy_neg_3 float64
 			err = rows.Scan(&dateentry, &current_1, &current_2, &current_3, &current_4, &voltage_1, &voltage_2, &voltage_3, &power_1, &power_2, &power_3, &cosphi_1, &cosphi_2, &cosphi_3, &frequency_1, &frequency_2, &frequency_3, &energy_pos_1, &energy_pos_2, &energy_pos_3, &energy_neg_1, &energy_neg_2, &energy_neg_3)
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 
 			val := new(MinuteValues)
@@ -157,7 +253,7 @@ func ReadChartData(databasedir string, starttime time.Time, endtime time.Time) [
 			values = append(values, val)
 
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 			rowcounter++
 		}
@@ -185,19 +281,18 @@ func ReadDayData(databasedir string, starttime time.Time, endtime time.Time) []*
 
 		db, err := sql.Open("sqlite3", databasedir+"/smartpi_logdata_"+elapsedtime.Format("200601")+".db")
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 		defer db.Close()
 
 		stmt, err := db.Prepare("SELECT date, current_1, current_2, current_3, current_4, voltage_1, voltage_2, voltage_3, power_1, power_2, power_3, cosphi_1, cosphi_2, cosphi_3, frequency_1, frequency_2, frequency_3, energy_pos_1, energy_pos_2, energy_pos_3, energy_neg_1, energy_neg_2, energy_neg_3 FROM smartpi_logdata_" + elapsedtime.Format("200601") + " WHERE date BETWEEN ? AND ? ORDER BY date")
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 		defer stmt.Close()
-		// fmt.Println("DStarttime: "+starttime.Local().Format("2006-01-02 15:04:05")+" DEndtime: "+endtime.Local().Format("2006-01-02 15:04:05"))
 		rows, err := stmt.Query(starttime.Local().Format("2006-01-02 15:04:05"), endtime.Local().Format("2006-01-02 15:04:05"))
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 		defer rows.Close()
 
@@ -208,14 +303,13 @@ func ReadDayData(databasedir string, starttime time.Time, endtime time.Time) []*
 			var current_1, current_2, current_3, current_4, voltage_1, voltage_2, voltage_3, power_1, power_2, power_3, cosphi_1, cosphi_2, cosphi_3, frequency_1, frequency_2, frequency_3, energy_pos_1, energy_pos_2, energy_pos_3, energy_neg_1, energy_neg_2, energy_neg_3 float64
 			err = rows.Scan(&dateentry, &current_1, &current_2, &current_3, &current_4, &voltage_1, &voltage_2, &voltage_3, &power_1, &power_2, &power_3, &cosphi_1, &cosphi_2, &cosphi_3, &frequency_1, &frequency_2, &frequency_3, &energy_pos_1, &energy_pos_2, &energy_pos_3, &energy_neg_1, &energy_neg_2, &energy_neg_3)
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 
 			val := new(MinuteValues)
 			insert := 1
 
-			//entrydate,_ := time.ParseInLocation("2006-01-02T15:04:05Z",dateentry,time.Now().Location())
-			entrydate, _ := time.Parse("2006-01-02T15:04:05Z", dateentry)
+			entrydate, _ := time.ParseInLocation("2006-01-02T15:04:05Z", dateentry, time.Now().Location())
 
 			for i := 0; i < len(values); i++ {
 
@@ -251,8 +345,7 @@ func ReadDayData(databasedir string, starttime time.Time, endtime time.Time) []*
 
 			if insert == 1 {
 
-				// val.Date, err = time.ParseInLocation("2006-01-02T15:04:05Z",dateentry,time.Now().Location())
-				val.Date, err = time.Parse("2006-01-02T15:04:05Z", dateentry)
+				val.Date, err = time.ParseInLocation("2006-01-02T15:04:05Z", dateentry, time.Now().Location())
 				val.Current_1 = current_1
 				val.Current_2 = current_2
 				val.Current_3 = current_3
@@ -279,7 +372,7 @@ func ReadDayData(databasedir string, starttime time.Time, endtime time.Time) []*
 				values = append(values, val)
 			}
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 			rowcounter++
 		}

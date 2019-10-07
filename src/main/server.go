@@ -35,6 +35,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -44,9 +45,47 @@ import (
 	// "golang.org/x/net/context"
 )
 
-type JSONError struct {
+type JSONMessage struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
+}
+
+var epoch = time.Unix(0, 0).Format(time.RFC1123)
+
+var noCacheHeaders = map[string]string{
+	"Expires":         epoch,
+	"Cache-Control":   "no-cache, private, max-age=0",
+	"Pragma":          "no-cache",
+	"X-Accel-Expires": "0",
+}
+
+var etagHeaders = []string{
+	"ETag",
+	"If-Modified-Since",
+	"If-Match",
+	"If-None-Match",
+	"If-Range",
+	"If-Unmodified-Since",
+}
+
+func NoCache(h http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		// Delete any ETag headers that may have been set
+		for _, v := range etagHeaders {
+			if r.Header.Get(v) != "" {
+				r.Header.Del(v)
+			}
+		}
+
+		// Set our NoCache headers
+		for k, v := range noCacheHeaders {
+			w.Header().Set(k, v)
+		}
+
+		h.ServeHTTP(w, r)
+	}
+
+	return http.HandlerFunc(fn)
 }
 
 func stringInSlice(list1 []string, list2 []string) bool {
@@ -79,7 +118,7 @@ func BasicAuth(realm string, handler http.HandlerFunc, c *smartpi.Config, u *sma
 			w.Header().Set("WWW-Authenticate", `Basic realm="`+realm+`"`)
 			w.WriteHeader(400)
 			// w.Write([]byte("Unauthorised.\n"))
-			if err := json.NewEncoder(w).Encode(JSONError{Code: 401, Message: "Unauthorized"}); err != nil {
+			if err := json.NewEncoder(w).Encode(JSONMessage{Code: 401, Message: "Unauthorized"}); err != nil {
 				panic(err)
 			}
 			return
@@ -127,14 +166,25 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/api/{phaseId}/{valueId}/now", smartpi.ServeMomentaryValues)
+	r.HandleFunc("/api/{phaseId}/{valueId}/now/{format}", smartpi.ServeMomentaryValues)
 	r.HandleFunc("/api/chart/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeChartValues)
+	r.HandleFunc("/api/chart/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}/{format}", smartpi.ServeChartValues)
 	r.HandleFunc("/api/values/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeChartValues)
+	r.HandleFunc("/api/values/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}/{format}", smartpi.ServeChartValues)
 	r.HandleFunc("/api/dayvalues/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeDayValues)
+	r.HandleFunc("/api/dayvalues/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}/{format}", smartpi.ServeDayValues)
 	r.HandleFunc("/api/csv/from/{fromDate}/to/{toDate}", smartpi.ServeCSVValues)
 	r.HandleFunc("/api/version", getSoftwareInformations)
 	r.HandleFunc("/api/config/read", BasicAuth("Please enter your username and password for this site", smartpi.ReadConfig, config, user, "smartpiadmin")).Methods("GET")
 	r.HandleFunc("/api/config/write", BasicAuth("Please enter your username and password for this site", smartpi.WriteConfig, config, user, "smartpiadmin")).Methods("POST")
 	r.HandleFunc("/api/config/user/read", BasicAuth("Please enter your username and password for this site", smartpi.ReadUserData, config, user, "smartpiadmin")).Methods("GET")
+	r.HandleFunc("/api/config/network/scanwifi", BasicAuth("Please enter your username and password for this site", smartpi.WifiList, config, user, "smartpiadmin")).Methods("GET")
+	r.HandleFunc("/api/config/network/networkconnections", BasicAuth("Please enter your username and password for this site", smartpi.NetworkConnections, config, user, "smartpiadmin")).Methods("GET")
+	r.HandleFunc("/api/config/network/wifi/set", BasicAuth("Please enter your username and password for this site", smartpi.CreateWifi, config, user, "smartpiadmin")).Methods("POST")
+	r.HandleFunc("/api/config/network/wifi/set/{name}", BasicAuth("Please enter your username and password for this site", smartpi.RemoveWifi, config, user, "smartpiadmin")).Methods("DELETE")
+	// r.HandleFunc("/api/config/network/wifi/active/{name}", BasicAuth("Please enter your username and password for this site", smartpi.ActivateWifi, config, user, "smartpiadmin")).Methods("GET")
+	// r.HandleFunc("/api/config/network/wifi/active/{name}", BasicAuth("Please enter your username and password for this site", smartpi.DeactivateWifi, config, user, "smartpiadmin")).Methods("DELETE")
+	// r.HandleFunc("/api/config/network/wifi/security/change/key", BasicAuth("Please enter your username and password for this site", smartpi.ChangeWifiKey, config, user, "smartpiadmin")).Methods("POST")
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(config.DocRoot)))
 	http.Handle("/metrics", prometheus.Handler())
 	http.Handle("/", prometheus.InstrumentHandler("smartpi", r))

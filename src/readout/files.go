@@ -11,17 +11,41 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
+	log "github.com/sirupsen/logrus"
 )
 
-func writeSharedFile(c *smartpi.Config, values [28]float64) {
+func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout, balancedvalue float64) {
 	var f *os.File
 	var err error
-	s := make([]string, 16)
-	for i, v := range values[0:16] {
-		s[i] = fmt.Sprintf("%g", v)
+	var p smartpi.Phase
+	s := make([]string, 17)
+	i := 0
+	for _, p = range smartpi.MainPhases {
+		s[i] = fmt.Sprint(values.Current[p])
+		i++
 	}
+	s[i] = fmt.Sprint(values.Current[smartpi.PhaseN])
+	i++
+	for _, p = range smartpi.MainPhases {
+		s[i] = fmt.Sprint(values.Voltage[p])
+		i++
+	}
+	for _, p = range smartpi.MainPhases {
+		s[i] = fmt.Sprint(values.ActiveWatts[p])
+		i++
+	}
+	for _, p = range smartpi.MainPhases {
+		s[i] = fmt.Sprint(values.CosPhi[p])
+		i++
+	}
+	for _, p = range smartpi.MainPhases {
+		s[i] = fmt.Sprint(values.Frequency[p])
+		i++
+	}
+	// sald Values
+	s[i] = fmt.Sprint(balancedvalue)
+
 	t := time.Now()
 	timeStamp := t.Format("2006-01-02 15:04:05")
 	logLine := "## Shared File Update ## "
@@ -31,6 +55,7 @@ func writeSharedFile(c *smartpi.Config, values [28]float64) {
 	logLine += fmt.Sprintf("P1: %s  P2: %s  P3: %s  ", s[7], s[8], s[9])
 	logLine += fmt.Sprintf("COS1: %s  COS2: %s  COS3: %s  ", s[10], s[11], s[12])
 	logLine += fmt.Sprintf("F1: %s  F2: %s  F3: %s  ", s[13], s[14], s[15])
+	logLine += fmt.Sprintf("Balanced: %s  ", s[16])
 	log.Info(logLine)
 	sharedFile := filepath.Join(c.SharedDir, c.SharedFile)
 	if _, err = os.Stat(sharedFile); os.IsNotExist(err) {
@@ -40,28 +65,28 @@ func writeSharedFile(c *smartpi.Config, values [28]float64) {
 			panic(err)
 		}
 	} else {
-		f, err = os.OpenFile(sharedFile, os.O_WRONLY, 0666)
+		f, err = os.OpenFile(sharedFile, os.O_WRONLY|os.O_TRUNC, 0666)
 		if err != nil {
 			panic(err)
 		}
 	}
 	defer f.Close()
-	_, err = f.WriteString(timeStamp + ";" + strings.Join(s, ";"))
+	_, err = f.WriteString(timeStamp + ";" + strings.Join(s, ";") + ";")
 	if err != nil {
 		panic(err)
 	}
 	f.Close()
 }
 
-func updateCounterFile(c *smartpi.Config, f string, v float64) {
+func updateCounterFile(c *smartpi.Config, f string, v float64) float64 {
 	t := time.Now()
 	var counter float64
 	counterFile, err := ioutil.ReadFile(f)
 	if err == nil {
 		counter, err = strconv.ParseFloat(string(counterFile), 64)
 		if err != nil {
+			log.Errorf("unable to read counter file %q, %q", f, err)
 			counter = 0.0
-			log.Fatal(err)
 		}
 	} else {
 		counter = 0.0
@@ -76,4 +101,5 @@ func updateCounterFile(c *smartpi.Config, f string, v float64) {
 	if err != nil {
 		panic(err)
 	}
+	return counter + v
 }
