@@ -421,7 +421,7 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, $interval
                     $scope.measurement.current.phase1.direction = data.CurrentDirection[1];
                     $scope.measurement.current.phase2.direction = data.CurrentDirection[2];
                     $scope.measurement.current.phase3.direction = data.CurrentDirection[3];
-                    $scope.measurement.current.phase4.measure = data.CurrentDirection[4];
+                    $scope.measurement.current.phase4.direction = data.CurrentDirection[4];
                     $scope.measurement.voltage.phase1.measure = data.MeasureVoltage[1];
                     $scope.measurement.voltage.phase2.measure = data.MeasureVoltage[2];
                     $scope.measurement.voltage.phase3.measure = data.MeasureVoltage[3];
