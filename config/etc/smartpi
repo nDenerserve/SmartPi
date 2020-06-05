@@ -16,6 +16,7 @@ database_enabled=true
 dir="/var/smartpi/db"
 influxuser="smartpi"
 influxpassword="smart4pi"
+influxdatabase="http://localhost:8086"
 
 [device]
 samplerate=1
