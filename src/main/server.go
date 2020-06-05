@@ -41,6 +41,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	// "golang.org/x/net/context"
 )
@@ -67,6 +69,15 @@ var etagHeaders = []string{
 	"If-Range",
 	"If-Unmodified-Since",
 }
+
+var responseCount = promauto.NewCounterVec(
+	prometheus.CounterOpts{
+		Namespace: "smartpi",
+		Name:      "responses_total",
+		Help:      "Total HTTP requests processed by the server, excluding scrapes.",
+	},
+	[]string{"code", "method"},
+)
 
 func NoCache(h http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
@@ -186,7 +197,7 @@ func main() {
 	// r.HandleFunc("/api/config/network/wifi/active/{name}", BasicAuth("Please enter your username and password for this site", smartpi.DeactivateWifi, config, user, "smartpiadmin")).Methods("DELETE")
 	// r.HandleFunc("/api/config/network/wifi/security/change/key", BasicAuth("Please enter your username and password for this site", smartpi.ChangeWifiKey, config, user, "smartpiadmin")).Methods("POST")
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(config.DocRoot)))
-	http.Handle("/metrics", prometheus.Handler())
-	http.Handle("/", prometheus.InstrumentHandler("smartpi", r))
+	http.Handle("/metrics", promhttp.Handler())
+	http.Handle("/", promhttp.InstrumentHandlerCounter(responseCount, r))
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.WebserverPort), nil))
 }
