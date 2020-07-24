@@ -30,13 +30,14 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"github.com/nDenerserve/SmartPi/src/smartpi"
-	"github.com/secsy/goftp"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/nDenerserve/SmartPi/src/smartpi"
+	"github.com/secsy/goftp"
+	log "github.com/sirupsen/logrus"
 )
 
 func init() {
@@ -119,7 +120,7 @@ func main() {
 			createpath = createpath + "/" + pathlist[j]
 
 			files, err := client.ReadDir(workingpath)
-			smartpi.Checklog(err)
+			smartpi.smartpi.Checklog(err)
 			fileexist := 0
 			for _, file := range files {
 				if file.IsDir() && file.Name() == pathlist[j] {
@@ -184,7 +185,7 @@ func main() {
 			createpath = createpath + "/" + pathlist[j]
 
 			files, err := client.ReadDir(workingpath)
-			smartpi.Checklog(err)
+			smartpi.smartpi.Checklog(err)
 			fileexist := 0
 			for _, file := range files {
 				if file.IsDir() && file.Name() == pathlist[j] {

@@ -30,25 +30,26 @@ Description: Defines the structure of of the json-api-file
 
 package smartpi
 
-type tValue struct {
+type TValue struct {
 	Type  string  `json:"type" xml:"type"`
 	Unity string  `json:"unity" xml:"unity"`
 	Info  string  `json:"info" xml:"info"`
 	Data  float32 `json:"data" xml:"data"`
 }
 
-type tPhase struct {
-	Phase  int       `json:"phase" xml:"phase"`
-	Name   string    `json:"name" xml:"name"`
-	Values []*tValue `json:"values" xml:"values"`
+type TPhase struct {
+	Phase         int       `json:"phase" xml:"phase"`
+	Name          string    `json:"name" xml:"name"`
+	MaxGUICurrent int       `json:"maxguicurrent" xml:"maxguicurrent"`
+	Values        []*TValue `json:"values" xml:"values"`
 }
 
-type tDataset struct {
+type TDataset struct {
 	Time   string    `json:"time" xml:"time"`
-	Phases []*tPhase `json:"phases" xml:"phases"`
+	Phases []*TPhase `json:"phases" xml:"phases"`
 }
 
-type tMeasurement struct {
+type TMeasurement struct {
 	Serial          string      `json:"serial" xml:"serial"`
 	Name            string      `json:"name" xml:"name"`
 	Lat             float64     `json:"lat" xml:"lat"`
@@ -56,5 +57,5 @@ type tMeasurement struct {
 	Time            string      `json:"time" xml:"time"`
 	Softwareversion string      `json:"softwareversion" xml:"softwareversion"`
 	Ipaddress       string      `json:"ipaddress" xml:"ipaddress"`
-	Datasets        []*tDataset `json:"datasets" xml:"datasets"`
+	Datasets        []*TDataset `json:"datasets" xml:"datasets"`
 }

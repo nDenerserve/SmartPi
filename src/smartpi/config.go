@@ -30,9 +30,10 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/ini.v1"
+	ini "gopkg.in/ini.v1"
 )
 
 type Config struct {
@@ -51,6 +52,7 @@ type Config struct {
 	CounterEnabled  bool
 	CounterDir      string
 	DatabaseEnabled bool
+	SQLLiteEnabled  bool
 	DatabaseDir     string
 	Influxuser      string
 	Influxpassword  string
@@ -69,13 +71,14 @@ type Config struct {
 	Voltage              map[Phase]float64
 
 	// [ftp]
-	FTPupload bool
-	FTPserver string
-	FTPuser   string
-	FTPpass   string
-	FTPpath   string
-	FTPcsv    bool
-	FTPxml    bool
+	FTPupload    bool
+	FTPserver    string
+	FTPuser      string
+	FTPpass      string
+	FTPpath      string
+	FTPcsv       bool
+	FTPxml       bool
+	FTPsendtimes [24]bool
 
 	// [webserver]
 	SharedFileEnabled bool
@@ -83,6 +86,7 @@ type Config struct {
 	SharedFile        string
 	WebserverPort     int
 	DocRoot           string
+	AppKey            string
 
 	// [csv]
 	CSVdecimalpoint string
@@ -113,6 +117,9 @@ type Config struct {
 	// [calibration]
 	CalibrationfactorI map[Phase]float64
 	CalibrationfactorU map[Phase]float64
+
+	// [GUI]
+	GUIMaxCurrent map[Phase]int
 }
 
 var cfg *ini.File
@@ -151,7 +158,8 @@ func (p *Config) ReadParameterFromFile() {
 	p.CounterEnabled = cfg.Section("database").Key("counter_enabled").MustBool(true)
 	p.CounterDir = cfg.Section("database").Key("counterdir").MustString("/var/smartpi")
 	p.DatabaseEnabled = cfg.Section("database").Key("database_enabled").MustBool(true)
-	p.DatabaseDir = cfg.Section("database").Key("dir").MustString("/var/smartpi/db")
+	p.SQLLiteEnabled = cfg.Section("database").Key("sqlite_enabled").MustBool(true)
+	p.DatabaseDir = cfg.Section("database").Key("sqlite_dir").MustString("/var/smartpi/db")
 	p.Influxuser = cfg.Section("database").Key("influxuser").MustString("smartpi")
 	p.Influxpassword = cfg.Section("database").Key("influxpassword").MustString("smart4pi")
 	p.Influxdatabase = cfg.Section("database").Key("influxdatabase").MustString("http://localhost:8086")
@@ -198,6 +206,10 @@ func (p *Config) ReadParameterFromFile() {
 	p.FTPpath = cfg.Section("ftp").Key("ftp_path").String()
 	p.FTPcsv = cfg.Section("ftp").Key("ftp_csv").MustBool(true)
 	p.FTPxml = cfg.Section("ftp").Key("ftp_xml").MustBool(true)
+	sendtimes := strings.Split(cfg.Section("ftp").Key("ftp_sendtimes").MustString("1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"), ",")
+	for i, r := range sendtimes {
+		p.FTPsendtimes[i], _ = strconv.ParseBool(r)
+	}
 
 	// [webserver]
 	p.SharedFileEnabled = cfg.Section("webserver").Key("shared_file_enabled").MustBool(true)
@@ -205,6 +217,7 @@ func (p *Config) ReadParameterFromFile() {
 	p.SharedFile = cfg.Section("webserver").Key("shared_file").MustString("smartpi_values")
 	p.WebserverPort = cfg.Section("webserver").Key("port").MustInt(1080)
 	p.DocRoot = cfg.Section("webserver").Key("docroot").MustString("/var/smartpi/www")
+	p.AppKey = cfg.Section("webserver").Key("appkey").MustString("ew980723j35h97fqw4!234490#t33465")
 
 	// [csv]
 	p.CSVdecimalpoint = cfg.Section("csv").Key("decimalpoint").String()
@@ -243,9 +256,18 @@ func (p *Config) ReadParameterFromFile() {
 	p.CalibrationfactorU[PhaseB] = cfg.Section("calibration").Key("calibrationfactorU_2").MustFloat64(1)
 	p.CalibrationfactorU[PhaseC] = cfg.Section("calibration").Key("calibrationfactorU_3").MustFloat64(1)
 
+	// [GUI]
+	p.GUIMaxCurrent = make(map[Phase]int)
+	p.GUIMaxCurrent[PhaseA] = cfg.Section("gui").Key("gui_max_current_1").MustInt(100)
+	p.GUIMaxCurrent[PhaseB] = cfg.Section("gui").Key("gui_max_current_2").MustInt(100)
+	p.GUIMaxCurrent[PhaseC] = cfg.Section("gui").Key("gui_max_current_3").MustInt(100)
+	p.GUIMaxCurrent[PhaseN] = cfg.Section("gui").Key("gui_max_current_4").MustInt(100)
+
 }
 
 func (p *Config) SaveParameterToFile() {
+
+	var tempSendFTP [24]string
 
 	_, err = cfg.Section("base").NewKey("serial", p.Serial)
 	_, err = cfg.Section("base").NewKey("name", p.Name)
@@ -260,7 +282,8 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("database").NewKey("counter_enabled", strconv.FormatBool(p.CounterEnabled))
 	_, err = cfg.Section("database").NewKey("counterdir", p.CounterDir)
 	_, err = cfg.Section("database").NewKey("database_enabled", strconv.FormatBool(p.DatabaseEnabled))
-	_, err = cfg.Section("database").NewKey("dir", p.DatabaseDir)
+	_, err = cfg.Section("database").NewKey("sqlite_enabled", strconv.FormatBool(p.SQLLiteEnabled))
+	_, err = cfg.Section("database").NewKey("sqlite_dir", p.DatabaseDir)
 	_, err = cfg.Section("database").NewKey("influxuser", p.Influxuser)
 	_, err = cfg.Section("database").NewKey("influxpassword", p.Influxpassword)
 	_, err = cfg.Section("database").NewKey("influxdatabase", p.Influxdatabase)
@@ -288,7 +311,7 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("device").NewKey("measure_current_1", strconv.FormatBool(p.MeasureCurrent[PhaseA]))
 	_, err = cfg.Section("device").NewKey("measure_current_2", strconv.FormatBool(p.MeasureCurrent[PhaseB]))
 	_, err = cfg.Section("device").NewKey("measure_current_3", strconv.FormatBool(p.MeasureCurrent[PhaseC]))
-	_, err = cfg.Section("device").NewKey("measure_current_3", strconv.FormatBool(p.MeasureCurrent[PhaseN]))
+	_, err = cfg.Section("device").NewKey("measure_current_4", strconv.FormatBool(p.MeasureCurrent[PhaseN]))
 
 	_, err = cfg.Section("device").NewKey("measure_voltage_1", strconv.FormatBool(p.MeasureVoltage[PhaseA]))
 	_, err = cfg.Section("device").NewKey("measure_voltage_2", strconv.FormatBool(p.MeasureVoltage[PhaseB]))
@@ -304,6 +327,10 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("ftp").NewKey("ftp_user", p.FTPuser)
 	_, err = cfg.Section("ftp").NewKey("ftp_pass", p.FTPpass)
 	_, err = cfg.Section("ftp").NewKey("ftp_path", p.FTPpath)
+	for i, r := range p.FTPsendtimes {
+		tempSendFTP[i] = strconv.FormatBool(r)
+	}
+	_, err = cfg.Section("ftp").NewKey("ftp_sendtimes", strings.Join(tempSendFTP[:], ","))
 
 	// [webserver]
 	_, err = cfg.Section("webserver").NewKey("shared_file_enabled", strconv.FormatBool(p.SharedFileEnabled))
@@ -311,6 +338,7 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("webserver").NewKey("shared_file", p.SharedFile)
 	_, err = cfg.Section("webserver").NewKey("port", strconv.FormatInt(int64(p.WebserverPort), 10))
 	_, err = cfg.Section("webserver").NewKey("docroot", p.DocRoot)
+	_, err = cfg.Section("appkey").NewKey("appkey", p.AppKey)
 
 	// [csv]
 	_, err = cfg.Section("csv").NewKey("decimalpoint", p.CSVdecimalpoint)
@@ -346,6 +374,11 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("device").NewKey("calibrationfactorU_1", strconv.FormatFloat(p.CalibrationfactorU[PhaseA], 'f', -1, 64))
 	_, err = cfg.Section("device").NewKey("calibrationfactorU_2", strconv.FormatFloat(p.CalibrationfactorU[PhaseB], 'f', -1, 64))
 	_, err = cfg.Section("device").NewKey("calibrationfactorU_3", strconv.FormatFloat(p.CalibrationfactorU[PhaseC], 'f', -1, 64))
+
+	_, err = cfg.Section("gui").NewKey("gui_max_current_1", strconv.FormatInt(int64(p.GUIMaxCurrent[PhaseA]), 10))
+	_, err = cfg.Section("gui").NewKey("gui_max_current_2", strconv.FormatInt(int64(p.GUIMaxCurrent[PhaseB]), 10))
+	_, err = cfg.Section("gui").NewKey("gui_max_current_3", strconv.FormatInt(int64(p.GUIMaxCurrent[PhaseC]), 10))
+	_, err = cfg.Section("gui").NewKey("gui_max_current_4", strconv.FormatInt(int64(p.GUIMaxCurrent[PhaseN]), 10))
 
 	tmpFile := "/tmp/smartpi"
 	err := cfg.SaveTo(tmpFile)

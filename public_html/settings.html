@@ -1,0 +1,619 @@
+<!doctype html>
+<html ng-app="smartpi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700' rel='stylesheet' type='text/css' />
+    <link rel="stylesheet" href="css/reset.css" />
+    <!-- CSS reset -->
+    <link rel="stylesheet" href="vendor/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="vendor/font-awesome/css/font-awesome.min.css" />
+    <link href="vendor/metisMenu/metisMenu.min.css" rel="stylesheet" />
+    <!-- MetisMenu CSS -->
+    <link rel="stylesheet" href="bower_components/nvd3/build/nv.d3.css" />
+    <link rel="stylesheet" href="css/stretchy.css" />
+
+    <link href="vendor/md-data-table/dist/md-data-table.min.css" rel="stylesheet" type="text/css" />
+    <!-- Resource style -->
+    <link rel="stylesheet" href="css/styles.css?v=1" />
+    <!-- Custom CSS -->
+    <link href="css/sb-admin-2.css" rel="stylesheet">
+    <!-- <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.css"> -->
+    <script>
+        document.write("<link rel='stylesheet' href='css/angular-material.min.css?v=" + Date.now() + "'/>");
+    </script>
+    <!--<link rel="stylesheet" href="css/smartpi.css?v=1" /> -->
+    <script>
+        document.write("<link rel='stylesheet' href='css/smartpi.css?v=" + Date.now() + "'/>");
+    </script>
+    <script src="js/modernizr.js"></script>
+    <!-- Modernizr -->
+    <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/d3/d3.js"></script>
+    <script src="bower_components/nvd3/build/nv.d3.js"></script>
+    <!-- or use another assembly -->
+    <script src="bower_components/angular-nvd3/dist/angular-nvd3.js"></script>
+    <script src="bower_components/angular-resource/angular-resource.js"></script>
+    <script src="bower_components/moment/moment.js"></script>
+    <script src="bower_components/angular-file-saver/dist/angular-file-saver.bundle.js"></script>
+    <script src="bower_components/angular-base64/angular-base64.js"></script>
+    <script src="bower_components/crypto-js/crypto-js.js"></script>
+    <!-- <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-animate.min.js"></script> -->
+    <script>
+        document.write("<script type='text/javascript' src='js/angular-animate.min.js?v=" + Date.now() + "'><\/script>");
+    </script>
+    <!-- <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-aria.min.js"></script> -->
+    <script>
+        document.write("<script type='text/javascript' src='js/angular-aria.min.js?v=" + Date.now() + "'><\/script>");
+    </script>
+    <!-- <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-messages.min.js"></script> -->
+    <script>
+        document.write("<script type='text/javascript' src='js/angular-messages.min.js?v=" + Date.now() + "'><\/script>");
+    </script>
+    <!-- <script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.js"></script> -->
+    <script>
+        document.write("<script type='text/javascript' src='js/angular-material.min.js?v=" + Date.now() + "'><\/script>");
+    </script>
+    <script>
+        document.write(" <script type = 'text/javascript' src='vendor/md-data-table/dist/md-data-table.min.js?v=" + Date.now() + "'><\/script>");
+    </script>
+    <!--<script src="js/app.js?v=1"></script>-->
+    <script>
+        document.write("<script type='text/javascript' src='js/app.js?v=" + Date.now() + "'><\/script>");
+    </script>
+    <!--<script src="js/services.js?v=1"></script>-->
+    <script>
+        document.write("<script type='text/javascript' src='js/services.js?v=" + Date.now() + "'><\/script>");
+    </script>
+    <!--<script src="js/module.js?v=1"></script>-->
+    <script>
+        document.write("<script type='text/javascript' src='js/module.js?v=" + Date.now() + "'><\/script>");
+    </script>
+    <!--<script src="js/controllers.js?v=1"></script>-->
+    <script>
+        document.write("<script type='text/javascript' src='js/settingscontrollers.js?v=" + Date.now() + "'><\/script>");
+    </script>
+    <title>SmartPi Settings</title>
+</head>
+
+<body ng-app="SmartPi" ng-controller="MainCtrl" ng-init="showLogin($event)">
+    <header>
+        <nav class="cd-stretchy-nav">
+            <a class="cd-nav-trigger" href="#0">
+            Menu
+            <span aria-hidden="true"></span>
+            </a>
+            <ul>
+                <li><a href="index.html" class="active"><span></span></a></li>
+                <li><a href="export.html"><span></span></a></li>
+                <li><a ng-href="{{nodelocation}}" target="_blank"><span></span></a></li>
+                <li><a ng-href="{{grafanalocation}}" target="_blank"><span></span></a></li>
+                <li><a href="settings.html" class="active"><span></span></a></li>
+                <!-- <li><a ng-href="{{networklocation}}" target="_blank"><span></span></a></li> -->
+
+                <!-- <li><a href="#0"><span></span></a></li> -->
+                <!-- <li><a href="#0"><span></span></a></li> -->
+                <!-- <li><a href="#0"><span></span></a></li> -->
+            </ul>
+            <span aria-hidden="true" class="stretchy-nav-bg"></span>
+        </nav>
+    </header>
+    <!--<main class="cd-main-content">
+         <!-- main content here -->
+    <!--</main>-->
+    <md-content class="md-default-theme">
+        <div class="md-toolbar-tools">
+            <span flex></span>
+            <div>
+                <img src="img/enerserve.png" alt="enerserve logo" height="52">
+                <br>
+                <span style="font-size: small;">Version: {{softwareversion}}</span>
+            </div>
+        </div>
+        </md-toolbar>
+        <div flex="66" flex-offset="15">
+
+
+
+            <md-tabs md-dynamic-height md-border-bottom ng-if="tabview">
+                <md-tab label="Default settings">
+                    <md-content class="md-padding">
+
+                        <div layout="row" layout-xs="column">
+                            <md-input-container flex="50">
+                                <label>Serial</label>
+                                <input required name="serial" ng-model="smartpi.serial" ng-change="showSaveButton('default')">
+                                <div ng-messages="projectForm.serial.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                            <md-input-container flex="50">
+                                <label>Name</label>
+                                <input required name="name" ng-model="smartpi.name" ng-change="showSaveButton('default')">
+                                <div ng-messages="projectForm.name.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                        </div>
+
+                        <h2>Location</h2>
+                        <div layout="row" layout-xs="column">
+                            <md-input-container flex="25">
+                                <label>Lat</label>
+                                <input ng-model="smartpi.location.lat" ng-change="showSaveButton('default')">
+                            </md-input-container>
+                            <md-input-container flex="25">
+                                <label>Lng</label>
+                                <input ng-model="smartpi.location.lng" ng-change="showSaveButton('default')">
+                            </md-input-container>
+                        </div>
+                        <md-button ng-style="{'visibility': isDefaultSave?'visible':'hidden'}" class="md-raised md-primary" ng-click="saveConfiguration('default')">Save</md-button>
+                    </md-content>
+                </md-tab>
+                <md-tab label="Measurement">
+                    <md-content class="md-padding">
+                        <h2>Frequency</h2>
+                        <md-input-container style="margin-right: 10px;">
+                            <md-select ng-model="measurement.frequency" ng-change="showSaveButton('measurement')">
+                                <md-option value=50>50 Hz</md-option>
+                                <md-option value=60>60 Hz</md-option>
+                            </md-select>
+                        </md-input-container>
+
+                        <h2>Current</h2>
+                        <div layout="row" layout-xs="column">
+                            <md-switch ng-model="measurement.current.phase1.measure" aria-label="Current phase 1" flex="20" ng-change="showSaveButton('measurement')">
+                                Measure current phase 1
+                            </md-switch>
+                            <md-input-container style="margin-right: 50px;" flex="8">
+                                <label>Current Sensor</label>
+                                <md-select ng-model="measurement.current.phase1.sensor" ng-change="showSaveButton('measurement')">
+                                    <md-option value="YHDC_SCT013">YHDC_SCT013</md-option>
+                                    <md-option value="400A/033V">400A/0.33V</md-option>
+                                    <md-option value="X/1A">Current transformer 1A sec current</md-option>
+                                </md-select>
+                            </md-input-container>
+                            <md-input-container class="md-block" flex="8" ng-if="measurement.current.phase1.sensor=='X/1A'">
+                                <label>Secondary current [A]</label>
+                                <input name="PrimarycurrentPhase1" ng-model="measurement.current.phase1.primarycurrent" ng-change="showSaveButton('measurement')">
+                            </md-input-container>
+                            <md-switch ng-model="measurement.current.phase1.direction" aria-label="Current direction phase 1" flex="20" ng-change="showSaveButton('measurement')">
+                                Change current direction phase 1
+                            </md-switch>
+                        </div>
+                        <div layout="row" layout-xs="column">
+                            <md-switch ng-model="measurement.current.phase2.measure" aria-label="Current phase 2" flex="20" ng-change="showSaveButton('measurement')">
+                                Measure current phase 2
+                            </md-switch>
+                            <md-input-container style="margin-right: 50px;" flex="8">
+                                <label>Current Sensor</label>
+                                <md-select ng-model="measurement.current.phase2.sensor" ng-change="showSaveButton('measurement')">
+                                    <md-option value="YHDC_SCT013">YHDC_SCT013</md-option>
+                                    <md-option value="400A/033V">400A/0.33V</md-option>
+                                    <md-option ng-checked="swedishCheck" value="X/1A">Current transformer 1A sec current</md-option>
+                                </md-select>
+                            </md-input-container>
+                            <md-input-container class="md-block" flex="8" ng-if="measurement.current.phase2.sensor=='X/1A'">
+                                <label>Secondary current [A]</label>
+                                <input name="PrimarycurrentPhase2" ng-model="measurement.current.phase2.primarycurrent" ng-change="showSaveButton('measurement')">
+                            </md-input-container>
+                            <md-switch ng-model="measurement.current.phase2.direction" aria-label="Current direction phase 2" flex="20" ng-change="showSaveButton('measurement')">
+                                Change current direction phase 2
+                            </md-switch>
+                        </div>
+                        <div layout="row" layout-xs="column">
+                            <md-switch ng-model="measurement.current.phase3.measure" aria-label="Current phase 3" flex="20" ng-change="showSaveButton('measurement')">
+                                Measure current phase 3
+                            </md-switch>
+                            <md-input-container style="margin-right: 50px;" flex="8">
+                                <label>Current Sensor</label>
+                                <md-select ng-model="measurement.current.phase3.sensor" ng-change="showSaveButton('measurement')">
+                                    <md-option value="YHDC_SCT013">YHDC_SCT013</md-option>
+                                    <md-option value="400A/033V">400A/0.33V</md-option>
+                                    <md-option value="X/1A">Current transformer 1A sec current</md-option>
+                                </md-select>
+                            </md-input-container>
+                            <md-input-container class="md-block" flex="8" ng-if="measurement.current.phase3.sensor=='X/1A'">
+                                <label>Secondary current [A]</label>
+                                <input name="PrimarycurrentPhase3" ng-model="measurement.current.phase3.primarycurrent" ng-change="showSaveButton('measurement')">
+                            </md-input-container>
+                            <md-switch ng-model="measurement.current.phase3.direction" aria-label="Current direction phase 3" flex="20" ng-change="showSaveButton('measurement')">
+                                Change current direction phase 3
+                            </md-switch>
+                        </div>
+                        <div layout="row" layout-xs="column">
+                            <md-switch ng-model="measurement.current.phase4.measure" aria-label="Current neutral" flex="20" ng-change="showSaveButton('measurement')">
+                                Measure current neutral
+                            </md-switch>
+                            <md-input-container style="margin-right: 50px;" flex="8">
+                                <label>Current Sensor</label>
+                                <md-select ng-model="measurement.current.phase4.sensor" ng-change="showSaveButton('measurement')">
+                                    <md-option value="YHDC_SCT013">YHDC_SCT013</md-option>
+                                    <md-option value="X/1A">Current transformer 1A sec current</md-option>
+                                </md-select>
+                            </md-input-container>
+                            <md-input-container class="md-block" flex="8" ng-if="measurement.current.phase4.sensor=='X/1A'">
+                                <label>Secondary current [A]</label>
+                                <input name="PrimarycurrentPhase4" ng-model="measurement.current.phase4.primarycurrent" ng-change="showSaveButton('measurement')">
+                            </md-input-container>
+                            <md-switch ng-model="measurement.current.phase4.direction" aria-label="Current direction neutral" flex="20">
+                                Change current direction phase 4
+                            </md-switch>
+                        </div>
+                        <h2>Voltage</h2>
+                        <div layout="row" layout-xs="column">
+                            <md-switch ng-model="measurement.voltage.phase1.measure" aria-label="Voltage phase 1" flex="20" ng-change="showSaveButton('measurement')">
+                                Measure voltage phase 1
+                            </md-switch>
+                            <md-input-container class="md-block" flex="8">
+                                <label>Supposed</label>
+                                <input name="supposedVoltagePhase1" ng-model="measurement.voltage.phase1.suppose" ng-disabled="model.isDisabledVoltage1" ng-change="showSaveButton('measurement')">
+                            </md-input-container>
+                        </div>
+                        <div layout="row" layout-xs="column">
+                            <md-switch ng-model="measurement.voltage.phase2.measure" aria-label="Voltage phase 2" flex="20" ng-change="showSaveButton('measurement')">
+                                Measure voltage phase 2
+                            </md-switch>
+                            <md-input-container class="md-block" flex="8">
+                                <label>Supposed</label>
+                                <input name="supposedVoltagePhase2" ng-model="measurement.voltage.phase2.suppose" ng-disabled="model.isDisabledVoltage2" ng-change="showSaveButton('measurement')">
+                            </md-input-container>
+                        </div>
+                        <div layout="row" layout-xs="column">
+                            <md-switch ng-model="measurement.voltage.phase3.measure" aria-label="Voltage phase 3" flex="20" ng-change="showSaveButton('measurement')">
+                                Measure voltage phase 3
+                            </md-switch>
+                            <md-input-container class="md-block" flex="8">
+                                <label>Supposed</label>
+                                <input name="supposedVoltagePhase3" ng-model="measurement.voltage.phase3.suppose" ng-disabled="model.isDisabledVoltage3" ng-change="showSaveButton('measurement')">
+                            </md-input-container>
+                        </div>
+                        <md-button ng-style="{'visibility': isMeasurementSave?'visible':'hidden'}" class="md-raised md-primary" ng-click="saveConfiguration('measurement')">Save</md-button>
+                    </md-content>
+                </md-tab>
+                <md-tab label="MQTT">
+                    <md-content class="md-padding">
+                        <div layout="row" layout-xs="column">
+                            <md-switch ng-model="mqtt.enabled" aria-label="MQTT Enabled" flex="20" ng-change="showSaveButton('mqtt')">
+                                MQTT
+                            </md-switch>
+                        </div>
+
+                        <div layout="row" layout-xs="column">
+                            <md-input-container flex="25">
+                                <label>MQTT broker url</label>
+                                <input required name="mqttbrokerurl" ng-model="mqtt.brokerUrl" ng-change="showSaveButton('mqtt')">
+                                <div ng-messages="projectForm.mqttbrokerurl.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                            <md-input-container flex="10">
+                                <label>MQTT broker port</label>
+                                <input required name="mqttbrokerport" ng-model="mqtt.brokerPort" ng-pattern="/^[0-9]{4}$/" ng-change="showSaveButton('mqtt')">
+                                <div ng-messages="projectForm.mqttbrokerport.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                        </div>
+                        <div layout="row" layout-xs="column">
+                            <md-input-container flex="25">
+                                <label>MQTT username</label>
+                                <input required name="mqttusername" ng-model="mqtt.username" ng-change="showSaveButton('mqtt')">
+                                <div ng-messages="projectForm.mqttusername.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                            <md-input-container flex="25">
+                                <label>MQTT password</label>
+                                <input required name="mqttpassword" ng-model="mqtt.password" ng-change="showSaveButton('mqtt')">
+                                <div ng-messages="projectForm.mqttpassword.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                        </div>
+                        <div layout="row" layout-xs="column">
+                            <md-input-container flex="25">
+                                <label>MQTT topic</label>
+                                <input required name="mqtttopic" ng-model="mqtt.topic" ng-change="showSaveButton('mqtt')">
+                                <div ng-messages="projectForm.mqtttopic.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                        </div>
+                        <md-button ng-style="{'visibility': isMqttSave?'visible':'hidden'}" class="md-raised md-primary" ng-click="saveConfiguration('mqtt')">Save</md-button>
+                    </md-content>
+                </md-tab>
+                <md-tab label="FTP">
+                    <md-content class="md-padding">
+                        <div layout="row" layout-xs="column">
+                            <md-switch ng-model="ftp.enabled" aria-label="FTP Enabled" flex="20" ng-change="showSaveButton('ftp')">
+                                FTP
+                            </md-switch>
+                        </div>
+                        <div layout="row" layout-xs="column">
+                            <md-input-container flex="25">
+                                <label>Server url</label>
+                                <input required name="ftpserverurl" ng-model="ftp.serverUrl" ng-change="showSaveButton('ftp')">
+                                <div ng-messages="projectForm.ftpserverurl.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                            <md-input-container flex="25">
+                                <label>Path on server</label>
+                                <input ng-model="ftp.path" ng-change="showSaveButton('ftp')">
+                            </md-input-container>
+                        </div>
+                        <div layout="row" layout-xs="column">
+                            <md-input-container flex="25">
+                                <label>FTP username</label>
+                                <input required name="ftpusername" ng-model="ftp.username" ng-change="showSaveButton('ftp')">
+                                <div ng-messages="projectForm.ftpusername.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                            <md-input-container flex="25">
+                                <label>FTP password</label>
+                                <input required name="ftppassword" ng-model="ftp.password" ng-change="showSaveButton('ftp')">
+                                <div ng-messages="projectForm.ftppassword.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                        </div>
+                        <md-button ng-style="{'visibility': isFtpSave?'visible':'hidden'}" class="md-raised md-primary" ng-click="saveConfiguration('ftp')">Save</md-button>
+                    </md-content>
+                </md-tab>
+                <!-- <md-tab md-on-select="initNetworkConfig()" label="Network">
+                    <md-content class="md-padding">
+
+                        <div layout="row" layout-xs="column">
+                            <md-progress-circular ng-disabled="wifilistresponsed" md-mode="indeterminate"></md-progress-circular>
+                        </div>
+
+                        <div layout="row">
+                            <md-card class="md-default-theme">
+                                <md-toolbar layout="row">
+                                    <div class="md-toolbar-tools">
+                                        <h2>
+                                            <span>Active connections</span>
+                                        </h2>
+                                    </div>
+                                </md-toolbar>
+                                <md-table-container>
+                                    <table md-table md-row-select multiple md-progress="promise">
+                                        <thead md-head>
+                                            <tr md-row>
+                                                <th md-column>Name</th>
+                                                <th md-column>IP</th>
+                                                <th md-column></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody md-body>
+                                            <tr md-row md-auto-select ng-repeat="w in networklist | orderBy: w.name">
+                                                <td md-cell>{{w.name}}</td>
+                                                <td md-cell>
+                                                    <div>
+                                                        {{w.addrs}}
+                                                    </div>
+                                                </td>
+                                                <td md-cell>
+
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </md-table-container>
+                            </md-card>
+                        </div>
+
+                        <div layout="row">
+                            <md-card class="md-default-theme">
+                                <md-toolbar layout="row">
+                                    <div class="md-toolbar-tools">
+                                        <h2>
+                                            <span>Scanned wifi</span>
+                                        </h2>
+                                    </div>
+                                </md-toolbar>
+                                <md-table-container>
+                                    <table md-table md-row-select multiple md-progress="promise">
+                                        <thead md-head>
+                                            <tr md-row>
+                                                <th md-column></th>
+                                                <th md-column>Name / SSID</th>
+                                                <th md-column>Mode</th>
+                                                <th md-column md-numeric>Channel</th>
+                                                <th md-column>Security</th>
+                                                <th md-column md-numeric>RSSI</th>
+                                                <th md-column></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody md-body>
+                                            <tr md-row md-auto-select="true" md-select-id="name" md-auto-select ng-repeat="x in wifilist | orderBy: x.ssid">
+                                                <td md-cell>
+                                                    <div ng-if="x.rssi < 15 ">
+                                                        <md-icon class="md-avatar-icon " md-svg-icon="../img/icons/wifi_empty.svg "></md-icon>
+                                                    </div>
+                                                    <div ng-if="x.rssi>= 15 && x.rssi < 40 ">
+                                                        <md-icon class="md-avatar-icon " md-svg-icon="../img/icons/wifi_quarter.svg "></md-icon>
+                                                    </div>
+                                                    <div ng-if="x.rssi>= 40 && x.rssi < 90 ">
+                                                        <md-icon class="md-avatar-icon " md-svg-icon="../img/icons/wifi_half.svg "></md-icon>
+                                                    </div>
+                                                    <div ng-if="x.rssi>= 90">
+                                                        <md-icon class="md-avatar-icon" md-svg-icon="../img/icons/wifi_full.svg"></md-icon>
+                                                    </div>
+
+                                                </td>
+                                                <td md-cell>{{x.ssid}}</td>
+                                                <td md-cell>{{x.mode}}</td>
+                                                <td md-cell>{{x.channel}}</td>
+                                                <td md-cell>{{x.security}}</td>
+                                                <td md-cell>{{x.rssi}}</td>
+                                                <td md-cell>
+                                                    <md-button class="md-raised md-primary" ng-click="createWifi(x.ssid)">Add Wifi</md-button>
+                                                </td>
+                                                <td md-cell>
+                                                    <div ng-if="x.active==true">
+                                                        <md-icon ng-click="removeWifi(x.ssid)" class="md-avatar-icon " md-svg-icon="../img/icons/ic_delete_black_24px.svg"></md-icon>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </md-table-container>
+                            </md-card>
+
+
+                        </div>
+                    </md-content>
+                </md-tab> -->
+                <md-tab label="Mobile communication">
+                    <md-content class="md-padding">
+                        <div layout="row" layout-xs="column">
+                            <md-switch ng-model="mobile.enabled" aria-label="Mobile Enabled" flex="20" ng-change="showSaveButton('mobile')">
+                                Mobile communication
+                            </md-switch>
+                        </div>
+                        <div layout="row" layout-xs="column">
+                            <md-input-container flex="25">
+                                <label>APN</label>
+                                <input required name="mobileapn" ng-model="mobile.apn" ng-change="showSaveButton('mobile')">
+                                <div ng-messages="projectForm.mobileapn.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                            <md-input-container flex="25">
+                                <label>PIN</label>
+                                <input required name="mobilepin" ng-model="mobile.pin" ng-pattern="/^[0-9]{4}$/" ng-change="showSaveButton('mobile')">
+                                <div ng-messages="projectForm.mobilepin.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                        </div>
+                        <div layout="row" layout-xs="column">
+                            <md-input-container flex="25">
+                                <label>Mobile username</label>
+                                <input required name="mobileusername" ng-model="mobile.username" ng-change="showSaveButton('mobile')">
+                                <div ng-messages="projectForm.mobileusername.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                            <md-input-container flex="25">
+                                <label>Mobile password</label>
+                                <input required name="mobilepassword" ng-model="mobile.password" ng-change="showSaveButton('mobile')">
+                                <div ng-messages="projectForm.mobilepassword.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                        </div>
+                        <md-button ng-style="{'visibility': isMobileSave?'visible':'hidden'}" class="md-raised md-primary" ng-click="saveConfiguration('mobile')">Save</md-button>
+                    </md-content>
+                </md-tab>
+                <!-- <md-tab label="Userdata">
+                      <ng-form name="forms.userdataForm">
+                        <md-content class="md-padding">
+                          <div layout="row" layout-xs="column">
+                              <md-input-container flex="50">
+                                  <label>Username</label>
+                                  <input required name="userdataname" ng-model="userdata.name" ng-change="showSaveButton('userdata')">
+                                  <div ng-messages="forms.userdataForm.userdataname.$error">
+                                      <div ng-message="required">This is required.</div>
+                                  </div>
+                              </md-input-container>
+                          </div>
+                          <div layout="row" layout-xs="column">
+                              <md-input-container flex="50">
+                                  <label>Password</label>
+                                  <input type="password" name="userdatapasswd" ng-model="userdata.password">
+
+                              </md-input-container>
+                              <md-input-container flex="50">
+                                  <label>Password repeat</label>
+                                  <input type="password" name="userdatapasswdconfirm" ng-model="userdata.passwordconfirm" ng-pattern="{{userdata.password}}" ng-change="showSaveButton('userdata')">
+                                  <div ng-messages="forms.userdataForm.userdatapasswdconfirm.$error">
+                                      <div ng-message="pattern">Not equal!!!</div>
+                                  </div>
+                              </md-input-container>
+                          </div>
+
+                            <md-button ng-style="{'visibility': isUserdataSave?'visible':'hidden'}" class="md-raised md-primary" ng-click="saveConfiguration('expert')">Save</md-button>
+                        </md-content>
+                      </ng-form>
+                    </md-tab> -->
+                <md-tab label="Expert settings">
+                    <md-content class="md-padding">
+                        <h2>CSV</h2>
+                        <div layout="row" layout-xs="column">
+                            <md-input-container flex="15">
+                                <label>Decimalpoint</label>
+                                <input required name="decimalpoint" ng-model="csv.decimalpoint" ng-pattern="/^[,.]{1}$/" ng-change="showSaveButton('expert')">
+                                <div ng-messages="projectForm.decimalpoint.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                            <md-input-container flex="25">
+                                <label>Timeformat</label>
+                                <input required name="timeformat" ng-model="csv.timeformat" ng-change="showSaveButton('expert')">
+                                <div ng-messages="projectForm.timeformat.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                        </div>
+                        <h2>Database</h2>
+                        <div layout="row" layout-xs="column">
+                            <md-switch ng-model="database.database.enabled" aria-label="Database Enabled" flex="10" ng-change="showSaveButton('expert')">
+                                Database
+                            </md-switch>
+                            <md-input-container flex="25">
+                                <label>Database directory</label>
+                                <input required name="databasedir" ng-model="database.database.directory" ng-change="showSaveButton('expert')">
+                                <div ng-messages="projectForm.databasedir.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                        </div>
+                        <div layout="row" layout-xs="column">
+                            <md-switch ng-model="database.counter.enabled" aria-label="Counter Enabled" flex="10" ng-change="showSaveButton('expert')">
+                                Counter
+                            </md-switch>
+                            <md-input-container flex="25">
+                                <label>Counter directory</label>
+                                <input required name="counterdir" ng-model="database.counter.directory" ng-change="showSaveButton('expert')">
+                                <div ng-messages="projectForm.counterdir.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                        </div>
+                        <h2>Webserver</h2>
+                        <div layout="row" layout-xs="column">
+                            <md-input-container flex="10">
+                                <label>Port</label>
+                                <input required name="webserverport" ng-model="webserver.port" ng-pattern="/^[0-9]{4}$/" ng-change="showSaveButton('expert')">
+                                <div ng-messages="projectForm.webserverport.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                        </div>
+                        <md-button ng-style="{'visibility': isExpertSave?'visible':'hidden'}" class="md-raised md-primary" ng-click="saveConfiguration('expert')">Save</md-button>
+                    </md-content>
+                </md-tab>
+            </md-tabs>
+
+
+
+        </div>
+    </md-content>
+
+    <script src="js/jquery-2.1.4.js"></script>
+    <script src="js/main.js"></script>
+    <!-- Resource jQuery -->
+    <script src="bower_components/tether/dist/js/tether.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+    <!-- Metis Menu Plugin JavaScript -->
+    <script src="vendor/metisMenu/metisMenu.min.js"></script>
+    <script src="js/sb-admin-2.js"></script>
+    <script src="js/scripts.js"></script>
+</body>
+
+</html>

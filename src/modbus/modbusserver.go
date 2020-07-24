@@ -5,15 +5,16 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
+	"math"
+	"os"
+	"strconv"
+	"time"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/goburrow/serial"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 	"github.com/nDenerserve/mbserver"
 	log "github.com/sirupsen/logrus"
-	"math"
-	"os"
-	"strconv"
-	"time"
 )
 
 func init() {
@@ -86,13 +87,13 @@ func main() {
 				log.Debugf("EVENT! %#v\n", event)
 				time.Sleep(1 * time.Second)
 				file, err := os.Open(config.SharedDir + "/" + config.SharedFile)
-				smartpi.Checklog(err)
+				smartpi.smartpi.Checklog(err)
 				defer file.Close()
 				reader := csv.NewReader(bufio.NewReader(file))
 				reader.Comma = ';'
 				records, err := reader.Read()
 				log.Debugf("%v", records)
-				smartpi.Checklog(err)
+				smartpi.smartpi.Checklog(err)
 				if len(records) >= 19 {
 					for i := 1; i < len(records)-1; i++ {
 						registervalue = 0

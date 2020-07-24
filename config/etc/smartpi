@@ -13,6 +13,8 @@ lng=9.7167
 counter_enabled=true
 counterdir="/var/smartpi"
 database_enabled=true
+sqlite_enabled=true
+sqlite_dir="/var/smartpi/db"
 dir="/var/smartpi/db"
 influxuser="smartpi"
 influxpassword="smart4pi"
@@ -57,6 +59,7 @@ shared_dir="/var/run"
 shared_file="smartpi_values"
 port=1080
 docroot="/var/smartpi/www"
+app_key = "ew980723j35h97fqw4!234490#t33465"
 
 [mqtt]
 mqtt_enabled=0

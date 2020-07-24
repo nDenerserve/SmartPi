@@ -3,6 +3,12 @@
 	"ignore": "",
 	"package": [
 		{
+			"checksumSHA1": "1goP+3Al4QkxcmOUiO5C5Q3Dbag=",
+			"path": "github.com/auth0/go-jwt-middleware",
+			"revision": "d30d7b9ece63db46d9d3b6a6f9e2ab184fd8a6c5",
+			"revisionTime": "2020-05-07T19:14:22Z"
+		},
+		{
 			"checksumSHA1": "3KhDEC5MM0iyN+FsLfxpnvFVeuY=",
 			"path": "github.com/davecgh/go-spew/spew",
 			"revision": "d8f796af33cc11cb798c1aaeb27a4ebc5099927d",
@@ -13,6 +19,24 @@
 			"path": "github.com/davecgh/go-spew/spew/testdata",
 			"revision": "d8f796af33cc11cb798c1aaeb27a4ebc5099927d",
 			"revisionTime": "2018-08-30T19:11:22Z"
+		},
+		{
+			"checksumSHA1": "Sp7XYPUZzY2kRLy/3EjzcmqCl7g=",
+			"path": "github.com/dgrijalva/jwt-go",
+			"revision": "dc14462fd58732591c7fa58cc8496d6824316a82",
+			"revisionTime": "2020-01-07T01:32:13Z"
+		},
+		{
+			"checksumSHA1": "PPw7uxTwitSQ/0qN7k/sxV80UHI=",
+			"path": "github.com/dgrijalva/jwt-go/request",
+			"revision": "dc14462fd58732591c7fa58cc8496d6824316a82",
+			"revisionTime": "2020-01-07T01:32:13Z"
+		},
+		{
+			"checksumSHA1": "/ibMJtZibmIJwKZDKCOUZWSbf8M=",
+			"path": "github.com/dgrijalva/jwt-go/test",
+			"revision": "dc14462fd58732591c7fa58cc8496d6824316a82",
+			"revisionTime": "2020-01-07T01:32:13Z"
 		},
 		{
 			"checksumSHA1": "Fvywnf6n60AuXX8MUHRmaWcT7A0=",
@@ -45,6 +69,12 @@
 			"revisionTime": "2017-10-03T20:18:52Z"
 		},
 		{
+			"checksumSHA1": "yIkYzW7bzAD81zHyuCNmEj4+oxQ=",
+			"path": "github.com/gopherjs/gopherjs/js",
+			"revision": "fce0ec30dd00773d3fa974351d04ce2737b5c4d9",
+			"revisionTime": "2020-02-17T14:24:28Z"
+		},
+		{
 			"checksumSHA1": "2zG6JquRI6VtYsYW9xa++NIbYro=",
 			"path": "github.com/influxdata/influxdb1-client/models",
 			"revision": "8ff2fc3824fcb533795f9a2f233275f0bb18d6c5",
@@ -61,6 +91,12 @@
 			"path": "github.com/influxdata/influxdb1-client/v2",
 			"revision": "8ff2fc3824fcb533795f9a2f233275f0bb18d6c5",
 			"revisionTime": "2019-04-02T20:47:10Z"
+		},
+		{
+			"checksumSHA1": "BrYBe2DRifxETY14JmGBwL+m+mA=",
+			"path": "github.com/jtolds/gls",
+			"revision": "b4936e06046bbecbb94cae9c18127ebe510a2cb9",
+			"revisionTime": "2018-11-10T20:28:10Z"
 		},
 		{
 			"checksumSHA1": "WPHK2GUYafqOR7lNyaSYs74L/A8=",
@@ -105,6 +141,54 @@
 			"revisionTime": "2019-03-11T16:20:41Z"
 		},
 		{
+			"checksumSHA1": "jzw1Lwq8FEc5HRv8WY0y6WFyS0s=",
+			"path": "github.com/smartystreets/assertions",
+			"revision": "b63c46aebc02f130a052a785f4f27bc938f2a4f3",
+			"revisionTime": "2020-04-25T22:40:22Z"
+		},
+		{
+			"checksumSHA1": "a0CRqejGZH1LxO4G/DZsux7ULWA=",
+			"path": "github.com/smartystreets/assertions/internal/go-diff/diffmatchpatch",
+			"revision": "b63c46aebc02f130a052a785f4f27bc938f2a4f3",
+			"revisionTime": "2020-04-25T22:40:22Z"
+		},
+		{
+			"checksumSHA1": "JrN6RhIUuhUtKpXeIxT6Xotxuag=",
+			"path": "github.com/smartystreets/assertions/internal/go-render/render",
+			"revision": "b63c46aebc02f130a052a785f4f27bc938f2a4f3",
+			"revisionTime": "2020-04-25T22:40:22Z"
+		},
+		{
+			"checksumSHA1": "r6FauVdOTFnwYQgrKGFuWUbIAJE=",
+			"path": "github.com/smartystreets/assertions/internal/oglematchers",
+			"revision": "b63c46aebc02f130a052a785f4f27bc938f2a4f3",
+			"revisionTime": "2020-04-25T22:40:22Z"
+		},
+		{
+			"checksumSHA1": "KruSVtcmb7757L2vSsw//VDAN58=",
+			"path": "github.com/smartystreets/assertions/internal/unit",
+			"revision": "b63c46aebc02f130a052a785f4f27bc938f2a4f3",
+			"revisionTime": "2020-04-25T22:40:22Z"
+		},
+		{
+			"checksumSHA1": "GTaZK9mOnw4IyjAHQ8I9etGahqo=",
+			"path": "github.com/smartystreets/goconvey/convey",
+			"revision": "505e419363375c0dc132d3ac02632a4ee32199ca",
+			"revisionTime": "2019-07-31T23:36:26Z"
+		},
+		{
+			"checksumSHA1": "vl/QM6Xmv+vE4rSAW6TBFEZ2JT4=",
+			"path": "github.com/smartystreets/goconvey/convey/gotest",
+			"revision": "505e419363375c0dc132d3ac02632a4ee32199ca",
+			"revisionTime": "2019-07-31T23:36:26Z"
+		},
+		{
+			"checksumSHA1": "094RgTNhYB3pM1dgTIDnJCtezRU=",
+			"path": "github.com/smartystreets/goconvey/convey/reporting",
+			"revision": "505e419363375c0dc132d3ac02632a4ee32199ca",
+			"revisionTime": "2019-07-31T23:36:26Z"
+		},
+		{
 			"checksumSHA1": "HcKMR0fFgCLPhYzkwVVHgSGsezQ=",
 			"path": "github.com/stretchr/testify/assert",
 			"revision": "34c6fa2dc70986bccbbffcc6130f6920a924b075",
@@ -115,6 +199,12 @@
 			"path": "github.com/stretchr/testify/require",
 			"revision": "34c6fa2dc70986bccbbffcc6130f6920a924b075",
 			"revisionTime": "2019-03-04T09:57:49Z"
+		},
+		{
+			"checksumSHA1": "c7/sPniXlkmxG9pGpmMuMOKs30U=",
+			"path": "github.com/urfave/negroni",
+			"revision": "f4316798d5d3acd39eb6784301b19f27f471415f",
+			"revisionTime": "2019-10-11T21:34:38Z"
 		},
 		{
 			"checksumSHA1": "WhaDh0b4bEENP0xpHg167aWBG2s=",
