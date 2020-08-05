@@ -48,6 +48,8 @@ import (
 	"github.com/oleiade/reflections"
 )
 
+// var Config smartpi.Config
+
 type JSONMessage struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
@@ -67,20 +69,23 @@ type wifiSettings struct {
 	Key  string `json:"key"`
 }
 
-func ReadConfig(w http.ResponseWriter, r *http.Request) {
-	// vars := mux.Vars(r)
-	// name := vars["name"]
+func TestEndpoint(w http.ResponseWriter, req *http.Request) {
+	if err := json.NewEncoder(w).Encode(Config); err != nil {
+		panic(err)
+	}
+}
 
-	// user := context.Get(r,"Username")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	configuration := context.Get(r, "Config")
-	if err := json.NewEncoder(w).Encode(configuration.(*smartpi.Config)); err != nil {
+func ReadConfig(w http.ResponseWriter, req *http.Request) {
+	if err := json.NewEncoder(w).Encode(Config); err != nil {
 		panic(err)
 	}
 }
 
 func WriteConfig(w http.ResponseWriter, r *http.Request) {
 	var wc writeconfiguration
+
+	w.Header().Add("Content-Type", "application/json")
+	// w.Header().Add("Access-Control-Allow-Origin", "*")
 
 	b, _ := ioutil.ReadAll(r.Body)
 
@@ -466,7 +471,8 @@ func RemoveWifi(w http.ResponseWriter, r *http.Request) {
 	name := vars["name"]
 
 	err := network.RemoveWifi(name)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Add("Content-Type", "application/json")
+	// w.Header().Add("Access-Control-Allow-Origin", "*")
 	if err != nil {
 		log.Println(err)
 		if err := json.NewEncoder(w).Encode(JSONMessage{Code: 500, Message: "Internal Server Error"}); err != nil {

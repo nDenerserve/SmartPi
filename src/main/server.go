@@ -34,16 +34,16 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 	"github.com/nDenerserve/SmartPi/src/smartpi/smartpiapi"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/version"
+
+	"github.com/rs/cors"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 )
@@ -134,34 +134,34 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	return jwtMiddleware.Handler(next)
 }
 
-func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		authorizationHeader := req.Header.Get("authorization")
-		if authorizationHeader != "" {
-			bearerToken := strings.Split(authorizationHeader, " ")
-			if len(bearerToken) == 2 {
-				token, error := jwt.Parse(bearerToken[1], func(token *jwt.Token) (interface{}, error) {
-					if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-						return nil, fmt.Errorf("There was an error")
-					}
-					return []byte("secret"), nil
-				})
-				if error != nil {
-					json.NewEncoder(w).Encode(Exception{Message: error.Error()})
-					return
-				}
-				if token.Valid {
-					context.Set(req, "decoded", token.Claims)
-					next(w, req)
-				} else {
-					json.NewEncoder(w).Encode(Exception{Message: "Invalid authorization token"})
-				}
-			}
-		} else {
-			json.NewEncoder(w).Encode(Exception{Message: "An authorization header is required"})
-		}
-	})
-}
+// func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
+// 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+// 		authorizationHeader := req.Header.Get("authorization")
+// 		if authorizationHeader != "" {
+// 			bearerToken := strings.Split(authorizationHeader, " ")
+// 			if len(bearerToken) == 2 {
+// 				token, error := jwt.Parse(bearerToken[1], func(token *jwt.Token) (interface{}, error) {
+// 					if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+// 						return nil, fmt.Errorf("There was an error")
+// 					}
+// 					return []byte("secret"), nil
+// 				})
+// 				if error != nil {
+// 					json.NewEncoder(w).Encode(Exception{Message: error.Error()})
+// 					return
+// 				}
+// 				if token.Valid {
+// 					context.Set(req, "decoded", token.Claims)
+// 					next(w, req)
+// 				} else {
+// 					json.NewEncoder(w).Encode(Exception{Message: "Invalid authorization token"})
+// 				}
+// 			}
+// 		} else {
+// 			json.NewEncoder(w).Encode(Exception{Message: "An authorization header is required"})
+// 		}
+// 	})
+// }
 
 func init() {
 	prometheus.MustRegister(version.NewCollector("smartpi"))
@@ -196,6 +196,11 @@ func main() {
 
 	fmt.Println("SmartPi server started")
 
+	corsWrapper := cors.New(cors.Options{
+		AllowedMethods: []string{"GET", "POST"},
+		AllowedHeaders: []string{"Content-Type", "Origin", "Accept", "*"},
+	})
+
 	r := mux.NewRouter()
 	r.HandleFunc("/api/{phaseId}/{valueId}/now", smartpiapi.ServeMomentaryValues)
 	r.HandleFunc("/api/{phaseId}/{valueId}/now/{format}", smartpiapi.ServeMomentaryValues)
@@ -208,7 +213,8 @@ func main() {
 	r.HandleFunc("/api/csv/from/{fromDate}/to/{toDate}", smartpiapi.ServeCSVValues)
 	r.HandleFunc("/api/version", getSoftwareInformations)
 	r.HandleFunc("/api/login", smartpiapi.Login).Methods("POST")
-	// r.HandleFunc("/api/config/read", AuthMiddleware(http.HandlerFunc(smartpiapi.ReadConfig(config)))).Methods("GET")
+	r.HandleFunc("/api/config/test", smartpiapi.TestEndpoint).Methods("GET")
+	r.Handle("/api/config/read", AuthMiddleware(http.HandlerFunc(smartpiapi.ReadConfig))).Methods("GET")
 	// r.HandleFunc("/api/config/write", AuthMiddleware(http.HandlerFunc(smartpiapi.WriteConfig(config)))).Methods("POST")
 	// r.HandleFunc("/api/config/user/read", AuthMiddleware(http.HandlerFunc(smartpiapi.ReadUserData(config)))).Methods("GET")
 	// r.HandleFunc("/api/config/network/scanwifi", AuthMiddleware(http.HandlerFunc(smartpiapi.WifiList(config)))).Methods("GET")
@@ -224,7 +230,7 @@ func main() {
 	r.HandleFunc("/api/v2/csv/from/{fromDate}/to/{toDate}", smartpiapi.ServeInfluxCSVValues)
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(config.DocRoot)))
 	http.Handle("/metrics", prometheus.Handler())
-	http.Handle("/", prometheus.InstrumentHandler("smartpi", r))
+	http.Handle("/", prometheus.InstrumentHandler("smartpi", corsWrapper.Handler(r)))
 	// log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.WebserverPort), nil))
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(8910), nil))
 }

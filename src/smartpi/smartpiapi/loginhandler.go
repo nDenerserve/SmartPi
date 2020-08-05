@@ -34,7 +34,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	var ret loginReturn
 
 	w.Header().Add("Content-Type", "application/json")
-	w.Header().Add("Access-Control-Allow-Origin", "*")
+	// w.Header().Add("Access-Control-Allow-Origin", "*")
 	r.ParseForm()
 
 	b, err := ioutil.ReadAll(r.Body)

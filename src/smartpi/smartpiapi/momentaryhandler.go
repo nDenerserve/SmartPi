@@ -57,6 +57,9 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 	var tempPhase *smartpi.TPhase
 	var tempDataset *smartpi.TDataset
 
+	w.Header().Set("Content-Type", "application/json")
+	// w.Header().Add("Access-Control-Allow-Origin", "*")
+
 	format := "json"
 	vars := mux.Vars(r)
 	phaseId := vars["phaseId"]
@@ -388,7 +391,6 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 		Ipaddress:       network.GetLocalIP(),
 		Datasets:        datasets,
 	}
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if format == "xml" {
 		// XML output of request
 		type response struct {
