@@ -46,7 +46,6 @@ import (
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 )
 
@@ -158,8 +157,10 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 
 			// Update SQLlite database.
 			if config.DatabaseEnabled {
-				updateSQLiteDatabase(config, accumulator, consumedWattHourBalanced60s, producedWattHourBalanced60s)
 				updateInfluxDatabase(config, accumulator, consumedWattHourBalanced60s, producedWattHourBalanced60s)
+			}
+			if config.SQLLiteEnabled {
+				updateSQLiteDatabase(config, accumulator, consumedWattHourBalanced60s, producedWattHourBalanced60s)
 			}
 
 			consumedCounter = 0.0
@@ -267,7 +268,7 @@ func main() {
 
 	go pollSmartPi(config, device)
 
-	http.Handle("/metrics", promhttp.Handler())
+	http.Handle("/metrics", prometheus.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>
             <head><title>SmartPi Readout Metrics Server</title></head>
