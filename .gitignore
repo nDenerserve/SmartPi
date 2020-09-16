@@ -15,3 +15,6 @@ src/snippets
 
 go.mod.bak
 go.sum.bak
+
+# Ignore vendor dir with go modules.
+vendor

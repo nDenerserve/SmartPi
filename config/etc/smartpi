@@ -18,6 +18,7 @@ sqlite_dir="/var/smartpi/db"
 dir="/var/smartpi/db"
 influxuser="smartpi"
 influxpassword="smart4pi"
+influxdatabase="http://localhost:8086"
 
 [device]
 samplerate=1

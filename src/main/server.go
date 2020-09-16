@@ -43,6 +43,8 @@ import (
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 	"github.com/nDenerserve/SmartPi/src/smartpi/smartpiapi"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
@@ -87,6 +89,15 @@ var etagHeaders = []string{
 	"If-Range",
 	"If-Unmodified-Since",
 }
+
+var responseCount = promauto.NewCounterVec(
+	prometheus.CounterOpts{
+		Namespace: "smartpi",
+		Name:      "responses_total",
+		Help:      "Total HTTP requests processed by the server, excluding scrapes.",
+	},
+	[]string{"code", "method"},
+)
 
 func NoCache(h http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
@@ -223,8 +234,7 @@ func main() {
 	r.HandleFunc("/api/v2/version", getSoftwareInformations)
 	r.HandleFunc("/api/v2/csv/from/{fromDate}/to/{toDate}", smartpiapi.ServeInfluxCSVValues)
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(config.DocRoot)))
-	http.Handle("/metrics", prometheus.Handler())
-	http.Handle("/", prometheus.InstrumentHandler("smartpi", r))
-	// log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.WebserverPort), nil))
-	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(8910), nil))
+	http.Handle("/metrics", promhttp.Handler())
+	http.Handle("/", promhttp.InstrumentHandlerCounter(responseCount, r))
+	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.WebserverPort), nil))
 }
