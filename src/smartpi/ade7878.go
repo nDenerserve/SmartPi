@@ -117,30 +117,30 @@ type ADE7878Readout struct {
 }
 
 type CTFactors struct {
-	CurrentResistor, CurrentClampFactor, OffsetCurrent, OffsetVoltage, PowerCorrectionFactor float64
+	CurrentResistor, CurrentClampFactor, CurrentRmsOffset, VoltageRmsOffset, PowerCorrectionFactor float64
 }
 
 var (
 	CTTypes = map[string]CTFactors{
 		"YHDC_SCT013": CTFactors{
-			CurrentResistor:       7.07107,
+			CurrentResistor:       7.5,
 			CurrentClampFactor:    0.05,
-			OffsetCurrent:         1.049084906,
-			OffsetVoltage:         1.0,
+			CurrentRmsOffset:      1.032,
+			VoltageRmsOffset:      1.0,
 			PowerCorrectionFactor: 0.019413,
 		},
 		"400A/033V": CTFactors{
 			CurrentResistor:       1.0,
 			CurrentClampFactor:    0.08325,
-			OffsetCurrent:         1.010725941,
-			OffsetVoltage:         1.0,
+			CurrentRmsOffset:      1.010725941,
+			VoltageRmsOffset:      1.0,
 			PowerCorrectionFactor: 0.042929856,
 		},
 		"X/1A": CTFactors{
 			CurrentResistor:       0.33,
 			CurrentClampFactor:    1.0,
-			OffsetCurrent:         1.010725941,
-			OffsetVoltage:         1.0,
+			CurrentRmsOffset:      1.010725941,
+			VoltageRmsOffset:      1.0,
 			PowerCorrectionFactor: 0.043861,
 		},
 	}
@@ -369,6 +369,26 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 	// 	panic(err)
 	// }
 
+	err = WriteRegister(d, "AIRMSOS", 0x0F, 0xFD, 0x40, 0xE0)
+	if err != nil {
+		panic(err)
+	}
+
+	err = WriteRegister(d, "BIRMSOS", 0x0F, 0xFD, 0x40, 0xE0)
+	if err != nil {
+		panic(err)
+	}
+
+	err = WriteRegister(d, "CIRMSOS", 0x0F, 0xFD, 0x40, 0xE0)
+	if err != nil {
+		panic(err)
+	}
+
+	err = WriteRegister(d, "NIRMSOS", 0x0F, 0xFD, 0x40, 0xE0)
+	if err != nil {
+		panic(err)
+	}
+
 	// Line cycle mode
 	// 0xE702 LCYCMODE
 	err = WriteRegister(d, "LCYCMODE", 0x0F)
@@ -432,7 +452,6 @@ func ReadCurrent(d *i2c.Device, c *Config, phase Phase) (current float64) {
 	if c.MeasureCurrent[phase] {
 		outcome := float64(DeviceFetchInt(d, 4, command))
 		cr := CTTypes[c.CTType[phase]].CurrentResistor
-
 		var ccf float64
 		if c.CTType[phase] == "YHDC_SCT013" {
 			ccf = CTTypes[c.CTType[phase]].CurrentClampFactor
@@ -442,26 +461,26 @@ func ReadCurrent(d *i2c.Device, c *Config, phase Phase) (current float64) {
 			ccf = 1.0 / (float64(c.CTTypePrimaryCurrent[phase]) / 100.0)
 		}
 		// fmt.Println("CalibrationfactorI: ", phase, "  ", c.CalibrationfactorI[phase])
-		oc := CTTypes[c.CTType[phase]].OffsetCurrent
-		outcome = outcome - 7300
-		current = ((((outcome * 0.3535) / rmsFactor) / cr) / ccf) * 100.0 * oc * c.CalibrationfactorI[phase]
+		oc := CTTypes[c.CTType[phase]].CurrentRmsOffset
+		// outcome = outcome - 7300
+		current = (((((outcome * 0.3535) / rmsFactor) / cr) / ccf) * 100.0 * oc * c.CalibrationfactorI[phase])
 
 		//calibration curves
-		if c.CTType[phase] == "YHDC_SCT013" {
-			if math.Abs(current) < 70.0 {
-				calibrationCurveFactorCurrent = -7.27989E-015*math.Pow(current, 8) + 0.00000000000264457*math.Pow(current, 7) - 0.000000000382397*math.Pow(current, 6) + 0.0000000275717*math.Pow(current, 5) - 0.0000009815*math.Pow(current, 4) + 0.0000112024*math.Pow(current, 3) + 0.00028008*math.Pow(current, 2) - 0.00961108*current + 1.0153903
-			} else {
-				calibrationCurveFactorCurrent = 0.925
-			}
-		} else if c.CTType[phase] == "400A/033V" {
-			if math.Abs(current) < 100.0 {
-				calibrationCurveFactorCurrent = 5.71575E-024*math.Pow(current, 12) - 8.1042E-021*math.Pow(current, 11) + 5.0668E-018*math.Pow(current, 10) - 1.83812E-015*math.Pow(current, 9) + 0.000000000000428455*math.Pow(current, 8) - 0.0000000000671328*math.Pow(current, 7) + 0.00000000718947*math.Pow(current, 6) - 0.000000524868*math.Pow(current, 5) + 0.0000256108*math.Pow(current, 4) - 0.000803211*math.Pow(current, 3) + 0.0151548*math.Pow(current, 2) - 0.153833*current + 1.69799
-			} else {
-				calibrationCurveFactorCurrent = 1.02
-			}
-		} else {
-			calibrationCurveFactorCurrent = 1.0
-		}
+		// if c.CTType[phase] == "YHDC_SCT013" {
+		// 	if math.Abs(current) < 70.0 {
+		// 		calibrationCurveFactorCurrent = 0.004591484821337*math.Log1p(current-1) + 0.982318924023796
+		// 	} else {
+		// 		calibrationCurveFactorCurrent = 1.00246306639231
+		// 	}
+		// } else if c.CTType[phase] == "400A/033V" {
+		// 	if math.Abs(current) < 100.0 {
+		// 		calibrationCurveFactorCurrent = -0.002946348708069*math.Log1p(current-1) + 1.04752234441994
+		// 	} else {
+		// 		calibrationCurveFactorCurrent = 1.035
+		// 	}
+		// } else {
+		// 	calibrationCurveFactorCurrent = 1.0
+		// }
 		current = current * calibrationCurveFactorCurrent
 	} else {
 		current = 0.0
@@ -526,27 +545,27 @@ func ReadActiveWatts(d *i2c.Device, c *Config, phase Phase) (watts float64) {
 	}
 
 	//calibration curves
-	if c.CTType[phase] == "YHDC_SCT013" {
+	// if c.CTType[phase] == "YHDC_SCT013" {
 
-		if math.Abs(watts) < 3000.0 {
-			calibrationCurveFactorPower = 2.82184E-22*math.Pow(watts, 6) - 4.0864E-18*math.Pow(watts, 5) + 2.194E-14*math.Pow(watts, 4) - 5.350181E-11*math.Pow(watts, 3) + 5.327381E-08*math.Pow(watts, 2) + 1.088465E-05*watts + 1.019201527
-			fmt.Print("CalibrationCurve: ")
-			fmt.Println(calibrationCurveFactorPower)
-		} else {
-			calibrationCurveFactorPower = 1.07
-			fmt.Print("CalibrationCurve2: ")
-			fmt.Println(calibrationCurveFactorPower)
-		}
+	// 	if math.Abs(watts) < 18000.0 {
+	// 		calibrationCurveFactorPower = 0.001855740652181*math.Log1p(watts-1) + 1.01456039967075
+	// 		fmt.Print("CalibrationCurve: ")
+	// 		fmt.Println(calibrationCurveFactorPower)
+	// 	} else {
+	// 		calibrationCurveFactorPower = 0.994460375354525
+	// 		fmt.Print("CalibrationCurve2: ")
+	// 		fmt.Println(calibrationCurveFactorPower)
+	// 	}
 
-	} else if c.CTType[phase] == "400A/033V" {
-		if math.Abs(watts) < 530000.0 {
-			calibrationCurveFactorPower = -7.41965E-53*math.Pow(watts, 12) + 2.57464E-47*math.Pow(watts, 11) - 3.95291E-42*math.Pow(watts, 10) + 3.53472E-37*math.Pow(watts, 9) - 2.03928E-32*math.Pow(watts, 8) + 7.94532E-28*math.Pow(watts, 7) - 2.12714E-23*math.Pow(watts, 6) + 3.9069E-19*math.Pow(watts, 5) - 4.83455E-15*math.Pow(watts, 4) + 3.8866E-11*math.Pow(watts, 3) - 1.90871E-07*math.Pow(watts, 2) + 0.000515379*watts + 0.392558
-		} else {
-			calibrationCurveFactorPower = 1.0
-		}
-	} else {
-		calibrationCurveFactorPower = 1.0
-	}
+	// } else if c.CTType[phase] == "400A/033V" {
+	// 	if math.Abs(watts) < 530000.0 {
+	// 		calibrationCurveFactorPower = -0.004876896009306*math.Log1p(watts-1) + 1.07274818852909
+	// 	} else {
+	// 		calibrationCurveFactorPower = 1.01983381
+	// 	}
+	// } else {
+	// 	calibrationCurveFactorPower = 1.0
+	// }
 
 	watts = watts * calibrationCurveFactorPower
 
