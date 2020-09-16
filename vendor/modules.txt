@@ -1,4 +1,5 @@
 # github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973
+github.com/bgentry/speakeasy v0.1.0
 github.com/beorn7/perks/quantile
 # github.com/eclipse/paho.mqtt.golang v1.1.1
 github.com/eclipse/paho.mqtt.golang
