@@ -4,7 +4,7 @@ version: 2.1
 executors:
   golang:
     docker:
-    - image: circleci/golang:1.14
+    - image: circleci/golang:1.15
 
 jobs:
   build:
@@ -13,6 +13,7 @@ jobs:
     steps:
     - checkout
     - run: sudo apt-get install -y libpam0g-dev
+    - run: go mod download
     - run: make style
     - run: make
     - store_artifacts:

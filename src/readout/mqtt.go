@@ -6,15 +6,15 @@ import (
 	"strconv"
 	"time"
 
-	MQTT "github.com/eclipse/paho.mqtt.golang"
+	"github.com/eclipse/paho.mqtt.golang"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 	log "github.com/sirupsen/logrus"
 )
 
-func newMQTTClient(c *smartpi.Config) (mqttclient MQTT.Client) {
+func newMQTTClient(c *smartpi.Config) (mqttclient mqtt.Client) {
 	log.Debugf("Connecting to MQTT broker at %s", (c.MQTTbroker + ":" + c.MQTTbrokerport))
 	//create a MQTTClientOptions struct setting the broker address, clientid, user and password
-	opts := MQTT.NewClientOptions().AddBroker("tcp://" + c.MQTTbroker + ":" + c.MQTTbrokerport)
+	opts := mqtt.NewClientOptions().AddBroker("tcp://" + c.MQTTbroker + ":" + c.MQTTbrokerport)
 	opts.SetClientID("SmartPi-" + c.Name)
 	opts.SetUsername(c.MQTTuser)
 	opts.SetPassword(c.MQTTpass)
@@ -24,7 +24,7 @@ func newMQTTClient(c *smartpi.Config) (mqttclient MQTT.Client) {
 	opts.SetKeepAlive(2 * time.Second) // Min value has to be 2
 	opts.SetMaxReconnectInterval(3 * time.Second)
 	//create and start a client using the above ClientOptions
-	mqttclient = MQTT.NewClient(opts)
+	mqttclient = mqtt.NewClient(opts)
 	if mqtttoken := mqttclient.Connect(); mqtttoken.Wait() && mqtttoken.Error() != nil {
 		//panic(mqtttoken.Error())
 		log.Debugf("Connecting to MQTT broker failed. %q", mqtttoken.Error())
@@ -32,7 +32,7 @@ func newMQTTClient(c *smartpi.Config) (mqttclient MQTT.Client) {
 	return mqttclient
 }
 
-func publishMQTT(m MQTT.Client, status *bool, t string, v float64) bool {
+func publishMQTT(m mqtt.Client, status *bool, t string, v float64) bool {
 	if *status {
 		log.Debugf("  -> ", t, ":", v)
 		token := m.Publish(t, 0, false, strconv.FormatFloat(v, 'f', 2, 32))
@@ -49,7 +49,7 @@ func publishMQTT(m MQTT.Client, status *bool, t string, v float64) bool {
 	return false
 }
 
-func publishMQTTReadouts(c *smartpi.Config, mqttclient MQTT.Client, values *smartpi.ADE7878Readout, accuvalues *smartpi.ReadoutAccumulator) {
+func publishMQTTReadouts(c *smartpi.Config, mqttclient mqtt.Client, values *smartpi.ADE7878Readout, accuvalues *smartpi.ReadoutAccumulator) {
 	var pTotalBalanced float64
 	//[basetopic]/[node]/[keyname]
 	// Let's try to (re-)connect if MQTT connection was lost.
@@ -83,7 +83,7 @@ func publishMQTTReadouts(c *smartpi.Config, mqttclient MQTT.Client, values *smar
 	}
 }
 
-func publishMQTTCalculations(c *smartpi.Config, mqttclient MQTT.Client, ec1m float64, ep1m float64, cc float64, pc float64) {
+func publishMQTTCalculations(c *smartpi.Config, mqttclient mqtt.Client, ec1m float64, ep1m float64, cc float64, pc float64) {
 
 	//[basetopic]/[node]/[keyname]
 	// Let's try to (re-)connect if MQTT connection was lost.

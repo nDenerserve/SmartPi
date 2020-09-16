@@ -43,7 +43,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 
 	//import the Paho Go MQTT library
-	MQTT "github.com/eclipse/paho.mqtt.golang"
+	"github.com/eclipse/paho.mqtt.golang"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -75,7 +75,7 @@ func makeReadout() (r smartpi.ADE7878Readout) {
 }
 
 func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
-	var mqttclient MQTT.Client
+	var mqttclient mqtt.Client
 	var consumed, produced, wattHourBalanced, consumedWattHourBalanced60s, producedWattHourBalanced60s float64
 	var p smartpi.Phase
 	var consumedCounter, producedCounter float64
