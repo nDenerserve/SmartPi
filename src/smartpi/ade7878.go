@@ -55,6 +55,9 @@ const (
 	PhaseN
 )
 
+var calibrationCurveFactorCurrent = 1.0
+var calibrationCurveFactorPower = 1.0
+
 func (p Phase) String() string {
 	switch p {
 	case PhaseA:
@@ -83,6 +86,20 @@ func (p Phase) PhaseNumber() string {
 	panic("Unreachable")
 }
 
+func PhaseNameFromNumber(p string) Phase {
+	switch p {
+	case "1":
+		return PhaseA
+	case "2":
+		return PhaseB
+	case "3":
+		return PhaseC
+	case "4":
+		return PhaseN
+	}
+	panic("Unreachable")
+}
+
 var MainPhases = []Phase{PhaseA, PhaseB, PhaseC}
 
 type Readings map[Phase]float64
@@ -100,23 +117,30 @@ type ADE7878Readout struct {
 }
 
 type CTFactors struct {
-	CurrentResistor, CurrentClampFactor, OffsetCurrent, OffsetVoltage, PowerCorrectionFactor float64
+	CurrentResistor, CurrentClampFactor, CurrentRmsOffset, VoltageRmsOffset, PowerCorrectionFactor float64
 }
 
 var (
 	CTTypes = map[string]CTFactors{
 		"YHDC_SCT013": CTFactors{
-			CurrentResistor:       7.07107,
+			CurrentResistor:       7.5,
 			CurrentClampFactor:    0.05,
-			OffsetCurrent:         1.049084906,
-			OffsetVoltage:         1.0,
+			CurrentRmsOffset:      1.032,
+			VoltageRmsOffset:      1.0,
 			PowerCorrectionFactor: 0.019413,
+		},
+		"400A/033V": CTFactors{
+			CurrentResistor:       1.0,
+			CurrentClampFactor:    0.08325,
+			CurrentRmsOffset:      1.010725941,
+			VoltageRmsOffset:      1.0,
+			PowerCorrectionFactor: 0.042929856,
 		},
 		"X/1A": CTFactors{
 			CurrentResistor:       0.33,
 			CurrentClampFactor:    1.0,
-			OffsetCurrent:         1.010725941,
-			OffsetVoltage:         1.0,
+			CurrentRmsOffset:      1.010725941,
+			VoltageRmsOffset:      1.0,
 			PowerCorrectionFactor: 0.043861,
 		},
 	}
@@ -160,9 +184,10 @@ func resetADE7878() {
 		panic(err)
 	}
 	defer p.Close()
+	p.Write(rpi.HIGH)
+	time.Sleep(3 * time.Second)
 	p.Write(rpi.LOW)
 	time.Sleep(time.Second)
-	p.Write(rpi.HIGH)
 }
 
 func initPiForADE7878() {
@@ -173,6 +198,7 @@ func initPiForADE7878() {
 	   }
 	   defer p.Close()
 	   p.Write(rpi.HIGH)*/
+
 }
 
 func WriteRegister(d *i2c.Device, register string, data ...byte) (err error) {
@@ -180,6 +206,22 @@ func WriteRegister(d *i2c.Device, register string, data ...byte) (err error) {
 }
 
 func InitADE7878(c *Config) (*i2c.Device, error) {
+
+	// **** Opening and closing the i2c fixes an error that incorrect values are displayed on pahse 2 and 3 when the program is restarted.
+
+	d, erre := i2c.Open(&i2c.Devfs{Dev: c.I2CDevice}, ADE7878_ADDR)
+	if erre != nil {
+		panic(erre)
+	}
+
+	time.Sleep(time.Second)
+
+	erre = d.Close()
+	if erre != nil {
+		panic(erre)
+	}
+
+	// **** END of fix
 
 	d, err := i2c.Open(&i2c.Devfs{Dev: c.I2CDevice}, ADE7878_ADDR)
 	if err != nil {
@@ -327,6 +369,26 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 	// 	panic(err)
 	// }
 
+	err = WriteRegister(d, "AIRMSOS", 0x0F, 0xFD, 0x40, 0xE0)
+	if err != nil {
+		panic(err)
+	}
+
+	err = WriteRegister(d, "BIRMSOS", 0x0F, 0xFD, 0x40, 0xE0)
+	if err != nil {
+		panic(err)
+	}
+
+	err = WriteRegister(d, "CIRMSOS", 0x0F, 0xFD, 0x40, 0xE0)
+	if err != nil {
+		panic(err)
+	}
+
+	err = WriteRegister(d, "NIRMSOS", 0x0F, 0xFD, 0x40, 0xE0)
+	if err != nil {
+		panic(err)
+	}
+
 	// Line cycle mode
 	// 0xE702 LCYCMODE
 	err = WriteRegister(d, "LCYCMODE", 0x0F)
@@ -390,17 +452,36 @@ func ReadCurrent(d *i2c.Device, c *Config, phase Phase) (current float64) {
 	if c.MeasureCurrent[phase] {
 		outcome := float64(DeviceFetchInt(d, 4, command))
 		cr := CTTypes[c.CTType[phase]].CurrentResistor
-
 		var ccf float64
 		if c.CTType[phase] == "YHDC_SCT013" {
+			ccf = CTTypes[c.CTType[phase]].CurrentClampFactor
+		} else if c.CTType[phase] == "400A/033V" {
 			ccf = CTTypes[c.CTType[phase]].CurrentClampFactor
 		} else {
 			ccf = 1.0 / (float64(c.CTTypePrimaryCurrent[phase]) / 100.0)
 		}
 		// fmt.Println("CalibrationfactorI: ", phase, "  ", c.CalibrationfactorI[phase])
-		oc := CTTypes[c.CTType[phase]].OffsetCurrent
-		outcome = outcome - 7300
-		current = ((((outcome * 0.3535) / rmsFactor) / cr) / ccf) * 100.0 * oc * c.CalibrationfactorI[phase]
+		oc := CTTypes[c.CTType[phase]].CurrentRmsOffset
+		// outcome = outcome - 7300
+		current = (((((outcome * 0.3535) / rmsFactor) / cr) / ccf) * 100.0 * oc * c.CalibrationfactorI[phase])
+
+		//calibration curves
+		// if c.CTType[phase] == "YHDC_SCT013" {
+		// 	if math.Abs(current) < 70.0 {
+		// 		calibrationCurveFactorCurrent = 0.004591484821337*math.Log1p(current-1) + 0.982318924023796
+		// 	} else {
+		// 		calibrationCurveFactorCurrent = 1.00246306639231
+		// 	}
+		// } else if c.CTType[phase] == "400A/033V" {
+		// 	if math.Abs(current) < 100.0 {
+		// 		calibrationCurveFactorCurrent = -0.002946348708069*math.Log1p(current-1) + 1.04752234441994
+		// 	} else {
+		// 		calibrationCurveFactorCurrent = 1.035
+		// 	}
+		// } else {
+		// 	calibrationCurveFactorCurrent = 1.0
+		// }
+		current = current * calibrationCurveFactorCurrent
 	} else {
 		current = 0.0
 	}
@@ -447,19 +528,46 @@ func ReadActiveWatts(d *i2c.Device, c *Config, phase Phase) (watts float64) {
 	var pcf float64
 	if c.CTType[phase] == "YHDC_SCT013" {
 		pcf = 1.0
+	} else if c.CTType[phase] == "400A/033V" {
+		pcf = 0.5
 	} else {
 		pcf = 200.0 / (float64(c.CTTypePrimaryCurrent[phase]))
 	}
 
 	outcome := float64(DeviceFetchInt(d, 4, command))
 	if c.MeasureCurrent[phase] {
-		watts = outcome * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf
+		watts = outcome * calibrationCurveFactorCurrent * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf
 	} else {
 		watts = 0.0
 	}
 	if c.CurrentDirection[phase] {
 		watts *= -1
 	}
+
+	//calibration curves
+	// if c.CTType[phase] == "YHDC_SCT013" {
+
+	// 	if math.Abs(watts) < 18000.0 {
+	// 		calibrationCurveFactorPower = 0.001855740652181*math.Log1p(watts-1) + 1.01456039967075
+	// 		fmt.Print("CalibrationCurve: ")
+	// 		fmt.Println(calibrationCurveFactorPower)
+	// 	} else {
+	// 		calibrationCurveFactorPower = 0.994460375354525
+	// 		fmt.Print("CalibrationCurve2: ")
+	// 		fmt.Println(calibrationCurveFactorPower)
+	// 	}
+
+	// } else if c.CTType[phase] == "400A/033V" {
+	// 	if math.Abs(watts) < 530000.0 {
+	// 		calibrationCurveFactorPower = -0.004876896009306*math.Log1p(watts-1) + 1.07274818852909
+	// 	} else {
+	// 		calibrationCurveFactorPower = 1.01983381
+	// 	}
+	// } else {
+	// 	calibrationCurveFactorPower = 1.0
+	// }
+
+	watts = watts * calibrationCurveFactorPower
 
 	return watts
 }
@@ -480,13 +588,15 @@ func ReadActiveEnergy(d *i2c.Device, c *Config, phase Phase) (energy float64) {
 	var pcf float64
 	if c.CTType[phase] == "YHDC_SCT013" {
 		pcf = 1.0
+	} else if c.CTType[phase] == "400A/033V" {
+		pcf = 0.5
 	} else {
 		pcf = 200.0 / (float64(c.CTTypePrimaryCurrent[phase]))
 	}
 
 	outcome := float64(DeviceFetchInt(d, 4, command))
 
-	energy = outcome / pcf
+	energy = outcome * calibrationCurveFactorCurrent * calibrationCurveFactorPower / pcf
 
 	// if c.CurrentDirection[phase] {
 	// 	watts *= -1
@@ -563,13 +673,15 @@ func ReadApparentPower(d *i2c.Device, c *Config, phase Phase) float64 {
 	var pcf float64
 	if c.CTType[phase] == "YHDC_SCT013" {
 		pcf = 1.0
+	} else if c.CTType[phase] == "400A/033V" {
+		pcf = 0.5
 	} else {
 		pcf = 200.0 / (float64(c.CTTypePrimaryCurrent[phase]))
 	}
 
 	if c.MeasureCurrent[phase] {
 		outcome := float64(DeviceFetchInt(d, 4, command))
-		return outcome * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf * 1.14989234
+		return outcome * calibrationCurveFactorCurrent * calibrationCurveFactorPower * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf * 1.14989234
 	} else {
 		return 0.0
 	}
@@ -591,13 +703,15 @@ func ReadReactivePower(d *i2c.Device, c *Config, phase Phase) (rewatts float64) 
 	var pcf float64
 	if c.CTType[phase] == "YHDC_SCT013" {
 		pcf = 1.0
+	} else if c.CTType[phase] == "400A/033V" {
+		pcf = 0.5
 	} else {
 		pcf = 200.0 / (float64(c.CTTypePrimaryCurrent[phase]))
 	}
 
 	outcome := float64(DeviceFetchInt(d, 4, command))
 	if c.MeasureCurrent[phase] {
-		rewatts = outcome * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf * 2.560177029
+		rewatts = outcome * calibrationCurveFactorCurrent * calibrationCurveFactorPower * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf * 2.560177029
 	} else {
 		rewatts = 0.0
 	}
@@ -668,5 +782,6 @@ func ReadPhase(d *i2c.Device, c *Config, p Phase, v *ADE7878Readout) {
 	logLine += fmt.Sprintf("I: %g  V: %g  P: %g ", v.Current[p], v.Voltage[p], v.ActiveWatts[p])
 	logLine += fmt.Sprintf("COS: %g  F: %g  VA: %g  ", v.CosPhi[p], v.Frequency[p], v.ApparentPower[p])
 	logLine += fmt.Sprintf("VAR: %g  PF: %g  WATTHR: %g  ", v.ReactivePower[p], v.PowerFactor[p], v.ActiveEnergy[p])
+	logLine += fmt.Sprintf("calibrationCurveFactorCurrent: %g", calibrationCurveFactorCurrent)
 	log.Debug(logLine)
 }
