@@ -28,7 +28,7 @@ File: apihandlerchart.go
 Description: Handels API requests for charts
 */
 
-package smartpiapi
+package smartpi
 
 import (
 	"encoding/json"
@@ -41,7 +41,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/nDenerserve/SmartPi/src/smartpi"
 )
 
 var Configfile string
@@ -68,7 +67,7 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 	valueId := vars["valueId"]
 	format = vars["format"]
 
-	config := smartpi.NewConfig()
+	config := NewConfig()
 
 	location := time.Now().Location()
 
@@ -98,7 +97,7 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 		export = append(export, valueId+"_sum")
 	}
 
-	data := smartpi.ReadChartData(config.DatabaseDir, start, end)
+	data := ReadChartData(config.DatabaseDir, start, end)
 
 	for _, valueelement := range export {
 		row := 0
@@ -209,7 +208,7 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 	valueId := vars["valueId"]
 	format = vars["format"]
 
-	config := smartpi.NewConfig()
+	config := NewConfig()
 
 	location := time.Now().Location()
 
@@ -238,7 +237,7 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 		export = append(export, valueId+"_sum")
 	}
 
-	data := smartpi.ReadDayData(config.DatabaseDir, start, end)
+	data := ReadDayData(config.DatabaseDir, start, end)
 
 	for _, valueelement := range export {
 		row := 0

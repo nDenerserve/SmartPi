@@ -24,38 +24,47 @@
     Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>.
 */
 /*
-File: apihandlersmomentary.go
+File: apihandlerscsv.go
 Description: Handels API requests
 */
 
-package smartpiapi
+package smartpi
 
 import (
-	"encoding/json"
+	"fmt"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
-
-	"github.com/gorilla/context"
-
-	"github.com/nDenerserve/SmartPi/src/smartpi"
+	"time"
 )
 
-type writeuser struct {
-	Type string
-	Msg  interface{}
-}
+func ServeCSVValues(w http.ResponseWriter, r *http.Request) {
 
-func ReadUserData(w http.ResponseWriter, r *http.Request) {
-	// vars := mux.Vars(r)
-	// name := vars["name"]
-
-	user := context.Get(r, "Username")
+	vars := mux.Vars(r)
+	from := vars["fromDate"]
+	to := vars["toDate"]
+	w.Header().Set("Content-Type", "application/text")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	if err := json.NewEncoder(w).Encode(user.(*smartpi.User)); err != nil {
+
+	location := time.Now().Location()
+
+	end, err := time.ParseInLocation(time.RFC3339, to, location)
+	if err != nil {
 		log.Println(err)
 	}
-}
+	end = end.In(location)
+	start, err := time.ParseInLocation(time.RFC3339, from, location)
+	if err != nil {
+		log.Println(err)
+	}
+	start = start.In(location)
 
-func ChangeUserData(w http.ResponseWriter, r *http.Request) {
-	// TODO: Save userdata in /etc/smartpiusers
+	if end.Before(start) {
+		start = start.AddDate(0, 0, -1)
+	}
+
+	csvfile := CreateCSV(start, end)
+
+	fmt.Fprintf(w, csvfile)
+
 }

@@ -28,7 +28,7 @@ File: apihandlersmomentary.go
 Description: Handels API requests
 */
 
-package smartpiapi
+package smartpi
 
 import (
 	"encoding/csv"
@@ -42,7 +42,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/nDenerserve/SmartPi/src/smartpi"
 	"github.com/nDenerserve/SmartPi/src/smartpi/network"
 )
 
@@ -51,11 +50,11 @@ func Index(w http.ResponseWriter, r *http.Request) {
 }
 
 func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
-	var phases = []*smartpi.TPhase{}
-	var datasets = []*smartpi.TDataset{}
-	var tempVal *smartpi.TValue
-	var tempPhase *smartpi.TPhase
-	var tempDataset *smartpi.TDataset
+	var phases = []*tPhase{}
+	var datasets = []*tDataset{}
+	var tempVal *tValue
+	var tempPhase *tPhase
+	var tempDataset *tDataset
 
 	format := "json"
 	vars := mux.Vars(r)
@@ -63,14 +62,14 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 	valueId := vars["valueId"]
 	format = vars["format"]
 
-	config := smartpi.NewConfig()
+	config := NewConfig()
 	file, err := os.Open(config.SharedDir + "/" + config.SharedFile)
-	smartpi.Checklog(err)
+	Checklog(err)
 	defer file.Close()
 	reader := csv.NewReader(file)
 	reader.Comma = ';'
 	records, err := reader.Read()
-	smartpi.Checklog(err)
+	Checklog(err)
 
 	t := time.Now()
 
@@ -83,9 +82,9 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 			var val float64
 			var err error
 			var info string
-			values := []*smartpi.TValue{}
+			values := []*tValue{}
 			id, err := strconv.Atoi(phaseId)
-			smartpi.Checklog(err)
+			Checklog(err)
 			if valueId == "current" && id < 5 {
 				val, err = strconv.ParseFloat(records[id], 32)
 			} else if valueId == "voltage" && id < 4 {
@@ -116,7 +115,7 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 				info = "warning: value infinity. set value to 0.0"
 			}
 
-			tempVal = new(smartpi.TValue)
+			tempVal = new(tValue)
 			if valueId == "current" {
 				tempVal.Type = "current"
 				tempVal.Unity = "A"
@@ -139,10 +138,9 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 
 			values = append(values, tempVal)
 
-			tempPhase = new(smartpi.TPhase)
+			tempPhase = new(tPhase)
 			tempPhase.Phase, _ = strconv.Atoi(phaseId)
 			tempPhase.Name = "phase " + phaseId
-			tempPhase.MaxGUICurrent = config.GUIMaxCurrent[smartpi.PhaseNameFromNumber(phaseId)]
 			tempPhase.Values = values
 
 			phases = append(phases, tempPhase)
@@ -155,7 +153,7 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 				var val float64
 				var err error
 				var info string
-				values := []*smartpi.TValue{}
+				values := []*tValue{}
 				if valueId == "current" {
 					val, err = strconv.ParseFloat(records[i+1], 32)
 				} else if valueId == "voltage" && i < 3 {
@@ -183,7 +181,7 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 					info = "warning: value infinity. set value to 0.0"
 				}
 
-				tempVal = new(smartpi.TValue)
+				tempVal = new(tValue)
 				if valueId == "current" {
 					tempVal.Type = "current"
 					tempVal.Unity = "A"
@@ -205,10 +203,9 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 
 				values = append(values, tempVal)
 
-				tempPhase = new(smartpi.TPhase)
+				tempPhase = new(tPhase)
 				tempPhase.Phase = i + 1
 				tempPhase.Name = "phase " + strconv.Itoa(i+1)
-				tempPhase.MaxGUICurrent = config.GUIMaxCurrent[smartpi.PhaseNameFromNumber(strconv.Itoa(i+1))]
 				tempPhase.Values = values
 
 				phases = append(phases, tempPhase)
@@ -222,9 +219,9 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 			var val float64
 			var err error
 			var info string
-			values := []*smartpi.TValue{}
+			values := []*tValue{}
 			id, err := strconv.Atoi(phaseId)
-			smartpi.Checklog(err)
+			Checklog(err)
 
 			for i := 1; i <= 5; i++ {
 
@@ -255,7 +252,7 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 					info = "warning: value infinity. set value to 0.0"
 				}
 
-				tempVal = new(smartpi.TValue)
+				tempVal = new(tValue)
 				if i == 1 {
 					tempVal.Type = "current"
 					tempVal.Unity = "A"
@@ -282,10 +279,9 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 
 			}
 
-			tempPhase = new(smartpi.TPhase)
+			tempPhase = new(tPhase)
 			tempPhase.Phase, _ = strconv.Atoi(phaseId)
 			tempPhase.Name = "phase " + phaseId
-			tempPhase.MaxGUICurrent = config.GUIMaxCurrent[smartpi.PhaseNameFromNumber(phaseId)]
 			tempPhase.Values = values
 
 			phases = append(phases, tempPhase)
@@ -298,7 +294,7 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 				var val float64
 				var err error
 				var info string
-				values := []*smartpi.TValue{}
+				values := []*tValue{}
 
 				for j := 1; j <= 5; j++ {
 
@@ -329,7 +325,7 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 						info = "warning: value infinity. set value to 0.0"
 					}
 
-					tempVal = new(smartpi.TValue)
+					tempVal = new(tValue)
 					if j == 1 && i < 4 {
 						tempVal.Type = "current"
 						tempVal.Unity = "A"
@@ -356,10 +352,9 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 
 				}
 
-				tempPhase = new(smartpi.TPhase)
+				tempPhase = new(tPhase)
 				tempPhase.Phase = i + 1
 				tempPhase.Name = "phase " + strconv.Itoa(i+1)
-				tempPhase.MaxGUICurrent = config.GUIMaxCurrent[smartpi.PhaseNameFromNumber(strconv.Itoa(i+1))]
 				tempPhase.Values = values
 
 				phases = append(phases, tempPhase)
@@ -372,13 +367,13 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 
 	// create dataset with actual timestamp
 	// for actual values there are only one dataset
-	tempDataset = new(smartpi.TDataset)
+	tempDataset = new(tDataset)
 	tempDataset.Time = records[0]
 	tempDataset.Phases = phases
 
 	datasets = append(datasets, tempDataset)
 
-	measurement := smartpi.TMeasurement{
+	measurement := tMeasurement{
 		Serial:          config.Serial,
 		Name:            config.Name,
 		Lat:             config.Lat,
@@ -392,7 +387,7 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 	if format == "xml" {
 		// XML output of request
 		type response struct {
-			smartpi.TMeasurement
+			tMeasurement
 		}
 		if err := xml.NewEncoder(w).Encode(response{measurement}); err != nil {
 			panic(err)

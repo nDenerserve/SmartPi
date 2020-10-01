@@ -27,6 +27,7 @@
 package main
 
 import (
+	"crypto/subtle"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -34,41 +35,20 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
-	"github.com/nDenerserve/SmartPi/src/smartpi/smartpiapi"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
-
-	jwtmiddleware "github.com/auth0/go-jwt-middleware"
+	// "golang.org/x/net/context"
 )
-
-var appVersion = "No Version Provided"
-var User smartpi.User
-var config smartpi.Config
 
 type JSONMessage struct {
 	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
-// type User struct {
-// 	Username string `json:"username"`
-// 	Password string `json:"password"`
-// }
-
-type JwtToken struct {
-	Token string `json:"token"`
-}
-
-type Exception struct {
 	Message string `json:"message"`
 }
 
@@ -130,53 +110,43 @@ func stringInSlice(list1 []string, list2 []string) bool {
 	return false
 }
 
-// AuthMiddleware is our middleware to check our token is valid. Returning
-// a 401 status to the client if it is not valid.
-func AuthMiddleware(next http.Handler) http.Handler {
-	if len(config.AppKey) == 0 {
-		log.Fatal("HTTP server unable to start, expected an APP_KEY for JWT auth")
-	}
-	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
-		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-			return []byte(config.AppKey), nil
-		},
-		SigningMethod: jwt.SigningMethodHS256,
-	})
-	return jwtMiddleware.Handler(next)
-}
+func BasicAuth(realm string, handler http.HandlerFunc, c *smartpi.Config, u *smartpi.User, roles ...string) http.HandlerFunc {
 
-func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		authorizationHeader := req.Header.Get("authorization")
-		if authorizationHeader != "" {
-			bearerToken := strings.Split(authorizationHeader, " ")
-			if len(bearerToken) == 2 {
-				token, error := jwt.Parse(bearerToken[1], func(token *jwt.Token) (interface{}, error) {
-					if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-						return nil, fmt.Errorf("There was an error")
-					}
-					return []byte("secret"), nil
-				})
-				if error != nil {
-					json.NewEncoder(w).Encode(Exception{Message: error.Error()})
-					return
-				}
-				if token.Valid {
-					context.Set(req, "decoded", token.Claims)
-					next(w, req)
-				} else {
-					json.NewEncoder(w).Encode(Exception{Message: "Invalid authorization token"})
-				}
-			}
-		} else {
-			json.NewEncoder(w).Encode(Exception{Message: "An authorization header is required"})
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		user, pass, ok := r.BasicAuth()
+
+		u.ReadUser(user, pass)
+
+		roleAllowed := false
+		if len(roles) > 0 && stringInSlice(u.Role, roles) {
+			roleAllowed = true
+		} else if len(roles) == 0 {
+			roleAllowed = true
 		}
-	})
+
+		if !ok || !u.Exist || subtle.ConstantTimeCompare([]byte(user), []byte(u.Name)) != 1 || subtle.ConstantTimeCompare([]byte(pass), []byte(u.Password)) != 1 || !roleAllowed {
+			w.Header().Set("WWW-Authenticate", `Basic realm="`+realm+`"`)
+			w.WriteHeader(400)
+			// w.Write([]byte("Unauthorised.\n"))
+			if err := json.NewEncoder(w).Encode(JSONMessage{Code: 401, Message: "Unauthorized"}); err != nil {
+				panic(err)
+			}
+			return
+		}
+
+		context.Set(r, "Config", c)
+		context.Set(r, "Username", u)
+
+		handler(w, r)
+	}
 }
 
 func init() {
 	prometheus.MustRegister(version.NewCollector("smartpi"))
 }
+
+var appVersion = "No Version Provided"
 
 type Softwareinformations struct {
 	Softwareversion string
@@ -193,10 +163,8 @@ func getSoftwareInformations(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	config = *smartpi.NewConfig()
-	User = *smartpi.NewUser()
-	smartpiapi.User = User
-	smartpiapi.Config = config
+	config := smartpi.NewConfig()
+	user := smartpi.NewUser()
 
 	version := flag.Bool("v", false, "prints current version information")
 	flag.Parse()
@@ -208,31 +176,26 @@ func main() {
 	fmt.Println("SmartPi server started")
 
 	r := mux.NewRouter()
-	r.HandleFunc("/api/{phaseId}/{valueId}/now", smartpiapi.ServeMomentaryValues)
-	r.HandleFunc("/api/{phaseId}/{valueId}/now/{format}", smartpiapi.ServeMomentaryValues)
-	r.HandleFunc("/api/chart/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpiapi.ServeChartValues)
-	r.HandleFunc("/api/chart/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}/{format}", smartpiapi.ServeChartValues)
-	r.HandleFunc("/api/values/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpiapi.ServeChartValues)
-	r.HandleFunc("/api/values/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}/{format}", smartpiapi.ServeChartValues)
-	r.HandleFunc("/api/dayvalues/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpiapi.ServeDayValues)
-	r.HandleFunc("/api/dayvalues/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}/{format}", smartpiapi.ServeDayValues)
-	r.HandleFunc("/api/csv/from/{fromDate}/to/{toDate}", smartpiapi.ServeCSVValues)
+	r.HandleFunc("/api/{phaseId}/{valueId}/now", smartpi.ServeMomentaryValues)
+	r.HandleFunc("/api/{phaseId}/{valueId}/now/{format}", smartpi.ServeMomentaryValues)
+	r.HandleFunc("/api/chart/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeChartValues)
+	r.HandleFunc("/api/chart/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}/{format}", smartpi.ServeChartValues)
+	r.HandleFunc("/api/values/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeChartValues)
+	r.HandleFunc("/api/values/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}/{format}", smartpi.ServeChartValues)
+	r.HandleFunc("/api/dayvalues/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}", smartpi.ServeDayValues)
+	r.HandleFunc("/api/dayvalues/{phaseId}/{valueId}/from/{fromDate}/to/{toDate}/{format}", smartpi.ServeDayValues)
+	r.HandleFunc("/api/csv/from/{fromDate}/to/{toDate}", smartpi.ServeCSVValues)
 	r.HandleFunc("/api/version", getSoftwareInformations)
-	r.HandleFunc("/api/login", smartpiapi.Login).Methods("POST")
-	// r.HandleFunc("/api/config/read", AuthMiddleware(http.HandlerFunc(smartpiapi.ReadConfig(config)))).Methods("GET")
-	// r.HandleFunc("/api/config/write", AuthMiddleware(http.HandlerFunc(smartpiapi.WriteConfig(config)))).Methods("POST")
-	// r.HandleFunc("/api/config/user/read", AuthMiddleware(http.HandlerFunc(smartpiapi.ReadUserData(config)))).Methods("GET")
-	// r.HandleFunc("/api/config/network/scanwifi", AuthMiddleware(http.HandlerFunc(smartpiapi.WifiList(config)))).Methods("GET")
-	// r.HandleFunc("/api/config/network/networkconnections", AuthMiddleware(http.HandlerFunc(smartpiapi.NetworkConnections(config)))).Methods("GET")
-	// r.HandleFunc("/api/config/network/wifi/set", AuthMiddleware(http.HandlerFunc(smartpiapi.CreateWifi(config)))).Methods("POST")
-	// r.HandleFunc("/api/config/network/wifi/set/{name}", AuthMiddleware(http.HandlerFunc(smartpiapi.RemoveWifi(config)))).Methods("DELETE")
-	// r.HandleFunc("/api/config/network/wifi/active/{name}", AuthMiddleware(http.HandlerFunc(smartpiapi.ActivateWifi(config)))).Methods("GET")
-	// r.HandleFunc("/api/config/network/wifi/active/{name}", AuthMiddleware(http.HandlerFunc(smartpiapi.DeactivateWifi(config)))).Methods("DELETE")
-	// r.HandleFunc("/api/config/network/wifi/security/change/key", AuthMiddleware(http.HandlerFunc(smartpiapi.ChangeWifiKey(config)))).Methods("POST")
-	r.HandleFunc("/api/v2/{phaseId}/{valueId}/now", smartpiapi.ServeMomentaryValues)
-	r.HandleFunc("/api/v2/{phaseId}/{valueId}/now/{format}", smartpiapi.ServeMomentaryValues)
-	r.HandleFunc("/api/v2/version", getSoftwareInformations)
-	r.HandleFunc("/api/v2/csv/from/{fromDate}/to/{toDate}", smartpiapi.ServeInfluxCSVValues)
+	r.HandleFunc("/api/config/read", BasicAuth("Please enter your username and password for this site", smartpi.ReadConfig, config, user, "smartpiadmin")).Methods("GET")
+	r.HandleFunc("/api/config/write", BasicAuth("Please enter your username and password for this site", smartpi.WriteConfig, config, user, "smartpiadmin")).Methods("POST")
+	r.HandleFunc("/api/config/user/read", BasicAuth("Please enter your username and password for this site", smartpi.ReadUserData, config, user, "smartpiadmin")).Methods("GET")
+	r.HandleFunc("/api/config/network/scanwifi", BasicAuth("Please enter your username and password for this site", smartpi.WifiList, config, user, "smartpiadmin")).Methods("GET")
+	r.HandleFunc("/api/config/network/networkconnections", BasicAuth("Please enter your username and password for this site", smartpi.NetworkConnections, config, user, "smartpiadmin")).Methods("GET")
+	r.HandleFunc("/api/config/network/wifi/set", BasicAuth("Please enter your username and password for this site", smartpi.CreateWifi, config, user, "smartpiadmin")).Methods("POST")
+	r.HandleFunc("/api/config/network/wifi/set/{name}", BasicAuth("Please enter your username and password for this site", smartpi.RemoveWifi, config, user, "smartpiadmin")).Methods("DELETE")
+	// r.HandleFunc("/api/config/network/wifi/active/{name}", BasicAuth("Please enter your username and password for this site", smartpi.ActivateWifi, config, user, "smartpiadmin")).Methods("GET")
+	// r.HandleFunc("/api/config/network/wifi/active/{name}", BasicAuth("Please enter your username and password for this site", smartpi.DeactivateWifi, config, user, "smartpiadmin")).Methods("DELETE")
+	// r.HandleFunc("/api/config/network/wifi/security/change/key", BasicAuth("Please enter your username and password for this site", smartpi.ChangeWifiKey, config, user, "smartpiadmin")).Methods("POST")
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(config.DocRoot)))
 	http.Handle("/metrics", promhttp.Handler())
 	http.Handle("/", promhttp.InstrumentHandlerCounter(responseCount, r))
