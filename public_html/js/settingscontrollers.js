@@ -541,8 +541,4 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, $interval
                 data.password = password;
             }
         };
-<<<<<<< HEAD
     });
-=======
-    });
->>>>>>> f534cf2a19ef4d227e9827899d7f4ebfb82e0cc1
