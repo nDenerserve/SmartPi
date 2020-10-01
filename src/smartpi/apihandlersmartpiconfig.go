@@ -28,24 +28,22 @@ File: apihandlersmomentary.go
 Description: Handels API requests
 */
 
-package smartpiapi
+package smartpi
 
 import (
 	// "fmt"
 	"encoding/json"
 	"fmt"
+	"github.com/fatih/structs"
+	"github.com/gorilla/context"
+	"github.com/gorilla/mux"
+	"github.com/nDenerserve/SmartPi/src/smartpi/network"
+	"github.com/oleiade/reflections"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"reflect"
 	"strconv"
-
-	"github.com/fatih/structs"
-	"github.com/gorilla/context"
-	"github.com/gorilla/mux"
-	"github.com/nDenerserve/SmartPi/src/smartpi"
-	"github.com/nDenerserve/SmartPi/src/smartpi/network"
-	"github.com/oleiade/reflections"
 )
 
 type JSONMessage struct {
@@ -74,7 +72,7 @@ func ReadConfig(w http.ResponseWriter, r *http.Request) {
 	// user := context.Get(r,"Username")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	configuration := context.Get(r, "Config")
-	if err := json.NewEncoder(w).Encode(configuration.(*smartpi.Config)); err != nil {
+	if err := json.NewEncoder(w).Encode(configuration.(*Config)); err != nil {
 		panic(err)
 	}
 }
@@ -96,7 +94,7 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 		keys = append(keys, k)
 	}
 
-	confignames := structs.Names(configuration.(*smartpi.Config))
+	confignames := structs.Names(configuration.(*Config))
 
 	for i := range confignames {
 		for j := range keys {
@@ -108,56 +106,56 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 
 				var err error
 				var fieldtype string
-				fieldtype, err = reflections.GetFieldType(configuration.(*smartpi.Config), confignames[i])
+				fieldtype, err = reflections.GetFieldType(configuration.(*Config), confignames[i])
 				fmt.Println("Fieldtype: " + fieldtype)
 
 				switch fieldtype {
 				case "int":
 					switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
 					case float64:
-						err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float()))
+						err = reflections.SetField(configuration.(*Config), confignames[i], int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float()))
 					case string:
 						intval, _ := strconv.Atoi(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String())
-						err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], intval)
+						err = reflections.SetField(configuration.(*Config), confignames[i], intval)
 					case int:
-						err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int()))
+						err = reflections.SetField(configuration.(*Config), confignames[i], int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int()))
 					case bool:
-						err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], b2i(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool()))
+						err = reflections.SetField(configuration.(*Config), confignames[i], b2i(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool()))
 					}
 				case "float64":
 					switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
 					case float64:
-						err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], float64(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float()))
+						err = reflections.SetField(configuration.(*Config), confignames[i], float64(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float()))
 					case string:
 						floatval, _ := strconv.ParseFloat(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String(), 64)
-						err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], floatval)
+						err = reflections.SetField(configuration.(*Config), confignames[i], floatval)
 					case int:
-						err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], float64(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int()))
+						err = reflections.SetField(configuration.(*Config), confignames[i], float64(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int()))
 					case bool:
-						err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], float64(b2i(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool())))
+						err = reflections.SetField(configuration.(*Config), confignames[i], float64(b2i(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool())))
 					}
 				case "string":
 					switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
 					case float64:
-						err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], strconv.FormatFloat(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float(), 'f', -1, 64))
+						err = reflections.SetField(configuration.(*Config), confignames[i], strconv.FormatFloat(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float(), 'f', -1, 64))
 					case string:
-						err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String())
+						err = reflections.SetField(configuration.(*Config), confignames[i], reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String())
 					case int:
-						err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], strconv.FormatInt(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int(), 16))
+						err = reflections.SetField(configuration.(*Config), confignames[i], strconv.FormatInt(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int(), 16))
 					case bool:
-						err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], strconv.FormatBool(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool()))
+						err = reflections.SetField(configuration.(*Config), confignames[i], strconv.FormatBool(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool()))
 					}
 				case "bool":
 					switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
 					case float64:
-						err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], !(int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float()) == 0))
+						err = reflections.SetField(configuration.(*Config), confignames[i], !(int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float()) == 0))
 					case string:
 						boolval, _ := strconv.ParseBool(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String())
-						err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], boolval)
+						err = reflections.SetField(configuration.(*Config), confignames[i], boolval)
 					case int:
-						err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], !(int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int()) == 0))
+						err = reflections.SetField(configuration.(*Config), confignames[i], !(int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int()) == 0))
 					case bool:
-						err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool())
+						err = reflections.SetField(configuration.(*Config), confignames[i], reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool())
 					}
 				case "map[string]int":
 					values := reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Interface().(map[string]interface{})
@@ -177,20 +175,20 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 						}
 						// fmt.Printf("key[%s] value[%s]\n", k, v)
 					}
-					err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], aData)
+					err = reflections.SetField(configuration.(*Config), confignames[i], aData)
 				case "map[smartpi.Phase]int":
 					values := reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Interface().(map[string]interface{})
-					var ind smartpi.Phase
-					aData := make(map[smartpi.Phase]int)
+					var ind Phase
+					aData := make(map[Phase]int)
 					for k, v := range values {
 						if k == "A" || k == "1" {
-							ind = smartpi.PhaseA
+							ind = PhaseA
 						} else if k == "B" || k == "2" {
-							ind = smartpi.PhaseB
+							ind = PhaseB
 						} else if k == "C" || k == "3" {
-							ind = smartpi.PhaseC
+							ind = PhaseC
 						} else if k == "N" || k == "4" {
-							ind = smartpi.PhaseN
+							ind = PhaseN
 						}
 						switch v.(type) {
 						case float64:
@@ -205,7 +203,7 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 						}
 						fmt.Printf("key[%s] value[%s]\n", ind, v)
 					}
-					err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], aData)
+					err = reflections.SetField(configuration.(*Config), confignames[i], aData)
 				case "map[string]float":
 					values := reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Interface().(map[string]interface{})
 					aData := make(map[string]float64)
@@ -224,20 +222,20 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 						}
 						fmt.Printf("key[%s] value[%s]\n", k, v)
 					}
-					err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], aData)
+					err = reflections.SetField(configuration.(*Config), confignames[i], aData)
 				case "map[smartpi.Phase]float":
 					values := reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Interface().(map[string]interface{})
-					var ind smartpi.Phase
-					aData := make(map[smartpi.Phase]float64)
+					var ind Phase
+					aData := make(map[Phase]float64)
 					for k, v := range values {
 						if k == "A" || k == "1" {
-							ind = smartpi.PhaseA
+							ind = PhaseA
 						} else if k == "B" || k == "2" {
-							ind = smartpi.PhaseB
+							ind = PhaseB
 						} else if k == "C" || k == "3" {
-							ind = smartpi.PhaseC
+							ind = PhaseC
 						} else if k == "N" || k == "4" {
-							ind = smartpi.PhaseN
+							ind = PhaseN
 						}
 						switch v.(type) {
 						case float64:
@@ -252,7 +250,7 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 						}
 						fmt.Printf("key[%s] value[%s]\n", ind, v)
 					}
-					err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], aData)
+					err = reflections.SetField(configuration.(*Config), confignames[i], aData)
 				case "map[string]float64":
 					values := reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Interface().(map[string]interface{})
 					aData := make(map[string]float64)
@@ -270,20 +268,20 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 						}
 						fmt.Printf("key[%s] value[%s]\n", k, v)
 					}
-					err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], aData)
+					err = reflections.SetField(configuration.(*Config), confignames[i], aData)
 				case "map[smartpi.Phase]float64":
 					values := reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Interface().(map[string]interface{})
-					aData := make(map[smartpi.Phase]float64)
-					var ind smartpi.Phase
+					aData := make(map[Phase]float64)
+					var ind Phase
 					for k, v := range values {
 						if k == "A" || k == "1" {
-							ind = smartpi.PhaseA
+							ind = PhaseA
 						} else if k == "B" || k == "2" {
-							ind = smartpi.PhaseB
+							ind = PhaseB
 						} else if k == "C" || k == "3" {
-							ind = smartpi.PhaseC
+							ind = PhaseC
 						} else if k == "N" || k == "4" {
-							ind = smartpi.PhaseN
+							ind = PhaseN
 						}
 						switch v.(type) {
 						case float64:
@@ -299,7 +297,7 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 						}
 						fmt.Printf("key[%s] value[%s]\n", ind, v)
 					}
-					err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], aData)
+					err = reflections.SetField(configuration.(*Config), confignames[i], aData)
 				case "map[string]string":
 					values := reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Interface().(map[string]interface{})
 					aData := make(map[string]string)
@@ -317,20 +315,20 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 						}
 						fmt.Printf("key[%s] value[%s]\n", k, v)
 					}
-					err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], aData)
+					err = reflections.SetField(configuration.(*Config), confignames[i], aData)
 				case "map[smartpi.Phase]string":
 					values := reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Interface().(map[string]interface{})
-					var ind smartpi.Phase
-					aData := make(map[smartpi.Phase]string)
+					var ind Phase
+					aData := make(map[Phase]string)
 					for k, v := range values {
 						if k == "A" || k == "1" {
-							ind = smartpi.PhaseA
+							ind = PhaseA
 						} else if k == "B" || k == "2" {
-							ind = smartpi.PhaseB
+							ind = PhaseB
 						} else if k == "C" || k == "3" {
-							ind = smartpi.PhaseC
+							ind = PhaseC
 						} else if k == "N" || k == "4" {
-							ind = smartpi.PhaseN
+							ind = PhaseN
 						}
 						switch v.(type) {
 						case float64:
@@ -344,7 +342,7 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 						}
 						fmt.Printf("key[%s] value[%s]\n", ind, v)
 					}
-					err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], aData)
+					err = reflections.SetField(configuration.(*Config), confignames[i], aData)
 				case "map[string]bool":
 					values := reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Interface().(map[string]interface{})
 					aData := make(map[string]bool)
@@ -362,20 +360,20 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 						}
 						fmt.Printf("key[%s] value[%s]\n", k, v)
 					}
-					err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], aData)
+					err = reflections.SetField(configuration.(*Config), confignames[i], aData)
 				case "map[smartpi.Phase]bool":
 					values := reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Interface().(map[string]interface{})
-					var ind smartpi.Phase
-					aData := make(map[smartpi.Phase]bool)
+					var ind Phase
+					aData := make(map[Phase]bool)
 					for k, v := range values {
 						if k == "A" || k == "1" {
-							ind = smartpi.PhaseA
+							ind = PhaseA
 						} else if k == "B" || k == "2" {
-							ind = smartpi.PhaseB
+							ind = PhaseB
 						} else if k == "C" || k == "3" {
-							ind = smartpi.PhaseC
+							ind = PhaseC
 						} else if k == "N" || k == "4" {
-							ind = smartpi.PhaseN
+							ind = PhaseN
 						}
 						switch v.(type) {
 						case float64:
@@ -390,7 +388,7 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 						}
 						fmt.Printf("key[%s] value[%s]\n", ind, v)
 					}
-					err = reflections.SetField(configuration.(*smartpi.Config), confignames[i], aData)
+					err = reflections.SetField(configuration.(*Config), confignames[i], aData)
 				}
 				if err != nil {
 					log.Println(err)
@@ -399,7 +397,7 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	configuration.(*smartpi.Config).SaveParameterToFile()
+	configuration.(*Config).SaveParameterToFile()
 	// }
 }
 

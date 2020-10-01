@@ -24,84 +24,35 @@
     Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>.
 */
 /*
-File: apihandlerscsv.go
+File: apihandlersmomentary.go
 Description: Handels API requests
 */
 
-package smartpiapi
+package smartpi
 
 import (
-	"fmt"
+	"encoding/json"
+	"github.com/gorilla/context"
 	"log"
 	"net/http"
-	"time"
-
-	"github.com/gorilla/mux"
-	"github.com/nDenerserve/SmartPi/src/smartpi"
 )
 
-func ServeCSVValues(w http.ResponseWriter, r *http.Request) {
-
-	vars := mux.Vars(r)
-	from := vars["fromDate"]
-	to := vars["toDate"]
-
-	w.Header().Set("Content-Type", "application/text")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	location := time.Now().Location()
-
-	end, err := time.ParseInLocation(time.RFC3339, to, location)
-	if err != nil {
-		log.Println(err)
-	}
-	end = end.In(location)
-	start, err := time.ParseInLocation(time.RFC3339, from, location)
-	if err != nil {
-		log.Println(err)
-	}
-	start = start.In(location)
-
-	if end.Before(start) {
-		start = start.AddDate(0, 0, -1)
-	}
-
-	csvfile := smartpi.CreateCSV(start, end)
-
-	fmt.Fprintf(w, csvfile)
-
+type writeuser struct {
+	Type string
+	Msg  interface{}
 }
 
-func ServeInfluxCSVValues(w http.ResponseWriter, r *http.Request) {
+func ReadUserData(w http.ResponseWriter, r *http.Request) {
+	// vars := mux.Vars(r)
+	// name := vars["name"]
 
-	vars := mux.Vars(r)
-	from := vars["fromDate"]
-	to := vars["toDate"]
-
-	config := smartpi.NewConfig()
-
-	w.Header().Set("Content-Type", "application/text")
+	user := context.Get(r, "Username")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	location := time.Now().Location()
-
-	end, err := time.ParseInLocation(time.RFC3339, to, location)
-	if err != nil {
+	if err := json.NewEncoder(w).Encode(user.(*User)); err != nil {
 		log.Println(err)
 	}
-	end = end.In(location)
-	start, err := time.ParseInLocation(time.RFC3339, from, location)
-	if err != nil {
-		log.Println(err)
-	}
-	start = start.In(location)
+}
 
-	if end.Before(start) {
-		start = start.AddDate(0, 0, -1)
-	}
-
-	csvfile := smartpi.ReadCSVData(config, start, end)
-
-	fmt.Fprintf(w, csvfile)
-
+func ChangeUserData(w http.ResponseWriter, r *http.Request) {
+	// TODO: Save userdata in /etc/smartpiusers
 }
