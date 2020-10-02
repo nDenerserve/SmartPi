@@ -41,6 +41,7 @@ import (
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 	"github.com/nDenerserve/SmartPi/src/smartpi/smartpiapi"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 
 	"github.com/rs/cors"
@@ -229,8 +230,9 @@ func main() {
 	r.HandleFunc("/api/v2/version", getSoftwareInformations)
 	r.HandleFunc("/api/v2/csv/from/{fromDate}/to/{toDate}", smartpiapi.ServeInfluxCSVValues)
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(config.DocRoot)))
-	http.Handle("/metrics", prometheus.Handler())
-	http.Handle("/", prometheus.InstrumentHandler("smartpi", corsWrapper.Handler(r)))
+	// http.Handle("/metrics", prometheus.Handler())
+	http.Handle("/metrics", promhttp.Handler())
+	http.Handle("/", corsWrapper.Handler(r))
 	// log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.WebserverPort), nil))
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(8910), nil))
 }

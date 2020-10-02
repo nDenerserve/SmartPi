@@ -18,6 +18,7 @@ require (
 	github.com/oleiade/reflections v0.0.0-20160817071559-0e86b3c98b2f
 	github.com/prometheus/client_golang v1.7.1
 	github.com/prometheus/common v0.13.0
+	github.com/rs/cors v1.7.0
 	github.com/secsy/goftp v0.0.0-20200609142545-aa2de14babf4
 	github.com/sirupsen/logrus v1.6.0
 	golang.org/x/exp v0.0.0-20200915172826-20d5ce0eab31
@@ -25,4 +26,3 @@ require (
 )
 
 go 1.14
- 
