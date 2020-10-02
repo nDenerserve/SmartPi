@@ -87,13 +87,13 @@ func main() {
 				log.Debugf("EVENT! %#v\n", event)
 				time.Sleep(1 * time.Second)
 				file, err := os.Open(config.SharedDir + "/" + config.SharedFile)
-				smartpi.smartpi.Checklog(err)
+				smartpi.Checklog(err)
 				defer file.Close()
 				reader := csv.NewReader(bufio.NewReader(file))
 				reader.Comma = ';'
 				records, err := reader.Read()
 				log.Debugf("%v", records)
-				smartpi.smartpi.Checklog(err)
+				smartpi.Checklog(err)
 				if len(records) >= 19 {
 					for i := 1; i < len(records)-1; i++ {
 						registervalue = 0

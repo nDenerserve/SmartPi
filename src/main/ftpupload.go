@@ -120,7 +120,7 @@ func main() {
 			createpath = createpath + "/" + pathlist[j]
 
 			files, err := client.ReadDir(workingpath)
-			smartpi.smartpi.Checklog(err)
+			smartpi.Checklog(err)
 			fileexist := 0
 			for _, file := range files {
 				if file.IsDir() && file.Name() == pathlist[j] {
@@ -185,7 +185,7 @@ func main() {
 			createpath = createpath + "/" + pathlist[j]
 
 			files, err := client.ReadDir(workingpath)
-			smartpi.smartpi.Checklog(err)
+			smartpi.Checklog(err)
 			fileexist := 0
 			for _, file := range files {
 				if file.IsDir() && file.Name() == pathlist[j] {
