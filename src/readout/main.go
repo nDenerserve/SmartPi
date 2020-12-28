@@ -35,7 +35,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/nDenerserve/SmartPi/src/smartpi"
+	"github.com/FransTheekrans/SmartPi/src/smartpi"
 
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/exp/io/i2c"
@@ -43,7 +43,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 
 	//import the Paho Go MQTT library
-	"github.com/eclipse/paho.mqtt.golang"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -90,12 +90,15 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 	accumulator := makeReadoutAccumulator()
 	i := 0
 
-	tick := time.Tick(time.Duration(1000/config.Samplerate) * time.Millisecond)
+	// FT:net very clear to me what the line below does. I expect this defines the tich time for the for-loop below. Sine this loop needs to be done twice a second this  is updated accordingly
+	tick := time.Tick(time.Duration(1000/config.Samplerate/2.0) * time.Millisecond)
 
 	for {
 		readouts := makeReadout()
 		// Restart the accumulator loop every 60 seconds.
-		if i > (60*config.Samplerate - 1) {
+		// FT:target: measure twice per second and log every second
+		// ==> Need to average every 2 measurements (keep config.samplerate as 1). 2 was 60
+		if i > (2*config.Samplerate - 1) {
 			i = 0
 			accumulator = makeReadoutAccumulator()
 		}
@@ -103,22 +106,23 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		startTime := time.Now()
 
 		// Update readouts and the accumlator.
+		// FT: updated coefficients used for averaging: 2.0 was 60.0 in denominator, 120.0 was 3600.0
 		smartpi.ReadPhase(device, config, smartpi.PhaseN, &readouts)
-		accumulator.Current[smartpi.PhaseN] += readouts.Current[smartpi.PhaseN] / (60.0 * float64(config.Samplerate))
+		accumulator.Current[smartpi.PhaseN] += readouts.Current[smartpi.PhaseN] / (2.0 * float64(config.Samplerate))
 		for _, p = range smartpi.MainPhases {
 			smartpi.ReadPhase(device, config, p, &readouts)
-			accumulator.Current[p] += readouts.Current[p] / (60.0 * float64(config.Samplerate))
-			accumulator.Voltage[p] += readouts.Voltage[p] / (60.0 * float64(config.Samplerate))
-			accumulator.ActiveWatts[p] += readouts.ActiveWatts[p] / (60.0 * float64(config.Samplerate))
-			accumulator.CosPhi[p] += readouts.CosPhi[p] / (60.0 * float64(config.Samplerate))
-			accumulator.Frequency[p] += readouts.Frequency[p] / (60.0 * float64(config.Samplerate))
+			accumulator.Current[p] += readouts.Current[p] / (2.0 * float64(config.Samplerate))
+			accumulator.Voltage[p] += readouts.Voltage[p] / (2.0 * float64(config.Samplerate))
+			accumulator.ActiveWatts[p] += readouts.ActiveWatts[p] / (2.0 * float64(config.Samplerate))
+			accumulator.CosPhi[p] += readouts.CosPhi[p] / (2.0 * float64(config.Samplerate))
+			accumulator.Frequency[p] += readouts.Frequency[p] / (2.0 * float64(config.Samplerate))
 
 			if readouts.ActiveWatts[p] >= 0 {
-				accumulator.WattHoursConsumed[p] += math.Abs(readouts.ActiveWatts[p]) / (3600.0 * float64(config.Samplerate))
+				accumulator.WattHoursConsumed[p] += math.Abs(readouts.ActiveWatts[p]) / (120.0 * float64(config.Samplerate))
 			} else {
-				accumulator.WattHoursProduced[p] += math.Abs(readouts.ActiveWatts[p]) / (3600.0 * float64(config.Samplerate))
+				accumulator.WattHoursProduced[p] += math.Abs(readouts.ActiveWatts[p]) / (120.0 * float64(config.Samplerate))
 			}
-			wattHourBalanced += readouts.ActiveWatts[p] / (3600.0 * float64(config.Samplerate))
+			wattHourBalanced += readouts.ActiveWatts[p] / (120.0 * float64(config.Samplerate))
 		}
 
 		// Update metrics endpoint.
@@ -139,7 +143,8 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		}
 
 		// Every 60 seconds.
-		if i == (60*config.Samplerate - 1) {
+		// FT: Needs to be done every second, so now every two samples. 2 was 60
+		if i == (2*config.Samplerate - 1) {
 
 			// balanced value
 			var wattHourBalanced60s float64
@@ -185,7 +190,8 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 			}
 		}
 
-		delay := time.Since(startTime) - (time.Duration(1000/config.Samplerate) * time.Millisecond)
+		// FT: updated delay calculation to reflect 2 measurements per second (/2 zas not there)
+		delay := time.Since(startTime) - (time.Duration(1000/config.Samplerate/2) * time.Millisecond)
 		if int64(delay) > 0 {
 			log.Errorf("Readout delayed: %s", delay)
 		}

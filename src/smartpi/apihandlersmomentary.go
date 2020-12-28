@@ -41,8 +41,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/FransTheekrans/SmartPi/src/smartpi/network"
 	"github.com/gorilla/mux"
-	"github.com/nDenerserve/SmartPi/src/smartpi/network"
 )
 
 func Index(w http.ResponseWriter, r *http.Request) {

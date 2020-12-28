@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/FransTheekrans/SmartPi/src/smartpi/network"
 	client "github.com/influxdata/influxdb1-client/v2"
-	"github.com/nDenerserve/SmartPi/src/smartpi/network"
 	log "github.com/sirupsen/logrus"
 )
 

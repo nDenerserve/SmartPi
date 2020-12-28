@@ -1,4 +1,4 @@
-module github.com/nDenerserve/SmartPi
+module github.com/FransTheekrans/SmartPi
 
 require (
 	github.com/auth0/go-jwt-middleware v0.0.0-20200810150920-a32d7af194d1
