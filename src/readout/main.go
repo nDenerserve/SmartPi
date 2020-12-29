@@ -90,15 +90,18 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 	accumulator := makeReadoutAccumulator()
 	i := 0
 
-	// FT:net very clear to me what the line below does. I expect this defines the tich time for the for-loop below. Sine this loop needs to be done twice a second this  is updated accordingly
-	tick := time.Tick(time.Duration(1000/config.Samplerate/2.0) * time.Millisecond)
+	// FT: net very clear to me what the line below does. I expect this defines the time for the for-loop below  (original: 1s).
+	// FT: did test, measuring twice per second on 4 phases is hit or miss, so max measurement speed is 1Hz.
+	// FT: TARGET: use "config.Samplerate" as a parameter determing the measurements averaged per logging (default value is now 60)
+	// FT: target: log once per second, and don't average
+
+	tick := time.Tick(time.Duration(1000) * time.Millisecond)
 
 	for {
 		readouts := makeReadout()
-		// Restart the accumulator loop every 60 seconds.
-		// FT:target: measure twice per second and log every second
-		// ==> Need to average every 2 measurements (keep config.samplerate as 1). 2 was 60
-		if i > (2*config.Samplerate - 1) {
+		// Restart the accumulator when the number of samples defined in config.samplerate is exceeded.
+		// FT:target: measure once per second and log every second as well
+		if i > (config.Samplerate - 1) {
 			i = 0
 			accumulator = makeReadoutAccumulator()
 		}
@@ -106,23 +109,24 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		startTime := time.Now()
 
 		// Update readouts and the accumlator.
-		// FT: updated coefficients used for averaging: 2.0 was 60.0 in denominator, 120.0 was 3600.0
+		// FT: updated coefficients used for averaging: (1.0-removed) was 60.0 in denominator, 60.0 was 3600.0
+		// FT: TARGET: use "config.Samplerate" as a parameter determing the measurements averaged per logging (default value is now 60)
 		smartpi.ReadPhase(device, config, smartpi.PhaseN, &readouts)
-		accumulator.Current[smartpi.PhaseN] += readouts.Current[smartpi.PhaseN] / (2.0 * float64(config.Samplerate))
+		accumulator.Current[smartpi.PhaseN] += readouts.Current[smartpi.PhaseN] / (float64(config.Samplerate))
 		for _, p = range smartpi.MainPhases {
 			smartpi.ReadPhase(device, config, p, &readouts)
-			accumulator.Current[p] += readouts.Current[p] / (2.0 * float64(config.Samplerate))
-			accumulator.Voltage[p] += readouts.Voltage[p] / (2.0 * float64(config.Samplerate))
-			accumulator.ActiveWatts[p] += readouts.ActiveWatts[p] / (2.0 * float64(config.Samplerate))
-			accumulator.CosPhi[p] += readouts.CosPhi[p] / (2.0 * float64(config.Samplerate))
-			accumulator.Frequency[p] += readouts.Frequency[p] / (2.0 * float64(config.Samplerate))
+			accumulator.Current[p] += readouts.Current[p] / (float64(config.Samplerate))
+			accumulator.Voltage[p] += readouts.Voltage[p] / (float64(config.Samplerate))
+			accumulator.ActiveWatts[p] += readouts.ActiveWatts[p] / (float64(config.Samplerate))
+			accumulator.CosPhi[p] += readouts.CosPhi[p] / (float64(config.Samplerate))
+			accumulator.Frequency[p] += readouts.Frequency[p] / (float64(config.Samplerate))
 
 			if readouts.ActiveWatts[p] >= 0 {
-				accumulator.WattHoursConsumed[p] += math.Abs(readouts.ActiveWatts[p]) / (120.0 * float64(config.Samplerate))
+				accumulator.WattHoursConsumed[p] += math.Abs(readouts.ActiveWatts[p]) / (60.0 * float64(config.Samplerate))
 			} else {
-				accumulator.WattHoursProduced[p] += math.Abs(readouts.ActiveWatts[p]) / (120.0 * float64(config.Samplerate))
+				accumulator.WattHoursProduced[p] += math.Abs(readouts.ActiveWatts[p]) / (60.0 * float64(config.Samplerate))
 			}
-			wattHourBalanced += readouts.ActiveWatts[p] / (120.0 * float64(config.Samplerate))
+			wattHourBalanced += readouts.ActiveWatts[p] / (60.0 * float64(config.Samplerate))
 		}
 
 		// Update metrics endpoint.
@@ -143,8 +147,8 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		}
 
 		// Every 60 seconds.
-		// FT: Needs to be done every second, so now every two samples. 2 was 60
-		if i == (2*config.Samplerate - 1) {
+		// FT: default for config.samplerate is now 60. config.samplerate is the number of measurements that need to be averaged befor logging
+		if i == (config.Samplerate - 1) {
 
 			// balanced value
 			var wattHourBalanced60s float64
@@ -190,8 +194,8 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 			}
 		}
 
-		// FT: updated delay calculation to reflect 2 measurements per second (/2 zas not there)
-		delay := time.Since(startTime) - (time.Duration(1000/config.Samplerate/2) * time.Millisecond)
+		// FT: updated delay calculation to reflect 1 measurements per second. there is no dependency on config.samplerate, so removed
+		delay := time.Since(startTime) - (time.Duration(1000) * time.Millisecond)
 		if int64(delay) > 0 {
 			log.Errorf("Readout delayed: %s", delay)
 		}
