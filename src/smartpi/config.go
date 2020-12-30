@@ -62,6 +62,7 @@ type Config struct {
 	I2CDevice            string
 	PowerFrequency       float64
 	Samplerate           int
+	Loggingrate          int
 	Integrator           bool
 	CTType               map[Phase]string
 	CTTypePrimaryCurrent map[Phase]int
@@ -167,7 +168,8 @@ func (p *Config) ReadParameterFromFile() {
 	// [device]
 	p.I2CDevice = cfg.Section("device").Key("i2c_device").MustString("/dev/i2c-1")
 	p.PowerFrequency = cfg.Section("device").Key("power_frequency").MustFloat64(50)
-	p.Samplerate = cfg.Section("device").Key("samplerate").MustInt(60)
+	p.Samplerate = cfg.Section("device").Key("samplerate").MustInt(1)
+	p.Loggingrate = cfg.Section("device").Key("loggingrate").MustInt(60)
 	p.Integrator = cfg.Section("device").Key("integrator").MustBool(false)
 	p.CTType = make(map[Phase]string)
 	p.CTType[PhaseA] = cfg.Section("device").Key("ct_type_1").MustString("YHDC_SCT013")
