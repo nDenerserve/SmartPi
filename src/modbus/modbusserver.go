@@ -10,9 +10,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/FransTheekrans/SmartPi/src/smartpi"
 	"github.com/fsnotify/fsnotify"
 	"github.com/goburrow/serial"
-	"github.com/nDenerserve/SmartPi/src/smartpi"
 	"github.com/nDenerserve/mbserver"
 	log "github.com/sirupsen/logrus"
 )

@@ -1,4 +1,4 @@
-module github.com/nDenerserve/SmartPi
+module github.com/FransTheekrans/SmartPi
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.3.3

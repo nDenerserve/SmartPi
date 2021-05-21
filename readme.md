@@ -91,8 +91,8 @@ and set the GOPATH environment variable to point to that location.
 
 ##### Building source
 
-    go get -v github.com/nDenerserve/SmartPi/src/smartpi
-    cd ${GOPATH-$HOME/go}/src/github.com/nDenerserve/SmartPi
+    go get -v github.com/FransTheekrans/SmartPi/src/smartpi
+    cd ${GOPATH-$HOME/go}/src/github.com/FransTheekrans/SmartPi
     make
 
 NOTE: If you need to build from a fork, you will have to symlink your fork into `${GOPATH-$HOME/go}/src/github.com/nDenerserve/` to make golang dependencies work correctly.

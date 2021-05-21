@@ -22,6 +22,7 @@ influxdatabase="http://localhost:8086"
 
 [device]
 samplerate=1
+loggingrate=60
 i2c_device="/dev/i2c-1"
 power_frequency=50
 ct_type_1=YHDC_SCT013

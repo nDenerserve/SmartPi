@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/nDenerserve/SmartPi/src/smartpi"
+	"github.com/FransTheekrans/SmartPi/src/smartpi"
 	log "github.com/sirupsen/logrus"
 )
 
