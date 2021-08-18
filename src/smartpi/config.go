@@ -93,12 +93,13 @@ type Config struct {
 	CSVtimeformat   string
 
 	// [mqtt]
-	MQTTenabled    bool
-	MQTTbroker     string
-	MQTTbrokerport string
-	MQTTuser       string
-	MQTTpass       string
-	MQTTtopic      string
+	MQTTenabled      bool
+	MQTTbrokerScheme string
+	MQTTbroker       string
+	MQTTbrokerport   string
+	MQTTuser         string
+	MQTTpass         string
+	MQTTtopic        string
 
 	// [modbus slave]
 	ModbusRTUenabled bool
@@ -225,6 +226,7 @@ func (p *Config) ReadParameterFromFile() {
 
 	// [mqtt]
 	p.MQTTenabled = cfg.Section("mqtt").Key("mqtt_enabled").MustBool(false)
+	p.MQTTbrokerScheme = cfg.Section("mqtt").Key("mqtt_broker_scheme").MustString("tcp://")
 	p.MQTTbroker = cfg.Section("mqtt").Key("mqtt_broker_url").String()
 	p.MQTTbrokerport = cfg.Section("mqtt").Key("mqtt_broker_port").String()
 	p.MQTTuser = cfg.Section("mqtt").Key("mqtt_username").String()
@@ -346,6 +348,7 @@ func (p *Config) SaveParameterToFile() {
 
 	// [mqtt]
 	_, err = cfg.Section("mqtt").NewKey("mqtt_enabled", strconv.FormatBool(p.MQTTenabled))
+	_, err = cfg.Section("mqtt").NewKey("mqtt_broker_scheme", p.MQTTbrokerScheme)
 	_, err = cfg.Section("mqtt").NewKey("mqtt_broker_url", p.MQTTbroker)
 	_, err = cfg.Section("mqtt").NewKey("mqtt_broker_port", p.MQTTbrokerport)
 	_, err = cfg.Section("mqtt").NewKey("mqtt_username", p.MQTTuser)

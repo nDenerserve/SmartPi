@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/eclipse/paho.mqtt.golang"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 	log "github.com/sirupsen/logrus"
 )
@@ -14,7 +14,7 @@ import (
 func newMQTTClient(c *smartpi.Config) (mqttclient mqtt.Client) {
 	log.Debugf("Connecting to MQTT broker at %s", (c.MQTTbroker + ":" + c.MQTTbrokerport))
 	//create a MQTTClientOptions struct setting the broker address, clientid, user and password
-	opts := mqtt.NewClientOptions().AddBroker("tcp://" + c.MQTTbroker + ":" + c.MQTTbrokerport)
+	opts := mqtt.NewClientOptions().AddBroker(c.MQTTbrokerScheme + c.MQTTbroker + ":" + c.MQTTbrokerport)
 	opts.SetClientID("SmartPi-" + c.Name)
 	opts.SetUsername(c.MQTTuser)
 	opts.SetPassword(c.MQTTpass)

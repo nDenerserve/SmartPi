@@ -1,7 +1,7 @@
 module github.com/nDenerserve/SmartPi
 
 require (
-	github.com/eclipse/paho.mqtt.golang v1.3.3
+	github.com/eclipse/paho.mqtt.golang v1.3.5
 	github.com/fatih/structs v1.1.0
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/goburrow/modbus v0.1.0 // indirect
@@ -22,4 +22,4 @@ require (
 	gopkg.in/ini.v1 v1.62.0
 )
 
-go 1.14
+go 1.16
