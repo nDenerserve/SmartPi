@@ -64,6 +64,7 @@ app_key = "ew980723j35h97fqw4!234490#t33465"
 
 [mqtt]
 mqtt_enabled=0
+mqtt_broker_scheme="tcp://"
 mqtt_broker_url=""
 mqtt_broker_port=""
 mqtt_username=""
