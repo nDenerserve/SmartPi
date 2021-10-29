@@ -78,7 +78,7 @@ Download the archive and extract it into /usr/local, creating a Go tree in /usr/
 Currently version 1.8.1 is up to date. You may need to adapt the filename according to latest version.
 
     cd /usr/local
-    curl -s https://storage.googleapis.com/golang/go1.8.1.linux-armv6l.tar.gz | sudo tar -xvz
+    curl -s https://storage.googleapis.com/golang/go1.16.3.linux-armv6l.tar.gz | sudo tar -xvz
     echo 'PATH="/usr/local/go/bin:${PATH}"' | sudo tee -a /etc/profile
 
 In order for the `${PATH}` to be updated, you will need to logout.
