@@ -93,10 +93,10 @@ and set the GOPATH environment variable to point to that location.
 
     cd ~
     git clone github.com:nDenerserve/SmartPi.git
-    cd SmartPi
+    cd ~/SmartPi
     make
 
-NOTE: If you need to build from a fork, you will have to symlink your fork into `${GOPATH-$HOME/go}/src/github.com/nDenerserve/` to make golang dependencies work correctly.
+NOTE: Executables files are located in the bin directory
 
 ##### emonSD Specifics
 The emonSD provides a read-only file system for most areas.
@@ -120,10 +120,6 @@ In SmartPi's configif file ```/etc/smartpi``` you may set the following settings
  * producecounter and consumecounter files make use of Databasedir -> co-located to rrd database
  * fixed "}" compilation issue
  * Added this readme.md
- 
-## ToDo's:
-   * Logging
-   * Improved error handling
 
 ### 02/10/17
  * changed from rrdtool to sqlite3
