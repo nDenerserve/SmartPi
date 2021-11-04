@@ -2,12 +2,15 @@
 
 [![CircleCI](https://circleci.com/gh/nDenerserve/SmartPi.svg?style=svg)](https://circleci.com/gh/nDenerserve/SmartPi)
 
-[SmartPi open source](http://www.emanager.eu/en/products/smartpi).
+[SmartPi open source](http://www.enerserve.eu.eu/products/smartpi).
 
 ## Forum
 https://forum.enerserve.eu
 
 ## Installation
+The easiest way is to download a prebuild image.
+Further information under: https://www.enerserve.eu/service.html
+
 Download Raspbian Jessie Lite from https://www.raspberrypi.org/downloads/raspbian/ and copy it on your SD card.
 Alternatively, you may download EmonSD, a pre-built SD card image for Raspberry Pi running as an emonPi/emonBase
 Download https://github.com/openenergymonitor/emonpi/wiki/emonSD-pre-built-SD-card-Download-&-Change-Log
