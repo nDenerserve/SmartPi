@@ -75,7 +75,7 @@ In case of an SmartPi connected to an RPI3, the output should look like this:
 
 ##### Install go
 Download the archive and extract it into /usr/local, creating a Go tree in /usr/local/go.
-Currently version 1.8.1 is up to date. You may need to adapt the filename according to latest version.
+Currently version 1.17.2 is up to date. You may need to adapt the filename according to latest version.
 
     cd /usr/local
     curl -s https://storage.googleapis.com/golang/go1.17.2.linux-armv6l.tar.gz | sudo tar -xvz
