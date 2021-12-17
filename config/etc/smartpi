@@ -40,6 +40,11 @@ voltage_3=230
 change_current_direction_1=0
 change_current_direction_2=0
 change_current_direction_3=0
+change_current_direction_4=0
+ct_type_1_primary_current  = 100
+ct_type_2_primary_current  = 100
+ct_type_3_primary_current  = 100
+ct_type_4_primary_current  = 100
 
 [ftp]
 ftp_upload=0

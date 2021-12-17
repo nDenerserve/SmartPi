@@ -15,6 +15,46 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+func writeSharedEnergyFile(c *smartpi.Config, accuvalues *smartpi.ReadoutAccumulator) {
+	var f *os.File
+	var err error
+	var p smartpi.Phase
+	s := make([]string, 6)
+	i := 0
+	for _, p = range smartpi.MainPhases {
+		s[i] = fmt.Sprint(accuvalues.WattHoursConsumed[p])
+		i++
+	}
+	for _, p = range smartpi.MainPhases {
+		s[i] = fmt.Sprint(accuvalues.WattHoursProduced[p])
+		i++
+	}
+
+	t := time.Now()
+	timeStamp := t.Format("2006-01-02 15:04:05")
+
+	sharedEnergyFile := filepath.Join(c.SharedDir, c.SharedEnergyFile)
+	if _, err = os.Stat(sharedEnergyFile); os.IsNotExist(err) {
+		os.MkdirAll(c.SharedDir, 0777)
+		f, err = os.Create(sharedEnergyFile)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		f, err = os.OpenFile(sharedEnergyFile, os.O_WRONLY|os.O_TRUNC, 0666)
+		if err != nil {
+			panic(err)
+		}
+	}
+	defer f.Close()
+	_, err = f.WriteString(timeStamp + ";" + strings.Join(s, ";") + ";")
+	if err != nil {
+		panic(err)
+	}
+	f.Close()
+
+}
+
 func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout, balancedvalue float64) {
 	var f *os.File
 	var err error

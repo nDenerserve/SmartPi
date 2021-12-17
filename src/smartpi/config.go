@@ -81,12 +81,14 @@ type Config struct {
 	FTPsendtimes [24]bool
 
 	// [webserver]
-	SharedFileEnabled bool
-	SharedDir         string
-	SharedFile        string
-	WebserverPort     int
-	DocRoot           string
-	AppKey            string
+	SharedFileEnabled    bool
+	SharedDir            string
+	SharedFile           string
+	SharedEnergyFile     string
+	SharedCalculatedFile string
+	WebserverPort        int
+	DocRoot              string
+	AppKey               string
 
 	// [csv]
 	CSVdecimalpoint string
@@ -216,6 +218,8 @@ func (p *Config) ReadParameterFromFile() {
 	p.SharedFileEnabled = cfg.Section("webserver").Key("shared_file_enabled").MustBool(true)
 	p.SharedDir = cfg.Section("webserver").Key("shared_dir").MustString("/var/run")
 	p.SharedFile = cfg.Section("webserver").Key("shared_file").MustString("smartpi_values")
+	p.SharedEnergyFile = cfg.Section("webserver").Key("shared_energy_file").MustString("smartpi_energy_values")
+	p.SharedEnergyFile = cfg.Section("webserver").Key("shared_calculated_file").MustString("smartpi_calculated_values")
 	p.WebserverPort = cfg.Section("webserver").Key("port").MustInt(1080)
 	p.DocRoot = cfg.Section("webserver").Key("docroot").MustString("/var/smartpi/www")
 	p.AppKey = cfg.Section("webserver").Key("appkey").MustString("ew980723j35h97fqw4!234490#t33465")
@@ -338,6 +342,8 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("webserver").NewKey("shared_file_enabled", strconv.FormatBool(p.SharedFileEnabled))
 	_, err = cfg.Section("webserver").NewKey("shared_dir", p.SharedDir)
 	_, err = cfg.Section("webserver").NewKey("shared_file", p.SharedFile)
+	_, err = cfg.Section("webserver").NewKey("shared_energy_file", p.SharedEnergyFile)
+	_, err = cfg.Section("webserver").NewKey("shared_calculated_file", p.SharedCalculatedFile)
 	_, err = cfg.Section("webserver").NewKey("port", strconv.FormatInt(int64(p.WebserverPort), 10))
 	_, err = cfg.Section("webserver").NewKey("docroot", p.DocRoot)
 	_, err = cfg.Section("appkey").NewKey("appkey", p.AppKey)

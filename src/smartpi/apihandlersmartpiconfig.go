@@ -34,16 +34,17 @@ import (
 	// "fmt"
 	"encoding/json"
 	"fmt"
-	"github.com/fatih/structs"
-	"github.com/gorilla/context"
-	"github.com/gorilla/mux"
-	"github.com/nDenerserve/SmartPi/src/smartpi/network"
-	"github.com/oleiade/reflections"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"reflect"
 	"strconv"
+
+	"github.com/gorilla/context"
+	"github.com/gorilla/mux"
+	"github.com/nDenerserve/SmartPi/src/smartpi/network"
+	"github.com/nDenerserve/structs"
+	"github.com/oleiade/reflections"
 )
 
 type JSONMessage struct {

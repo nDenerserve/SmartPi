@@ -82,6 +82,53 @@ func InsertInfluxData(c *Config, t time.Time, v ReadoutAccumulator, consumedWatt
 	}
 }
 
+func InsertFastData(c *Config, t time.Time, values *ADE7878Readout) {
+
+	dbc, err := client.NewHTTPClient(client.HTTPConfig{
+		Addr:     c.Influxdatabase,
+		Username: c.Influxuser,
+		Password: c.Influxpassword,
+	})
+	if err != nil {
+		log.Printf("Error creating InfluxDB Client: ", err.Error())
+	}
+	defer dbc.Close()
+
+	// Create a new point batch
+	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
+		Database:  "FastMeasurement",
+		Precision: "s",
+	})
+
+	// Create a point and add to batch
+	macaddress := network.GetMacAddr()
+	tags := map[string]string{"serial": macaddress, "type": "electric"}
+	fields := map[string]interface{}{
+		"I1": float64(values.Current[PhaseA]),
+		"I2": float64(values.Current[PhaseB]),
+		"I3": float64(values.Current[PhaseC]),
+		"I4": float64(values.Current[PhaseN]),
+		"U1": float64(values.Voltage[PhaseA]),
+		"U2": float64(values.Voltage[PhaseB]),
+		"U3": float64(values.Voltage[PhaseC]),
+		"P1": float64(values.ActiveWatts[PhaseA]),
+		"P2": float64(values.ActiveWatts[PhaseB]),
+		"P3": float64(values.ActiveWatts[PhaseC]),
+	}
+	pt, err := client.NewPoint("data", tags, fields, time.Now())
+	log.Info(fields)
+	if err != nil {
+		log.Printf("Error: ", err.Error())
+	}
+	bp.AddPoint(pt)
+
+	// Write the batch
+	err = dbc.Write(bp)
+	if err != nil {
+		log.Printf("Error: ", err.Error())
+	}
+}
+
 func ReadCSVData(c *Config, starttime time.Time, endtime time.Time) string {
 
 	loc, _ := time.LoadLocation("UTC")

@@ -199,8 +199,12 @@ github.com/msteinert/pam v0.0.0-20201130170657-e61372126161 h1:XQ1+fYPzaWZCVdu1x
 github.com/msteinert/pam v0.0.0-20201130170657-e61372126161/go.mod h1:np1wUFZ6tyoke22qDJZY40URn9Ae51gX7ljIWXN5TJs=
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
 github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
+github.com/nDenerserve/go-rpigpio v0.0.0-20160701025123-bce6190607da h1:zlC34hM5ZKbGPEuvfC2XDkjahg9prP5X2UyxJcAfcz0=
+github.com/nDenerserve/go-rpigpio v0.0.0-20160701025123-bce6190607da/go.mod h1:DLzdXWH9asVJL0kdZEv0PVG8YJBx03ivd7133aePUlw=
 github.com/nDenerserve/mbserver v0.0.0-20190424130445-5ba17eeab6ce h1:dlHlsuKOcJwS03YYlbV8XGffW4OT5pBoCMh7qA2Irpk=
 github.com/nDenerserve/mbserver v0.0.0-20190424130445-5ba17eeab6ce/go.mod h1:Jm3fdLz6ubBNXO49Iw6A+HDNxlYoFXzNV+H6ty1HqGA=
+github.com/nDenerserve/structs v1.1.0 h1:AlfJ8MssIOZJIYermhWcJFTtM/AdHUOjQ7pnRkKkuNI=
+github.com/nDenerserve/structs v1.1.0/go.mod h1:JJ7nQTXT2V9EDL92v809hBCHGqQA/BZjekczfMW9+yw=
 github.com/nathan-osman/go-rpigpio v0.0.0-20160701025123-bce6190607da h1:4fuSzRW9Os4EsqurEJtUADEZBAhYBQGDwMYEpm0tY70=
 github.com/nathan-osman/go-rpigpio v0.0.0-20160701025123-bce6190607da/go.mod h1:d9P2zqmuOhe7dbKtAOfSXL4vIB9BAjFj/+/vMULsVfE=
 github.com/nats-io/jwt v0.3.0/go.mod h1:fRYCDE99xlTsqUzISS1Bi75UBJ6ljOJQOAAu5VglpSg=
@@ -247,6 +251,7 @@ github.com/prometheus/client_golang v1.3.0/go.mod h1:hJaj2vgQTGQmVCsAACORcieXFeD
 github.com/prometheus/client_golang v1.7.1/go.mod h1:PY5Wy2awLA44sXw4AOSfFBetzPP4j5+D6mVACh+pe2M=
 github.com/prometheus/client_golang v1.10.0 h1:/o0BDeWzLWXNZ+4q5gXltUvaMpJqckTa+jTNoB+z4cg=
 github.com/prometheus/client_golang v1.10.0/go.mod h1:WJM3cc3yu7XKBKa/I8WeZm+V3eltZnBwfENSU7mdogU=
+github.com/prometheus/client_golang v1.11.0 h1:HNkLOAEQMIDv/K+04rukrLx6ch7msSRwf3/SASFAGtQ=
 github.com/prometheus/client_model v0.0.0-20180712105110-5c3871d89910/go.mod h1:MbSGuTsp3dbXC40dX6PRTWyKYBIrTGTE9sqQNg2J8bo=
 github.com/prometheus/client_model v0.0.0-20190115171406-56726106282f/go.mod h1:MbSGuTsp3dbXC40dX6PRTWyKYBIrTGTE9sqQNg2J8bo=
 github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90/go.mod h1:xMI15A0UPsDsEKsMN9yxemIoYk6Tm2C1GtYGdfGttqA=
@@ -261,6 +266,7 @@ github.com/prometheus/common v0.10.0/go.mod h1:Tlit/dnDKsSWFlCLTWaA1cyBgKHSMdTB8
 github.com/prometheus/common v0.18.0/go.mod h1:U+gB1OBLb1lF3O42bTCL+FK18tX9Oar16Clt/msog/s=
 github.com/prometheus/common v0.20.0 h1:pfeDeUdQcIxOMutNjCejsEFp7qeP+/iltHSSmLpE+hU=
 github.com/prometheus/common v0.20.0/go.mod h1:U+gB1OBLb1lF3O42bTCL+FK18tX9Oar16Clt/msog/s=
+github.com/prometheus/common v0.32.1 h1:hWIdL3N2HoUx3B8j3YN9mWor0qhY/NlEKZEaXxuIRh4=
 github.com/prometheus/procfs v0.0.0-20181005140218-185b4288413d/go.mod h1:c3At6R/oaqEKCNdg8wHV1ftS6bRYblBhIjjI8uT2IGk=
 github.com/prometheus/procfs v0.0.0-20190117184657-bf6a532e95b1/go.mod h1:c3At6R/oaqEKCNdg8wHV1ftS6bRYblBhIjjI8uT2IGk=
 github.com/prometheus/procfs v0.0.2/go.mod h1:TjEm7ze935MbeOT/UhFTIMYKhuLP4wbCsTZCD3I8kEA=
@@ -328,6 +334,7 @@ golang.org/x/exp v0.0.0-20190121172915-509febef88a4/go.mod h1:CJ0aWSM057203Lf6IL
 golang.org/x/exp v0.0.0-20190731235908-ec7cb31e5a56/go.mod h1:JhuoJpWY28nO4Vef9tZUw9qufEGTyX1+7lmHxV5q5G4=
 golang.org/x/exp v0.0.0-20210417010653-0739314eea07 h1:B++6xOM/K7sWi0y6Ji36eIMkZLdBO9fkK46aYBaSasQ=
 golang.org/x/exp v0.0.0-20210417010653-0739314eea07/go.mod h1:UjMNdUHwQ6WIvg3xW80lhIWsmxZLZf67lkFSwkMjyZ8=
+golang.org/x/exp v0.0.0-20211123021643-48cbe7f80d7c h1:hp+QRBz/P/780ndA1Rv/UpvsR6AsVmOMGYitxgZ1PPA=
 golang.org/x/image v0.0.0-20190227222117-0694c2d4d067/go.mod h1:kZ7UVZpmo3dzQBMxlp+ypCbDeSB+sBbTgSJuh5dn5js=
 golang.org/x/image v0.0.0-20190802002840-cff245a6509b/go.mod h1:FeLwcggjj3mMvU+oOTbSwawSJRM1uh48EjtB4UJZlP0=
 golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3/go.mod h1:UVdnD1Gm6xHRNCYTkRU2/jEulfH38KcIWyp/GAMgvoE=
@@ -456,6 +463,7 @@ gopkg.in/fsnotify.v1 v1.4.7/go.mod h1:Tz8NjZHkW78fSQdbUxIjBTcgA1z1m8ZHf0WmKUhAMy
 gopkg.in/gcfg.v1 v1.2.3/go.mod h1:yesOnuUOFQAhST5vPY4nbZsb/huCgGGXlipJsBn0b3o=
 gopkg.in/ini.v1 v1.62.0 h1:duBzk771uxoUuOlyRLkHsygud9+5lrlGjdFBb4mSKDU=
 gopkg.in/ini.v1 v1.62.0/go.mod h1:pNLf8WUiyNEtQjuu5G5vTm06TEv9tsIgeAvK8hOrP4k=
+gopkg.in/ini.v1 v1.65.0 h1:B2//IEITFk89S+Nl2tozBeqUvFEpUAY6daarSlrx8jU=
 gopkg.in/resty.v1 v1.12.0/go.mod h1:mDo4pnntr5jdWRML875a/NmxYqAlA73dVijT2AXvQQo=
 gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7/go.mod h1:dt/ZhP58zS4L8KSrWDmTeBkI65Dw0HsyUHuEVlX15mw=
 gopkg.in/warnings.v0 v0.1.2/go.mod h1:jksf8JmL6Qr/oQM2OXTHunEvvTAsrWBLb6OOjuVWRNI=

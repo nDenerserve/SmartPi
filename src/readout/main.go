@@ -35,6 +35,7 @@ import (
 	"path/filepath"
 	"time"
 
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 
 	log "github.com/sirupsen/logrus"
@@ -43,7 +44,6 @@ import (
 	"github.com/fsnotify/fsnotify"
 
 	//import the Paho Go MQTT library
-	"github.com/eclipse/paho.mqtt.golang"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -79,6 +79,7 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 	var consumed, produced, wattHourBalanced, consumedWattHourBalanced60s, producedWattHourBalanced60s float64
 	var p smartpi.Phase
 	var consumedCounter, producedCounter float64
+	var measureFrequency bool = true
 
 	consumerCounterFile := filepath.Join(config.CounterDir, "consumecounter")
 	producerCounterFile := filepath.Join(config.CounterDir, "producecounter")
@@ -92,6 +93,11 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 
 	tick := time.Tick(time.Duration(1000/config.Samplerate) * time.Millisecond)
 
+	// disable measuring frequency if samplerate higher than 4 samples/second
+	if config.Samplerate > 4 {
+		measureFrequency = false
+	}
+
 	for {
 		readouts := makeReadout()
 		// Restart the accumulator loop every 60 seconds.
@@ -103,10 +109,10 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		startTime := time.Now()
 
 		// Update readouts and the accumlator.
-		smartpi.ReadPhase(device, config, smartpi.PhaseN, &readouts)
+		smartpi.ReadPhase(device, config, smartpi.PhaseN, measureFrequency, &readouts)
 		accumulator.Current[smartpi.PhaseN] += readouts.Current[smartpi.PhaseN] / (60.0 * float64(config.Samplerate))
 		for _, p = range smartpi.MainPhases {
-			smartpi.ReadPhase(device, config, p, &readouts)
+			smartpi.ReadPhase(device, config, p, measureFrequency, &readouts)
 			accumulator.Current[p] += readouts.Current[p] / (60.0 * float64(config.Samplerate))
 			accumulator.Voltage[p] += readouts.Voltage[p] / (60.0 * float64(config.Samplerate))
 			accumulator.ActiveWatts[p] += readouts.ActiveWatts[p] / (60.0 * float64(config.Samplerate))
@@ -128,6 +134,7 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		if i%1 == 0 {
 			if config.SharedFileEnabled {
 				writeSharedFile(config, &readouts, wattHourBalanced)
+				writeSharedEnergyFile(config, &accumulator)
 			}
 
 			// Publish readouts to MQTT.
@@ -135,11 +142,19 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 				publishMQTTReadouts(config, mqttclient, &readouts, &accumulator)
 			}
 
+			// Update InfluxDB (FastMeasurement) database.
+			// if samplerate > 4 and safe to Database enabled.
+			// Only I1-I4, U1-U3 and P1-P3
+			if config.DatabaseEnabled && (measureFrequency == false) {
+				updateInfluxFastdata(config, &readouts)
+			}
+
 			wattHourBalanced = 0
 		}
 
 		// Every 60 seconds.
-		if i == (60*config.Samplerate - 1) {
+		// Energymeasurement is only enabled if samplerate < 4
+		if (i == (60*config.Samplerate - 1)) && (measureFrequency == true) {
 
 			// balanced value
 			var wattHourBalanced60s float64
@@ -156,10 +171,11 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 				producedWattHourBalanced60s = wattHourBalanced60s
 			}
 
-			// Update SQLlite database.
+			// Update InfluxDB database.
 			if config.DatabaseEnabled {
 				updateInfluxDatabase(config, accumulator, consumedWattHourBalanced60s, producedWattHourBalanced60s)
 			}
+			// Update SQLlite database.
 			if config.SQLLiteEnabled {
 				updateSQLiteDatabase(config, accumulator, consumedWattHourBalanced60s, producedWattHourBalanced60s)
 			}
