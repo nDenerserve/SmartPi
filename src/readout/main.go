@@ -35,6 +35,7 @@ import (
 	"path/filepath"
 	"time"
 
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/nDenerserve/SmartPi/src/smartpi"
 
 	log "github.com/sirupsen/logrus"
@@ -43,7 +44,6 @@ import (
 	"github.com/fsnotify/fsnotify"
 
 	//import the Paho Go MQTT library
-	"github.com/eclipse/paho.mqtt.golang"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -71,14 +71,17 @@ func makeReadout() (r smartpi.ADE7878Readout) {
 	r.ReactivePower = make(smartpi.Readings)
 	r.PowerFactor = make(smartpi.Readings)
 	r.ActiveEnergy = make(smartpi.Readings)
+	r.Energyconsumption = make(smartpi.Readings)
+	r.Energyproduction = make(smartpi.Readings)
 	return r
 }
 
 func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 	var mqttclient mqtt.Client
-	var consumed, produced, wattHourBalanced, consumedWattHourBalanced60s, producedWattHourBalanced60s float64
+	var wattHourBalanced, wattHourBalancedAccu, consumedWattHourBalanced60s, producedWattHourBalanced60s float64
 	var p smartpi.Phase
 	var consumedCounter, producedCounter float64
+	var measureFrequency bool = true
 
 	consumerCounterFile := filepath.Join(config.CounterDir, "consumecounter")
 	producerCounterFile := filepath.Join(config.CounterDir, "producecounter")
@@ -92,6 +95,11 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 
 	tick := time.Tick(time.Duration(1000/config.Samplerate) * time.Millisecond)
 
+	// disable measuring frequency if samplerate higher than 4 samples/second
+	if config.Samplerate > 4 {
+		measureFrequency = false
+	}
+
 	for {
 		readouts := makeReadout()
 		// Restart the accumulator loop every 60 seconds.
@@ -103,10 +111,10 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		startTime := time.Now()
 
 		// Update readouts and the accumlator.
-		smartpi.ReadPhase(device, config, smartpi.PhaseN, &readouts)
+		smartpi.ReadPhase(device, config, smartpi.PhaseN, measureFrequency, &readouts)
 		accumulator.Current[smartpi.PhaseN] += readouts.Current[smartpi.PhaseN] / (60.0 * float64(config.Samplerate))
 		for _, p = range smartpi.MainPhases {
-			smartpi.ReadPhase(device, config, p, &readouts)
+			smartpi.ReadPhase(device, config, p, measureFrequency, &readouts)
 			accumulator.Current[p] += readouts.Current[p] / (60.0 * float64(config.Samplerate))
 			accumulator.Voltage[p] += readouts.Voltage[p] / (60.0 * float64(config.Samplerate))
 			accumulator.ActiveWatts[p] += readouts.ActiveWatts[p] / (60.0 * float64(config.Samplerate))
@@ -114,9 +122,11 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 			accumulator.Frequency[p] += readouts.Frequency[p] / (60.0 * float64(config.Samplerate))
 
 			if readouts.ActiveWatts[p] >= 0 {
-				accumulator.WattHoursConsumed[p] += math.Abs(readouts.ActiveWatts[p]) / (3600.0 * float64(config.Samplerate))
+				readouts.Energyconsumption[p] = math.Abs(readouts.ActiveWatts[p]) / (3600.0 * float64(config.Samplerate))
+				accumulator.WattHoursConsumed[p] += readouts.Energyconsumption[p]
 			} else {
-				accumulator.WattHoursProduced[p] += math.Abs(readouts.ActiveWatts[p]) / (3600.0 * float64(config.Samplerate))
+				readouts.Energyproduction[p] = math.Abs(readouts.ActiveWatts[p]) / (3600.0 * float64(config.Samplerate))
+				accumulator.WattHoursProduced[p] += readouts.Energyproduction[p]
 			}
 			wattHourBalanced += readouts.ActiveWatts[p] / (3600.0 * float64(config.Samplerate))
 		}
@@ -126,40 +136,45 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 
 		// Every sample
 		if i%1 == 0 {
+
 			if config.SharedFileEnabled {
 				writeSharedFile(config, &readouts, wattHourBalanced)
 			}
 
 			// Publish readouts to MQTT.
 			if config.MQTTenabled {
-				publishMQTTReadouts(config, mqttclient, &readouts, &accumulator)
+				publishMQTTReadouts(config, mqttclient, &readouts, wattHourBalanced)
 			}
 
+			// Update InfluxDB (FastMeasurement) database.
+			// if samplerate > 4 and safe to Database enabled.
+			// Only I1-I4, U1-U3 and P1-P3
+			if config.DatabaseEnabled && (measureFrequency == false) {
+				updateInfluxFastdata(config, &readouts)
+			}
+			wattHourBalancedAccu += wattHourBalanced
 			wattHourBalanced = 0
 		}
 
 		// Every 60 seconds.
-		if i == (60*config.Samplerate - 1) {
+		// Energymeasurement is only enabled if samplerate < 4
+		if (i == (60*config.Samplerate - 1)) && (measureFrequency == true) {
 
 			// balanced value
-			var wattHourBalanced60s float64
 			consumedWattHourBalanced60s = 0.0
 			producedWattHourBalanced60s = 0.0
 
-			for _, p = range smartpi.MainPhases {
-				wattHourBalanced60s += accumulator.WattHoursConsumed[p]
-				wattHourBalanced60s -= accumulator.WattHoursProduced[p]
-			}
-			if wattHourBalanced60s >= 0 {
-				consumedWattHourBalanced60s = wattHourBalanced60s
+			if wattHourBalancedAccu >= 0 {
+				consumedWattHourBalanced60s = wattHourBalancedAccu
 			} else {
-				producedWattHourBalanced60s = wattHourBalanced60s
+				producedWattHourBalanced60s = wattHourBalancedAccu
 			}
 
-			// Update SQLlite database.
+			// Update InfluxDB database.
 			if config.DatabaseEnabled {
 				updateInfluxDatabase(config, accumulator, consumedWattHourBalanced60s, producedWattHourBalanced60s)
 			}
+			// Update SQLlite database.
 			if config.SQLLiteEnabled {
 				updateSQLiteDatabase(config, accumulator, consumedWattHourBalanced60s, producedWattHourBalanced60s)
 			}
@@ -169,16 +184,12 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 
 			// Update persistent counter files.
 			if config.CounterEnabled {
-				consumed = 0.0
-				for _, p = range smartpi.MainPhases {
-					consumed += accumulator.WattHoursConsumed[p]
+				if wattHourBalancedAccu >= 0 {
+					consumedCounter = updateCounterFile(config, consumerCounterFile, wattHourBalancedAccu)
+				} else {
+					producedCounter = updateCounterFile(config, producerCounterFile, wattHourBalancedAccu)
 				}
-				consumedCounter = updateCounterFile(config, consumerCounterFile, consumed)
-				produced = 0.0
-				for _, p = range smartpi.MainPhases {
-					produced += accumulator.WattHoursProduced[p]
-				}
-				producedCounter = updateCounterFile(config, producerCounterFile, produced)
+				wattHourBalancedAccu = 0.0
 			}
 			if config.MQTTenabled {
 				publishMQTTCalculations(config, mqttclient, consumedWattHourBalanced60s, producedWattHourBalanced60s, consumedCounter, producedCounter)

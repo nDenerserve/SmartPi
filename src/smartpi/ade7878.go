@@ -32,7 +32,7 @@ import (
 	"math"
 	"time"
 
-	rpi "github.com/nathan-osman/go-rpigpio"
+	rpi "github.com/nDenerserve/go-rpigpio"
 	"golang.org/x/exp/io/i2c"
 
 	log "github.com/sirupsen/logrus"
@@ -55,8 +55,11 @@ const (
 	PhaseN
 )
 
-var calibrationCurveFactorCurrent = 1.0
-var calibrationCurveFactorPower = 1.0
+var (
+	calibrationCurveFactorCurrent = 1.0
+	calibrationCurveFactorPower   = 1.0
+	rms_factor_current            float64
+)
 
 func (p Phase) String() string {
 	switch p {
@@ -105,15 +108,17 @@ var MainPhases = []Phase{PhaseA, PhaseB, PhaseC}
 type Readings map[Phase]float64
 
 type ADE7878Readout struct {
-	Current       Readings
-	Voltage       Readings
-	ActiveWatts   Readings
-	CosPhi        Readings
-	Frequency     Readings
-	ApparentPower Readings
-	ReactivePower Readings
-	PowerFactor   Readings
-	ActiveEnergy  Readings
+	Current           Readings
+	Voltage           Readings
+	ActiveWatts       Readings
+	CosPhi            Readings
+	Frequency         Readings
+	ApparentPower     Readings
+	ReactivePower     Readings
+	PowerFactor       Readings
+	ActiveEnergy      Readings
+	Energyconsumption Readings
+	Energyproduction  Readings
 }
 
 type CTFactors struct {
@@ -144,10 +149,6 @@ var (
 			PowerCorrectionFactor: 0.043861,
 		},
 	}
-)
-
-var (
-	rms_factor_current float64
 )
 
 // Fetch a number of bytes from the device and convert it to an int.
@@ -735,7 +736,7 @@ func CalculatePowerFactor(c *Config, phase Phase, watts float64, voltAmps float6
 	}
 }
 
-func ReadPhase(d *i2c.Device, c *Config, p Phase, v *ADE7878Readout) {
+func ReadPhase(d *i2c.Device, c *Config, p Phase, measureFrequency bool, v *ADE7878Readout) {
 	startTime := time.Now()
 
 	// Measure current.
@@ -773,7 +774,9 @@ func ReadPhase(d *i2c.Device, c *Config, p Phase, v *ADE7878Readout) {
 	v.ActiveEnergy[p] = ReadActiveEnergy(d, c, p)
 
 	// Measure frequency.
-	v.Frequency[p] = ReadFrequency(d, c, p)
+	if measureFrequency {
+		v.Frequency[p] = ReadFrequency(d, c, p)
+	}
 
 	// Calculate power factor.
 	v.PowerFactor[p] = CalculatePowerFactor(c, p, v.ActiveWatts[p], v.ApparentPower[p], v.ReactivePower[p])

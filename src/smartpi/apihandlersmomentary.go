@@ -74,7 +74,7 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 	t := time.Now()
 
 	// API request for single values
-	if valueId == "current" || valueId == "voltage" || valueId == "power" || valueId == "cosphi" || valueId == "frequency" {
+	if valueId == "current" || valueId == "voltage" || valueId == "power" || valueId == "cosphi" || valueId == "frequency" || valueId == "energyconsumed" || valueId == "energyproduced" || valueId == "energybalanced" {
 
 		// request for one of the phases
 		if (phaseId == "1") || (phaseId == "2") || (phaseId == "3") || (phaseId == "4") {
@@ -95,6 +95,12 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 				val, err = strconv.ParseFloat(records[id+10], 32)
 			} else if valueId == "frequency" && id < 4 {
 				val, err = strconv.ParseFloat(records[id+13], 32)
+			} else if valueId == "energyconsumed" && id < 4 {
+				val, err = strconv.ParseFloat(records[id+16], 32)
+			} else if valueId == "energyproduced" && id < 4 {
+				val, err = strconv.ParseFloat(records[id+19], 32)
+			} else if valueId == "energybalanced" && id < 4 {
+				val, err = strconv.ParseFloat(records[23], 32)
 			} else {
 				val = 0.0
 				info = "error: not allowed"
@@ -164,6 +170,12 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 					val, err = strconv.ParseFloat(records[i+11], 32)
 				} else if valueId == "frequency" && i < 3 {
 					val, err = strconv.ParseFloat(records[i+14], 32)
+				} else if valueId == "energyconsumed" && i < 3 {
+					val, err = strconv.ParseFloat(records[i+17], 32)
+				} else if valueId == "energyproduced" && i < 3 {
+					val, err = strconv.ParseFloat(records[i+20], 32)
+				} else if valueId == "energybalanced" && i < 3 {
+					val, err = strconv.ParseFloat(records[23], 32)
 				}
 
 				if err != nil {
@@ -197,6 +209,15 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 				} else if valueId == "frequency" {
 					tempVal.Type = "frequency"
 					tempVal.Unity = "Hz"
+				} else if valueId == "energyconsumed" {
+					tempVal.Type = "energyconsumed"
+					tempVal.Unity = "Wh"
+				} else if valueId == "energyproduced" {
+					tempVal.Type = "energyproduced"
+					tempVal.Unity = "Wh"
+				} else if valueId == "energybalanced" {
+					tempVal.Type = "energybalanced"
+					tempVal.Unity = "Wh"
 				}
 				tempVal.Info = info
 				tempVal.Data = float32(val)
@@ -223,7 +244,7 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 			id, err := strconv.Atoi(phaseId)
 			Checklog(err)
 
-			for i := 1; i <= 5; i++ {
+			for i := 1; i <= 8; i++ {
 
 				if i == 1 && id < 5 {
 					val, err = strconv.ParseFloat(records[id], 32)
@@ -235,6 +256,12 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 					val, err = strconv.ParseFloat(records[id+10], 32)
 				} else if i == 5 && id < 4 {
 					val, err = strconv.ParseFloat(records[id+13], 32)
+				} else if i == 6 && id < 4 {
+					val, err = strconv.ParseFloat(records[id+16], 32)
+				} else if i == 7 && id < 4 {
+					val, err = strconv.ParseFloat(records[id+19], 32)
+				} else if i == 8 && id < 4 {
+					val, err = strconv.ParseFloat(records[23], 32)
 				}
 
 				if err != nil {
@@ -268,6 +295,15 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 				} else if i == 5 {
 					tempVal.Type = "frequency"
 					tempVal.Unity = "Hz"
+				} else if i == 6 {
+					tempVal.Type = "energyconsumed"
+					tempVal.Unity = "Wh"
+				} else if i == 7 {
+					tempVal.Type = "energyproduced"
+					tempVal.Unity = "Wh"
+				} else if i == 8 {
+					tempVal.Type = "energybalanced"
+					tempVal.Unity = "Wh"
 				}
 
 				if (i == 1 && id < 5) || (i >= 2 && id < 4) {
@@ -296,7 +332,7 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 				var info string
 				values := []*tValue{}
 
-				for j := 1; j <= 5; j++ {
+				for j := 1; j <= 8; j++ {
 
 					if j == 1 && i < 4 {
 						val, err = strconv.ParseFloat(records[i+1], 32)
@@ -308,6 +344,12 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 						val, err = strconv.ParseFloat(records[i+11], 32)
 					} else if j == 5 && i < 3 {
 						val, err = strconv.ParseFloat(records[i+14], 32)
+					} else if j == 6 && i < 3 {
+						val, err = strconv.ParseFloat(records[i+17], 32)
+					} else if j == 7 && i < 3 {
+						val, err = strconv.ParseFloat(records[i+20], 32)
+					} else if j == 8 && i < 3 {
+						val, err = strconv.ParseFloat(records[23], 32)
 					}
 
 					if err != nil {
@@ -341,6 +383,15 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 					} else if j == 5 && i < 3 {
 						tempVal.Type = "frequency"
 						tempVal.Unity = "Hz"
+					} else if j == 6 && i < 3 {
+						tempVal.Type = "energyconsumed"
+						tempVal.Unity = "Wh"
+					} else if j == 7 && i < 3 {
+						tempVal.Type = "energyproduced"
+						tempVal.Unity = "Wh"
+					} else if j == 8 && i < 3 {
+						tempVal.Type = "energybalanced"
+						tempVal.Unity = "Wh"
 					}
 
 					if (j == 1 && i < 4) || (j >= 2 && i < 3) {
