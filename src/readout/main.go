@@ -133,8 +133,7 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		// Every sample
 		if i%1 == 0 {
 			if config.SharedFileEnabled {
-				writeSharedFile(config, &readouts, wattHourBalanced)
-				writeSharedEnergyFile(config, &accumulator)
+				writeSharedFile(config, &readouts, &accumulator, wattHourBalanced)
 			}
 
 			// Publish readouts to MQTT.

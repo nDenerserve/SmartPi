@@ -15,51 +15,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func writeSharedEnergyFile(c *smartpi.Config, accuvalues *smartpi.ReadoutAccumulator) {
+func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout, accuvalues *smartpi.ReadoutAccumulator, balancedvalue float64) {
 	var f *os.File
 	var err error
 	var p smartpi.Phase
-	s := make([]string, 6)
-	i := 0
-	for _, p = range smartpi.MainPhases {
-		s[i] = fmt.Sprint(accuvalues.WattHoursConsumed[p])
-		i++
-	}
-	for _, p = range smartpi.MainPhases {
-		s[i] = fmt.Sprint(accuvalues.WattHoursProduced[p])
-		i++
-	}
-
-	t := time.Now()
-	timeStamp := t.Format("2006-01-02 15:04:05")
-
-	sharedEnergyFile := filepath.Join(c.SharedDir, c.SharedEnergyFile)
-	if _, err = os.Stat(sharedEnergyFile); os.IsNotExist(err) {
-		os.MkdirAll(c.SharedDir, 0777)
-		f, err = os.Create(sharedEnergyFile)
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		f, err = os.OpenFile(sharedEnergyFile, os.O_WRONLY|os.O_TRUNC, 0666)
-		if err != nil {
-			panic(err)
-		}
-	}
-	defer f.Close()
-	_, err = f.WriteString(timeStamp + ";" + strings.Join(s, ";") + ";")
-	if err != nil {
-		panic(err)
-	}
-	f.Close()
-
-}
-
-func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout, balancedvalue float64) {
-	var f *os.File
-	var err error
-	var p smartpi.Phase
-	s := make([]string, 17)
+	s := make([]string, 23)
 	i := 0
 	for _, p = range smartpi.MainPhases {
 		s[i] = fmt.Sprint(values.Current[p])
@@ -83,6 +43,14 @@ func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout, balanced
 		s[i] = fmt.Sprint(values.Frequency[p])
 		i++
 	}
+	for _, p = range smartpi.MainPhases {
+		s[i] = fmt.Sprint(accuvalues.WattHoursConsumed[p])
+		i++
+	}
+	for _, p = range smartpi.MainPhases {
+		s[i] = fmt.Sprint(accuvalues.WattHoursProduced[p])
+		i++
+	}
 	// sald Values
 	s[i] = fmt.Sprint(balancedvalue)
 
@@ -95,7 +63,9 @@ func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout, balanced
 	logLine += fmt.Sprintf("P1: %s  P2: %s  P3: %s  ", s[7], s[8], s[9])
 	logLine += fmt.Sprintf("COS1: %s  COS2: %s  COS3: %s  ", s[10], s[11], s[12])
 	logLine += fmt.Sprintf("F1: %s  F2: %s  F3: %s  ", s[13], s[14], s[15])
-	logLine += fmt.Sprintf("Balanced: %s  ", s[16])
+	logLine += fmt.Sprintf("Ec1: %s  Ec2: %s  Ec3: %s  ", s[16], s[17], s[18])
+	logLine += fmt.Sprintf("Ep1: %s  Ep2: %s  Ep3: %s  ", s[19], s[20], s[21])
+	logLine += fmt.Sprintf("Balanced: %s  ", s[22])
 	log.Info(logLine)
 	sharedFile := filepath.Join(c.SharedDir, c.SharedFile)
 	if _, err = os.Stat(sharedFile); os.IsNotExist(err) {
