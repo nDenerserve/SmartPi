@@ -15,7 +15,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout, accuvalues *smartpi.ReadoutAccumulator, balancedvalue float64) {
+func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout, balancedvalue float64) {
 	var f *os.File
 	var err error
 	var p smartpi.Phase
@@ -44,13 +44,14 @@ func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout, accuvalu
 		i++
 	}
 	for _, p = range smartpi.MainPhases {
-		s[i] = fmt.Sprint(accuvalues.WattHoursConsumed[p])
+		s[i] = fmt.Sprint(values.Energyconsumption[p])
 		i++
 	}
 	for _, p = range smartpi.MainPhases {
-		s[i] = fmt.Sprint(accuvalues.WattHoursProduced[p])
+		s[i] = fmt.Sprint(values.Energyproduction[p])
 		i++
 	}
+
 	// sald Values
 	s[i] = fmt.Sprint(balancedvalue)
 

@@ -49,7 +49,7 @@ func publishMQTT(m mqtt.Client, status *bool, t string, v float64) bool {
 	return false
 }
 
-func publishMQTTReadouts(c *smartpi.Config, mqttclient mqtt.Client, values *smartpi.ADE7878Readout, accuvalues *smartpi.ReadoutAccumulator) {
+func publishMQTTReadouts(c *smartpi.Config, mqttclient mqtt.Client, values *smartpi.ADE7878Readout, wattHourBalanced float64) {
 	var pTotalBalanced float64
 	//[basetopic]/[node]/[keyname]
 	// Let's try to (re-)connect if MQTT connection was lost.
@@ -71,14 +71,15 @@ func publishMQTTReadouts(c *smartpi.Config, mqttclient mqtt.Client, values *smar
 			publishMQTT(mqttclient, &status, c.MQTTtopic+"/P"+label, values.ActiveWatts[p])
 			publishMQTT(mqttclient, &status, c.MQTTtopic+"/COS"+label, values.CosPhi[p])
 			publishMQTT(mqttclient, &status, c.MQTTtopic+"/F"+label, values.Frequency[p])
-			publishMQTT(mqttclient, &status, c.MQTTtopic+"/Ec"+label, accuvalues.WattHoursConsumed[p])
-			publishMQTT(mqttclient, &status, c.MQTTtopic+"/Ep"+label, accuvalues.WattHoursProduced[p])
+			publishMQTT(mqttclient, &status, c.MQTTtopic+"/Ec"+label, values.Energyconsumption[p])
+			publishMQTT(mqttclient, &status, c.MQTTtopic+"/Ep"+label, values.Energyproduction[p])
 		}
 		pTotalBalanced = 0.0
 		for _, p := range smartpi.MainPhases {
 			pTotalBalanced = pTotalBalanced + values.ActiveWatts[p]
 		}
 		publishMQTT(mqttclient, &status, c.MQTTtopic+"/Ptot", pTotalBalanced)
+		publishMQTT(mqttclient, &status, c.MQTTtopic+"/Ebal", wattHourBalanced)
 		log.Debug("MQTT done.")
 	}
 }
