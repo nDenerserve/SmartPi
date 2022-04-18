@@ -132,7 +132,7 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		}
 
 		// Update metrics endpoint.
-		updatePrometheusMetrics(&readouts)
+		updatePrometheusMetrics(&readouts, config)
 
 		// Every sample
 		if i%1 == 0 {
@@ -243,14 +243,6 @@ func init() {
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.DebugLevel)
 
-	prometheus.MustRegister(currentMetric)
-	prometheus.MustRegister(voltageMetric)
-	prometheus.MustRegister(activePowerMetirc)
-	prometheus.MustRegister(cosphiMetric)
-	prometheus.MustRegister(frequencyMetric)
-	prometheus.MustRegister(apparentPowerMetric)
-	prometheus.MustRegister(reactivePowerMetric)
-	prometheus.MustRegister(powerFactorMetric)
 	prometheus.MustRegister(version.NewCollector("smartpi"))
 }
 
