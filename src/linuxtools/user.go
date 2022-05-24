@@ -117,6 +117,8 @@ func pamAuth(serviceName, userName, passwd string) error {
 	if err = t.Authenticate(0); err != nil {
 		return err
 	}
-
+	if err = t.AcctMgmt(0); err != nil {
+		return err
+	}
 	return nil
 }
