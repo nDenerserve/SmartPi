@@ -165,9 +165,9 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 			producedWattHourBalanced60s = 0.0
 
 			if wattHourBalancedAccu >= 0 {
-				consumedWattHourBalanced60s = wattHourBalancedAccu
+				consumedWattHourBalanced60s = math.Abs(wattHourBalancedAccu)
 			} else {
-				producedWattHourBalanced60s = wattHourBalancedAccu
+				producedWattHourBalanced60s = math.Abs(wattHourBalancedAccu)
 			}
 
 			// Update InfluxDB database.
@@ -182,12 +182,14 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 			consumedCounter = 0.0
 			producedCounter = 0.0
 
-			// Update persistent counter files.
+			// Update persistent counter files and read Values from not updated files
 			if config.CounterEnabled {
 				if wattHourBalancedAccu >= 0 {
-					consumedCounter = updateCounterFile(config, consumerCounterFile, wattHourBalancedAccu)
+					consumedCounter = updateCounterFile(config, consumerCounterFile, math.Abs(wattHourBalancedAccu))
+					producedCounter = readCounterFile(config, producerCounterFile)
 				} else {
-					producedCounter = updateCounterFile(config, producerCounterFile, wattHourBalancedAccu)
+					producedCounter = updateCounterFile(config, producerCounterFile, math.Abs(wattHourBalancedAccu))
+					consumedCounter = readCounterFile(config, consumerCounterFile)
 				}
 				wattHourBalancedAccu = 0.0
 			}

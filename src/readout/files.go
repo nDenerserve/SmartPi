@@ -97,7 +97,12 @@ func updateCounterFile(c *smartpi.Config, f string, v float64) float64 {
 		counter, err = strconv.ParseFloat(string(counterFile), 64)
 		if err != nil {
 			log.Errorf("unable to read counter file %q, %q", f, err)
+			log.Errorf("try to create new counterfile")
 			counter = 0.0
+			err = ioutil.WriteFile(f, []byte(strconv.FormatFloat(counter, 'f', 8, 64)), 0644)
+			if err != nil {
+				log.Errorf("unable to create counter file %q, %q", f, err)
+			}
 		}
 	} else {
 		counter = 0.0
@@ -113,4 +118,26 @@ func updateCounterFile(c *smartpi.Config, f string, v float64) float64 {
 		panic(err)
 	}
 	return counter + v
+}
+
+func readCounterFile(c *smartpi.Config, f string) float64 {
+	t := time.Now()
+	var counter float64
+	counterFile, err := ioutil.ReadFile(f)
+	if err == nil {
+		counter, err = strconv.ParseFloat(string(counterFile), 64)
+		if err != nil {
+			log.Errorf("unable to read counter file %q, %q", f, err)
+			counter = 0.0
+		}
+	} else {
+		counter = 0.0
+	}
+
+	logLine := "## Read Persistent counter file ##"
+	logLine += t.Format(" 2006-01-02 15:04:05 ")
+	logLine += fmt.Sprintf("File: %q  Current: %g  ", f, counter)
+	log.Info(logLine)
+
+	return counter
 }
