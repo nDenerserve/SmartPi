@@ -11,19 +11,22 @@ https://forum.enerserve.eu
 The easiest way is to download a prebuild image.
 Further information under: https://www.enerserve.eu/service.html
 
-Download Raspbian Bullseye Lite (64bit) (the big bullsyeye should also work) from https://www.raspberrypi.com/software/ and copy it on your SD card. The easiest way is to use the Raspbbery Pi Imager.
-
-Create a user with the name smartpi and a password of your choice. We use the password smart4pi here. During installation, please use the password you have chosen and replace smart4pi with the one you have chosen.
+Download Raspbian Jessie Lite from https://www.raspberrypi.org/downloads/raspbian/ and copy it on your SD card.
+Alternatively, you may download EmonSD, a pre-built SD card image for Raspberry Pi running as an emonPi/emonBase
+Download https://github.com/openenergymonitor/emonpi/wiki/emonSD-pre-built-SD-card-Download-&-Change-Log
 
 ##### Update packet list and update packages
 
-    sudo apt update
-    sudo apt upgrade
+    sudo apt-get update
+    sudo apt-get upgrade
 
 ##### Install additional packages.
 
-    sudo apt install sqlite3 git i2c-tools avahi-daemon libpam0g-dev
+    $ sudo apt-get install sqlite3 git i2c-tools avahi-daemon
 
+For building SmartPi tools, additional packages are required.
+
+    sudo apt-get install libpam0g-dev
 
 ##### Enable i2c kernel module
 
@@ -35,12 +38,10 @@ To check to see if the module is loaded:
 
 This should return something like this:
 
-    i2c_dev                20480  0
-    i2c_bcm2835            16384  0
+    i2c_dev                 5859  0
+    i2c_bcm2708             4834  0
 
-
-If the module is not listed, activate i2c via 
-sudo raspi-config or add it in following way to the system: 
+If the module is not listed, add it to the system.
 
     echo 'i2c-dev' | sudo tee -a /etc/modules
     sudo modprobe 'i2c-dev'
@@ -66,7 +67,7 @@ In case of an SmartPi connected to an RPI3, the output should look like this:
     20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
     30: -- -- -- -- -- -- -- -- 38 -- -- -- -- -- -- --
     40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-    50: -- 51 -- -- -- -- -- -- -- -- -- -- -- -- -- --
+    50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
     60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
     70: -- -- -- -- -- -- -- --
 
@@ -80,14 +81,8 @@ Download the archive and extract it into /usr/local, creating a Go tree in /usr/
 Currently version 1.17.2 is up to date. You may need to adapt the filename according to latest version.
 
     cd /usr/local
-   # curl -s https://storage.googleapis.com/golang/go1.17.4.linux-arm64.tar.gz | sudo tar -xvz
-
-    sudo wget https://go.dev/dl/go1.18.2.linux-arm64.tar.gz 
-    sudo tar -xvzf go1.18.2.linux-arm64.tar.gz
+    curl -s https://storage.googleapis.com/golang/go1.17.2.linux-armv6l.tar.gz | sudo tar -xvz
     echo 'PATH="/usr/local/go/bin:${PATH}"' | sudo tee -a /etc/profile
-
-
-
 
 In order for the `${PATH}` to be updated, you will need to logout.
 
@@ -106,6 +101,19 @@ and set the GOPATH environment variable to point to that location.
 
 NOTE: Executables files are located in the bin directory
 
+##### emonSD Specifics
+The emonSD provides a read-only file system for most areas.
+You can mount the file system with write privileges by ```rpi-rw``` in order to edit files.
+```rpi-ro``` reverts write privileges again. ```/home/pi/data``` is always mounted with write access.
+This is the location where you need to place your SmartPi database and current values file.
+In SmartPi's configif file ```/etc/smartpi``` you may set the following settings to move all files SmartPi is writing into.
+
+    [database]
+    dir="/home/pi/data/smartpi"
+    
+    [device]
+    shared_dir="/home/pi/data/smartpi"
+
 
 
 ## Change Log
@@ -123,6 +131,3 @@ NOTE: Executables files are located in the bin directory
  * change datelayout in API to RFC3339
  * fixed errors in datehandling
  * added week consumption
-
- ### 05/24/22
- 

@@ -3,7 +3,9 @@
         category: 'SmartPi',
         color: '#E2D96E',
         defaults: {
-            name: {value: ""},
+            name: {
+                value: ""
+            },
             rising_threshold: {
                 value: "",
                 required: true,
@@ -14,8 +16,12 @@
                 required: true,
                 validate: RED.validators.number()
             },
-						levelup: {value: ""},
-						leveldown: {value: ""},
+            levelup: {
+                value: ""
+            },
+            leveldown: {
+                value: ""
+            },
 
         },
         inputs: 1,
@@ -24,19 +30,21 @@
         label: function() {
             return this.name || "smartpi-treshold-trigger";
         },
-				oneditprepare: function() {
-						var setstate = function () {
-						                if ($('#node-input-set').is(":checked")) {
-						                    $("#node-set-levelup").show();
-																$("#node-set-leveldown").show();
-						                } else {
-						                    $("#node-set-levelup").hide();
-																$("#node-set-leveldown").show();
-						                }
-						            };
-						            $("#node-input-set").change(function () { setstate(); });
-						            setstate();
-											}
+        oneditprepare: function() {
+            var setstate = function() {
+                if ($('#node-input-set').is(":checked")) {
+                    $("#node-set-levelup").show();
+                    $("#node-set-leveldown").show();
+                } else {
+                    $("#node-set-levelup").hide();
+                    $("#node-set-leveldown").hide();
+                }
+            };
+            $("#node-input-set").change(function() {
+                setstate();
+            });
+            setstate();
+        }
 
     });
 </script>
@@ -46,37 +54,36 @@
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="name">
     </div>
-		<div class="form-row" id="node-set-behavior">
-			<label>&nbsp;</label>
-			<input type="checkbox" id="node-input-set" style="display: inline-block; width: auto; vertical-align: top;">
-			<label for="node-input-set" style="width: 70%;">Change normal behavior?</label>
-		</div>
+    <div class="form-row" id="node-set-behavior">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-set" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-set" style="width: 70%;">Change normal behavior?</label>
+    </div>
     <div class="form-row">
         <label for="node-input-rising_threshold"><i class="icon-chevron-up"></i> Rising threshold</label>
         <input type="text" id="node-input-rising_threshold" placeholder="value">
     </div>
-		<div class="form-row" id="node-set-levelup">
-			<label for="node-input-levelup">&nbsp;</label>
-			<select id="node-input-levelup" style="width: 250px;">
-	            <option value="0">"level - off (0)"</option>
-	            <option selected="selected" value="1">"level - on (1)"</option>
-	        </select>
-		</div>
+    <div class="form-row" id="node-set-levelup">
+        <label for="node-input-levelup">&nbsp;</label>
+        <select id="node-input-levelup" style="width: 250px;">
+            <option value="0">"level - off (0)"</option>
+            <option selected="selected" value="1">"level - on (1)"</option>
+        </select>
+    </div>
     <div class="form-row">
         <label for="node-input-falling_threshold"><i class="icon-chevron-down"></i> Falling threshold</label>
         <input type="text" id="node-input-falling_threshold" placeholder="value">
     </div>
-		<div class="form-row" id="node-set-leveldown">
-			<label for="node-input-leveldown">&nbsp;</label>
-			<select id="node-input-leveldown" style="width: 250px;">
+    <div class="form-row" id="node-set-leveldown">
+        <label for="node-input-leveldown">&nbsp;</label>
+        <select id="node-input-leveldown" style="width: 250px;">
 	            <option selected="selected" value="0">"level - off (0)"</option>
 	            <option value="1">"level - on (1)"</option>
 	        </select>
-		</div>
+    </div>
 
 </script>
 
 <script type="text/x-red" data-help-name="smartpi-treshold-trigger">
-    <p>A node that converts values to 0 or 1 for the SmartPi relay. If the input
-		 rises above the rising treshold, the output is 1. If the input sings below the falling threshold, the output is 0.</p>
+    <p>A node that converts values to 0 or 1 for the SmartPi relay. If the input rises above the rising treshold, the output is 1. If the input sings below the falling threshold, the output is 0.</p>
 </script>
