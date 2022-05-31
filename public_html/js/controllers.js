@@ -37,6 +37,8 @@ smartpi.controller('MainCtrl', function($scope, $Momentary, $Linechart, $GetData
     $GetSoftwareInformations.get({},
         function(softwareinformations) {
             $scope.softwareversion = softwareinformations.Softwareversion;
+            $scope.hardwaremodel = softwareinformations.Hardwaremodel;
+            $scope.hardwareserial = softwareinformations.Hardwareserial;
         });
 
     getActualValues();
