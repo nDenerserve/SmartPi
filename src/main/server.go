@@ -34,6 +34,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"strconv"
 	"time"
 
@@ -150,10 +151,23 @@ var appVersion = "No Version Provided"
 
 type Softwareinformations struct {
 	Softwareversion string
+	Hardwareserial  string
+	Hardwaremodel   string
 }
 
 func getSoftwareInformations(w http.ResponseWriter, r *http.Request) {
-	data := Softwareinformations{Softwareversion: appVersion}
+
+	model, err := exec.Command("cat /sys/firmware/devicetree/base/model").Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	serial, err := exec.Command("cat /proc/cpuinfo | grep Serial | cut -d' ' -f2").Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	data := Softwareinformations{Softwareversion: appVersion, Hardwareserial: string(serial), Hardwaremodel: string(model)}
 
 	// JSON output of request
 	if err := json.NewEncoder(w).Encode(data); err != nil {

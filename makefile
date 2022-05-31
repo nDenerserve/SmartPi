@@ -4,7 +4,7 @@ BINARY_FTPUPLOAD=smartpiftpupload
 BINARY_MODBUSSERVER=smartpimodbusserver
 
 #VERSION=0.3.7
-VERSION := $(shell git describe --always --long --dirty)
+VERS = $(shell git describe --always --long --dirty)
 BUILD_TIME := $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
 
 BUILDPATH=$(CURDIR)
@@ -17,8 +17,18 @@ GOGET=$(GO) get
 
 pkgs = $(shell $(GO) list ./src/...)
 
+
+ifdef VERSION
+		VERSION := $(VERSION)
+else
+		VERSION := $(VERS)_${BUILD_TIME}
+endif
+
+$(info    VERSION is $(VERSION))
+
+
 all: format makedir get buildsmartpireadout buildsmartpiserver buildsmartpiftpupload buildsmartpimodbusserver
-#all: makedir get buildsmartpireadout
+
 
 makedir:
 	@echo "start building tree..."
@@ -31,28 +41,29 @@ style:
 	@echo "checking code style"
 	! $(GOFMT) -d $$(find . -path ./vendor -prune -o -name '*.go' -print) | grep '^'
 
+
 format:
 	@echo "formatting code..."
 	@$(GO) fmt $(pkgs)
 
 buildsmartpireadout:
 	@echo "start building smartpireadout..."
-	$(GOBUILD) -o bin/$(BINARY_READOUT) -ldflags="-X main.appVersion=${VERSION}_${BUILD_TIME}" src/readout/*.go
+	$(GOBUILD) -o bin/$(BINARY_READOUT) -ldflags="-X main.appVersion=${VERSION}" src/readout/*.go
 	@echo "building smartpireadout done"
 
 buildsmartpiserver:
 	@echo "start building smartpiserver..."
-	$(GOBUILD) -o bin/$(BINARY_SERVER) -ldflags="-X main.appVersion=${VERSION}_${BUILD_TIME}" src/main/server.go
+	$(GOBUILD) -o bin/$(BINARY_SERVER) -ldflags="-X main.appVersion=${VERSION}" src/main/server.go
 	@echo "building smartpiserver done"
 
 buildsmartpiftpupload:
 	@echo "start building smartpiftpupload..."
-	$(GOBUILD) -o bin/$(BINARY_FTPUPLOAD) -ldflags="-X main.appVersion=${VERSION}_${BUILD_TIME}" src/main/ftpupload.go
+	$(GOBUILD) -o bin/$(BINARY_FTPUPLOAD) -ldflags="-X main.appVersion=${VERSION}" src/main/ftpupload.go
 	@echo "building smartpiftpupload done"
 
 buildsmartpimodbusserver:
 	@echo "start building smartpimodbusserver..."
-	$(GOBUILD) -o bin/$(BINARY_MODBUSSERVER) -ldflags="-X main.appVersion=${VERSION}_${BUILD_TIME}" src/modbus/modbusserver.go
+	$(GOBUILD) -o bin/$(BINARY_MODBUSSERVER) -ldflags="-X main.appVersion=${VERSION}" src/modbus/modbusserver.go
 	@echo "building smartpimodbusserver done"
 
 install:
