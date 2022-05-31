@@ -27,6 +27,7 @@
 package main
 
 import (
+	"bufio"
 	"crypto/subtle"
 	"encoding/json"
 	"flag"
@@ -34,8 +35,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/context"
@@ -157,17 +158,30 @@ type Softwareinformations struct {
 
 func getSoftwareInformations(w http.ResponseWriter, r *http.Request) {
 
-	model, err := exec.Command("cat /sys/firmware/devicetree/base/model").Output()
-	if err != nil {
-		log.Fatal(err)
+	serial := ""
+	model := ""
+
+	file, err := os.Open("/proc/cpuinfo")
+	smartpi.Checklog(err)
+
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "Model") {
+			substring := strings.Split(line, ": ")
+			if len(substring) > 1 {
+				model = (substring[len(substring)-1])
+			}
+		} else if strings.Contains(line, "Serial") {
+			substring := strings.Split(line, ": ")
+			if len(substring) > 1 {
+				serial = (substring[len(substring)-1])
+			}
+		}
 	}
 
-	serial, err := exec.Command("cat /proc/cpuinfo | grep Serial | cut -d' ' -f2").Output()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	data := Softwareinformations{Softwareversion: appVersion, Hardwareserial: string(serial), Hardwaremodel: string(model)}
+	data := Softwareinformations{Softwareversion: appVersion, Hardwareserial: serial, Hardwaremodel: model}
 
 	// JSON output of request
 	if err := json.NewEncoder(w).Encode(data); err != nil {
