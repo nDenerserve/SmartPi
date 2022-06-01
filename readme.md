@@ -16,14 +16,40 @@ Download Raspbian Bullseye Lite (64bit) (the big bullsyeye should also work) fro
 Create a user with the name smartpi and a password of your choice. We use the password smart4pi here. During installation, please use the password you have chosen and replace smart4pi with the one you have chosen.
 
 ##### Update packet list and update packages
+    
+    wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -
+    echo "deb https://packages.grafana.com/oss/deb stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
 
     sudo apt update
     sudo apt upgrade
 
 ##### Install additional packages.
 
-    sudo apt install sqlite3 git i2c-tools avahi-daemon libpam0g-dev
+    sudo apt-get install -y grafana, sqlite3, ppp, wvdial, libpam0g, npm, influxdb, grafana
 
+##### Start InfluxDB at startup and create all needed tables
+
+    sudo systemctl unmask influxdb
+    sudo systemctl enable influxdb
+    sudo systemctl start influxdb
+
+Create needed tables. You can use your own password, but keep in mind that you have to change the password in /etc/smartpi too.
+
+    influx -execute "CREATE USER smartpi WITH PASSWORD 'smart4pi' WITH ALL PRIVILEGES"
+    influx -username admin -password smart4pi -execute "CREATE DATABASE MeteringData"
+    influx -username admin -password smart4pi -execute "CREATE CONTINUOUS QUERY minmax_1h ON MeteringData BEGIN SELECT max(CosPhi1) AS MAX_CosPhi1,max(CosPhi2) AS MAX_CosPhi2,max(CosPhi3) AS MAX_CosPhi3,max(F1) AS MAX_F1,max(F2) AS MAX_F2,max(F3) AS MAX_F3,max(U1) AS MAX_U1,max(U2) AS MAX_U2,max(U3) AS MAX_U3,max(I1) AS MAX_I1,max(I2) AS MAX_I2,max(I3) AS MAX_I3,max(I4) AS MAX_I4,max(P1) AS MAX_P1,max(P2) AS MAX_P2,max(P3) AS MAX_P3,max(P3) AS MAX_P3,min(CosPhi1) AS MIN_CosPhi1,min(CosPhi2) AS MIN_CosPhi2,min(CosPhi3) AS MIN_CosPhi3,min(F1) AS MIN_F1,min(F2) AS MIN_F2,min(F3) AS MIN_F3,min(U1) AS MIN_U1,min(U2) AS MIN_U2,min(U3) AS MIN_U3,min(I1) AS MIN_I1,min(I2) AS MIN_I2,min(I3) AS MIN_I3,min(I4) AS MIN_I4,min(P1) AS MIN_P1,min(P2) AS MIN_P2,min(P3) AS MIN_P3,min(P3) AS MIN_P3 INTO hour FROM data GROUP BY time(1h),serial,type END"
+    influx -username admin -password smart4pi -execute "CREATE DATABASE FastMeasurement"
+
+##### Create tmpfs in /etc/fstab
+
+    tmpfs /var/tmp/smartpi tmpfs nodev,nosuid,size=20M 0 0
+    
+
+For secure 24/7 operation, we recommend that you also create a tmpf for the log and tmp files.
+
+    tmpfs /var/log tmpfs defaults,noatime,mode=1777,size=10M 0 0
+    tmpfs /var/tmp tmpfs defaults,noatime,mode=1777,size=30M 0 0
+    tmpfs /tmp tmpfs defaults,noatime,mode=1777,size=20M 0 0
 
 ##### Enable i2c kernel module
 
@@ -77,10 +103,9 @@ In case of an SmartPi connected to an RPI3, the output should look like this:
 
 ##### Install go
 Download the archive and extract it into /usr/local, creating a Go tree in /usr/local/go.
-Currently version 1.17.2 is up to date. You may need to adapt the filename according to latest version.
+Currently version 1.18.2 is up to date. You may need to adapt the filename according to latest version.
 
     cd /usr/local
-   # curl -s https://storage.googleapis.com/golang/go1.17.4.linux-arm64.tar.gz | sudo tar -xvz
 
     sudo wget https://go.dev/dl/go1.18.2.linux-arm64.tar.gz 
     sudo tar -xvzf go1.18.2.linux-arm64.tar.gz
@@ -125,4 +150,7 @@ NOTE: Executables files are located in the bin directory
  * added week consumption
 
  ### 05/24/22
+ * added Influxdb-support
+ * added calibration possibilities
+ * added modbus-server
  
