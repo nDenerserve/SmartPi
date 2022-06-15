@@ -191,7 +191,7 @@
                                 <md-select ng-model="measurement.current.phase2.sensor" ng-change="showSaveButton('measurement')">
                                     <md-option value="YHDC_SCT013">YHDC_SCT013</md-option>
                                     <md-option value="400A/033V">400A/0.33V</md-option>
-                                    <md-option ng-checked="swedishCheck" value="X/1A">Current transformer 1A sec current</md-option>
+                                    <md-option value="X/1A">Current transformer 1A sec current</md-option>
                                 </md-select>
                             </md-input-container>
                             <md-input-container class="md-block" flex="8" ng-if="measurement.current.phase2.sensor=='X/1A'">
@@ -230,6 +230,7 @@
                                 <label>Current Sensor</label>
                                 <md-select ng-model="measurement.current.phase4.sensor" ng-change="showSaveButton('measurement')">
                                     <md-option value="YHDC_SCT013">YHDC_SCT013</md-option>
+                                    <md-option value="400A/033V">400A/0.33V</md-option>
                                     <md-option value="X/1A">Current transformer 1A sec current</md-option>
                                 </md-select>
                             </md-input-container>
