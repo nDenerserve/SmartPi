@@ -21,11 +21,10 @@ Create a user with the name smartpi and a password of your choice. We use the pa
     echo "deb https://packages.grafana.com/oss/deb stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
 
     sudo apt update
-    sudo apt upgrade
 
 ##### Install additional packages.
 
-    sudo apt-get install -y grafana, sqlite3, ppp, wvdial, libpam0g, npm, influxdb, grafana
+    sudo apt-get install -y sqlite3 ppp wvdial libpam0g npm influxdb grafana
 
 ##### Start InfluxDB at startup and create all needed tables
 
@@ -96,42 +95,19 @@ In case of an SmartPi connected to an RPI3, the output should look like this:
     60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
     70: -- -- -- -- -- -- -- --
 
-##### Remove old go version
+##### Install Go
 
-    sudo apt-get remove golang
-    sudo apt-get autoremove
-
-##### Install go
-Download the archive and extract it into /usr/local, creating a Go tree in /usr/local/go.
-Currently version 1.18.2 is up to date. You may need to adapt the filename according to latest version.
-
-    cd /usr/local
-
-    sudo wget https://go.dev/dl/go1.18.2.linux-arm64.tar.gz 
-    sudo tar -xvzf go1.18.2.linux-arm64.tar.gz
-    echo 'PATH="/usr/local/go/bin:${PATH}"' | sudo tee -a /etc/profile
-
-
-
-
-In order for the `${PATH}` to be updated, you will need to logout.
-
-Create a directory to contain your Go workspace, for example `${HOME}/go`,
-and set the GOPATH environment variable to point to that location.
-
-    mkdir "${HOME}/go"
-    export GOPATH="${HOME}/go"
+Get the latest 1.x version of [Go from go.dev using the install instructions](https://go.dev/doc/install)
 
 ##### Building source
 
+    sudo apt-get install -y build-essential libpam0g-dev
     cd ~
     git clone github.com:nDenerserve/SmartPi.git
     cd ~/SmartPi
     make
 
 NOTE: Executables files are located in the bin directory
-
-
 
 ## Change Log
 
