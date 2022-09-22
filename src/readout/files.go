@@ -76,12 +76,13 @@ func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout, balanced
 			panic(err)
 		}
 	} else {
-		f, err = os.OpenFile(sharedFile, os.O_WRONLY|os.O_TRUNC, 0666)
+		f, err = os.OpenFile(sharedFile, os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
 			panic(err)
 		}
 	}
 	defer f.Close()
+
 	_, err = f.WriteString(timeStamp + ";" + strings.Join(s, ";") + ";")
 	if err != nil {
 		panic(err)
