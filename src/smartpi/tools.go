@@ -38,6 +38,7 @@ type ReadoutAccumulator struct {
 	Frequency         Readings
 	WattHoursConsumed Readings
 	WattHoursProduced Readings
+	WattHoursBalanced Readings
 }
 
 func Checkpanic(e error) {

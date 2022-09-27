@@ -66,6 +66,9 @@ func InsertInfluxData(c *Config, t time.Time, v ReadoutAccumulator, consumedWatt
 		"Ep1":     float64(v.WattHoursProduced[PhaseA]),
 		"Ep2":     float64(v.WattHoursProduced[PhaseB]),
 		"Ep3":     float64(v.WattHoursProduced[PhaseC]),
+		"Eb1":     float64(v.WattHoursBalanced[PhaseA]),
+		"Eb2":     float64(v.WattHoursBalanced[PhaseB]),
+		"Eb3":     float64(v.WattHoursBalanced[PhaseC]),
 		"bEc":     float64(consumedWattHourBalanced),
 		"bEp":     float64(producedWattHourBalanced),
 	}
