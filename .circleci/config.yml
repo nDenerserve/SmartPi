@@ -13,8 +13,7 @@ jobs:
     executor: golang
 
     steps:
-    - checkout:
-        path: ~/SmartPi/src
+    - checkout
     - run: sudo apt-get update
     - run: sudo apt-get install -y libpam0g-dev
     - run: go mod download
