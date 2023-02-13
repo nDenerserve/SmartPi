@@ -6,7 +6,10 @@ executors:
     docker:
     - image: cimg/go:1.18
     
-
+defaults:
+ run:
+  working-directory: ./src
+  
 jobs:
   build:
     executor: golang
@@ -15,9 +18,7 @@ jobs:
     - checkout
     - run: sudo apt-get update
     - run: sudo apt-get install -y libpam0g-dev
-    - name: Run go mod
-      working_directory: ./src
-      run: go mod download
+    - run: go mod download
     - run: make style
     - run: make
     - store_artifacts:
