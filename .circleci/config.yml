@@ -3,9 +3,10 @@ version: 2.1
 
 executors:
   golang:
+    working_directory: ~/SmartPi/src
     docker:
     - image: cimg/go:1.18
-    working_directory: ~/SmartPi
+    
 
 jobs:
   build:
