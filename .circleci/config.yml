@@ -18,7 +18,7 @@ jobs:
     - checkout
     - run: sudo apt-get update
     - run: sudo apt-get install -y libpam0g-dev
-    - run: go mod download
+    - run: cd src && go mod download
     - run: make style
     - run: make
     - store_artifacts:
