@@ -8,11 +8,12 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/nDenerserve/SmartPi/src/smartpi"
+	"github.com/nDenerserve/SmartPi/repository/config"
+	"github.com/nDenerserve/SmartPi/smartpi"
 	log "github.com/sirupsen/logrus"
 )
 
-func updateInfluxDatabase(c *smartpi.Config, data smartpi.ReadoutAccumulator, consumedWattHourBalanced float64, producedWattHourBalanced float64) {
+func updateInfluxDatabase(c *config.Config, data smartpi.ReadoutAccumulator, consumedWattHourBalanced float64, producedWattHourBalanced float64) {
 	t := time.Now()
 
 	logLine := "## InfluxDB (MeterinData) Database Update ##"
@@ -23,7 +24,7 @@ func updateInfluxDatabase(c *smartpi.Config, data smartpi.ReadoutAccumulator, co
 	smartpi.InsertInfluxData(c, t, data, consumedWattHourBalanced, producedWattHourBalanced)
 }
 
-func updateInfluxFastdata(c *smartpi.Config, data *smartpi.ADE7878Readout) {
+func updateInfluxFastdata(c *config.Config, data *smartpi.ADE7878Readout) {
 	t := time.Now()
 
 	logLine := "## InfluxDB (Fastdata) Database Update ##"
@@ -34,7 +35,7 @@ func updateInfluxFastdata(c *smartpi.Config, data *smartpi.ADE7878Readout) {
 	smartpi.InsertFastData(c, t, data)
 }
 
-func updateSQLiteDatabase(c *smartpi.Config, data smartpi.ReadoutAccumulator, consumedWattHourBalanced float64, producedWattHourBalanced float64) {
+func updateSQLiteDatabase(c *config.Config, data smartpi.ReadoutAccumulator, consumedWattHourBalanced float64, producedWattHourBalanced float64) {
 	t := time.Now()
 	dbFileName := "smartpi_logdata_" + t.Format("200601") + ".db"
 

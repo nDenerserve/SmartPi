@@ -11,21 +11,23 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nDenerserve/SmartPi/src/smartpi"
+	"github.com/nDenerserve/SmartPi/models"
+	"github.com/nDenerserve/SmartPi/repository/config"
+	"github.com/nDenerserve/SmartPi/smartpi"
 	log "github.com/sirupsen/logrus"
 )
 
-func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout, balancedvalue float64) {
+func writeSharedFile(c *config.Config, values *smartpi.ADE7878Readout, balancedvalue float64) {
 	var f *os.File
 	var err error
-	var p smartpi.Phase
+	var p models.Phase
 	s := make([]string, 23)
 	i := 0
 	for _, p = range smartpi.MainPhases {
 		s[i] = fmt.Sprint(values.Current[p])
 		i++
 	}
-	s[i] = fmt.Sprint(values.Current[smartpi.PhaseN])
+	s[i] = fmt.Sprint(values.Current[models.PhaseN])
 	i++
 	for _, p = range smartpi.MainPhases {
 		s[i] = fmt.Sprint(values.Voltage[p])
@@ -89,7 +91,7 @@ func writeSharedFile(c *smartpi.Config, values *smartpi.ADE7878Readout, balanced
 	f.Close()
 }
 
-func updateCounterFile(c *smartpi.Config, f string, v float64) float64 {
+func updateCounterFile(c *config.Config, f string, v float64) float64 {
 	t := time.Now()
 	var counter float64
 	counterFile, err := ioutil.ReadFile(f)
@@ -120,7 +122,7 @@ func updateCounterFile(c *smartpi.Config, f string, v float64) float64 {
 	return counter + v
 }
 
-func readCounterFile(c *smartpi.Config, f string) float64 {
+func readCounterFile(c *config.Config, f string) float64 {
 	t := time.Now()
 	var counter float64
 	counterFile, err := ioutil.ReadFile(f)

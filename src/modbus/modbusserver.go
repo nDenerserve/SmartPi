@@ -12,7 +12,8 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/goburrow/serial"
-	"github.com/nDenerserve/SmartPi/src/smartpi"
+	"github.com/nDenerserve/SmartPi/repository/config"
+	"github.com/nDenerserve/SmartPi/utils"
 	"github.com/nDenerserve/mbserver"
 	log "github.com/sirupsen/logrus"
 )
@@ -28,7 +29,7 @@ var appVersion = "No Version Provided"
 // main
 func main() {
 
-	config := smartpi.NewConfig()
+	config := config.NewConfig()
 
 	version := flag.Bool("v", false, "prints current version information")
 	flag.Parse()
@@ -87,13 +88,13 @@ func main() {
 				log.Debugf("EVENT! %#v\n", event)
 				time.Sleep(1 * time.Second)
 				file, err := os.Open(config.SharedDir + "/" + config.SharedFile)
-				smartpi.Checklog(err)
+				utils.Checklog(err)
 				defer file.Close()
 				reader := csv.NewReader(bufio.NewReader(file))
 				reader.Comma = ';'
 				records, err := reader.Read()
 				log.Debugf("%v", records)
-				smartpi.Checklog(err)
+				utils.Checklog(err)
 				if len(records) >= 19 {
 					for i := 1; i < len(records)-1; i++ {
 						registervalue = 0

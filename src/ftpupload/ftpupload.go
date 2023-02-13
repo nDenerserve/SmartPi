@@ -35,7 +35,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nDenerserve/SmartPi/src/smartpi"
+	"github.com/nDenerserve/SmartPi/repository/config"
+	"github.com/nDenerserve/SmartPi/smartpi"
+	"github.com/nDenerserve/SmartPi/utils"
 	"github.com/secsy/goftp"
 	log "github.com/sirupsen/logrus"
 )
@@ -50,7 +52,7 @@ var appVersion = "No Version Provided"
 
 func main() {
 
-	config := smartpi.NewConfig()
+	config := config.NewConfig()
 
 	version := flag.Bool("v", false, "prints current version information")
 	flag.Parse()
@@ -120,7 +122,7 @@ func main() {
 			createpath = createpath + "/" + pathlist[j]
 
 			files, err := client.ReadDir(workingpath)
-			smartpi.Checklog(err)
+			utils.Checklog(err)
 			fileexist := 0
 			for _, file := range files {
 				if file.IsDir() && file.Name() == pathlist[j] {
@@ -185,7 +187,7 @@ func main() {
 			createpath = createpath + "/" + pathlist[j]
 
 			files, err := client.ReadDir(workingpath)
-			smartpi.Checklog(err)
+			utils.Checklog(err)
 			fileexist := 0
 			for _, file := range files {
 				if file.IsDir() && file.Name() == pathlist[j] {

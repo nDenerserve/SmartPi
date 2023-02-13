@@ -41,6 +41,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/nDenerserve/SmartPi/repository/config"
 )
 
 var Configfile string
@@ -67,7 +68,7 @@ func ServeChartValues(w http.ResponseWriter, r *http.Request) {
 	valueId := vars["valueId"]
 	format = vars["format"]
 
-	config := NewConfig()
+	config := config.NewConfig()
 
 	location := time.Now().Location()
 
@@ -208,7 +209,7 @@ func ServeDayValues(w http.ResponseWriter, r *http.Request) {
 	valueId := vars["valueId"]
 	format = vars["format"]
 
-	config := NewConfig()
+	config := config.NewConfig()
 
 	location := time.Now().Location()
 

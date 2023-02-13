@@ -35,6 +35,8 @@ import (
 	"math"
 	"reflect"
 	"time"
+
+	"github.com/nDenerserve/SmartPi/repository/config"
 )
 
 const (
@@ -84,7 +86,7 @@ func CreateXML(start time.Time, end time.Time) string {
 	// type serie []tChartSerie
 
 	tempValues := make([]float32, 22)
-	config := NewConfig()
+	config := config.NewConfig()
 	data := ReadChartData(config.DatabaseDir, start, end)
 
 	for _, dataelement := range data {

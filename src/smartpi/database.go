@@ -6,6 +6,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/nDenerserve/SmartPi/models"
+	"github.com/nDenerserve/SmartPi/utils"
 	log "github.com/sirupsen/logrus"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -151,28 +153,28 @@ func InsertSQLData(databasedir string, t time.Time, v ReadoutAccumulator, consum
 
 	_, err = stmt.Exec(
 		t.Format("2006-01-02 15:04:05"),
-		fmt.Sprintf("%f", v.Current[PhaseA]),
-		fmt.Sprintf("%f", v.Current[PhaseB]),
-		fmt.Sprintf("%f", v.Current[PhaseC]),
-		fmt.Sprintf("%f", v.Current[PhaseN]),
-		fmt.Sprintf("%f", v.Voltage[PhaseA]),
-		fmt.Sprintf("%f", v.Voltage[PhaseB]),
-		fmt.Sprintf("%f", v.Voltage[PhaseC]),
-		fmt.Sprintf("%f", v.ActiveWatts[PhaseA]),
-		fmt.Sprintf("%f", v.ActiveWatts[PhaseB]),
-		fmt.Sprintf("%f", v.ActiveWatts[PhaseC]),
-		fmt.Sprintf("%f", v.CosPhi[PhaseA]),
-		fmt.Sprintf("%f", v.CosPhi[PhaseB]),
-		fmt.Sprintf("%f", v.CosPhi[PhaseC]),
-		fmt.Sprintf("%f", v.Frequency[PhaseA]),
-		fmt.Sprintf("%f", v.Frequency[PhaseB]),
-		fmt.Sprintf("%f", v.Frequency[PhaseC]),
-		fmt.Sprintf("%f", v.WattHoursConsumed[PhaseA]),
-		fmt.Sprintf("%f", v.WattHoursConsumed[PhaseB]),
-		fmt.Sprintf("%f", v.WattHoursConsumed[PhaseC]),
-		fmt.Sprintf("%f", v.WattHoursProduced[PhaseA]),
-		fmt.Sprintf("%f", v.WattHoursProduced[PhaseB]),
-		fmt.Sprintf("%f", v.WattHoursProduced[PhaseC]),
+		fmt.Sprintf("%f", v.Current[models.PhaseA]),
+		fmt.Sprintf("%f", v.Current[models.PhaseB]),
+		fmt.Sprintf("%f", v.Current[models.PhaseC]),
+		fmt.Sprintf("%f", v.Current[models.PhaseN]),
+		fmt.Sprintf("%f", v.Voltage[models.PhaseA]),
+		fmt.Sprintf("%f", v.Voltage[models.PhaseB]),
+		fmt.Sprintf("%f", v.Voltage[models.PhaseC]),
+		fmt.Sprintf("%f", v.ActiveWatts[models.PhaseA]),
+		fmt.Sprintf("%f", v.ActiveWatts[models.PhaseB]),
+		fmt.Sprintf("%f", v.ActiveWatts[models.PhaseC]),
+		fmt.Sprintf("%f", v.CosPhi[models.PhaseA]),
+		fmt.Sprintf("%f", v.CosPhi[models.PhaseB]),
+		fmt.Sprintf("%f", v.CosPhi[models.PhaseC]),
+		fmt.Sprintf("%f", v.Frequency[models.PhaseA]),
+		fmt.Sprintf("%f", v.Frequency[models.PhaseB]),
+		fmt.Sprintf("%f", v.Frequency[models.PhaseC]),
+		fmt.Sprintf("%f", v.WattHoursConsumed[models.PhaseA]),
+		fmt.Sprintf("%f", v.WattHoursConsumed[models.PhaseB]),
+		fmt.Sprintf("%f", v.WattHoursConsumed[models.PhaseC]),
+		fmt.Sprintf("%f", v.WattHoursProduced[models.PhaseA]),
+		fmt.Sprintf("%f", v.WattHoursProduced[models.PhaseB]),
+		fmt.Sprintf("%f", v.WattHoursProduced[models.PhaseC]),
 		fmt.Sprintf("%f", consumedWattHourBalanced),
 		fmt.Sprintf("%f", producedWattHourBalanced),
 	)
@@ -186,7 +188,7 @@ func ReadChartData(databasedir string, starttime time.Time, endtime time.Time) [
 
 	values := []*MinuteValues{}
 
-	diffmonth := Monthchange(starttime, endtime)
+	diffmonth := utils.Monthchange(starttime, endtime)
 
 	elapsedtime := endtime
 
@@ -269,7 +271,7 @@ func ReadDayData(databasedir string, starttime time.Time, endtime time.Time) []*
 
 	values := []*MinuteValues{}
 
-	diffmonth := Monthchange(starttime, endtime)
+	diffmonth := utils.Monthchange(starttime, endtime)
 
 	elapsedtime := endtime
 

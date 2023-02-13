@@ -36,7 +36,9 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/nDenerserve/SmartPi/src/smartpi"
+	"github.com/nDenerserve/SmartPi/models"
+	"github.com/nDenerserve/SmartPi/repository/config"
+	"github.com/nDenerserve/SmartPi/smartpi"
 
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/exp/io/i2c"
@@ -76,10 +78,10 @@ func makeReadout() (r smartpi.ADE7878Readout) {
 	return r
 }
 
-func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
+func pollSmartPi(config *config.Config, device *i2c.Device) {
 	var mqttclient mqtt.Client
 	var wattHourBalanced, wattHourBalancedAccu, consumedWattHourBalanced60s, producedWattHourBalanced60s float64
-	var p smartpi.Phase
+	var p models.Phase
 	var consumedCounter, producedCounter float64
 	var measureFrequency bool = true
 
@@ -111,8 +113,8 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 		startTime := time.Now()
 
 		// Update readouts and the accumlator.
-		smartpi.ReadPhase(device, config, smartpi.PhaseN, measureFrequency, &readouts)
-		accumulator.Current[smartpi.PhaseN] += readouts.Current[smartpi.PhaseN] / (60.0 * float64(config.Samplerate))
+		smartpi.ReadPhase(device, config, models.PhaseN, measureFrequency, &readouts)
+		accumulator.Current[models.PhaseN] += readouts.Current[models.PhaseN] / (60.0 * float64(config.Samplerate))
 		for _, p = range smartpi.MainPhases {
 			smartpi.ReadPhase(device, config, p, measureFrequency, &readouts)
 			accumulator.Current[p] += readouts.Current[p] / (60.0 * float64(config.Samplerate))
@@ -207,7 +209,7 @@ func pollSmartPi(config *smartpi.Config, device *i2c.Device) {
 	}
 }
 
-func configWatcher(config *smartpi.Config) {
+func configWatcher(config *config.Config) {
 	log.Debug("Start SmartPi watcher")
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -251,9 +253,9 @@ func init() {
 var appVersion = "No Version Provided"
 
 func main() {
-	config := smartpi.NewConfig()
+	smartpiconfig := config.NewConfig()
 
-	go configWatcher(config)
+	go configWatcher(smartpiconfig)
 
 	version := flag.Bool("v", false, "prints current version information")
 	flag.Parse()
@@ -262,17 +264,17 @@ func main() {
 		os.Exit(0)
 	}
 
-	log.SetLevel(config.LogLevel)
+	log.SetLevel(smartpiconfig.LogLevel)
 
-	smartpi.CheckDatabase(config.DatabaseDir)
+	smartpi.CheckDatabase(smartpiconfig.DatabaseDir)
 
-	listenAddress := config.MetricsListenAddress
+	listenAddress := smartpiconfig.MetricsListenAddress
 
 	log.Debug("Start SmartPi readout")
 
-	device, _ := smartpi.InitADE7878(config)
+	device, _ := smartpi.InitADE7878(smartpiconfig)
 
-	go pollSmartPi(config, device)
+	go pollSmartPi(smartpiconfig, device)
 
 	//http.Handle("/metrics", prometheus.Handler())
 	http.Handle("/metrics", promhttp.Handler())

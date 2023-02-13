@@ -3,7 +3,9 @@
 package main
 
 import (
-	"github.com/nDenerserve/SmartPi/src/smartpi"
+	"github.com/nDenerserve/SmartPi/models"
+	"github.com/nDenerserve/SmartPi/repository/config"
+	"github.com/nDenerserve/SmartPi/smartpi"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
@@ -93,8 +95,8 @@ var (
 	)
 )
 
-func updatePrometheusMetrics(v *smartpi.ADE7878Readout, c *smartpi.Config) {
-	currentMetric.WithLabelValues("N").Set(v.Current[smartpi.PhaseN])
+func updatePrometheusMetrics(v *smartpi.ADE7878Readout, c *config.Config) {
+	currentMetric.WithLabelValues("N").Set(v.Current[models.PhaseN])
 	for _, p := range smartpi.MainPhases {
 		// Skip updating metrics where the phase is not measured.
 		if !c.MeasureCurrent[p] && !c.MeasureVoltage[p] {
