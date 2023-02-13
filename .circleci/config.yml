@@ -3,7 +3,7 @@ version: 2.1
 
 executors:
   golang:
-    working_directory: ~/src
+    working_directory: /src
     docker:
     - image: cimg/go:1.18
     
