@@ -5,6 +5,7 @@ executors:
   golang:
     docker:
     - image: cimg/go:1.18
+    working_directory: ~/SmartPi
 
 jobs:
   build:
@@ -12,7 +13,7 @@ jobs:
 
     steps:
     - checkout:
-        path: ~/src
+        path: ~/SmartPi/src
     - run: sudo apt-get update
     - run: sudo apt-get install -y libpam0g-dev
     - run: go mod download
