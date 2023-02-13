@@ -208,8 +208,6 @@ func main() {
 		os.Exit(0)
 	}
 
-	fmt.Println("SmartPi server started")
-
 	router := mux.NewRouter()
 	router.HandleFunc("/api/{phaseId}/{valueId}/now", smartpi.ServeMomentaryValues)
 	router.HandleFunc("/api/{phaseId}/{valueId}/now/{format}", smartpi.ServeMomentaryValues)
@@ -240,13 +238,15 @@ func main() {
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "DELETE", "POST", "PUT", "OPTIONS"},
 		AllowedHeaders:   []string{"Access-Control-Allow-Headers", "Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"},
-		Debug:            true,
+		Debug:            false,
 	})
 
 	handler := c.Handler(router)
 
 	http.Handle("/metrics", promhttp.Handler())
 	http.Handle("/", promhttp.InstrumentHandlerCounter(responseCount, handler))
+
+	log.Print("Starting Smartpi server @Port: " + strconv.Itoa(smartpiconfig.WebserverPort))
 
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(smartpiconfig.WebserverPort), nil))
 }
