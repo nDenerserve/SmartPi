@@ -32,6 +32,8 @@ import (
 	"math"
 	"time"
 
+	"github.com/nDenerserve/SmartPi/models"
+	"github.com/nDenerserve/SmartPi/repository/config"
 	rpi "github.com/nDenerserve/go-rpigpio"
 	"golang.org/x/exp/io/i2c"
 
@@ -45,67 +47,15 @@ const (
 	halfCircle   float64 = math.Pi / 180.0
 )
 
-type Phase uint
-
-const (
-	_ = iota
-	PhaseA
-	PhaseB
-	PhaseC
-	PhaseN
-)
-
 var (
 	calibrationCurveFactorCurrent = 1.0
 	calibrationCurveFactorPower   = 1.0
 	rms_factor_current            float64
 )
 
-func (p Phase) String() string {
-	switch p {
-	case PhaseA:
-		return "A"
-	case PhaseB:
-		return "B"
-	case PhaseC:
-		return "C"
-	case PhaseN:
-		return "N"
-	}
-	panic("Unreachable")
-}
+var MainPhases = []models.Phase{models.PhaseA, models.PhaseB, models.PhaseC}
 
-func (p Phase) PhaseNumber() string {
-	switch p {
-	case PhaseA:
-		return "1"
-	case PhaseB:
-		return "2"
-	case PhaseC:
-		return "3"
-	case PhaseN:
-		return "4"
-	}
-	panic("Unreachable")
-}
-
-func PhaseNameFromNumber(p string) Phase {
-	switch p {
-	case "1":
-		return PhaseA
-	case "2":
-		return PhaseB
-	case "3":
-		return PhaseC
-	case "4":
-		return PhaseN
-	}
-	panic("Unreachable")
-}
-
-var MainPhases = []Phase{PhaseA, PhaseB, PhaseC}
-
-type Readings map[Phase]float64
+type Readings map[models.Phase]float64
 
 type ADE7878Readout struct {
 	Current           Readings
@@ -206,7 +156,7 @@ func WriteRegister(d *i2c.Device, register string, data ...byte) (err error) {
 	return d.Write(append(ADE7878REG[register], data...))
 }
 
-func InitADE7878(c *Config) (*i2c.Device, error) {
+func InitADE7878(c *config.Config) (*i2c.Device, error) {
 
 	// **** Opening and closing the i2c fixes an error that incorrect values are displayed on pahse 2 and 3 when the program is restarted.
 
@@ -425,16 +375,16 @@ func InitADE7878(c *Config) (*i2c.Device, error) {
 	return d, nil
 }
 
-func ReadCurrent(d *i2c.Device, c *Config, phase Phase) (current float64) {
+func ReadCurrent(d *i2c.Device, c *config.Config, phase models.Phase) (current float64) {
 	command := make([]byte, 2)
 	switch phase {
-	case PhaseA:
+	case models.PhaseA:
 		command = ADE7878REG["AIRMS"] // 0x43C0 (AIRMS; Current rms an A)
-	case PhaseB:
+	case models.PhaseB:
 		command = ADE7878REG["BIRMS"] // 0x43C2 (AIRMS; Current rms an B)
-	case PhaseC:
+	case models.PhaseC:
 		command = ADE7878REG["CIRMS"] // 0x43C4 (AIRMS; Current rms an C)
-	case PhaseN:
+	case models.PhaseN:
 		command = ADE7878REG["NIRMS"] // 0x43C6 (AIRMS; Current rms an N)
 	default:
 		panic(fmt.Errorf("Invalid phase %q", phase))
@@ -489,14 +439,14 @@ func ReadCurrent(d *i2c.Device, c *Config, phase Phase) (current float64) {
 	return current
 }
 
-func ReadVoltage(d *i2c.Device, c *Config, phase Phase) (voltage float64, measureVoltage bool) {
+func ReadVoltage(d *i2c.Device, c *config.Config, phase models.Phase) (voltage float64, measureVoltage bool) {
 	command := make([]byte, 2)
 	switch phase {
-	case PhaseA:
+	case models.PhaseA:
 		command = []byte{0x43, 0xC1} // 0x43C1 (AVRMS; Voltage RMS phase A)
-	case PhaseB:
+	case models.PhaseB:
 		command = []byte{0x43, 0xC3} // 0x43C3 (BVRMS; Voltage RMS phase B)
-	case PhaseC:
+	case models.PhaseC:
 		command = []byte{0x43, 0xC5} // 0x43C5 (BVRMS; Voltage RMS phase C)
 	default:
 		panic(fmt.Errorf("Invalid phase %q", phase))
@@ -513,14 +463,14 @@ func ReadVoltage(d *i2c.Device, c *Config, phase Phase) (voltage float64, measur
 	return voltage, measureVoltage
 }
 
-func ReadActiveWatts(d *i2c.Device, c *Config, phase Phase) (watts float64) {
+func ReadActiveWatts(d *i2c.Device, c *config.Config, phase models.Phase) (watts float64) {
 	command := make([]byte, 2)
 	switch phase {
-	case PhaseA:
+	case models.PhaseA:
 		command = []byte{0xE5, 0x13} // 0xE513 (AWATT total active power phase A)
-	case PhaseB:
+	case models.PhaseB:
 		command = []byte{0xE5, 0x14} // 0xE514 (BWATT total active power phase B)
-	case PhaseC:
+	case models.PhaseC:
 		command = []byte{0xE5, 0x15} // 0xE515 (CWATT total active power phase C)
 	default:
 		panic(fmt.Errorf("Invalid phase %q", phase))
@@ -573,14 +523,14 @@ func ReadActiveWatts(d *i2c.Device, c *Config, phase Phase) (watts float64) {
 	return watts
 }
 
-func ReadActiveEnergy(d *i2c.Device, c *Config, phase Phase) (energy float64) {
+func ReadActiveEnergy(d *i2c.Device, c *config.Config, phase models.Phase) (energy float64) {
 	command := make([]byte, 2)
 	switch phase {
-	case PhaseA:
+	case models.PhaseA:
 		command = []byte{0xE4, 0x00} // 0xE4000 (AWATTHR total active energy phase A)
-	case PhaseB:
+	case models.PhaseB:
 		command = []byte{0xE4, 0x00} // 0xE4001 (BWATTHR total active energy phase B)
-	case PhaseC:
+	case models.PhaseC:
 		command = []byte{0xE4, 0x00} // 0xE4002 (CWATTHR total active energy phase C)
 	default:
 		panic(fmt.Errorf("Invalid phase %q", phase))
@@ -606,14 +556,14 @@ func ReadActiveEnergy(d *i2c.Device, c *Config, phase Phase) (energy float64) {
 	return energy
 }
 
-func ReadAngle(d *i2c.Device, c *Config, phase Phase) (angle float64) {
+func ReadAngle(d *i2c.Device, c *config.Config, phase models.Phase) (angle float64) {
 	command := make([]byte, 2)
 	switch phase {
-	case PhaseA:
+	case models.PhaseA:
 		command = []byte{0xE6, 0x01} // 0xE601 (ANGLE0 cosphi an A)
-	case PhaseB:
+	case models.PhaseB:
 		command = []byte{0xE6, 0x02} // 0xE602 (ANGLE1 cosphi an B)
-	case PhaseC:
+	case models.PhaseC:
 		command = []byte{0xE6, 0x03} // 0xE603 (ANGLE2 cosphi an C)
 	default:
 		panic(fmt.Errorf("Invalid phase %q", phase))
@@ -632,14 +582,14 @@ func ReadAngle(d *i2c.Device, c *Config, phase Phase) (angle float64) {
 	return angle
 }
 
-func ReadFrequency(d *i2c.Device, c *Config, phase Phase) (frequency float64) {
+func ReadFrequency(d *i2c.Device, c *config.Config, phase models.Phase) (frequency float64) {
 	command := make([]byte, 2)
 	switch phase {
-	case PhaseA:
+	case models.PhaseA:
 		command = []byte{0xE7, 0x00, 0x1C} // 0xE7001C MMODE-Register measure frequency at VA
-	case PhaseB:
+	case models.PhaseB:
 		command = []byte{0xE7, 0x00, 0x1D} // 0xE7001D MMODE-Register measure frequency at VB
-	case PhaseC:
+	case models.PhaseC:
 		command = []byte{0xE7, 0x00, 0x1E} // 0xE7001E MMODE-Register measure frequency at VC
 	default:
 		panic(fmt.Errorf("Invalid phase %q", phase))
@@ -658,14 +608,14 @@ func ReadFrequency(d *i2c.Device, c *Config, phase Phase) (frequency float64) {
 	return frequency
 }
 
-func ReadApparentPower(d *i2c.Device, c *Config, phase Phase) float64 {
+func ReadApparentPower(d *i2c.Device, c *config.Config, phase models.Phase) float64 {
 	command := make([]byte, 2)
 	switch phase {
-	case PhaseA:
+	case models.PhaseA:
 		command = []byte{0xE5, 0x19} // 0xE519 (AVA total apparent power phase A)
-	case PhaseB:
+	case models.PhaseB:
 		command = []byte{0xE5, 0x1A} // 0xE51A (BVA total apparent power phase B)
-	case PhaseC:
+	case models.PhaseC:
 		command = []byte{0xE5, 0x1B} // 0xE51B (CVA total apparent power phase C)
 	default:
 		panic(fmt.Errorf("Invalid phase %q", phase))
@@ -688,14 +638,14 @@ func ReadApparentPower(d *i2c.Device, c *Config, phase Phase) float64 {
 	}
 }
 
-func ReadReactivePower(d *i2c.Device, c *Config, phase Phase) (rewatts float64) {
+func ReadReactivePower(d *i2c.Device, c *config.Config, phase models.Phase) (rewatts float64) {
 	command := make([]byte, 2)
 	switch phase {
-	case PhaseA:
+	case models.PhaseA:
 		command = []byte{0xE5, 0x16} // 0xE516 (AVAR total reactive power phase A)
-	case PhaseB:
+	case models.PhaseB:
 		command = []byte{0xE5, 0x17} // 0xE517 (AVAR total reactive power phase B)
-	case PhaseC:
+	case models.PhaseC:
 		command = []byte{0xE5, 0x18} // 0xE518 (AVAR total reactive power phase C)
 	default:
 		panic(fmt.Errorf("Invalid phase %q", phase))
@@ -723,7 +673,7 @@ func ReadReactivePower(d *i2c.Device, c *Config, phase Phase) (rewatts float64) 
 	return rewatts
 }
 
-func CalculatePowerFactor(c *Config, phase Phase, watts float64, voltAmps float64, voltAmpsReactive float64) float64 {
+func CalculatePowerFactor(c *config.Config, phase models.Phase, watts float64, voltAmps float64, voltAmpsReactive float64) float64 {
 	powerFactor := watts / CTTypes[c.CTType[phase]].PowerCorrectionFactor / voltAmps
 	if c.MeasureCurrent[phase] {
 		if math.Signbit(voltAmpsReactive) {
@@ -736,14 +686,14 @@ func CalculatePowerFactor(c *Config, phase Phase, watts float64, voltAmps float6
 	}
 }
 
-func ReadPhase(d *i2c.Device, c *Config, p Phase, measureFrequency bool, v *ADE7878Readout) {
+func ReadPhase(d *i2c.Device, c *config.Config, p models.Phase, measureFrequency bool, v *ADE7878Readout) {
 	startTime := time.Now()
 
 	// Measure current.
 	v.Current[p] = ReadCurrent(d, c, p)
 
 	// Neutral phase has no other updates.
-	if p == PhaseN {
+	if p == models.PhaseN {
 		logLine := fmt.Sprintf("ReadValues: %s phase: %s", time.Since(startTime), p)
 		logLine += fmt.Sprintf("I: %g", v.Current[p])
 		log.Debug(logLine)

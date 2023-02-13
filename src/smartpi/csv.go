@@ -36,11 +36,13 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/nDenerserve/SmartPi/repository/config"
 )
 
 func CreateCSV(start time.Time, end time.Time) string {
 
-	config := NewConfig()
+	config := config.NewConfig()
 
 	data := ReadChartData(config.DatabaseDir, start, end)
 

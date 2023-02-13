@@ -24,13 +24,16 @@
     Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>.
 */
 
-package smartpi
+package config
 
 import (
 	"io"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/nDenerserve/SmartPi/models"
+	"github.com/nDenerserve/SmartPi/utils"
 
 	log "github.com/sirupsen/logrus"
 	ini "gopkg.in/ini.v1"
@@ -63,12 +66,12 @@ type Config struct {
 	PowerFrequency       float64
 	Samplerate           int
 	Integrator           bool
-	CTType               map[Phase]string
-	CTTypePrimaryCurrent map[Phase]int
-	CurrentDirection     map[Phase]bool
-	MeasureCurrent       map[Phase]bool
-	MeasureVoltage       map[Phase]bool
-	Voltage              map[Phase]float64
+	CTType               map[models.Phase]string
+	CTTypePrimaryCurrent map[models.Phase]int
+	CurrentDirection     map[models.Phase]bool
+	MeasureCurrent       map[models.Phase]bool
+	MeasureVoltage       map[models.Phase]bool
+	Voltage              map[models.Phase]float64
 
 	// [ftp]
 	FTPupload    bool
@@ -118,11 +121,11 @@ type Config struct {
 	MobilePass    string
 
 	// [calibration]
-	CalibrationfactorI map[Phase]float64
-	CalibrationfactorU map[Phase]float64
+	CalibrationfactorI map[models.Phase]float64
+	CalibrationfactorU map[models.Phase]float64
 
 	// [GUI]
-	GUIMaxCurrent map[Phase]int
+	GUIMaxCurrent map[models.Phase]int
 }
 
 var cfg *ini.File
@@ -172,34 +175,34 @@ func (p *Config) ReadParameterFromFile() {
 	p.PowerFrequency = cfg.Section("device").Key("power_frequency").MustFloat64(50)
 	p.Samplerate = cfg.Section("device").Key("samplerate").MustInt(1)
 	p.Integrator = cfg.Section("device").Key("integrator").MustBool(false)
-	p.CTType = make(map[Phase]string)
-	p.CTType[PhaseA] = cfg.Section("device").Key("ct_type_1").MustString("YHDC_SCT013")
-	p.CTType[PhaseB] = cfg.Section("device").Key("ct_type_2").MustString("YHDC_SCT013")
-	p.CTType[PhaseC] = cfg.Section("device").Key("ct_type_3").MustString("YHDC_SCT013")
-	p.CTType[PhaseN] = cfg.Section("device").Key("ct_type_4").MustString("YHDC_SCT013")
-	p.CTTypePrimaryCurrent = make(map[Phase]int)
-	p.CTTypePrimaryCurrent[PhaseA] = cfg.Section("device").Key("ct_type_1_primary_current").MustInt(100)
-	p.CTTypePrimaryCurrent[PhaseB] = cfg.Section("device").Key("ct_type_2_primary_current").MustInt(100)
-	p.CTTypePrimaryCurrent[PhaseC] = cfg.Section("device").Key("ct_type_3_primary_current").MustInt(100)
-	p.CTTypePrimaryCurrent[PhaseN] = cfg.Section("device").Key("ct_type_4_primary_current").MustInt(100)
-	p.CurrentDirection = make(map[Phase]bool)
-	p.CurrentDirection[PhaseA] = cfg.Section("device").Key("change_current_direction_1").MustBool(false)
-	p.CurrentDirection[PhaseB] = cfg.Section("device").Key("change_current_direction_2").MustBool(false)
-	p.CurrentDirection[PhaseC] = cfg.Section("device").Key("change_current_direction_3").MustBool(false)
-	p.CurrentDirection[PhaseN] = cfg.Section("device").Key("change_current_direction_4").MustBool(false)
-	p.MeasureCurrent = make(map[Phase]bool)
-	p.MeasureCurrent[PhaseA] = cfg.Section("device").Key("measure_current_1").MustBool(true)
-	p.MeasureCurrent[PhaseB] = cfg.Section("device").Key("measure_current_2").MustBool(true)
-	p.MeasureCurrent[PhaseC] = cfg.Section("device").Key("measure_current_3").MustBool(true)
-	p.MeasureCurrent[PhaseN] = cfg.Section("device").Key("measure_current_4").MustBool(true)
-	p.MeasureVoltage = make(map[Phase]bool)
-	p.MeasureVoltage[PhaseA] = cfg.Section("device").Key("measure_voltage_1").MustBool(true)
-	p.MeasureVoltage[PhaseB] = cfg.Section("device").Key("measure_voltage_2").MustBool(true)
-	p.MeasureVoltage[PhaseC] = cfg.Section("device").Key("measure_voltage_3").MustBool(true)
-	p.Voltage = make(map[Phase]float64)
-	p.Voltage[PhaseA] = cfg.Section("device").Key("voltage_1").MustFloat64(230)
-	p.Voltage[PhaseB] = cfg.Section("device").Key("voltage_2").MustFloat64(230)
-	p.Voltage[PhaseC] = cfg.Section("device").Key("voltage_3").MustFloat64(230)
+	p.CTType = make(map[models.Phase]string)
+	p.CTType[models.PhaseA] = cfg.Section("device").Key("ct_type_1").MustString("YHDC_SCT013")
+	p.CTType[models.PhaseB] = cfg.Section("device").Key("ct_type_2").MustString("YHDC_SCT013")
+	p.CTType[models.PhaseC] = cfg.Section("device").Key("ct_type_3").MustString("YHDC_SCT013")
+	p.CTType[models.PhaseN] = cfg.Section("device").Key("ct_type_4").MustString("YHDC_SCT013")
+	p.CTTypePrimaryCurrent = make(map[models.Phase]int)
+	p.CTTypePrimaryCurrent[models.PhaseA] = cfg.Section("device").Key("ct_type_1_primary_current").MustInt(100)
+	p.CTTypePrimaryCurrent[models.PhaseB] = cfg.Section("device").Key("ct_type_2_primary_current").MustInt(100)
+	p.CTTypePrimaryCurrent[models.PhaseC] = cfg.Section("device").Key("ct_type_3_primary_current").MustInt(100)
+	p.CTTypePrimaryCurrent[models.PhaseN] = cfg.Section("device").Key("ct_type_4_primary_current").MustInt(100)
+	p.CurrentDirection = make(map[models.Phase]bool)
+	p.CurrentDirection[models.PhaseA] = cfg.Section("device").Key("change_current_direction_1").MustBool(false)
+	p.CurrentDirection[models.PhaseB] = cfg.Section("device").Key("change_current_direction_2").MustBool(false)
+	p.CurrentDirection[models.PhaseC] = cfg.Section("device").Key("change_current_direction_3").MustBool(false)
+	p.CurrentDirection[models.PhaseN] = cfg.Section("device").Key("change_current_direction_4").MustBool(false)
+	p.MeasureCurrent = make(map[models.Phase]bool)
+	p.MeasureCurrent[models.PhaseA] = cfg.Section("device").Key("measure_current_1").MustBool(true)
+	p.MeasureCurrent[models.PhaseB] = cfg.Section("device").Key("measure_current_2").MustBool(true)
+	p.MeasureCurrent[models.PhaseC] = cfg.Section("device").Key("measure_current_3").MustBool(true)
+	p.MeasureCurrent[models.PhaseN] = cfg.Section("device").Key("measure_current_4").MustBool(true)
+	p.MeasureVoltage = make(map[models.Phase]bool)
+	p.MeasureVoltage[models.PhaseA] = cfg.Section("device").Key("measure_voltage_1").MustBool(true)
+	p.MeasureVoltage[models.PhaseB] = cfg.Section("device").Key("measure_voltage_2").MustBool(true)
+	p.MeasureVoltage[models.PhaseC] = cfg.Section("device").Key("measure_voltage_3").MustBool(true)
+	p.Voltage = make(map[models.Phase]float64)
+	p.Voltage[models.PhaseA] = cfg.Section("device").Key("voltage_1").MustFloat64(230)
+	p.Voltage[models.PhaseB] = cfg.Section("device").Key("voltage_2").MustFloat64(230)
+	p.Voltage[models.PhaseC] = cfg.Section("device").Key("voltage_3").MustFloat64(230)
 
 	// [ftp]
 	p.FTPupload = cfg.Section("ftp").Key("ftp_upload").MustBool(false)
@@ -252,22 +255,22 @@ func (p *Config) ReadParameterFromFile() {
 	p.MobilePass = cfg.Section("umts").Key("umts_password").String()
 
 	// [calibration]
-	p.CalibrationfactorI = make(map[Phase]float64)
-	p.CalibrationfactorI[PhaseA] = cfg.Section("calibration").Key("calibrationfactorI_1").MustFloat64(1)
-	p.CalibrationfactorI[PhaseB] = cfg.Section("calibration").Key("calibrationfactorI_2").MustFloat64(1)
-	p.CalibrationfactorI[PhaseC] = cfg.Section("calibration").Key("calibrationfactorI_3").MustFloat64(1)
-	p.CalibrationfactorI[PhaseN] = cfg.Section("calibration").Key("calibrationfactorI_4").MustFloat64(1)
-	p.CalibrationfactorU = make(map[Phase]float64)
-	p.CalibrationfactorU[PhaseA] = cfg.Section("calibration").Key("calibrationfactorU_1").MustFloat64(1)
-	p.CalibrationfactorU[PhaseB] = cfg.Section("calibration").Key("calibrationfactorU_2").MustFloat64(1)
-	p.CalibrationfactorU[PhaseC] = cfg.Section("calibration").Key("calibrationfactorU_3").MustFloat64(1)
+	p.CalibrationfactorI = make(map[models.Phase]float64)
+	p.CalibrationfactorI[models.PhaseA] = cfg.Section("calibration").Key("calibrationfactorI_1").MustFloat64(1)
+	p.CalibrationfactorI[models.PhaseB] = cfg.Section("calibration").Key("calibrationfactorI_2").MustFloat64(1)
+	p.CalibrationfactorI[models.PhaseC] = cfg.Section("calibration").Key("calibrationfactorI_3").MustFloat64(1)
+	p.CalibrationfactorI[models.PhaseN] = cfg.Section("calibration").Key("calibrationfactorI_4").MustFloat64(1)
+	p.CalibrationfactorU = make(map[models.Phase]float64)
+	p.CalibrationfactorU[models.PhaseA] = cfg.Section("calibration").Key("calibrationfactorU_1").MustFloat64(1)
+	p.CalibrationfactorU[models.PhaseB] = cfg.Section("calibration").Key("calibrationfactorU_2").MustFloat64(1)
+	p.CalibrationfactorU[models.PhaseC] = cfg.Section("calibration").Key("calibrationfactorU_3").MustFloat64(1)
 
 	// [GUI]
-	p.GUIMaxCurrent = make(map[Phase]int)
-	p.GUIMaxCurrent[PhaseA] = cfg.Section("gui").Key("gui_max_current_1").MustInt(100)
-	p.GUIMaxCurrent[PhaseB] = cfg.Section("gui").Key("gui_max_current_2").MustInt(100)
-	p.GUIMaxCurrent[PhaseC] = cfg.Section("gui").Key("gui_max_current_3").MustInt(100)
-	p.GUIMaxCurrent[PhaseN] = cfg.Section("gui").Key("gui_max_current_4").MustInt(100)
+	p.GUIMaxCurrent = make(map[models.Phase]int)
+	p.GUIMaxCurrent[models.PhaseA] = cfg.Section("gui").Key("gui_max_current_1").MustInt(100)
+	p.GUIMaxCurrent[models.PhaseB] = cfg.Section("gui").Key("gui_max_current_2").MustInt(100)
+	p.GUIMaxCurrent[models.PhaseC] = cfg.Section("gui").Key("gui_max_current_3").MustInt(100)
+	p.GUIMaxCurrent[models.PhaseN] = cfg.Section("gui").Key("gui_max_current_4").MustInt(100)
 
 }
 
@@ -299,33 +302,33 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("device").NewKey("power_frequency", strconv.FormatInt(int64(p.PowerFrequency), 10))
 	_, err = cfg.Section("device").NewKey("samplerate", strconv.FormatInt(int64(p.Samplerate), 10))
 	_, err = cfg.Section("device").NewKey("integrator", strconv.FormatBool(p.Integrator))
-	_, err = cfg.Section("device").NewKey("ct_type_1", p.CTType[PhaseA])
-	_, err = cfg.Section("device").NewKey("ct_type_2", p.CTType[PhaseB])
-	_, err = cfg.Section("device").NewKey("ct_type_3", p.CTType[PhaseC])
-	_, err = cfg.Section("device").NewKey("ct_type_4", p.CTType[PhaseN])
+	_, err = cfg.Section("device").NewKey("ct_type_1", p.CTType[models.PhaseA])
+	_, err = cfg.Section("device").NewKey("ct_type_2", p.CTType[models.PhaseB])
+	_, err = cfg.Section("device").NewKey("ct_type_3", p.CTType[models.PhaseC])
+	_, err = cfg.Section("device").NewKey("ct_type_4", p.CTType[models.PhaseN])
 
-	_, err = cfg.Section("device").NewKey("ct_type_1_primary_current", strconv.FormatInt(int64(p.CTTypePrimaryCurrent[PhaseA]), 10))
-	_, err = cfg.Section("device").NewKey("ct_type_2_primary_current", strconv.FormatInt(int64(p.CTTypePrimaryCurrent[PhaseB]), 10))
-	_, err = cfg.Section("device").NewKey("ct_type_3_primary_current", strconv.FormatInt(int64(p.CTTypePrimaryCurrent[PhaseC]), 10))
-	_, err = cfg.Section("device").NewKey("ct_type_4_primary_current", strconv.FormatInt(int64(p.CTTypePrimaryCurrent[PhaseN]), 10))
+	_, err = cfg.Section("device").NewKey("ct_type_1_primary_current", strconv.FormatInt(int64(p.CTTypePrimaryCurrent[models.PhaseA]), 10))
+	_, err = cfg.Section("device").NewKey("ct_type_2_primary_current", strconv.FormatInt(int64(p.CTTypePrimaryCurrent[models.PhaseB]), 10))
+	_, err = cfg.Section("device").NewKey("ct_type_3_primary_current", strconv.FormatInt(int64(p.CTTypePrimaryCurrent[models.PhaseC]), 10))
+	_, err = cfg.Section("device").NewKey("ct_type_4_primary_current", strconv.FormatInt(int64(p.CTTypePrimaryCurrent[models.PhaseN]), 10))
 
-	_, err = cfg.Section("device").NewKey("change_current_direction_1", strconv.FormatBool(p.CurrentDirection[PhaseA]))
-	_, err = cfg.Section("device").NewKey("change_current_direction_2", strconv.FormatBool(p.CurrentDirection[PhaseB]))
-	_, err = cfg.Section("device").NewKey("change_current_direction_3", strconv.FormatBool(p.CurrentDirection[PhaseC]))
-	_, err = cfg.Section("device").NewKey("change_current_direction_4", strconv.FormatBool(p.CurrentDirection[PhaseN]))
+	_, err = cfg.Section("device").NewKey("change_current_direction_1", strconv.FormatBool(p.CurrentDirection[models.PhaseA]))
+	_, err = cfg.Section("device").NewKey("change_current_direction_2", strconv.FormatBool(p.CurrentDirection[models.PhaseB]))
+	_, err = cfg.Section("device").NewKey("change_current_direction_3", strconv.FormatBool(p.CurrentDirection[models.PhaseC]))
+	_, err = cfg.Section("device").NewKey("change_current_direction_4", strconv.FormatBool(p.CurrentDirection[models.PhaseN]))
 
-	_, err = cfg.Section("device").NewKey("measure_current_1", strconv.FormatBool(p.MeasureCurrent[PhaseA]))
-	_, err = cfg.Section("device").NewKey("measure_current_2", strconv.FormatBool(p.MeasureCurrent[PhaseB]))
-	_, err = cfg.Section("device").NewKey("measure_current_3", strconv.FormatBool(p.MeasureCurrent[PhaseC]))
-	_, err = cfg.Section("device").NewKey("measure_current_4", strconv.FormatBool(p.MeasureCurrent[PhaseN]))
+	_, err = cfg.Section("device").NewKey("measure_current_1", strconv.FormatBool(p.MeasureCurrent[models.PhaseA]))
+	_, err = cfg.Section("device").NewKey("measure_current_2", strconv.FormatBool(p.MeasureCurrent[models.PhaseB]))
+	_, err = cfg.Section("device").NewKey("measure_current_3", strconv.FormatBool(p.MeasureCurrent[models.PhaseC]))
+	_, err = cfg.Section("device").NewKey("measure_current_4", strconv.FormatBool(p.MeasureCurrent[models.PhaseN]))
 
-	_, err = cfg.Section("device").NewKey("measure_voltage_1", strconv.FormatBool(p.MeasureVoltage[PhaseA]))
-	_, err = cfg.Section("device").NewKey("measure_voltage_2", strconv.FormatBool(p.MeasureVoltage[PhaseB]))
-	_, err = cfg.Section("device").NewKey("measure_voltage_3", strconv.FormatBool(p.MeasureVoltage[PhaseC]))
+	_, err = cfg.Section("device").NewKey("measure_voltage_1", strconv.FormatBool(p.MeasureVoltage[models.PhaseA]))
+	_, err = cfg.Section("device").NewKey("measure_voltage_2", strconv.FormatBool(p.MeasureVoltage[models.PhaseB]))
+	_, err = cfg.Section("device").NewKey("measure_voltage_3", strconv.FormatBool(p.MeasureVoltage[models.PhaseC]))
 
-	_, err = cfg.Section("device").NewKey("voltage_1", strconv.FormatFloat(p.Voltage[PhaseA], 'f', -1, 64))
-	_, err = cfg.Section("device").NewKey("voltage_2", strconv.FormatFloat(p.Voltage[PhaseB], 'f', -1, 64))
-	_, err = cfg.Section("device").NewKey("voltage_3", strconv.FormatFloat(p.Voltage[PhaseC], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("voltage_1", strconv.FormatFloat(p.Voltage[models.PhaseA], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("voltage_2", strconv.FormatFloat(p.Voltage[models.PhaseB], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("voltage_3", strconv.FormatFloat(p.Voltage[models.PhaseC], 'f', -1, 64))
 
 	// [ftp]
 	_, err = cfg.Section("ftp").NewKey("ftp_upload", strconv.FormatBool(p.FTPupload))
@@ -376,18 +379,18 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("umts").NewKey("umts_password", p.MobilePass)
 
 	// [calibration]
-	_, err = cfg.Section("device").NewKey("calibrationfactorI_1", strconv.FormatFloat(p.CalibrationfactorI[PhaseA], 'f', -1, 64))
-	_, err = cfg.Section("device").NewKey("calibrationfactorI_2", strconv.FormatFloat(p.CalibrationfactorI[PhaseB], 'f', -1, 64))
-	_, err = cfg.Section("device").NewKey("calibrationfactorI_3", strconv.FormatFloat(p.CalibrationfactorI[PhaseC], 'f', -1, 64))
-	_, err = cfg.Section("device").NewKey("calibrationfactorI_4", strconv.FormatFloat(p.CalibrationfactorI[PhaseN], 'f', -1, 64))
-	_, err = cfg.Section("device").NewKey("calibrationfactorU_1", strconv.FormatFloat(p.CalibrationfactorU[PhaseA], 'f', -1, 64))
-	_, err = cfg.Section("device").NewKey("calibrationfactorU_2", strconv.FormatFloat(p.CalibrationfactorU[PhaseB], 'f', -1, 64))
-	_, err = cfg.Section("device").NewKey("calibrationfactorU_3", strconv.FormatFloat(p.CalibrationfactorU[PhaseC], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("calibrationfactorI_1", strconv.FormatFloat(p.CalibrationfactorI[models.PhaseA], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("calibrationfactorI_2", strconv.FormatFloat(p.CalibrationfactorI[models.PhaseB], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("calibrationfactorI_3", strconv.FormatFloat(p.CalibrationfactorI[models.PhaseC], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("calibrationfactorI_4", strconv.FormatFloat(p.CalibrationfactorI[models.PhaseN], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("calibrationfactorU_1", strconv.FormatFloat(p.CalibrationfactorU[models.PhaseA], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("calibrationfactorU_2", strconv.FormatFloat(p.CalibrationfactorU[models.PhaseB], 'f', -1, 64))
+	_, err = cfg.Section("device").NewKey("calibrationfactorU_3", strconv.FormatFloat(p.CalibrationfactorU[models.PhaseC], 'f', -1, 64))
 
-	_, err = cfg.Section("gui").NewKey("gui_max_current_1", strconv.FormatInt(int64(p.GUIMaxCurrent[PhaseA]), 10))
-	_, err = cfg.Section("gui").NewKey("gui_max_current_2", strconv.FormatInt(int64(p.GUIMaxCurrent[PhaseB]), 10))
-	_, err = cfg.Section("gui").NewKey("gui_max_current_3", strconv.FormatInt(int64(p.GUIMaxCurrent[PhaseC]), 10))
-	_, err = cfg.Section("gui").NewKey("gui_max_current_4", strconv.FormatInt(int64(p.GUIMaxCurrent[PhaseN]), 10))
+	_, err = cfg.Section("gui").NewKey("gui_max_current_1", strconv.FormatInt(int64(p.GUIMaxCurrent[models.PhaseA]), 10))
+	_, err = cfg.Section("gui").NewKey("gui_max_current_2", strconv.FormatInt(int64(p.GUIMaxCurrent[models.PhaseB]), 10))
+	_, err = cfg.Section("gui").NewKey("gui_max_current_3", strconv.FormatInt(int64(p.GUIMaxCurrent[models.PhaseC]), 10))
+	_, err = cfg.Section("gui").NewKey("gui_max_current_4", strconv.FormatInt(int64(p.GUIMaxCurrent[models.PhaseN]), 10))
 
 	tmpFile := "/tmp/smartpi"
 	err := cfg.SaveTo(tmpFile)
@@ -396,18 +399,18 @@ func (p *Config) SaveParameterToFile() {
 	}
 
 	srcFile, err := os.Open(tmpFile)
-	Checklog(err)
+	utils.Checklog(err)
 	defer srcFile.Close()
 
 	destFile, err := os.Create("/etc/smartpi") // creates if file doesn't exist
-	Checklog(err)
+	utils.Checklog(err)
 	defer destFile.Close()
 
 	_, err = io.Copy(destFile, srcFile)
-	Checklog(err)
+	utils.Checklog(err)
 
 	err = destFile.Sync()
-	Checklog(err)
+	utils.Checklog(err)
 
 	defer os.Remove(tmpFile)
 }

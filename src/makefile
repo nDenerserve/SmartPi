@@ -15,7 +15,7 @@ GOINSTALL=$(GO) install
 GOCLEAN=$(GO) clean
 GOGET=$(GO) get
 
-pkgs = $(shell $(GO) list ./src/...)
+pkgs = $(shell $(GO) list ./...)
 
 
 ifdef VERSION
@@ -48,22 +48,22 @@ format:
 
 buildsmartpireadout:
 	@echo "start building smartpireadout..."
-	$(GOBUILD) -o bin/$(BINARY_READOUT) -ldflags="-X main.appVersion=${VERSION}" src/readout/*.go
+	$(GOBUILD) -o ../bin/$(BINARY_READOUT) -ldflags="-X main.appVersion=${VERSION}" readout/*.go
 	@echo "building smartpireadout done"
 
 buildsmartpiserver:
 	@echo "start building smartpiserver..."
-	$(GOBUILD) -o bin/$(BINARY_SERVER) -ldflags="-X main.appVersion=${VERSION}" src/main/server.go
+	$(GOBUILD) -o ../bin/$(BINARY_SERVER) -ldflags="-X main.appVersion=${VERSION}" server/server.go
 	@echo "building smartpiserver done"
 
 buildsmartpiftpupload:
 	@echo "start building smartpiftpupload..."
-	$(GOBUILD) -o bin/$(BINARY_FTPUPLOAD) -ldflags="-X main.appVersion=${VERSION}" src/main/ftpupload.go
+	$(GOBUILD) -o ../bin/$(BINARY_FTPUPLOAD) -ldflags="-X main.appVersion=${VERSION}" ftpupload/ftpupload.go
 	@echo "building smartpiftpupload done"
 
 buildsmartpimodbusserver:
 	@echo "start building smartpimodbusserver..."
-	$(GOBUILD) -o bin/$(BINARY_MODBUSSERVER) -ldflags="-X main.appVersion=${VERSION}" src/modbus/modbusserver.go
+	$(GOBUILD) -o ../bin/$(BINARY_MODBUSSERVER) -ldflags="-X main.appVersion=${VERSION}" modbus/modbusserver.go
 	@echo "building smartpimodbusserver done"
 
 install:

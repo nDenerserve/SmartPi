@@ -1,0 +1,13 @@
+[base]
+i2c_device="/dev/i2c-1"
+webserver = true
+vfs = false
+# Valid log levels: panic, error, info, debug
+loglevel=debug
+
+[webserver]
+port=9000
+app_key = "ew980723j35h97fqw4!234490#t33465"
+
+[digitalout]
+allowed_user = "jens,smartpi,root"

@@ -42,7 +42,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/nDenerserve/SmartPi/src/smartpi/network"
+	"github.com/nDenerserve/SmartPi/repository/config"
+	"github.com/nDenerserve/SmartPi/smartpi/network"
+	"github.com/nDenerserve/SmartPi/utils"
 )
 
 func Index(w http.ResponseWriter, r *http.Request) {
@@ -62,14 +64,14 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 	valueId := vars["valueId"]
 	format = vars["format"]
 
-	config := NewConfig()
+	config := config.NewConfig()
 	file, err := os.Open(config.SharedDir + "/" + config.SharedFile)
-	Checklog(err)
+	utils.Checklog(err)
 	defer file.Close()
 	reader := csv.NewReader(file)
 	reader.Comma = ';'
 	records, err := reader.Read()
-	Checklog(err)
+	utils.Checklog(err)
 
 	t := time.Now()
 
@@ -84,7 +86,7 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 			var info string
 			values := []*tValue{}
 			id, err := strconv.Atoi(phaseId)
-			Checklog(err)
+			utils.Checklog(err)
 			if valueId == "current" && id < 5 {
 				val, err = strconv.ParseFloat(records[id], 32)
 			} else if valueId == "voltage" && id < 4 {
@@ -242,7 +244,7 @@ func ServeMomentaryValues(w http.ResponseWriter, r *http.Request) {
 			var info string
 			values := []*tValue{}
 			id, err := strconv.Atoi(phaseId)
-			Checklog(err)
+			utils.Checklog(err)
 
 			for i := 1; i <= 8; i++ {
 
