@@ -32,7 +32,7 @@ Check if influxdb is running
 
 ###### Create InfluxDB user and tables
 Go to http://<<ip-address of smartpi>>:8086
-![Login Screen](https://github.com/nDenerserve/SmartPi/blob/main/img/influx01.jpg?raw=true)
+![Login Screen](https://github.com/nDenerserve/SmartPi/blob/master/img/influx01.jpg?raw=true)
 
 Create user with name smartpi and password smart4pi. Use **smartpi** for Initial Organization Name and **meteringdata** for Initial Bucket Name
 ![Login Screen](https://github.com/nDenerserve/SmartPi/blob/main/img/influx02.jpg?raw=true)
