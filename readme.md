@@ -35,10 +35,10 @@ Go to http://<<ip-address of smartpi>>:8086
 ![Login Screen](https://github.com/nDenerserve/SmartPi/blob/master/img/influx01.jpg?raw=true)
 
 Create user with name smartpi and password smart4pi. Use **smartpi** for Initial Organization Name and **meteringdata** for Initial Bucket Name
-![Login Screen](https://github.com/nDenerserve/SmartPi/blob/main/img/influx02.jpg?raw=true)
+![Login Screen](https://github.com/nDenerserve/SmartPi/blob/master/img/influx02.jpg?raw=true)
 
 Login and add an addition Bucket called **fastmeasurement**
-![Login Screen](https://github.com/nDenerserve/SmartPi/blob/main/img/influx03.jpg?raw=true)
+![Login Screen](https://github.com/nDenerserve/SmartPi/blob/master/img/influx03.jpg?raw=true)
 
 ##### Update packet list and update packages
     
@@ -85,32 +85,32 @@ For secure 24/7 operation, we recommend that you also create a tmpf for the log 
 And add size 10M and change from weekly to daily.
 The file looks like:
                                                                                                                                                                                                                                                 
-/var/log/syslog
-/var/log/mail.info
-/var/log/mail.warn
-/var/log/mail.err
-/var/log/mail.log
-/var/log/daemon.log
-/var/log/kern.log
-/var/log/auth.log
-/var/log/user.log
-/var/log/lpr.log
-/var/log/cron.log
-/var/log/debug
-/var/log/messages
-{
-        rotate 4
-        size 10M
-        daily
-        missingok
-        notifempty
-        compress
-        delaycompress
-        sharedscripts
-        postrotate
-                /usr/lib/rsyslog/rsyslog-rotate
-        endscript
-}
+    /var/log/syslog
+    /var/log/mail.info
+    /var/log/mail.warn
+    /var/log/mail.err
+    /var/log/mail.log
+    /var/log/daemon.log
+    /var/log/kern.log
+    /var/log/auth.log
+    /var/log/user.log
+    /var/log/lpr.log
+    /var/log/cron.log
+    /var/log/debug
+    /var/log/messages
+    {
+            rotate 4
+            size 10M
+            daily
+            missingok
+            notifempty
+            compress
+            delaycompress
+            sharedscripts
+            postrotate
+                    /usr/lib/rsyslog/rsyslog-rotate
+            endscript
+    }
 
 
 ##### Add rescue IP
