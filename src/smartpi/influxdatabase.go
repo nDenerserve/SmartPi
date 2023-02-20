@@ -5,6 +5,7 @@ import (
 	// "fmt"
 	// "os"
 
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -12,7 +13,9 @@ import (
 	"strings"
 	"time"
 
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	client "github.com/influxdata/influxdb1-client/v2"
+
 	"github.com/nDenerserve/SmartPi/models"
 	"github.com/nDenerserve/SmartPi/repository/config"
 	"github.com/nDenerserve/SmartPi/smartpi/network"
@@ -26,25 +29,16 @@ import (
 
 func InsertInfluxData(c *config.Config, t time.Time, v ReadoutAccumulator, consumedWattHourBalanced float64, producedWattHourBalanced float64) {
 
-	dbc, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr:     c.Influxdatabase,
-		Username: c.Influxuser,
-		Password: c.Influxpassword,
-	})
-	if err != nil {
-		log.Printf("Error creating InfluxDB Client: ", err.Error())
-	}
-	defer dbc.Close()
+	client := influxdb2.NewClient(c.Influxdatabase, c.InfluxAPIToken)
+	defer client.Close()
 
-	// Create a new point batch
-	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  "MeteringData",
-		Precision: "s",
-	})
+	writeAPI := client.WriteAPIBlocking(c.InfluxOrg, c.InfluxBucket)
+
+	log.Debug("InfluxDB: " + c.Influxdatabase + "  User: " + c.Influxuser + "  Password: " + c.Influxpassword)
 
 	// Create a point and add to batch
 	macaddress := network.GetMacAddr()
-	tags := map[string]string{"serial": macaddress, "type": "electric"}
+	tags := map[string]string{"mac": macaddress, "type": "electric"}
 	fields := map[string]interface{}{
 		"I1":      float64(v.Current[models.PhaseA]),
 		"I2":      float64(v.Current[models.PhaseB]),
@@ -71,40 +65,21 @@ func InsertInfluxData(c *config.Config, t time.Time, v ReadoutAccumulator, consu
 		"bEc":     float64(consumedWattHourBalanced),
 		"bEp":     float64(producedWattHourBalanced),
 	}
-	pt, err := client.NewPoint("data", tags, fields, time.Now())
-	if err != nil {
-		log.Printf("Error: ", err.Error())
-	}
-	bp.AddPoint(pt)
+	pt := influxdb2.NewPoint("data", tags, fields, time.Now())
 
-	// Write the batch
-	err = dbc.Write(bp)
-	if err != nil {
-		log.Printf("Error: ", err.Error())
-	}
+	writeAPI.WritePoint(context.Background(), pt)
 }
 
 func InsertFastData(c *config.Config, t time.Time, values *ADE7878Readout) {
 
-	dbc, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr:     c.Influxdatabase,
-		Username: c.Influxuser,
-		Password: c.Influxpassword,
-	})
-	if err != nil {
-		log.Printf("Error creating InfluxDB Client: ", err.Error())
-	}
-	defer dbc.Close()
+	client := influxdb2.NewClient(c.Influxdatabase, c.InfluxAPIToken)
+	defer client.Close()
 
-	// Create a new point batch
-	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  "FastMeasurement",
-		Precision: "s",
-	})
+	writeAPI := client.WriteAPIBlocking(c.InfluxOrg, c.InfluxBucket)
 
 	// Create a point and add to batch
 	macaddress := network.GetMacAddr()
-	tags := map[string]string{"serial": macaddress, "type": "electric"}
+	tags := map[string]string{"mac": macaddress, "type": "electric"}
 	fields := map[string]interface{}{
 		"I1": float64(values.Current[models.PhaseA]),
 		"I2": float64(values.Current[models.PhaseB]),
@@ -117,18 +92,9 @@ func InsertFastData(c *config.Config, t time.Time, values *ADE7878Readout) {
 		"P2": float64(values.ActiveWatts[models.PhaseB]),
 		"P3": float64(values.ActiveWatts[models.PhaseC]),
 	}
-	pt, err := client.NewPoint("data", tags, fields, time.Now())
-	log.Info(fields)
-	if err != nil {
-		log.Printf("Error: ", err.Error())
-	}
-	bp.AddPoint(pt)
+	pt := influxdb2.NewPoint("data", tags, fields, time.Now())
 
-	// Write the batch
-	err = dbc.Write(bp)
-	if err != nil {
-		log.Printf("Error: ", err.Error())
-	}
+	writeAPI.WritePoint(context.Background(), pt)
 }
 
 func ReadCSVData(c *config.Config, starttime time.Time, endtime time.Time) string {
@@ -169,7 +135,7 @@ func ExampleClient_query(c *config.Config) {
 	}
 	defer dbc.Close()
 
-	q := client.NewQuery("SELECT * FROM MeteringData", "MeteringData", "ns")
+	q := client.NewQuery("SELECT * FROM meteringdata", "meteringdata", "ns")
 	if response, err := dbc.Query(q); err == nil && response.Error() == nil {
 		fmt.Println(response.Results)
 	}

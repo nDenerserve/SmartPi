@@ -3,6 +3,7 @@ smartpi.controller('MainCtrl', function($scope, $Momentary, $Linechart, $GetData
     $scope.nodelocation = window.location.protocol + '//' + window.location.hostname + ':1880';
     $scope.networklocation = window.location.protocol + '//' + window.location.hostname + ':8080';
     $scope.grafanalocation = window.location.protocol + '//' + window.location.hostname + ':3000';
+    $scope.influxdblocation = window.location.protocol + '//' + window.location.hostname + ':8086';
 
     $scope.toShow = "dashboard";
 

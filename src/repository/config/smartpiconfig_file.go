@@ -60,6 +60,9 @@ type Config struct {
 	Influxuser      string
 	Influxpassword  string
 	Influxdatabase  string
+	InfluxAPIToken  string
+	InfluxOrg       string
+	InfluxBucket    string
 
 	// [device]
 	I2CDevice            string
@@ -99,7 +102,7 @@ type Config struct {
 
 	// [mqtt]
 	MQTTenabled      bool
-	MQTTbrokerScheme string
+	MQTTbrokerscheme string
 	MQTTbroker       string
 	MQTTbrokerport   string
 	MQTTuser         string
@@ -169,6 +172,9 @@ func (p *Config) ReadParameterFromFile() {
 	p.Influxuser = cfg.Section("database").Key("influxuser").MustString("smartpi")
 	p.Influxpassword = cfg.Section("database").Key("influxpassword").MustString("smart4pi")
 	p.Influxdatabase = cfg.Section("database").Key("influxdatabase").MustString("http://localhost:8086")
+	p.InfluxAPIToken = cfg.Section("database").Key("influxapitoken").MustString("847583öjkhldkjfg9er)/(&jljh)")
+	p.InfluxOrg = cfg.Section("database").Key("influxorg").MustString("smartpi")
+	p.InfluxBucket = cfg.Section("database").Key("influxbucket").MustString("meteringdata")
 
 	// [device]
 	p.I2CDevice = cfg.Section("device").Key("i2c_device").MustString("/dev/i2c-1")
@@ -233,7 +239,7 @@ func (p *Config) ReadParameterFromFile() {
 
 	// [mqtt]
 	p.MQTTenabled = cfg.Section("mqtt").Key("mqtt_enabled").MustBool(false)
-	p.MQTTbrokerScheme = cfg.Section("mqtt").Key("mqtt_broker_scheme").MustString("tcp://")
+	p.MQTTbrokerscheme = cfg.Section("mqtt").Key("mqtt_broker_scheme").MustString("tcp://")
 	p.MQTTbroker = cfg.Section("mqtt").Key("mqtt_broker_url").String()
 	p.MQTTbrokerport = cfg.Section("mqtt").Key("mqtt_broker_port").String()
 	p.MQTTuser = cfg.Section("mqtt").Key("mqtt_username").String()
@@ -296,6 +302,9 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("database").NewKey("influxuser", p.Influxuser)
 	_, err = cfg.Section("database").NewKey("influxpassword", p.Influxpassword)
 	_, err = cfg.Section("database").NewKey("influxdatabase", p.Influxdatabase)
+	_, err = cfg.Section("database").NewKey("influxapitoken", p.InfluxAPIToken)
+	_, err = cfg.Section("database").NewKey("influxorg", p.InfluxOrg)
+	_, err = cfg.Section("database").NewKey("influxbucket", p.InfluxBucket)
 
 	// [device]
 	_, err = cfg.Section("device").NewKey("i2c_device", p.I2CDevice)
@@ -357,7 +366,7 @@ func (p *Config) SaveParameterToFile() {
 
 	// [mqtt]
 	_, err = cfg.Section("mqtt").NewKey("mqtt_enabled", strconv.FormatBool(p.MQTTenabled))
-	_, err = cfg.Section("mqtt").NewKey("mqtt_broker_scheme", p.MQTTbrokerScheme)
+	_, err = cfg.Section("mqtt").NewKey("mqtt_broker_scheme", p.MQTTbrokerscheme)
 	_, err = cfg.Section("mqtt").NewKey("mqtt_broker_url", p.MQTTbroker)
 	_, err = cfg.Section("mqtt").NewKey("mqtt_broker_port", p.MQTTbrokerport)
 	_, err = cfg.Section("mqtt").NewKey("mqtt_username", p.MQTTuser)

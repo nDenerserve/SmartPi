@@ -1,5 +1,5 @@
 [base]
-serial="smartpi170512345"
+serial="smartpi2302140012345"
 name="House"
 # Valid log levels: panic, error, info, debug
 loglevel=info
@@ -19,6 +19,7 @@ dir="/var/smartpi/db"
 influxuser="smartpi"
 influxpassword="smart4pi"
 influxdatabase="http://localhost:8086"
+influxapitoken=""
 
 [device]
 samplerate=1
@@ -83,13 +84,6 @@ modbus_rtu_address=1
 modbus_rtu_device_id="/dev/serial0"
 modbus_tcp_address=":502"
 
-
-[umts]
-umts=0
-umts_apn=""
-umts_pin=""
-umts_username=""
-umts_password=""
 
 [calibration]
 calibrationfactorI_1=1.0

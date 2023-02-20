@@ -16,7 +16,7 @@ import (
 func updateInfluxDatabase(c *config.Config, data smartpi.ReadoutAccumulator, consumedWattHourBalanced float64, producedWattHourBalanced float64) {
 	t := time.Now()
 
-	logLine := "## InfluxDB (MeterinData) Database Update ##"
+	logLine := "## InfluxDB (meteringdata) Database Update ##"
 	logLine += fmt.Sprintf(t.Format(" 2006-01-02 15:04:05 "))
 	// logLine += dbFileName
 	log.Info(logLine)
@@ -27,7 +27,7 @@ func updateInfluxDatabase(c *config.Config, data smartpi.ReadoutAccumulator, con
 func updateInfluxFastdata(c *config.Config, data *smartpi.ADE7878Readout) {
 	t := time.Now()
 
-	logLine := "## InfluxDB (Fastdata) Database Update ##"
+	logLine := "## InfluxDB (fastmeasurement) Database Update ##"
 	logLine += fmt.Sprintf(t.Format(" 2006-01-02 15:04:05 "))
 	// logLine += dbFileName
 	log.Info(logLine)

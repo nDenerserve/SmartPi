@@ -15,6 +15,31 @@ Download Raspbian Bullseye Lite (64bit) (the big bullsyeye should also work) fro
 
 Create a user with the name smartpi and a password of your choice. We use the password smart4pi here. During installation, please use the password you have chosen and replace smart4pi with the one you have chosen.
 
+##### Install InfluxDB 2
+
+    wget -q https://repos.influxdata.com/influxdata-archive_compat.key
+
+    echo '393e8779c89ac8d958f81f942f9ad7fb82a25e133faddaf92e15b16e6ac9ce4c influxdata-archive_compat.key' | sha256sum -c && cat influxdata-archive_compat.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg > /dev/null
+
+    echo 'deb [signed-by=/etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg] https://repos.influxdata.com/debian stable main' | sudo tee /etc/apt/sources.list.d/influxdata.list
+
+    sudo apt update && sudo apt install influxdb2
+    sudo service influxdb start
+
+Check if influxdb is running
+
+    sudo service influxdb status
+
+###### Create InfluxDB user and tables
+Go to http://<<ip-address of smartpi>>:8086
+![Login Screen](https://github.com/nDenerserve/SmartPi/blob/main/img/influx01.jpg?raw=true)
+
+Create user with name smartpi and password smart4pi. Use **smartpi** for Initial Organization Name and **meteringdata** for Initial Bucket Name
+![Login Screen](https://github.com/nDenerserve/SmartPi/blob/main/img/influx02.jpg?raw=true)
+
+Login and add an addition Bucket called **fastmeasurement**
+![Login Screen](https://github.com/nDenerserve/SmartPi/blob/main/img/influx03.jpg?raw=true)
+
 ##### Update packet list and update packages
     
     wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -
@@ -23,35 +48,107 @@ Create a user with the name smartpi and a password of your choice. We use the pa
     sudo apt update
     sudo apt upgrade
 
-##### Install additional packages.
 
-    sudo apt-get install -y grafana, sqlite3, ppp, wvdial, libpam0g, npm, influxdb, grafana
+##### Install additional packages
 
-##### Start InfluxDB at startup and create all needed tables
+    sudo apt-get install -y grafana sqlite3 libpam0g i2c-tools watchdog
+    sudo service grafana-server start
 
-    sudo systemctl unmask influxdb
-    sudo systemctl enable influxdb
-    sudo systemctl start influxdb
+Check if grafana is running
 
-Create needed tables. You can use your own password, but keep in mind that you have to change the password in /etc/smartpi too.
+    sudo service grafana-server status
 
-    influx -execute "CREATE USER smartpi WITH PASSWORD 'smart4pi' WITH ALL PRIVILEGES"
-    influx -username admin -password smart4pi -execute "CREATE DATABASE MeteringData"
-    influx -username admin -password smart4pi -execute "CREATE CONTINUOUS QUERY minmax_1h ON MeteringData BEGIN SELECT max(CosPhi1) AS MAX_CosPhi1,max(CosPhi2) AS MAX_CosPhi2,max(CosPhi3) AS MAX_CosPhi3,max(F1) AS MAX_F1,max(F2) AS MAX_F2,max(F3) AS MAX_F3,max(U1) AS MAX_U1,max(U2) AS MAX_U2,max(U3) AS MAX_U3,max(I1) AS MAX_I1,max(I2) AS MAX_I2,max(I3) AS MAX_I3,max(I4) AS MAX_I4,max(P1) AS MAX_P1,max(P2) AS MAX_P2,max(P3) AS MAX_P3,max(P3) AS MAX_P3,min(CosPhi1) AS MIN_CosPhi1,min(CosPhi2) AS MIN_CosPhi2,min(CosPhi3) AS MIN_CosPhi3,min(F1) AS MIN_F1,min(F2) AS MIN_F2,min(F3) AS MIN_F3,min(U1) AS MIN_U1,min(U2) AS MIN_U2,min(U3) AS MIN_U3,min(I1) AS MIN_I1,min(I2) AS MIN_I2,min(I3) AS MIN_I3,min(I4) AS MIN_I4,min(P1) AS MIN_P1,min(P2) AS MIN_P2,min(P3) AS MIN_P3,min(P3) AS MIN_P3 INTO hour FROM data GROUP BY time(1h),serial,type END"
-    influx -username admin -password smart4pi -execute "CREATE DATABASE FastMeasurement"
+
+##### Install nodered
+
+    bash <(curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered)
+
+    systemctl enable nodered
+    systemctl start nodered
+
 
 ##### Create tmpfs in /etc/fstab
 
-    tmpfs /var/tmp/smartpi tmpfs nodev,nosuid,size=20M 0 0
+    echo "tmpfs /var/tmp/smartpi tmpfs nodev,nosuid,size=20M 0 0" | sudo tee -a /etc/fstab
     
-
 For secure 24/7 operation, we recommend that you also create a tmpf for the log and tmp files.
 
-    tmpfs /var/log tmpfs defaults,noatime,mode=1777,size=10M 0 0
-    tmpfs /var/tmp tmpfs defaults,noatime,mode=1777,size=30M 0 0
-    tmpfs /tmp tmpfs defaults,noatime,mode=1777,size=20M 0 0
+    echo "tmpfs /var/log tmpfs defaults,noatime,mode=1777,size=50M 0 0" | sudo tee -a /etc/fstab
+    echo "tmpfs /var/tmp tmpfs defaults,noatime,mode=1777,size=30M 0 0" | sudo tee -a /etc/fstab
+    echo "tmpfs /tmp tmpfs defaults,noatime,mode=1777,size=20M 0 0" | sudo tee -a /etc/fstab
+    
 
+##### Optimize the logfile:
+
+    sudo nano /etc/logrotate.d/rsyslog
+
+And add size 10M and change from weekly to daily.
+The file looks like:
+                                                                                                                                                                                                                                                
+/var/log/syslog
+/var/log/mail.info
+/var/log/mail.warn
+/var/log/mail.err
+/var/log/mail.log
+/var/log/daemon.log
+/var/log/kern.log
+/var/log/auth.log
+/var/log/user.log
+/var/log/lpr.log
+/var/log/cron.log
+/var/log/debug
+/var/log/messages
+{
+        rotate 4
+        size 10M
+        daily
+        missingok
+        notifempty
+        compress
+        delaycompress
+        sharedscripts
+        postrotate
+                /usr/lib/rsyslog/rsyslog-rotate
+        endscript
+}
+
+
+##### Add rescue IP
+
+    sudo nano /etc/dhcpcd.enter-hook
+    
+Insert the following content:
+                                                                                                      
+    # File /etc/dhcpcd.enter-hook
+    # Assign an IP alias to the eth0 interface.
+    if [ "$interface" = "eth0" ]; then
+        case $reason in
+            PREINIT)
+                # Other reasons are: NOCARRIER|CARRIER|BOUND
+                /usr/sbin/ip addr add 169.254.3.10/16 dev eth0 label eth0:0 || true
+                ;;
+        esac
+    fi
+
+
+##### Reboot
+    
+    sudo reboot
+    
+
+    
 ##### Enable i2c kernel module
+
+By default, the I2C bus is disabled on the raspberry Pi. It must be activated for the operation of the SmartPi.
+There are 2 ways to activate tccce I2C bus.
+
+1. With the help of raspi-config:
+
+    sudo raspi-config
+
+Select 3 Interface Options --> I5 I2C --> Yes
+
+2. Manually:
 
 `i2c-dev` is required for communicating with the SmartPi.
 
@@ -95,11 +192,52 @@ In case of an SmartPi connected to an RPI3, the output should look like this:
     50: -- 51 -- -- -- -- -- -- -- -- -- -- -- -- -- --
     60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
     70: -- -- -- -- -- -- -- --
+    
+    
+##### Activate Hardware RTC
+
+You can add support for the RTC by adding a device tree overlay. Run
+
+    sudo nano /boot/config.txt
+    
+to edit the pi configuration and add the RTC chip of the SmartPi
+
+    dtoverlay=i2c-rtc,pcf8523
+    
+to the end of the file.
+
+    sudo reboot
+    
+Disable the "fake hwclock" which interferes with the 'real' hwclock
+
+    sudo apt-get -y remove fake-hwclock
+    sudo update-rc.d -f fake-hwclock remove
+    sudo systemctl disable fake-hwclock
+
+Run sudo nano /lib/udev/hwclock-set and comment out these three lines:
+    #if [ -e /run/systemd/system ] ; then
+    # exit 0
+    #fi
+And also comment out:
+    #/sbin/hwclock --rtc=$dev --systz
+    #/sbin/hwclock --rtc=$dev --hctosys
+
+Use
+    
+    sudo hwclock -w
+    
+to write the time to the RTC and
+
+    sudo hwclock -r
+
+to read the time from the RTC.
+
 
 ##### Remove old go version
 
     sudo apt-get remove golang
     sudo apt-get autoremove
+
 
 ##### Install go
 Download the archive and extract it into /usr/local, creating a Go tree in /usr/local/go.
@@ -107,8 +245,9 @@ Currently version 1.18.2 is up to date. You may need to adapt the filename accor
 
     cd /usr/local
 
-    sudo wget https://go.dev/dl/go1.19.5.linux-arm64.tar.gz
-    sudo tar -xvzf go1.19.5.linux-arm64.tar.gz
+    sudo wget https://go.dev/dl/go1.20.linux-arm64.tar.gz
+    sudo tar -xvzf go1.20.linux-arm64.tar.gz
+    sudo rm go1.20.linux-arm64.tar.gz
     echo 'PATH="/usr/local/go/bin:${PATH}"' | sudo tee -a /etc/profile
 
 
@@ -154,3 +293,7 @@ NOTE: Executables files are located in the bin directory
  * added calibration possibilities
  * added modbus-server
  
+ ### 02/14/23
+ * changed to InfluxDB2
+ * added support for nD-enerserve Digital-Out-Module (https://shop.enerserve.eu/e.digital-OUT/100054)
+ * removed support for UMTS-Sticks
