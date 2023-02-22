@@ -1,6 +1,7 @@
 # Ignore built binaries.
 bin
 bin64
+bin32
 src/snippets
 
 # Ignore CSV logs.
