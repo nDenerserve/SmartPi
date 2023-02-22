@@ -1,0 +1,9 @@
+[base]
+i2c_device="/dev/i2c-1"
+webserver = true
+vfs = false
+# Valid log levels: panic, error, info, debug
+loglevel=debug
+
+[digitalout]
+allowed_user = "smartpi,root"
