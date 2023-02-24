@@ -279,9 +279,11 @@ NOTE: Executables files are located in the bin directory
 
 Add the saved API-Key into the /etc/smartpi
     influxapitoken      = <API-Key>
+![Login Screen](https://github.com/nDenerserve/SmartPi/blob/master/img/influx06.jpg?raw=true)
+
 
 Or you can add it later via webgui:
-![Login Screen](https://github.com/nDenerserve/SmartPi/blob/master/img/influx06.jpg?raw=true)
+![Login Screen](https://github.com/nDenerserve/SmartPi/blob/master/img/influx05.jpg?raw=true)
 
 ## Change Log
 
