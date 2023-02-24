@@ -40,6 +40,9 @@ Create user with name smartpi and password smart4pi. Use **smartpi** for Initial
 Login and add an addition Bucket called **fastmeasurement**
 ![Login Screen](https://github.com/nDenerserve/SmartPi/blob/master/img/influx03.jpg?raw=true)
 
+Create an API-Key and save it for later use. You have to adde the API-Key later in the SmartPiconfiguration
+![Login Screen](https://github.com/nDenerserve/SmartPi/blob/master/img/influx04.jpg?raw=true)
+
 ##### Update packet list and update packages
     
     wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -
@@ -261,6 +264,7 @@ and set the GOPATH environment variable to point to that location.
     mkdir "${HOME}/go"
     export GOPATH="${HOME}/go"
 
+
 ##### Building source
 
     cd ~
@@ -271,6 +275,13 @@ and set the GOPATH environment variable to point to that location.
 NOTE: Executables files are located in the bin directory
 
 
+##### Add Api-Key to config-file
+
+Add the saved API-Key into the /etc/smartpi
+    influxapitoken      = <API-Key>
+
+Or you can add it later via webgui:
+![Login Screen](https://github.com/nDenerserve/SmartPi/blob/master/img/influx06.jpg?raw=true)
 
 ## Change Log
 
