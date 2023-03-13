@@ -269,7 +269,7 @@ and set the GOPATH environment variable to point to that location.
 
     cd ~
     git clone github.com:nDenerserve/SmartPi.git
-    cd ~/SmartPi
+    cd ~/SmartPi/src
     make
 
 NOTE: Executables files are located in the bin directory
