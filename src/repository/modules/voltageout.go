@@ -9,7 +9,7 @@ import (
 
 func (m ModulesRepository) Analog0to10FastWrite(port string, channelA float64, channelB float64, channelC float64, channelD float64) (err error) {
 
-	cFactor := 0.309657
+	cFactor := 0.316202
 
 	chanA := uint16(channelA * cFactor)
 	chanB := uint16(channelB * cFactor)
