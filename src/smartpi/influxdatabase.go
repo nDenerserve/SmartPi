@@ -90,7 +90,8 @@ func InsertInfluxDataV1(c *config.Config, t time.Time, v ReadoutAccumulator, con
 func InsertInfluxData(c *config.Config, t time.Time, v ReadoutAccumulator, consumedWattHourBalanced float64, producedWattHourBalanced float64) {
 
 	if c.Influxversion == "1" {
-		return InsertInfluxDataV1(c, t, v, consumedWattHourBalanced, producedWattHourBalanced)
+		InsertInfluxDataV1(c, t, v, consumedWattHourBalanced, producedWattHourBalanced)
+		return
 	}
 
 	client := influxdb2.NewClient(c.Influxdatabase, c.InfluxAPIToken)
@@ -184,7 +185,8 @@ func InsertFastDataV1(c *config.Config, t time.Time, values *ADE7878Readout) {
 func InsertFastData(c *config.Config, t time.Time, values *ADE7878Readout) {
 
 	if c.Influxversion == "1" {
-		return InsertFastDataV1(c, t, values)
+		InsertFastDataV1(c, t, values)
+		return
 	}
 
 	client := influxdb2.NewClient(c.Influxdatabase, c.InfluxAPIToken)
