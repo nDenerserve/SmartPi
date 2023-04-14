@@ -80,6 +80,8 @@ For secure 24/7 operation, we recommend that you also create a tmpf for the log 
     echo "tmpfs /var/tmp tmpfs defaults,noatime,mode=1777,size=30M 0 0" | sudo tee -a /etc/fstab
     echo "tmpfs /tmp tmpfs defaults,noatime,mode=1777,size=20M 0 0" | sudo tee -a /etc/fstab
     
+If you want to compile yourself, increase the value for tmp to 200M.
+    
 
 ##### Optimize the logfile:
 
@@ -248,9 +250,9 @@ Currently version 1.18.2 is up to date. You may need to adapt the filename accor
 
     cd /usr/local
 
-    sudo wget https://go.dev/dl/go1.20.linux-arm64.tar.gz
-    sudo tar -xvzf go1.20.linux-arm64.tar.gz
-    sudo rm go1.20.linux-arm64.tar.gz
+    sudo wget https://go.dev/dl/go1.20.3.linux-arm64.tar.gz
+    sudo tar -xvzf go1.20.3.linux-arm64.tar.gz
+    sudo rm go1.20.3.linux-arm64.tar.gz
     echo 'PATH="/usr/local/go/bin:${PATH}"' | sudo tee -a /etc/profile
 
 
