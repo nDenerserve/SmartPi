@@ -17,6 +17,7 @@ database_enabled    =true
 sqlite_enabled      =true
 sqlite_dir          ="/var/smartpi/db"
 dir                 ="/var/smartpi/db"
+influxversion       =2
 influxuser          ="smartpi"
 influxpassword      ="smart4pi"
 influxdatabase      ="http://localhost:8086"

@@ -57,6 +57,7 @@ type Config struct {
 	DatabaseEnabled bool
 	SQLLiteEnabled  bool
 	DatabaseDir     string
+	Influxversion   string
 	Influxuser      string
 	Influxpassword  string
 	Influxdatabase  string
@@ -169,6 +170,7 @@ func (p *Config) ReadParameterFromFile() {
 	p.DatabaseEnabled = cfg.Section("database").Key("database_enabled").MustBool(true)
 	p.SQLLiteEnabled = cfg.Section("database").Key("sqlite_enabled").MustBool(true)
 	p.DatabaseDir = cfg.Section("database").Key("sqlite_dir").MustString("/var/smartpi/db")
+	p.Influxversion = cfg.Section("database").Key("influxversion").MustString("2")
 	p.Influxuser = cfg.Section("database").Key("influxuser").MustString("smartpi")
 	p.Influxpassword = cfg.Section("database").Key("influxpassword").MustString("smart4pi")
 	p.Influxdatabase = cfg.Section("database").Key("influxdatabase").MustString("http://localhost:8086")
