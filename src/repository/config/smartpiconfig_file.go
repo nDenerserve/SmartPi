@@ -130,6 +130,11 @@ type Config struct {
 
 	// [GUI]
 	GUIMaxCurrent map[models.Phase]int
+
+	// [emeter]
+	EmeterEnabled          bool
+	EmeterMulticastAddress string
+	EmeterMulticastPort    int
 }
 
 var cfg *ini.File
@@ -280,6 +285,11 @@ func (p *Config) ReadParameterFromFile() {
 	p.GUIMaxCurrent[models.PhaseC] = cfg.Section("gui").Key("gui_max_current_3").MustInt(100)
 	p.GUIMaxCurrent[models.PhaseN] = cfg.Section("gui").Key("gui_max_current_4").MustInt(100)
 
+	// [emeter]
+	p.EmeterEnabled = cfg.Section("emeter").Key("emeter_enabled").MustBool(false)
+	p.EmeterMulticastAddress = cfg.Section("emeter").Key("emeter_multicast_address").MustString("239.12.255.254")
+	p.EmeterMulticastPort = cfg.Section("emeter").Key("emeter_multicast_port").MustInt(9522)
+
 }
 
 func (p *Config) SaveParameterToFile() {
@@ -402,6 +412,11 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("gui").NewKey("gui_max_current_2", strconv.FormatInt(int64(p.GUIMaxCurrent[models.PhaseB]), 10))
 	_, err = cfg.Section("gui").NewKey("gui_max_current_3", strconv.FormatInt(int64(p.GUIMaxCurrent[models.PhaseC]), 10))
 	_, err = cfg.Section("gui").NewKey("gui_max_current_4", strconv.FormatInt(int64(p.GUIMaxCurrent[models.PhaseN]), 10))
+
+	// [emeter]
+	_, err = cfg.Section("emeter").NewKey("emeter_enabled", strconv.FormatBool(p.EmeterEnabled))
+	_, err = cfg.Section("emeter").NewKey("emeter_multicast_address", p.EmeterMulticastAddress)
+	_, err = cfg.Section("emeter").NewKey("meter_multicast_port", strconv.FormatInt(int64(p.EmeterMulticastPort), 10))
 
 	tmpFile := "/tmp/smartpi"
 	err := cfg.SaveTo(tmpFile)
