@@ -6,6 +6,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/binary"
 	"encoding/csv"
 	"encoding/hex"
 	"flag"
@@ -104,11 +105,9 @@ func ping(config *config.Config) {
 	datagram = append(datagram, []byte{0x00, 0x10}...)                         // Tag: "SMA Net 2", version 0
 	datagram = append(datagram, []byte{0x60, 0x69}...)                         // Protocol ID (energy meter protocol), Data length: 2 byte
 	datagram = append(datagram, []byte{0x01, 0x0E, 0x00, 0x00, 0x01, 0x02}...) // Energy meter identifier Data length: 6 byte Susy-ID: 270 (0x10E) SerNo.: 258 (0x102)
-	tickerMeasuringTimeByte := []byte(Uint32ToBytes(uint32(time.Now().UnixMilli())))
 
-	for len(tickerMeasuringTimeByte) < 4 {
-		tickerMeasuringTimeByte = append([]byte{0x00}, tickerMeasuringTimeByte...)
-	}
+	tickerMeasuringTimeByte := make([]byte, 4)
+	binary.BigEndian.PutUint32(tickerMeasuringTimeByte, uint32(time.Now().UnixMilli()))
 
 	datagram = append(datagram, tickerMeasuringTimeByte...)
 
@@ -163,13 +162,6 @@ func ping(config *config.Config) {
 	// 	// conn.Write([]byte("SMA0"))
 	// 	time.Sleep(1 * time.Second)
 	// }
-}
-
-func Uint32ToBytes(i uint32) []byte {
-	if i > 0 {
-		return append(big.NewInt(int64(i)).Bytes(), byte(1))
-	}
-	return append(big.NewInt(int64(i)).Bytes(), byte(0))
 }
 
 func IntToBytes(i int) []byte {
