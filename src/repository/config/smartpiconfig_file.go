@@ -27,10 +27,15 @@
 package config
 
 import (
+	"bufio"
+	"encoding/binary"
+	"encoding/hex"
 	"io"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/nDenerserve/SmartPi/models"
 	"github.com/nDenerserve/SmartPi/utils"
@@ -135,12 +140,42 @@ type Config struct {
 	EmeterEnabled          bool
 	EmeterMulticastAddress string
 	EmeterMulticastPort    int
+	EmeterSusyID           uint16
+	EmeterSerial           []byte
 }
 
 var cfg *ini.File
 var err error
 
+func (p *Config) ReadHardwareInfos() (string, string) {
+	serial := ""
+	model := ""
+
+	file, err := os.Open("/proc/cpuinfo")
+	utils.Checklog(err)
+
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "Model") {
+			substring := strings.Split(line, ": ")
+			if len(substring) > 1 {
+				model = (substring[len(substring)-1])
+			}
+		} else if strings.Contains(line, "Serial") {
+			substring := strings.Split(line, ": ")
+			if len(substring) > 1 {
+				serial = (substring[len(substring)-1])
+			}
+		}
+	}
+	return serial, model
+}
+
 func (p *Config) ReadParameterFromFile() {
+
+	serial, _ := p.ReadHardwareInfos()
 
 	cfg, err = ini.Load("/etc/smartpi")
 	if err != nil {
@@ -148,8 +183,9 @@ func (p *Config) ReadParameterFromFile() {
 	}
 
 	// [base]
-	p.Serial = cfg.Section("base").Key("serial").String()
-	p.Name = cfg.Section("base").Key("name").MustString("House")
+	// p.Serial = cfg.Section("base").Key("serial").String()
+	p.Serial = serial
+	p.Name = cfg.Section("base").Key("name").MustString("SmartPi " + serial)
 	// Handle logging levels
 	p.LogLevel, err = log.ParseLevel(cfg.Section("base").Key("loglevel").MustString("info"))
 	if err != nil {
@@ -289,6 +325,40 @@ func (p *Config) ReadParameterFromFile() {
 	p.EmeterEnabled = cfg.Section("emeter").Key("emeter_enabled").MustBool(false)
 	p.EmeterMulticastAddress = cfg.Section("emeter").Key("emeter_multicast_address").MustString("239.12.255.254")
 	p.EmeterMulticastPort = cfg.Section("emeter").Key("emeter_multicast_port").MustInt(9522)
+	p.EmeterSusyID = uint16(cfg.Section("emeter").Key("emeter_susy_id").MustUint(270))
+	serialbytes, err := hex.DecodeString(serial[len(serial)-8:])
+	if err != nil {
+
+		log.Error(err)
+		rand.Seed(time.Now().UnixNano())
+
+		serialbytes := make([]byte, 4)
+		binary.BigEndian.PutUint32(serialbytes, uint32(cfg.Section("emeter").Key("emeter_susy_id").MustUint(uint(rand.Uint32()))))
+		_, err = cfg.Section("emeter").NewKey("emeter_serial", strconv.FormatUint(uint64(binary.BigEndian.Uint32(serialbytes)), 10))
+		tmpFile := "/tmp/smartpi"
+		err := cfg.SaveTo(tmpFile)
+		if err != nil {
+			panic(err)
+		}
+
+		srcFile, err := os.Open(tmpFile)
+		utils.Checklog(err)
+		defer srcFile.Close()
+
+		destFile, err := os.Create("/etc/smartpi") // creates if file doesn't exist
+		utils.Checklog(err)
+		defer destFile.Close()
+
+		_, err = io.Copy(destFile, srcFile)
+		utils.Checklog(err)
+
+		err = destFile.Sync()
+		utils.Checklog(err)
+
+		defer os.Remove(tmpFile)
+
+	}
+	p.EmeterSerial = serialbytes
 
 }
 
@@ -296,7 +366,7 @@ func (p *Config) SaveParameterToFile() {
 
 	var tempSendFTP [24]string
 
-	_, err = cfg.Section("base").NewKey("serial", p.Serial)
+	// _, err = cfg.Section("base").NewKey("serial", p.Serial)
 	_, err = cfg.Section("base").NewKey("name", p.Name)
 	_, err = cfg.Section("base").NewKey("loglevel", p.LogLevel.String())
 	_, err = cfg.Section("base").NewKey("metrics_listen_address", p.MetricsListenAddress)
@@ -416,7 +486,9 @@ func (p *Config) SaveParameterToFile() {
 	// [emeter]
 	_, err = cfg.Section("emeter").NewKey("emeter_enabled", strconv.FormatBool(p.EmeterEnabled))
 	_, err = cfg.Section("emeter").NewKey("emeter_multicast_address", p.EmeterMulticastAddress)
-	_, err = cfg.Section("emeter").NewKey("meter_multicast_port", strconv.FormatInt(int64(p.EmeterMulticastPort), 10))
+	_, err = cfg.Section("emeter").NewKey("emeter_multicast_port", strconv.FormatInt(int64(p.EmeterMulticastPort), 10))
+	_, err = cfg.Section("emeter").NewKey("emeter_susy_id", strconv.FormatUint(uint64(p.EmeterSusyID), 10))
+	_, err = cfg.Section("emeter").NewKey("emeter_serial", strconv.FormatUint(uint64(binary.BigEndian.Uint32(p.EmeterSerial)), 10))
 
 	tmpFile := "/tmp/smartpi"
 	err := cfg.SaveTo(tmpFile)
