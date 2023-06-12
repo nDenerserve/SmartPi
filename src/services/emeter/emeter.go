@@ -15,11 +15,13 @@ import (
 	"math/big"
 	"net"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/nDenerserve/SmartPi/repository/config"
+	"github.com/nDenerserve/SmartPi/smartpi"
 	"github.com/nDenerserve/SmartPi/smartpi/emeter"
 	"github.com/nDenerserve/SmartPi/utils"
 	"github.com/nDenerserve/SmartPi/utils/multicast"
@@ -91,8 +93,8 @@ func main() {
 }
 
 func msgHandler(src *net.UDPAddr, n int, b []byte) {
-	log.Println(n, "bytes read from", src)
-	log.Println(hex.Dump(b[:n]))
+	log.Debug(n, "bytes read from", src)
+	log.Debug(hex.Dump(b[:n]))
 }
 
 func ping(config *config.Config) {
@@ -194,7 +196,6 @@ func ping(config *config.Config) {
 			sumActivePowerMinus = uint32(math.Abs(math.Round(tmpValSum*100) / 10))
 			sumActivePowerPlus = uint32(0)
 		}
-
 		// Active power phase 1
 		if (tmpVal1) >= 0.0 {
 			phase1ActivePowerPlus = uint32(math.Round(tmpVal1*100) / 10)
@@ -224,23 +225,41 @@ func ping(config *config.Config) {
 		tmpVal1, _ = strconv.ParseFloat(records[1], 64)
 		tmpVal2, _ = strconv.ParseFloat(records[2], 64)
 		tmpVal3, _ = strconv.ParseFloat(records[3], 64)
-		phase1Current = uint32(tmpVal1)
-		phase2Current = uint32(tmpVal2)
-		phase3Current = uint32(tmpVal3)
+		phase1Current = uint32(math.Abs(math.Round(tmpVal1*10000) / 10))
+		phase2Current = uint32(math.Abs(math.Round(tmpVal2*10000) / 10))
+		phase3Current = uint32(math.Abs(math.Round(tmpVal3*10000) / 10))
 
-		// Current
+		// Voltage
 		tmpVal1, _ = strconv.ParseFloat(records[5], 64)
 		tmpVal2, _ = strconv.ParseFloat(records[6], 64)
 		tmpVal3, _ = strconv.ParseFloat(records[7], 64)
-		phase1Voltage = uint32(tmpVal1)
-		phase2Voltage = uint32(tmpVal2)
-		phase3Voltage = uint32(tmpVal3)
+		phase1Voltage = uint32(math.Abs(math.Round(tmpVal1*10000) / 10))
+		phase2Voltage = uint32(math.Abs(math.Round(tmpVal2*10000) / 10))
+		phase3Voltage = uint32(math.Abs(math.Round(tmpVal3*10000) / 10))
+
+		// Power factor
+		tmpVal1, _ = strconv.ParseFloat(records[23], 64)
+		tmpVal2, _ = strconv.ParseFloat(records[24], 64)
+		tmpVal3, _ = strconv.ParseFloat(records[25], 64)
+		phase1PowerFactor = uint32(math.Abs(math.Round(tmpVal1*10000) / 10))
+		phase2PowerFactor = uint32(math.Abs(math.Round(tmpVal2*10000) / 10))
+		phase3PowerFactor = uint32(math.Abs(math.Round(tmpVal3*10000) / 10))
+
+		// Energy counter
+		consumerCounterFile := filepath.Join(config.CounterDir, "consumecounter")
+		producerCounterFile := filepath.Join(config.CounterDir, "producecounter")
+
+		consumedCounter := smartpi.ReadCounterFile(config, consumerCounterFile)
+		sumActiveEnergyPlus = uint64(math.Abs(math.Round(consumedCounter*36000) / 10))
+		producedCounter := smartpi.ReadCounterFile(config, producerCounterFile)
+		sumActiveEnergyMinus = uint64(math.Abs(math.Round(producedCounter*36000) / 10))
 
 	} else {
 		log.Fatal("Values not written")
 	}
 
 	datagram = append([]byte("SMA"))
+	datagram = append(datagram, []byte{0x00}...)
 	datagram = append(datagram, []byte{0x00, 0x04}...)             // Data length: 4 byte (0x00000004)
 	datagram = append(datagram, []byte{0x02, 0xA0}...)             // Tag: "Tag0" (42), version 0
 	datagram = append(datagram, []byte{0x00, 0x00, 0x00, 0x01}...) // Group1 (default group)
@@ -387,6 +406,8 @@ func ping(config *config.Config) {
 	append4ByteDatagram(&datagram, emeter.CurrentAverage[127], softwareversion)
 
 	datagram = append(datagram, []byte{0x00, 0x00, 0x00, 0x00}...) //End
+
+	log.Debugf("% x \n", datagram)
 
 	conn, err := multicast.NewBroadcaster(config.EmeterMulticastAddress + ":" + strconv.Itoa(config.EmeterMulticastPort))
 

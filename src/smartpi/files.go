@@ -1,6 +1,6 @@
 // File Exporter
 
-package main
+package smartpi
 
 import (
 	"fmt"
@@ -13,49 +13,54 @@ import (
 
 	"github.com/nDenerserve/SmartPi/models"
 	"github.com/nDenerserve/SmartPi/repository/config"
-	"github.com/nDenerserve/SmartPi/smartpi"
 	log "github.com/sirupsen/logrus"
 )
 
-func writeSharedFile(c *config.Config, values *smartpi.ADE7878Readout, balancedvalue float64) {
+func WriteSharedFile(c *config.Config, values *ADE7878Readout, balancedvalue float64) {
 	var f *os.File
 	var err error
 	var p models.Phase
-	s := make([]string, 23)
+	s := make([]string, 26)
 	i := 0
-	for _, p = range smartpi.MainPhases {
+	for _, p = range MainPhases {
 		s[i] = fmt.Sprint(values.Current[p])
 		i++
 	}
 	s[i] = fmt.Sprint(values.Current[models.PhaseN])
 	i++
-	for _, p = range smartpi.MainPhases {
+	for _, p = range MainPhases {
 		s[i] = fmt.Sprint(values.Voltage[p])
 		i++
 	}
-	for _, p = range smartpi.MainPhases {
+	for _, p = range MainPhases {
 		s[i] = fmt.Sprint(values.ActiveWatts[p])
 		i++
 	}
-	for _, p = range smartpi.MainPhases {
+	for _, p = range MainPhases {
 		s[i] = fmt.Sprint(values.CosPhi[p])
 		i++
 	}
-	for _, p = range smartpi.MainPhases {
+	for _, p = range MainPhases {
 		s[i] = fmt.Sprint(values.Frequency[p])
 		i++
 	}
-	for _, p = range smartpi.MainPhases {
+	for _, p = range MainPhases {
 		s[i] = fmt.Sprint(values.Energyconsumption[p])
 		i++
 	}
-	for _, p = range smartpi.MainPhases {
+	for _, p = range MainPhases {
 		s[i] = fmt.Sprint(values.Energyproduction[p])
 		i++
 	}
 
 	// sald Values
 	s[i] = fmt.Sprint(balancedvalue)
+
+	//PowerFactor
+	for _, p = range MainPhases {
+		s[i] = fmt.Sprint(values.PowerFactor[p])
+		i++
+	}
 
 	t := time.Now()
 	timeStamp := t.Format("2006-01-02 15:04:05")
@@ -69,6 +74,7 @@ func writeSharedFile(c *config.Config, values *smartpi.ADE7878Readout, balancedv
 	logLine += fmt.Sprintf("Ec1: %s  Ec2: %s  Ec3: %s  ", s[16], s[17], s[18])
 	logLine += fmt.Sprintf("Ep1: %s  Ep2: %s  Ep3: %s  ", s[19], s[20], s[21])
 	logLine += fmt.Sprintf("Balanced: %s  ", s[22])
+	logLine += fmt.Sprintf("PF1: %s  PF2: %s  PF3: %s  ", s[23], s[24], s[25])
 	log.Info(logLine)
 	sharedFile := filepath.Join(c.SharedDir, c.SharedFile)
 	if _, err = os.Stat(sharedFile); os.IsNotExist(err) {
@@ -91,7 +97,7 @@ func writeSharedFile(c *config.Config, values *smartpi.ADE7878Readout, balancedv
 	f.Close()
 }
 
-func updateCounterFile(c *config.Config, f string, v float64) float64 {
+func UpdateCounterFile(c *config.Config, f string, v float64) float64 {
 	t := time.Now()
 	var counter float64
 	counterFile, err := ioutil.ReadFile(f)
@@ -122,7 +128,7 @@ func updateCounterFile(c *config.Config, f string, v float64) float64 {
 	return counter + v
 }
 
-func readCounterFile(c *config.Config, f string) float64 {
+func ReadCounterFile(c *config.Config, f string) float64 {
 	t := time.Now()
 	var counter float64
 	counterFile, err := ioutil.ReadFile(f)

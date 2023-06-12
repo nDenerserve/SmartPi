@@ -140,7 +140,7 @@ func pollSmartPi(config *config.Config, device *i2c.Device) {
 		if i%1 == 0 {
 
 			if config.SharedFileEnabled {
-				writeSharedFile(config, &readouts, wattHourBalanced)
+				smartpi.WriteSharedFile(config, &readouts, wattHourBalanced)
 			}
 
 			// Publish readouts to MQTT.
@@ -187,11 +187,11 @@ func pollSmartPi(config *config.Config, device *i2c.Device) {
 			// Update persistent counter files and read Values from not updated files
 			if config.CounterEnabled {
 				if wattHourBalancedAccu >= 0 {
-					consumedCounter = updateCounterFile(config, consumerCounterFile, math.Abs(wattHourBalancedAccu))
-					producedCounter = readCounterFile(config, producerCounterFile)
+					consumedCounter = smartpi.UpdateCounterFile(config, consumerCounterFile, math.Abs(wattHourBalancedAccu))
+					producedCounter = smartpi.ReadCounterFile(config, producerCounterFile)
 				} else {
-					producedCounter = updateCounterFile(config, producerCounterFile, math.Abs(wattHourBalancedAccu))
-					consumedCounter = readCounterFile(config, consumerCounterFile)
+					producedCounter = smartpi.UpdateCounterFile(config, producerCounterFile, math.Abs(wattHourBalancedAccu))
+					consumedCounter = smartpi.ReadCounterFile(config, consumerCounterFile)
 				}
 				wattHourBalancedAccu = 0.0
 			}
