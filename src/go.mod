@@ -3,7 +3,7 @@ module github.com/nDenerserve/SmartPi
 go 1.20
 
 require (
-	github.com/eclipse/paho.mqtt.golang v1.3.5
+	github.com/eclipse/paho.mqtt.golang v1.4.2
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/goburrow/serial v0.1.0
 	github.com/gorilla/context v1.1.1
@@ -22,6 +22,8 @@ require (
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	gopkg.in/ini.v1 v1.67.0
 )
+
+require golang.org/x/sync v0.2.0 // indirect
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
