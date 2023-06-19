@@ -3,7 +3,7 @@ module github.com/nDenerserve/SmartPi
 go 1.20
 
 require (
-	github.com/eclipse/paho.mqtt.golang v1.3.5
+	github.com/eclipse/paho.mqtt.golang v1.4.2
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/goburrow/serial v0.1.0
 	github.com/gorilla/context v1.1.1
@@ -39,6 +39,7 @@ require (
 	github.com/rs/cors v1.8.3
 	golang.org/x/crypto v0.6.0
 	golang.org/x/net v0.10.0 // indirect
+	golang.org/x/sync v0.2.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	periph.io/x/conn/v3 v3.7.0
