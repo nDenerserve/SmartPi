@@ -18,7 +18,7 @@ require (
 	github.com/prometheus/client_golang v1.16.0
 	github.com/prometheus/common v0.42.0
 	github.com/secsy/goftp v0.0.0-20200609142545-aa2de14babf4
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	gopkg.in/ini.v1 v1.67.0
 )
