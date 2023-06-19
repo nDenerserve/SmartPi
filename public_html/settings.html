@@ -334,6 +334,51 @@
                         <md-button ng-style="{'visibility': isMqttSave?'visible':'hidden'}" class="md-raised md-primary" ng-click="saveConfiguration('mqtt')">Save</md-button>
                     </md-content>
                 </md-tab>
+                <md-tab label="SMA Energy meter protocol">
+                    <md-content class="md-padding">
+                        <div layout="row" layout-xs="column">
+                            <md-switch ng-model="emeter.enabled" aria-label="SMA energy meter protocol enabled" flex="20" ng-change="showSaveButton('emeter')">
+                                SMA energy meter protocol
+                            </md-switch>
+                        </div>
+                
+                        <div layout="row" layout-xs="column">
+                            <md-input-container flex="25">
+                                <label>Multicast address</label>
+                                <input required name="emetermulticastaddress" ng-model="emeter.multicastAddress" ng-change="showSaveButton('emeter')">
+                                <div ng-messages="projectForm.emetermulticastaddress.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                            <md-input-container flex="10">
+                                <label>Multicast port</label>
+                                <input required name="emetermulticastport" ng-model="emeter.multicastPort" ng-pattern="/^[0-9]{4}$/"
+                                    ng-change="showSaveButton('emeter')">
+                                <div ng-messages="projectForm.emetermulticastport.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                        </div>
+                        <div layout="row" layout-xs="column">
+                            <md-input-container flex="25">
+                                <label>SusyID</label>
+                                <input required name="emetersusyid" ng-model="emeter.susyId" ng-change="showSaveButton('emeter')">
+                                <div ng-messages="projectForm.emetersusyid.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                            <md-input-container flex="25">
+                                <label>Serial</label>
+                                <input required name="emeterserial" ng-model="emeter.serial" ng-change="showSaveButton('emeter')">
+                                <div ng-messages="projectForm.emeterserial.$error">
+                                    <div ng-message="required">This is required.</div>
+                                </div>
+                            </md-input-container>
+                        </div>
+                        <md-button ng-style="{'visibility': isEmeterSave?'visible':'hidden'}" class="md-raised md-primary"
+                            ng-click="saveConfiguration('emeter')">Save</md-button>
+                    </md-content>
+                </md-tab>
                 <md-tab label="Database">
                     <md-content class="md-padding">
                         <div layout="row" layout-xs="column">

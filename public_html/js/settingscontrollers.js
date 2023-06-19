@@ -22,6 +22,7 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, $interval
         $scope.measurement.voltage.phase3 = {};
 
         $scope.mqtt = {};
+        $scope.emeter = {};
         $scope.ftp = {};
         $scope.mobile = {};
         $scope.csv = {};
@@ -203,6 +204,9 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, $interval
                 case 'mqtt':
                     $scope.isMqttSave = true;
                     break;
+                case 'emeter':
+                    $scope.isEmeterSave = true;
+                    break;
                 case 'database':
                     $scope.isDatabaseSave = true;
                     break;
@@ -332,6 +336,15 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, $interval
                     jsonConfigObj.MQTTpass = $scope.mqtt.password;
                     jsonConfigObj.MQTTtopic = $scope.mqtt.topic;
                     break;
+                
+                case 'emeter':
+
+                    jsonConfigObj.EmeterEnabled = $scope.emeter.enabled;
+                    jsonConfigObj.EmeterMulticastAddress = $scope.emeter.multicastAddress;
+                    jsonConfigObj.EmeterMulticastPort = $scope.emeter.multicastPort;
+                    jsonConfigObj.EmeterSusyID = $scope.emeter.susyId;
+                    jsonConfigObj.EmeterSerial = $scope.emeter.serial;
+                    break;
 
                 case 'database':
 
@@ -456,6 +469,12 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, $interval
                     $scope.mqtt.username = data.MQTTuser;
                     $scope.mqtt.password = data.MQTTpass;
                     $scope.mqtt.topic = data.MQTTtopic;
+                    $scope.emeter.enabled = data.EmeterEnabled;
+                    $scope.emeter.multicastAddress = data.EmeterMulticastAddress;
+                    $scope.emeter.multicastPort = data.EmeterMulticastPort;
+                    $scope.emeter.susyId = data.EmeterSusyID;
+                    $scope.emeter.serial = data.EmeterSerial;
+
                     $scope.influx.enabled = data.DatabaseEnabled;
                     $scope.influx.influxAPItoken = data.InfluxAPIToken;
                     $scope.influx.influxdatabase = data.Influxdatabase;

@@ -2,6 +2,7 @@ BINARY_READOUT=smartpireadout
 BINARY_SERVER=smartpiserver
 BINARY_FTPUPLOAD=smartpiftpupload
 BINARY_MODBUSSERVER=smartpimodbusserver
+BINARY_EMETERSERVER=smartpiemeterserver
 
 #VERSION=0.3.7
 VERS = $(shell git describe --always --long --dirty)
@@ -64,8 +65,13 @@ buildsmartpiftpupload:
 
 buildsmartpimodbusserver:
 	@echo "start building smartpimodbusserver..."
-	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_MODBUSSERVER) -ldflags="-X main.appVersion=${VERSION}" modbus/modbusserver.go
+	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_MODBUSSERVER) -ldflags="-X main.appVersion=${VERSION}" services/modbus/modbusserver.go
 	@echo "building smartpimodbusserver done"
+
+buildsmartpiemeterserver:
+	@echo "start building smartpiemeterserver..."
+	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_EMETERSERVER) -ldflags="-X main.appVersion=${VERSION}" services/emeter/emeter.go
+	@echo "building smartpiemeterserver done"
 
 install:
 	@echo install
