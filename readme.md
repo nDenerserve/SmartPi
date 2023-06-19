@@ -312,3 +312,7 @@ Or you can add it later via webgui:
  * changed to InfluxDB2
  * added support for nD-enerserve Digital-Out-Module (https://shop.enerserve.eu/e.digital-OUT/100054)
  * removed support for UMTS-Sticks
+
+ ### 06/19/23
+ * added support for SMA energy meter (test)
+ * SmartPi can replace the SMA energy meter
