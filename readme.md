@@ -246,16 +246,14 @@ to read the time from the RTC.
 
 ##### Install go
 Download the archive and extract it into /usr/local, creating a Go tree in /usr/local/go.
-Currently version 1.18.2 is up to date. You may need to adapt the filename according to latest version.
+Currently version 1.20.5 is up to date. You may need to adapt the filename according to latest version.
 
     cd /usr/local
 
-    sudo wget https://go.dev/dl/go1.20.3.linux-arm64.tar.gz
-    sudo tar -xvzf go1.20.3.linux-arm64.tar.gz
-    sudo rm go1.20.3.linux-arm64.tar.gz
+    sudo wget https://go.dev/dl/go1.20.5.linux-arm64.tar.gz
+    sudo tar -xvzf go1.20.5.linux-arm64.tar.gz
+    sudo rm go1.20.5.linux-arm64.tar.gz
     echo 'PATH="/usr/local/go/bin:${PATH}"' | sudo tee -a /etc/profile
-
-
 
 
 In order for the `${PATH}` to be updated, you will need to logout.
