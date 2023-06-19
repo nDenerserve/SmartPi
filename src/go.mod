@@ -10,7 +10,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.12
 	github.com/msteinert/pam v1.0.0
 	github.com/nDenerserve/go-rpigpio v0.0.0-20160701025123-bce6190607da
-	github.com/nDenerserve/mbserver v0.0.0-20190424130445-5ba17eeab6ce
+	github.com/nDenerserve/mbserver v0.0.0-20230619125728-ce6fed969ee0
 	github.com/nDenerserve/structs v1.1.0
 	github.com/oleiade/reflections v1.0.1
 	github.com/prometheus/client_golang v1.12.1

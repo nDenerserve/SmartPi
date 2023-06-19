@@ -100,7 +100,8 @@ func main() {
 						registervalue = 0
 						val, err := strconv.ParseFloat(records[i], 32)
 						if err != nil {
-							log.Fatal("error converting value", err)
+							log.Error("error converting value", err)
+							val = 0.0
 						} else {
 							registervalue = math.Float32bits(float32(val))
 						}

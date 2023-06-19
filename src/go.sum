@@ -204,6 +204,8 @@ github.com/nDenerserve/go-rpigpio v0.0.0-20160701025123-bce6190607da h1:zlC34hM5
 github.com/nDenerserve/go-rpigpio v0.0.0-20160701025123-bce6190607da/go.mod h1:DLzdXWH9asVJL0kdZEv0PVG8YJBx03ivd7133aePUlw=
 github.com/nDenerserve/mbserver v0.0.0-20190424130445-5ba17eeab6ce h1:dlHlsuKOcJwS03YYlbV8XGffW4OT5pBoCMh7qA2Irpk=
 github.com/nDenerserve/mbserver v0.0.0-20190424130445-5ba17eeab6ce/go.mod h1:Jm3fdLz6ubBNXO49Iw6A+HDNxlYoFXzNV+H6ty1HqGA=
+github.com/nDenerserve/mbserver v0.0.0-20230619125728-ce6fed969ee0 h1:Ktp4zHNdxDEvTMjkRfuwOZsSTw4bSx3aR581ZH5bA8Y=
+github.com/nDenerserve/mbserver v0.0.0-20230619125728-ce6fed969ee0/go.mod h1:aEQP6jpQA5sBX5m0PRgIyCx8V41gcZlzExhx6TKbxqg=
 github.com/nDenerserve/structs v1.1.0 h1:AlfJ8MssIOZJIYermhWcJFTtM/AdHUOjQ7pnRkKkuNI=
 github.com/nDenerserve/structs v1.1.0/go.mod h1:JJ7nQTXT2V9EDL92v809hBCHGqQA/BZjekczfMW9+yw=
 github.com/oleiade/reflections v1.0.1 h1:D1XO3LVEYroYskEsoSiGItp9RUxG6jWnCVvrqH0HHQM=

@@ -322,7 +322,7 @@ func (p *Config) ReadParameterFromFile() {
 	p.GUIMaxCurrent[models.PhaseN] = cfg.Section("gui").Key("gui_max_current_4").MustInt(100)
 
 	// [emeter]
-	p.EmeterEnabled = cfg.Section("emeter").Key("emeter_enabled").MustBool(false)
+	p.EmeterEnabled = cfg.Section("emeter").Key("emeter_enabled").MustBool(true)
 	p.EmeterMulticastAddress = cfg.Section("emeter").Key("emeter_multicast_address").MustString("239.12.255.254")
 	p.EmeterMulticastPort = cfg.Section("emeter").Key("emeter_multicast_port").MustInt(9522)
 	p.EmeterSusyID = uint16(cfg.Section("emeter").Key("emeter_susy_id").MustUint(270))
