@@ -243,6 +243,9 @@ smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, $interval
                 case 'mqtt':
                     $scope.isMqttSave = false;
                     break;
+                case 'emeter':
+                    $scope.isEmeterSave = false;
+                    break;
                 case 'database':
                     $scope.isDatabaseSave = false;
                     break;

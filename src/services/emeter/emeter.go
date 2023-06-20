@@ -44,6 +44,7 @@ var appVersion = "No Version Provided"
 func main() {
 
 	config := config.NewConfig()
+	go configWatcher(config)
 
 	version := flag.Bool("v", false, "prints current version information")
 	flag.Parse()
@@ -51,6 +52,8 @@ func main() {
 		fmt.Println(appVersion)
 		os.Exit(0)
 	}
+
+	log.SetLevel(config.LogLevel)
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -73,7 +76,9 @@ func main() {
 				log.Debugf("EVENT! %#v\n", event)
 				time.Sleep(100 * time.Millisecond)
 
-				ping(config)
+				if config.EmeterEnabled {
+					ping(config)
+				}
 
 				// watch for errors
 			case err := <-watcher.Errors:
@@ -419,6 +424,39 @@ func ping(config *config.Config) {
 
 	file.Close()
 
+}
+
+func configWatcher(config *config.Config) {
+	log.Debug("Start SmartPi watcher")
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer watcher.Close()
+	log.Debug("init done 1")
+	done := make(chan bool)
+	go func() {
+		for {
+			select {
+			case event := <-watcher.Events:
+				log.Println("event:", event)
+				if event.Op&fsnotify.Write == fsnotify.Write {
+					log.Println("modified file:", event.Name)
+					config.ReadParameterFromFile()
+				}
+			case err := <-watcher.Errors:
+				log.Println("error:", err)
+			}
+		}
+	}()
+
+	log.Debug("init done 2")
+	err = watcher.Add("/etc/smartpi")
+	if err != nil {
+		log.Fatal(err)
+	}
+	<-done
+	log.Debug("init done 3")
 }
 
 func append4ByteDatagram(datagram *[]byte, measurementType []byte, value uint32) {
