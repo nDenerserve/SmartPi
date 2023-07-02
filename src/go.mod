@@ -10,7 +10,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/influxdata/influxdb1-client v0.0.0-20220302092344-a9ab5670611c
 	github.com/mattn/go-sqlite3 v1.14.17
-	github.com/msteinert/pam v1.0.0
+	github.com/msteinert/pam v1.1.0
 	github.com/nDenerserve/go-rpigpio v0.0.0-20160701025123-bce6190607da
 	github.com/nDenerserve/mbserver v0.0.0-20230619125728-ce6fed969ee0
 	github.com/nDenerserve/structs v1.1.0
