@@ -160,7 +160,7 @@ gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 periph.io/x/conn/v3 v3.7.0 h1:f1EXLn4pkf7AEWwkol2gilCNZ0ElY+bxS4WE2PQXfrA=
 periph.io/x/conn/v3 v3.7.0/go.mod h1:ypY7UVxgDbP9PJGwFSVelRRagxyXYfttVh7hJZUHEhg=
-periph.io/x/devices/v3 v3.7.0 h1:9SqKZ9lcTpND36jDV6ADrtdhAvx7r+PqoFKzpQI+HuM=
-periph.io/x/devices/v3 v3.7.0/go.mod h1:K24UH9Y0Zh/8Ib24QK56YyRDLrZFlPEMEH+aea5Xmyw=
+periph.io/x/devices/v3 v3.7.1 h1:BsExlfYJlZUZoawzpMF7ksgC9f1eBAdqvKRCGvb+VYw=
+periph.io/x/devices/v3 v3.7.1/go.mod h1:ezQOe8WknDaMbKZXVwQUQkIauyLyJshwAHkIohHXA94=
 periph.io/x/host/v3 v3.8.0 h1:T5ojZ2wvnZHGPS4h95N2ZpcCyHnsvH3YRZ1UUUiv5CQ=
 periph.io/x/host/v3 v3.8.0/go.mod h1:rzOLH+2g9bhc6pWZrkCrmytD4igwQ2vxFw6Wn6ZOlLY=
