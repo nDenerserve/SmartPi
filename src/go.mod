@@ -16,15 +16,22 @@ require (
 	github.com/prometheus/client_golang v1.12.1
 	github.com/prometheus/common v0.33.0
 	github.com/secsy/goftp v0.0.0-20200609142545-aa2de14babf4
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/exp v0.0.0-20220414153411-bcd21879b8fd
 	gopkg.in/ini.v1 v1.66.4
 )
 
 require (
 	github.com/deepmap/oapi-codegen v1.8.2 // indirect
+	github.com/fatih/structs v1.1.0 // indirect
+	github.com/go-ole/go-ole v1.2.6 // indirect
+	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839 // indirect
+	github.com/muka/go-bluetooth v0.0.0-20221213043340-85dc80edc4e1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/saltosystems/winrt-go v0.0.0-20230921082907-2ab5b7d431e1 // indirect
+	github.com/tinygo-org/cbgo v0.0.4 // indirect
+	golang.org/x/term v0.11.0 // indirect
 )
 
 require (
@@ -39,13 +46,14 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/rs/cors v1.8.3
-	golang.org/x/crypto v0.6.0
-	golang.org/x/net v0.6.0 // indirect
-	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/crypto v0.12.0
+	golang.org/x/net v0.10.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
 	google.golang.org/protobuf v1.26.0 // indirect
 	periph.io/x/conn/v3 v3.7.0
 	periph.io/x/devices/v3 v3.7.0
 	periph.io/x/host/v3 v3.8.0
+	tinygo.org/x/bluetooth v0.8.0
 )
 
 go 1.18
