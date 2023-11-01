@@ -55,6 +55,7 @@ func WriteSharedFile(c *config.Config, values *ADE7878Readout, balancedvalue flo
 
 	// sald Values
 	s[i] = fmt.Sprint(balancedvalue)
+	i++
 
 	//PowerFactor
 	for _, p = range MainPhases {
