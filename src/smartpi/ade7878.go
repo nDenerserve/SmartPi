@@ -677,11 +677,6 @@ func CalculatePowerFactor(c *config.Config, phase models.Phase, watts float64, v
 
 	powerFactor := watts / CTTypes[c.CTType[phase]].PowerCorrectionFactor / voltAmps
 
-	fmt.Println()
-	fmt.Print(phase)
-	fmt.Print("  Powerfactor: ")
-	fmt.Println(powerFactor)
-
 	if c.MeasureCurrent[phase] {
 		if math.Signbit(voltAmpsReactive) {
 			return powerFactor
