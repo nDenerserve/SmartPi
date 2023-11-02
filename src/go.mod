@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/fsnotify/fsnotify v1.6.0
+	github.com/fsnotify/fsnotify v1.7.0
 	github.com/goburrow/serial v0.1.0
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.8.0
@@ -21,6 +21,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	gopkg.in/ini.v1 v1.67.0
+	tinygo.org/x/bluetooth v0.8.0
 )
 
 require (
@@ -31,7 +32,6 @@ require (
 	github.com/saltosystems/winrt-go v0.0.0-20230921082907-2ab5b7d431e1 // indirect
 	github.com/tinygo-org/cbgo v0.0.4 // indirect
 	golang.org/x/term v0.12.0 // indirect
-	tinygo.org/x/bluetooth v0.8.0 // indirect
 )
 
 require (
