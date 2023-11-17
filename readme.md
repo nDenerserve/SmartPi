@@ -278,9 +278,9 @@ Currently version 1.20.5 is up to date. You may need to adapt the filename accor
 
     cd /usr/local
 
-    sudo wget https://go.dev/dl/go1.20.5.linux-arm64.tar.gz
-    sudo tar -xvzf go1.20.5.linux-arm64.tar.gz
-    sudo rm go1.20.5.linux-arm64.tar.gz
+    sudo wget https://go.dev/dl/go1.21.4.linux-arm64.tar.gz
+    sudo tar -xvzf go1.21.4.linux-arm64.tar.gz
+    sudo rm go1.21.4.linux-arm64.tar.gz
     echo 'PATH="/usr/local/go/bin:${PATH}"' | sudo tee -a /etc/profile
 
 
