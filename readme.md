@@ -24,11 +24,11 @@ Create a user with the name smartpi and a password of your choice. We use the pa
     echo 'deb [signed-by=/etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg] https://repos.influxdata.com/debian stable main' | sudo tee /etc/apt/sources.list.d/influxdata.list
 
     sudo apt update && sudo apt install influxdb2
-    sudo service influxdb start
+    sudo systemctl start influxdb
 
 Check if influxdb is running
 
-    sudo service influxdb status
+    sudo systemctl status influxdb
 
 ###### Create InfluxDB user and tables
 Go to http://<<ip-address of smartpi>>:8086
@@ -45,7 +45,7 @@ Create an API-Key and save it for later use. You have to adde the API-Key later 
 
 ##### Update packet list and update packages
     
-    wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -
+    wget -q -O - https://packages.grafana.com/gpg.key | gpg --dearmor | sudo tee -a /etc/apt/trusted.gpg.d/grafana-archive_compat.gpg && clear
     echo "deb https://packages.grafana.com/oss/deb stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
 
     sudo apt update
@@ -55,19 +55,19 @@ Create an API-Key and save it for later use. You have to adde the API-Key later 
 ##### Install additional packages
 
     sudo apt-get install -y grafana sqlite3 libpam0g i2c-tools watchdog
-    sudo service grafana-server start
+    sudo systemctl start grafana-server
 
 Check if grafana is running
 
-    sudo service grafana-server status
+    sudo systemctl status grafana-server
 
 
 ##### Install nodered
 
     bash <(curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered)
 
-    systemctl enable nodered
-    systemctl start nodered
+    sudo systemctl enable nodered
+    sudo systemctl start nodered
 
 
 ##### Create tmpfs in /etc/fstab
@@ -83,7 +83,7 @@ For secure 24/7 operation, we recommend that you also create a tmpf for the log 
 If you want to compile yourself, increase the value for tmp to 200M.
     
 
-##### Optimize the logfile:
+##### Optimize the logfile (for bullseye):
 
     sudo nano /etc/logrotate.d/rsyslog
 
@@ -116,6 +116,19 @@ The file looks like:
                     /usr/lib/rsyslog/rsyslog-rotate
             endscript
     }
+
+##### Optimize the logfile (for bookworm):
+
+    sudo nano /etc/logrotate.conf
+    
+The file should be looks like this:
+   
+    daily
+    rotate 7
+    create
+    #dateext
+    compress
+    include /etc/logrotate.d
 
 
 ##### Add rescue IP
@@ -218,12 +231,18 @@ Disable the "fake hwclock" which interferes with the 'real' hwclock
     sudo apt-get -y remove fake-hwclock
     sudo update-rc.d -f fake-hwclock remove
     sudo systemctl disable fake-hwclock
+Run
 
-Run sudo nano /lib/udev/hwclock-set and comment out these three lines:
+    sudo nano /lib/udev/hwclock-set 
+    
+and comment out these three lines:
+
     #if [ -e /run/systemd/system ] ; then
     # exit 0
     #fi
+
 And also comment out:
+
     #/sbin/hwclock --rtc=$dev --systz
     #/sbin/hwclock --rtc=$dev --hctosys
 
@@ -237,6 +256,15 @@ to write the time to the RTC and
 
 to read the time from the RTC.
 
+##### If you would like to use our RS485- or Lora-Module:
+Open
+
+    sudo nano /boot/config.txt
+and add:
+
+    dtoverlay=sc16is752-i2c,int_pin=24,addr=0x4D,xtal=14745600
+
+    
 
 ##### Remove old go version
 
@@ -250,20 +278,13 @@ Currently version 1.20.5 is up to date. You may need to adapt the filename accor
 
     cd /usr/local
 
-    sudo wget https://go.dev/dl/go1.20.5.linux-arm64.tar.gz
-    sudo tar -xvzf go1.20.5.linux-arm64.tar.gz
-    sudo rm go1.20.5.linux-arm64.tar.gz
+    sudo wget https://go.dev/dl/go1.21.4.linux-arm64.tar.gz
+    sudo tar -xvzf go1.21.4.linux-arm64.tar.gz
+    sudo rm go1.21.4.linux-arm64.tar.gz
     echo 'PATH="/usr/local/go/bin:${PATH}"' | sudo tee -a /etc/profile
 
 
 In order for the `${PATH}` to be updated, you will need to logout.
-
-Create a directory to contain your Go workspace, for example `${HOME}/go`,
-and set the GOPATH environment variable to point to that location.
-
-    mkdir "${HOME}/go"
-    export GOPATH="${HOME}/go"
-
 
 ##### Building source
 
