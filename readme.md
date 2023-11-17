@@ -83,7 +83,7 @@ For secure 24/7 operation, we recommend that you also create a tmpf for the log 
 If you want to compile yourself, increase the value for tmp to 200M.
     
 
-##### Optimize the logfile:
+##### Optimize the logfile (for bullseye):
 
     sudo nano /etc/logrotate.d/rsyslog
 
@@ -116,6 +116,19 @@ The file looks like:
                     /usr/lib/rsyslog/rsyslog-rotate
             endscript
     }
+
+##### Optimize the logfile (for bookworm):
+
+    sudo nano /etc/logrotate.conf
+    
+The file should be looks like this:
+   
+    daily
+    rotate 7
+    create
+    #dateext
+    compress
+    include /etc/logrotate.d
 
 
 ##### Add rescue IP
