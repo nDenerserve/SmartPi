@@ -24,11 +24,11 @@ Create a user with the name smartpi and a password of your choice. We use the pa
     echo 'deb [signed-by=/etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg] https://repos.influxdata.com/debian stable main' | sudo tee /etc/apt/sources.list.d/influxdata.list
 
     sudo apt update && sudo apt install influxdb2
-    sudo service influxdb start
+    sudo systemctl start influxdb
 
 Check if influxdb is running
 
-    sudo service influxdb status
+    sudo systemctl status influxdb
 
 ###### Create InfluxDB user and tables
 Go to http://<<ip-address of smartpi>>:8086
@@ -55,11 +55,11 @@ Create an API-Key and save it for later use. You have to adde the API-Key later 
 ##### Install additional packages
 
     sudo apt-get install -y grafana sqlite3 libpam0g i2c-tools watchdog
-    sudo service grafana-server start
+    sudo systemctl start grafana-server
 
 Check if grafana is running
 
-    sudo service grafana-server status
+    sudo systemctl status grafana-server
 
 
 ##### Install nodered
