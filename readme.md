@@ -258,6 +258,7 @@ to read the time from the RTC.
 
 ##### If you would like to use our RS485- or Lora-Module:
 Open
+
     sudo nano /boot/config.txt
 and add:
 
