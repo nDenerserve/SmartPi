@@ -232,7 +232,8 @@ Disable the "fake hwclock" which interferes with the 'real' hwclock
     sudo update-rc.d -f fake-hwclock remove
     sudo systemctl disable fake-hwclock
 
-Run sudo nano /lib/udev/hwclock-set and comment out these three lines:
+Run 
+    sudo nano /lib/udev/hwclock-set and comment out these three lines:
     #if [ -e /run/systemd/system ] ; then
     # exit 0
     #fi
