@@ -4,6 +4,8 @@ smartpi.controller('MainCtrl', function($scope, $Momentary, $http, $interval, Fi
     $scope.networklocation = window.location.protocol + '//' + window.location.hostname + ':8080';
     $scope.grafanalocation = window.location.protocol + '//' + window.location.hostname + ':3000';
     $scope.influxdblocation = window.location.protocol + '//' + window.location.hostname + ':8086';
+    $scope.filebrowserlocation = window.location.protocol + '//' + window.location.hostname + ':4201';
+    $scope.websshlocation = 'https://' + window.location.hostname + ':4200';
 
 
     $scope.startDate = moment().startOf('day').toDate();
