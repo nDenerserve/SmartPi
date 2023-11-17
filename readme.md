@@ -231,13 +231,16 @@ Disable the "fake hwclock" which interferes with the 'real' hwclock
     sudo apt-get -y remove fake-hwclock
     sudo update-rc.d -f fake-hwclock remove
     sudo systemctl disable fake-hwclock
+Run
 
-Run 
     sudo nano /lib/udev/hwclock-set 
+    
 and comment out these three lines:
+
     #if [ -e /run/systemd/system ] ; then
     # exit 0
     #fi
+
 And also comment out:
     #/sbin/hwclock --rtc=$dev --systz
     #/sbin/hwclock --rtc=$dev --hctosys
