@@ -45,7 +45,7 @@ Create an API-Key and save it for later use. You have to adde the API-Key later 
 
 ##### Update packet list and update packages
     
-    wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -
+    wget -q -O - https://packages.grafana.com/gpg.key | gpg --dearmor | sudo tee -a /etc/apt/trusted.gpg.d/grafana-archive_compat.gpg && clear
     echo "deb https://packages.grafana.com/oss/deb stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
 
     sudo apt update
