@@ -66,8 +66,8 @@ Check if grafana is running
 
     bash <(curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered)
 
-    systemctl enable nodered
-    systemctl start nodered
+    sudo systemctl enable nodered
+    sudo systemctl start nodered
 
 
 ##### Create tmpfs in /etc/fstab
