@@ -11,19 +11,19 @@ lat=52.3667
 lng=9.7167
 
 [database]
-counter_enabled     =true
-counterdir          ="/var/smartpi"
-database_enabled    =true
-sqlite_enabled      =true
-sqlite_dir          ="/var/smartpi/db"
-dir                 ="/var/smartpi/db"
-influxversion       =2
-influxuser          ="smartpi"
-influxpassword      ="smart4pi"
-influxdatabase      ="http://localhost:8086"
-influxapitoken      =""
-influxorg           = "smartpi"
-influxbucket        = "meteringdata"
+counter_enabled  = true
+counterdir       = /var/smartpi
+database_enabled = true
+sqlite_enabled   = true
+sqlite_dir       = /var/smartpi/db
+dir              = /var/smartpi/db
+influxuser       = smartpi
+influxpassword   = smart4pi
+influxdatabase   = http://localhost:8086
+influxapitoken   = /////SECRET////
+influxorg        = smartpi
+influxbucket     = meteringdata
+influxversion    = 2
 
 
 [device]
@@ -98,3 +98,19 @@ calibrationfactorI_4=1.0
 calibrationfactorU_1=1.0
 calibrationfactorU_2=1.0
 calibrationfactorU_3=1.0
+
+[gui]
+gui_max_current_1 = 100
+gui_max_current_2 = 100
+gui_max_current_3 = 100
+gui_max_current_4 = 100
+
+[appkey]
+appkey = `ew980723j35h97fqw4!234490#t33465`
+
+[emeter]
+emeter_enabled           = true
+emeter_multicast_address = 239.12.255.254
+emeter_multicast_port    = 9522
+emeter_susy_id           = 270
+emeter_serial            = 340585213

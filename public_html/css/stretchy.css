@@ -248,11 +248,15 @@ Stretchy Nav style - common to:
 }
 
 .cd-stretchy-nav ul li:nth-of-type(6) a::after {
-    background-position: -0px 0;
+    background-position: -96px 0;
 }
 
 .cd-stretchy-nav ul li:nth-of-type(7) a::after {
-    background-position: -96px 0;
+    background-position: -112px 0;
+}
+
+.cd-stretchy-nav ul li:nth-of-type(8) a::after {
+    background-position: -0px 0;
 }
 
 .cd-stretchy-nav ul span {
@@ -387,6 +391,12 @@ Stretchy Nav style - common to:
     animation-delay: 0.40s;
 }
 
+.cd-stretchy-nav.nav-is-visible ul li:nth-of-type(8) a::after,
+.cd-stretchy-nav.nav-is-visible ul li:nth-of-type(8) span {
+    -webkit-animation-delay: 0.40s;
+    -moz-animation-delay: 0.40s;
+    animation-delay: 0.40s;
+}
 
 /* --------------------------------
 
@@ -539,12 +549,18 @@ add-content navigation style
 }
 
 .cd-stretchy-nav.add-content ul li:nth-of-type(6) a::after {
-    background-position: -0px 0px;
+    background-position: -96px 0px;
 }
 
 .cd-stretchy-nav.add-content ul li:nth-of-type(7) a::after {
-    background-position: -96px 0px;
+    background-position: -112px 0px;
 }
+
+.cd-stretchy-nav.add-content ul li:nth-of-type(8) a::after {
+    background-position: -0px 0px;
+}
+
+
 
 .cd-stretchy-nav.add-content ul li:first-of-type a::after,
 .cd-stretchy-nav.add-content ul li:nth-of-type(4) a::after {
@@ -800,12 +816,17 @@ edit content
 }
 
 .cd-stretchy-nav.edit-content ul li:nth-of-type(6) a::after {
-    background-position: -0px 0;
+    background-position: -96px 0;
 }
 
 .cd-stretchy-nav.edit-content ul li:nth-of-type(7) a::after {
-    background-position: -96px 0;
+    background-position: -112px 0;
 }
+
+.cd-stretchy-nav.edit-content ul li:nth-of-type(8) a::after {
+    background-position: -0px 0;
+}
+
 
 .cd-stretchy-nav.edit-content ul span {
     position: absolute;
