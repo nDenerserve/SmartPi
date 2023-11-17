@@ -242,6 +242,7 @@ and comment out these three lines:
     #fi
 
 And also comment out:
+
     #/sbin/hwclock --rtc=$dev --systz
     #/sbin/hwclock --rtc=$dev --hctosys
 
@@ -255,6 +256,14 @@ to write the time to the RTC and
 
 to read the time from the RTC.
 
+##### If you would like to use our RS485- or Lora-Module:
+Open
+    sudo nano /boot/config.txt
+and add:
+
+    dtoverlay=sc16is752-i2c,int_pin=24,addr=0x4D,xtal=14745600
+
+    
 
 ##### Remove old go version
 
