@@ -286,13 +286,6 @@ Currently version 1.20.5 is up to date. You may need to adapt the filename accor
 
 In order for the `${PATH}` to be updated, you will need to logout.
 
-Create a directory to contain your Go workspace, for example `${HOME}/go`,
-and set the GOPATH environment variable to point to that location.
-
-    mkdir "${HOME}/go"
-    export GOPATH="${HOME}/go"
-
-
 ##### Building source
 
     cd ~
