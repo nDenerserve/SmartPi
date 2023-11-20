@@ -25,6 +25,11 @@ type Moduleconfig struct {
 	// [digitalout]
 	AllowedDigitalOutUser []string
 
+	// [etemperature]
+	AllowedEtemperatureUser []string
+	EtemperatureI2CAddress  uint16
+	EtemperatureSamplerate  int
+
 	// s := strings.Split("a,b,c", ",")
 }
 
@@ -54,6 +59,13 @@ func (p *Moduleconfig) ReadParameterFromFile() {
 	// [digitalout]
 	p.AllowedDigitalOutUser = strings.Split(mcfg.Section("digitalout").Key("allowed_user").String(), ",")
 
+	//[etemperature]
+	p.AllowedEtemperatureUser = strings.Split(mcfg.Section("emeter").Key("allowed_user").String(), ",")
+	if p.EtemperatureI2CAddress, err = utils.DecodeUint16(mcfg.Section("etemperature").Key("i2c_address").MustString("0x52")); err != nil {
+		log.Fatal(err)
+	}
+	p.EtemperatureSamplerate = mcfg.Section("device").Key("samplerate").MustInt(6)
+
 }
 
 func (p *Moduleconfig) SaveParameterToFile() {
@@ -70,6 +82,11 @@ func (p *Moduleconfig) SaveParameterToFile() {
 
 	// [digitalout]
 	_, merr = mcfg.Section("digitalout").NewKey("allowed_user", strings.Join(p.AllowedDigitalOutUser, ","))
+
+	//[etemperature]
+	_, merr = mcfg.Section("etemperature").NewKey("allowed_user", strings.Join(p.AllowedEtemperatureUser, ","))
+	_, merr = mcfg.Section("etemperature").NewKey("i2c_address", utils.EncodeUint64(uint64(p.EtemperatureI2CAddress)))
+	_, err = mcfg.Section("etemperature").NewKey("samplerate", strconv.FormatInt(int64(p.EtemperatureSamplerate), 10))
 
 	tmpFile := "/tmp/smartpi_modules"
 	merr := mcfg.SaveTo(tmpFile)
