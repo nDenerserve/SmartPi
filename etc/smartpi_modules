@@ -7,3 +7,9 @@ loglevel=debug
 
 [digitalout]
 allowed_user = "smartpi,root"
+
+[etemperature]
+allowed_user = "smartpi,root"
+i2c_address = 0x52
+# Measurements each minute
+samplerate = 6
