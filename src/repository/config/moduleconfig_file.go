@@ -26,9 +26,12 @@ type Moduleconfig struct {
 	AllowedDigitalOutUser []string
 
 	// [etemperature]
-	AllowedEtemperatureUser []string
-	EtemperatureI2CAddress  uint16
-	EtemperatureSamplerate  int
+	AllowedEtemperatureUser       []string
+	EtemperatureI2CAddress        uint16
+	EtemperatureSamplerate        int
+	EtemperatureSharedFileEnabled bool
+	EtemperatureSharedDir         string
+	EtemperatureSharedFile        string
 
 	// s := strings.Split("a,b,c", ",")
 }
@@ -60,11 +63,14 @@ func (p *Moduleconfig) ReadParameterFromFile() {
 	p.AllowedDigitalOutUser = strings.Split(mcfg.Section("digitalout").Key("allowed_user").String(), ",")
 
 	//[etemperature]
-	p.AllowedEtemperatureUser = strings.Split(mcfg.Section("emeter").Key("allowed_user").String(), ",")
+	p.AllowedEtemperatureUser = strings.Split(mcfg.Section("etemperature").Key("allowed_user").String(), ",")
 	if p.EtemperatureI2CAddress, err = utils.DecodeUint16(mcfg.Section("etemperature").Key("i2c_address").MustString("0x52")); err != nil {
 		log.Fatal(err)
 	}
-	p.EtemperatureSamplerate = mcfg.Section("device").Key("samplerate").MustInt(6)
+	p.EtemperatureSamplerate = mcfg.Section("etemperature").Key("samplerate").MustInt(6)
+	p.EtemperatureSharedFileEnabled = mcfg.Section("etemperature").Key("shared_file_enabled").MustBool(true)
+	p.EtemperatureSharedDir = mcfg.Section("etemperature").Key("shared_dir").MustString("/var/run")
+	p.EtemperatureSharedFile = mcfg.Section("etemperature").Key("shared_file").MustString("smartpi_etemperature_values")
 
 }
 
@@ -86,7 +92,10 @@ func (p *Moduleconfig) SaveParameterToFile() {
 	//[etemperature]
 	_, merr = mcfg.Section("etemperature").NewKey("allowed_user", strings.Join(p.AllowedEtemperatureUser, ","))
 	_, merr = mcfg.Section("etemperature").NewKey("i2c_address", utils.EncodeUint64(uint64(p.EtemperatureI2CAddress)))
-	_, err = mcfg.Section("etemperature").NewKey("samplerate", strconv.FormatInt(int64(p.EtemperatureSamplerate), 10))
+	_, merr = mcfg.Section("etemperature").NewKey("samplerate", strconv.FormatInt(int64(p.EtemperatureSamplerate), 10))
+	_, merr = mcfg.Section("etemperature").NewKey("shared_file_enabled", strconv.FormatBool(p.EtemperatureSharedFileEnabled))
+	_, merr = mcfg.Section("etemperature").NewKey("shared_dir", p.EtemperatureSharedDir)
+	_, merr = mcfg.Section("etemperature").NewKey("shared_file", p.EtemperatureSharedFile)
 
 	tmpFile := "/tmp/smartpi_modules"
 	merr := mcfg.SaveTo(tmpFile)

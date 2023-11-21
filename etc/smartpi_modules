@@ -9,6 +9,9 @@ loglevel=debug
 allowed_user = "smartpi,root"
 
 [etemperature]
+shared_file_enabled=true
+shared_dir="/var/run"
+shared_file="smartpi_etemperature_values"
 allowed_user = "smartpi,root"
 i2c_address = 0x52
 # Measurements each minute

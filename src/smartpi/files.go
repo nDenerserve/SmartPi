@@ -101,14 +101,14 @@ func WriteSharedFile(c *config.Config, values *ADE7878Readout, balancedvalue flo
 func UpdateCounterFile(c *config.Config, f string, v float64) float64 {
 	t := time.Now()
 	var counter float64
-	counterFile, err := ioutil.ReadFile(f)
+	counterFile, err := os.ReadFile(f)
 	if err == nil {
 		counter, err = strconv.ParseFloat(string(counterFile), 64)
 		if err != nil {
 			log.Errorf("unable to read counter file %q, %q", f, err)
 			log.Errorf("try to create new counterfile")
 			counter = 0.0
-			err = ioutil.WriteFile(f, []byte(strconv.FormatFloat(counter, 'f', 8, 64)), 0644)
+			err = os.WriteFile(f, []byte(strconv.FormatFloat(counter, 'f', 8, 64)), 0644)
 			if err != nil {
 				log.Errorf("unable to create counter file %q, %q", f, err)
 			}

@@ -3,6 +3,7 @@ BINARY_SERVER=smartpiserver
 BINARY_FTPUPLOAD=smartpiftpupload
 BINARY_MODBUSSERVER=smartpimodbusserver
 BINARY_EMETERSERVER=smartpiemeterserver
+BINARY_ETEMPERATUREREADOUT=smartpietemperaturereadout
 
 #VERSION=0.3.7
 VERS = $(shell git describe --always --long --dirty)
@@ -29,7 +30,7 @@ endif
 $(info    VERSION is $(VERSION))
 
 
-all: format makedir get buildsmartpireadout buildsmartpiserver buildsmartpiftpupload buildsmartpimodbusserver buildsmartpiemeterserver
+all: format makedir get buildsmartpireadout buildsmartpiserver buildsmartpiftpupload buildsmartpimodbusserver buildsmartpiemeterserver buildsmartpietemperaturereadout
 
 
 makedir:
@@ -72,6 +73,11 @@ buildsmartpiemeterserver:
 	@echo "start building smartpiemeterserver..."
 	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_EMETERSERVER) -ldflags="-X main.appVersion=${VERSION}" services/emeter/emeter.go
 	@echo "building smartpiemeterserver done"
+
+buildsmartpietemperaturereadout:
+	@echo "start building smartpietemperaturereadout..."
+	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_ETEMPERATUREREADOUT) -ldflags="-X main.appVersion=${VERSION}" modules/etemperature.go
+	@echo "building smartpietemperaturereadout done"
 
 install:
 	@echo install

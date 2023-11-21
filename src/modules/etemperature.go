@@ -2,10 +2,14 @@ package main
 
 import (
 	"encoding/binary"
+	"fmt"
 	"math"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/nDenerserve/SmartPi/repository/config"
+	"github.com/nDenerserve/SmartPi/utils"
 	log "github.com/sirupsen/logrus"
 	"periph.io/x/conn/v3/i2c"
 	"periph.io/x/conn/v3/i2c/i2creg"
@@ -79,6 +83,9 @@ func pollTemperature(dev i2c.Dev, moduleconfig *config.Moduleconfig) {
 
 		if hasError == false {
 			log.Debug("FILE WRITEING")
+			if moduleconfig.EtemperatureSharedFileEnabled {
+				writeSharedTemperaturefile(moduleconfig, temperatures)
+			}
 		} else {
 			hasError = false
 		}
@@ -122,4 +129,35 @@ func readTemperature(input uint8, dev i2c.Dev) (float64, error) {
 	log.Debugf("Temperature input %v: %v", input, temperature)
 
 	return float64(temperature), nil
+}
+
+func writeSharedTemperaturefile(c *config.Moduleconfig, values []float64) {
+	var f *os.File
+	var err error
+
+	t := time.Now()
+	timeStamp := t.Format("2006-01-02 15:04:05")
+	logLine := "## Shared File Update ## "
+	logLine += fmt.Sprintf(timeStamp)
+	logLine += fmt.Sprintf(" T1: %f  T2: %f  T3: %f  T4: %f  T5: %f  T6: %f  T7: %f  T8: %f  T9: %f  T10: %f  T11: %f  T12: %f  T13: %f  T14: %f  T15: %f  T16: %f  ", values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8], values[9], values[10], values[11], values[12], values[13], values[14], values[15])
+	log.Info(logLine)
+	sharedFile := filepath.Join(c.EtemperatureSharedDir, c.EtemperatureSharedFile)
+	if _, err = os.Stat(sharedFile); os.IsNotExist(err) {
+		os.MkdirAll(c.EtemperatureSharedDir, 0777)
+		f, err = os.Create(sharedFile)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		f, err = os.OpenFile(sharedFile, os.O_WRONLY|os.O_TRUNC, 0666)
+		if err != nil {
+			panic(err)
+		}
+	}
+	defer f.Close()
+	_, err = f.WriteString(timeStamp + ";" + utils.Float64ArrayToString(values, ";") + ";")
+	if err != nil {
+		panic(err)
+	}
+	f.Close()
 }
