@@ -22,7 +22,7 @@ func main() {
 
 	log.SetLevel(moduleconfig.LogLevel)
 
-	log.Info("Start")
+	log.Info("Start etemperature")
 
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)

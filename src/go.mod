@@ -1,6 +1,6 @@
 module github.com/nDenerserve/SmartPi
 
-go 1.20
+go 1.21.4
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
@@ -30,7 +30,9 @@ require (
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 	github.com/muka/go-bluetooth v0.0.0-20221213043340-85dc80edc4e1 // indirect
+	github.com/nDenerserve/RN2483 v0.0.0-20231123165121-2ab5d8f2030a // indirect
 	github.com/saltosystems/winrt-go v0.0.0-20230921082907-2ab5b7d431e1 // indirect
+	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07 // indirect
 	github.com/tinygo-org/cbgo v0.0.4 // indirect
 	golang.org/x/term v0.13.0 // indirect
 )
@@ -43,6 +45,7 @@ require (
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/influxdata/influxdb-client-go/v2 v2.12.3
 	github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839 // indirect
+	github.com/nDenerserve/rn2483 v0.0.0-20231123145450-29a7c43f3799
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_model v0.4.1-0.20230718164431-9a2bf3000d16 // indirect
 	github.com/prometheus/procfs v0.11.1 // indirect
@@ -50,7 +53,7 @@ require (
 	golang.org/x/crypto v0.14.0
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/sys v0.14.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	periph.io/x/conn/v3 v3.7.0
 	periph.io/x/devices/v3 v3.7.1

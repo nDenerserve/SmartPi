@@ -33,6 +33,15 @@ type Moduleconfig struct {
 	EtemperatureSharedDir         string
 	EtemperatureSharedFile        string
 
+	// [lorawan]
+	LoraWANEnabled        bool
+	LoraWANSharedDirs     []string
+	LoraWANSharedFile     string
+	LoraWANSerialPort     string
+	LoraWANSendInterval   int
+	LoraWANApplicationEUI string
+	LoraWANApplicationKey string
+
 	// s := strings.Split("a,b,c", ",")
 }
 
@@ -72,6 +81,17 @@ func (p *Moduleconfig) ReadParameterFromFile() {
 	p.EtemperatureSharedDir = mcfg.Section("etemperature").Key("shared_dir").MustString("/var/run")
 	p.EtemperatureSharedFile = mcfg.Section("etemperature").Key("shared_file").MustString("smartpi_etemperature_values")
 
+	//[lorawan]
+	p.LoraWANEnabled = mcfg.Section("lorawan").Key("shared_file_enabled").MustBool(true)
+	p.LoraWANSharedDirs = mcfg.Section("lorawan").Key("shared_files_path").Strings(",")
+	if len(p.LoraWANSharedDirs) == 0 {
+		p.LoraWANSharedDirs = append(p.LoraWANSharedDirs, "/var/run/smartpi_values")
+	}
+	p.LoraWANSendInterval = mcfg.Section("lorawan").Key("interval").MustInt(60)
+	p.LoraWANSerialPort = mcfg.Section("lorawan").Key("serial_port").MustString("/dev/ttyS0")
+	p.LoraWANApplicationEUI = mcfg.Section("lorawan").Key("applicationEUI").MustString("")
+	p.LoraWANApplicationKey = mcfg.Section("lorawan").Key("applicationKey").MustString("")
+
 }
 
 func (p *Moduleconfig) SaveParameterToFile() {
@@ -96,6 +116,14 @@ func (p *Moduleconfig) SaveParameterToFile() {
 	_, merr = mcfg.Section("etemperature").NewKey("shared_file_enabled", strconv.FormatBool(p.EtemperatureSharedFileEnabled))
 	_, merr = mcfg.Section("etemperature").NewKey("shared_dir", p.EtemperatureSharedDir)
 	_, merr = mcfg.Section("etemperature").NewKey("shared_file", p.EtemperatureSharedFile)
+
+	//[lorawan]
+	_, merr = mcfg.Section("lorawan").NewKey("shared_file_enabled", strconv.FormatBool(p.LoraWANEnabled))
+	_, merr = mcfg.Section("lorawan").NewKey("shared_files_path", strings.Join(p.LoraWANSharedDirs[:], ","))
+	_, merr = mcfg.Section("lorawan").NewKey("interval", strconv.FormatInt(int64(p.EtemperatureSamplerate), 60))
+	_, merr = mcfg.Section("lorawan").NewKey("serial_port", p.LoraWANSerialPort)
+	_, merr = mcfg.Section("lorawan").NewKey("applicationEUI", p.LoraWANApplicationEUI)
+	_, merr = mcfg.Section("lorawan").NewKey("applicationKey", p.LoraWANApplicationKey)
 
 	tmpFile := "/tmp/smartpi_modules"
 	merr := mcfg.SaveTo(tmpFile)

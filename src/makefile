@@ -4,6 +4,7 @@ BINARY_FTPUPLOAD=smartpiftpupload
 BINARY_MODBUSSERVER=smartpimodbusserver
 BINARY_EMETERSERVER=smartpiemeterserver
 BINARY_ETEMPERATUREREADOUT=smartpietemperaturereadout
+BINARY_LORAWAN=smartpielorawan
 
 #VERSION=0.3.7
 VERS = $(shell git describe --always --long --dirty)
@@ -30,7 +31,7 @@ endif
 $(info    VERSION is $(VERSION))
 
 
-all: format makedir get buildsmartpireadout buildsmartpiserver buildsmartpiftpupload buildsmartpimodbusserver buildsmartpiemeterserver buildsmartpietemperaturereadout
+all: format makedir get buildsmartpireadout buildsmartpiserver buildsmartpiftpupload buildsmartpimodbusserver buildsmartpiemeterserver buildsmartpietemperaturereadout buildsmartpielorawan
 
 
 makedir:
@@ -76,8 +77,13 @@ buildsmartpiemeterserver:
 
 buildsmartpietemperaturereadout:
 	@echo "start building smartpietemperaturereadout..."
-	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_ETEMPERATUREREADOUT) -ldflags="-X main.appVersion=${VERSION}" modules/etemperature.go
+	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_ETEMPERATUREREADOUT) -ldflags="-X main.appVersion=${VERSION}" modules/etemperature/etemperature.go
 	@echo "building smartpietemperaturereadout done"
+
+buildsmartpielorawan:
+	@echo "start building smartpielorawan..."
+	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_LORAWAN) -ldflags="-X main.appVersion=${VERSION}" modules/lorawan/lorawan.go
+	@echo "building smartpielorawan done"
 
 install:
 	@echo install

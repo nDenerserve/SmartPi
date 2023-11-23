@@ -9,10 +9,19 @@ loglevel=debug
 allowed_user = "smartpi,root"
 
 [etemperature]
-shared_file_enabled=true
-shared_dir="/var/run"
-shared_file="smartpi_etemperature_values"
+shared_file_enabled = true
+shared_dir = "/var/run"
+shared_file = "smartpi_etemperature_values"
 allowed_user = "smartpi,root"
 i2c_address = 0x52
 # Measurements each minute
 samplerate = 6
+
+[lorawan]
+send_shared_file_enabled = true
+shared_files_path = "/var/run/smartpi_values,/var/run/smartpi_etemperature_values"
+serial_port = "/dev/ttySC0"
+# send interval in seconds
+interval = 5
+applicationEUI = "A5B3C6C77768FF21"
+applicationKey = "D504995EDBE29A78F572D28F9A20AB4A"
