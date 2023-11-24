@@ -34,13 +34,13 @@ type Moduleconfig struct {
 	EtemperatureSharedFile        string
 
 	// [lorawan]
-	LoraWANEnabled        bool
-	LoraWANSharedDirs     []string
-	LoraWANSharedFile     string
-	LoraWANSerialPort     string
-	LoraWANSendInterval   int
-	LoraWANApplicationEUI string
-	LoraWANApplicationKey string
+	LoraWANEnabled             bool
+	LoraWANSharedDirs          []string
+	LoraWANSharedFilesElements []string
+	LoraWANSerialPort          string
+	LoraWANSendInterval        int
+	LoraWANApplicationEUI      string
+	LoraWANApplicationKey      string
 
 	// s := strings.Split("a,b,c", ",")
 }
@@ -87,6 +87,10 @@ func (p *Moduleconfig) ReadParameterFromFile() {
 	if len(p.LoraWANSharedDirs) == 0 {
 		p.LoraWANSharedDirs = append(p.LoraWANSharedDirs, "/var/run/smartpi_values")
 	}
+	p.LoraWANSharedFilesElements = mcfg.Section("lorawan").Key("shared_files_elements").Strings(",")
+	if len(p.LoraWANSharedDirs) == 0 {
+		p.LoraWANSharedDirs = append(p.LoraWANSharedDirs, "1:2:1.0;2:2:1.0;3:2:1.0;4:2:1.0;5:2:1.0;6:2:1.0;7:2:1.0,1:2:1.0;2:2:1.0;3:2:1.0;4:2:1.0;5:2:1.0;6:2:1.0;7:2:1.0")
+	}
 	p.LoraWANSendInterval = mcfg.Section("lorawan").Key("interval").MustInt(60)
 	p.LoraWANSerialPort = mcfg.Section("lorawan").Key("serial_port").MustString("/dev/ttyS0")
 	p.LoraWANApplicationEUI = mcfg.Section("lorawan").Key("applicationEUI").MustString("")
@@ -120,6 +124,7 @@ func (p *Moduleconfig) SaveParameterToFile() {
 	//[lorawan]
 	_, merr = mcfg.Section("lorawan").NewKey("shared_file_enabled", strconv.FormatBool(p.LoraWANEnabled))
 	_, merr = mcfg.Section("lorawan").NewKey("shared_files_path", strings.Join(p.LoraWANSharedDirs[:], ","))
+	_, merr = mcfg.Section("lorawan").NewKey("shared_files_elements", strings.Join(p.LoraWANSharedFilesElements[:], ","))
 	_, merr = mcfg.Section("lorawan").NewKey("interval", strconv.FormatInt(int64(p.EtemperatureSamplerate), 60))
 	_, merr = mcfg.Section("lorawan").NewKey("serial_port", p.LoraWANSerialPort)
 	_, merr = mcfg.Section("lorawan").NewKey("applicationEUI", p.LoraWANApplicationEUI)

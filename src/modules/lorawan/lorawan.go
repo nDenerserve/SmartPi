@@ -1,11 +1,14 @@
 package main
 
 import (
-	"fmt"
+	"encoding/csv"
+	"os"
+	"strings"
 	"time"
 
 	rn2483 "github.com/nDenerserve/RN2483"
 	"github.com/nDenerserve/SmartPi/repository/config"
+	"github.com/nDenerserve/SmartPi/utils"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -58,18 +61,20 @@ func sendData(moduleconfig *config.Moduleconfig) {
 		callback := func(port uint8, data []byte) {
 			log.Debugf("Received message on port %v: %s", port, string(data))
 		}
-		moduleconfig.LoraWANSharedDirs
-		for i, s := range moduleconfig.LoraWANSharedDirs {
-			fmt.Println(i, s)
+
+		for i, sharedfile := range moduleconfig.LoraWANSharedDirs {
+
+			elements := strings.Split(moduleconfig.LoraWANSharedFilesElements[i], ":")
+			log.Debug(elements)
+			file, err := os.Open(sharedfile)
+			utils.Checklog(err)
+			defer file.Close()
+			reader := csv.NewReader(file)
+			reader.Comma = ';'
+			records, err := reader.Read()
+			log.Debug(records)
+			utils.Checklog(err)
 		}
-		// config := config.NewConfig()
-		// file, err := os.Open(config.SharedDir + "/" + config.SharedFile)
-		// utils.Checklog(err)
-		// defer file.Close()
-		// reader := csv.NewReader(file)
-		// reader.Comma = ';'
-		// records, err := reader.Read()
-		// utils.Checklog(err)
 
 		data := []byte("Hallo Welt")
 		log.Debug(rn2483.MacGetStatus())
