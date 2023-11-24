@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	rn2483 "github.com/nDenerserve/RN2483"
@@ -57,8 +58,20 @@ func sendData(moduleconfig *config.Moduleconfig) {
 		callback := func(port uint8, data []byte) {
 			log.Debugf("Received message on port %v: %s", port, string(data))
 		}
+		moduleconfig.LoraWANSharedDirs
+		for i, s := range moduleconfig.LoraWANSharedDirs {
+			fmt.Println(i, s)
+		}
+		// config := config.NewConfig()
+		// file, err := os.Open(config.SharedDir + "/" + config.SharedFile)
+		// utils.Checklog(err)
+		// defer file.Close()
+		// reader := csv.NewReader(file)
+		// reader.Comma = ';'
+		// records, err := reader.Read()
+		// utils.Checklog(err)
+
 		data := []byte("Hallo Welt")
-		// fmt.Println(rn2483.MacTx(false, uint8(1), data, callback))
 		log.Debug(rn2483.MacGetStatus())
 
 		err := rn2483.MacTx(false, uint8(1), data, callback)

@@ -4,7 +4,7 @@ BINARY_FTPUPLOAD=smartpiftpupload
 BINARY_MODBUSSERVER=smartpimodbusserver
 BINARY_EMETERSERVER=smartpiemeterserver
 BINARY_ETEMPERATUREREADOUT=smartpietemperaturereadout
-BINARY_LORAWAN=smartpielorawan
+BINARY_LORAWAN=smartpilorawan
 
 #VERSION=0.3.7
 VERS = $(shell git describe --always --long --dirty)
@@ -81,9 +81,9 @@ buildsmartpietemperaturereadout:
 	@echo "building smartpietemperaturereadout done"
 
 buildsmartpielorawan:
-	@echo "start building smartpielorawan..."
+	@echo "start building smartpilorawan..."
 	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_LORAWAN) -ldflags="-X main.appVersion=${VERSION}" modules/lorawan/lorawan.go
-	@echo "building smartpielorawan done"
+	@echo "building smartpilorawan done"
 
 install:
 	@echo install
