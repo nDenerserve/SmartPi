@@ -19,8 +19,8 @@ samplerate = 6
 
 [lorawan]
 send_shared_file_enabled = true
-shared_files_path = "/var/run/smartpi_values,/var/run/smartpi_etemperature_values"
-shared_files_elements = "1:2:1.0;2:2:1.0;3:2:1.0;4:2:1.0;5:2:1.0;6:2:1.0;7:2:1.0,1:2:1.0;2:2:1.0;3:2:1.0;4:2:1.0;5:2:1.0;6:2:1.0;7:2:1.0"
+shared_files_path = "/var/run/smartpi_values|/var/run/smartpi_etemperature_values"
+shared_files_elements = 1:2f:1.0|2:2f:1.0|3:2f:1.0|4:2f:1.0|5:2f:1.0|6:2f:1.0|7:2f:1.0,1:2f:1.0|2:2f:1.0|3:2f:1.0|4:2f:1.0|5:2f:1.0|6:2f:1.0|7:2f:1.0
 serial_port = "/dev/ttySC0"
 # send interval in seconds
 interval = 5

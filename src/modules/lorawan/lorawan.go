@@ -1,10 +1,14 @@
 package main
 
 import (
+	"encoding/binary"
 	"encoding/csv"
 	"os"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/x448/float16"
 
 	rn2483 "github.com/nDenerserve/RN2483"
 	"github.com/nDenerserve/SmartPi/repository/config"
@@ -52,7 +56,7 @@ func main() {
 
 func sendData(moduleconfig *config.Moduleconfig) {
 
-	log.Debug(moduleconfig.LoraWANSendInterval)
+	var data []byte
 
 	tick := time.Tick(time.Duration(moduleconfig.LoraWANSendInterval) * time.Second)
 
@@ -64,19 +68,50 @@ func sendData(moduleconfig *config.Moduleconfig) {
 
 		for i, sharedfile := range moduleconfig.LoraWANSharedDirs {
 
-			elements := strings.Split(moduleconfig.LoraWANSharedFilesElements[i], ":")
-			log.Debug(elements)
 			file, err := os.Open(sharedfile)
 			utils.Checklog(err)
 			defer file.Close()
 			reader := csv.NewReader(file)
 			reader.Comma = ';'
 			records, err := reader.Read()
+			log.Debug("!!!!!")
 			log.Debug(records)
 			utils.Checklog(err)
+
+			for j, element := range strings.Split(moduleconfig.LoraWANSharedFilesElements[i], "|") {
+
+				log.Debug(element)
+
+				tmpElements := strings.Split(string(element), ":")
+				log.Debug(tmpElements)
+				log.Debug(len(tmpElements))
+				elementNumber, err := strconv.Atoi(tmpElements[0])
+				utils.Checklog(err)
+				numberLength, err := strconv.Atoi(tmpElements[1][:1])
+				utils.Checklog(err)
+				numberFormat := tmpElements[1][1:]
+				numberFactor, err := strconv.ParseFloat(tmpElements[2], 64)
+				utils.Checklog(err)
+
+				if elementNumber >= 0 && elementNumber < len(records) {
+					if strings.EqualFold(numberFormat, "f") {
+
+						tmpValue, err := strconv.ParseFloat(records[elementNumber], 32)
+						log.Debug("Value: " + strconv.FormatFloat(tmpValue, 'f', -1, 32))
+						utils.Checklog(err)
+						if numberLength == 2 {
+							data = binary.BigEndian.AppendUint16(data, float16.Fromfloat32(float32(tmpValue*numberFactor)).Bits())
+						} else if numberLength == 4 {
+							data = binary.BigEndian.AppendUint32(data, uint32(float32(tmpValue*numberFactor)))
+						}
+
+					}
+
+				}
+
+			}
 		}
 
-		data := []byte("Hallo Welt")
 		log.Debug(rn2483.MacGetStatus())
 
 		err := rn2483.MacTx(false, uint8(1), data, callback)

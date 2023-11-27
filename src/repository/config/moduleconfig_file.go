@@ -83,13 +83,13 @@ func (p *Moduleconfig) ReadParameterFromFile() {
 
 	//[lorawan]
 	p.LoraWANEnabled = mcfg.Section("lorawan").Key("shared_file_enabled").MustBool(true)
-	p.LoraWANSharedDirs = mcfg.Section("lorawan").Key("shared_files_path").Strings(",")
+	p.LoraWANSharedDirs = strings.Split(mcfg.Section("lorawan").Key("shared_files_path").String(), ",")
 	if len(p.LoraWANSharedDirs) == 0 {
 		p.LoraWANSharedDirs = append(p.LoraWANSharedDirs, "/var/run/smartpi_values")
 	}
-	p.LoraWANSharedFilesElements = mcfg.Section("lorawan").Key("shared_files_elements").Strings(",")
-	if len(p.LoraWANSharedDirs) == 0 {
-		p.LoraWANSharedDirs = append(p.LoraWANSharedDirs, "1:2:1.0;2:2:1.0;3:2:1.0;4:2:1.0;5:2:1.0;6:2:1.0;7:2:1.0,1:2:1.0;2:2:1.0;3:2:1.0;4:2:1.0;5:2:1.0;6:2:1.0;7:2:1.0")
+	p.LoraWANSharedFilesElements = strings.Split(mcfg.Section("lorawan").Key("shared_files_elements").String(), ",")
+	if len(p.LoraWANSharedFilesElements) == 0 {
+		p.LoraWANSharedFilesElements = append(p.LoraWANSharedFilesElements, "1:2f:1.0|2:2f:1.0|3:2f:1.0|4:2f:1.0|5:2f:1.0|6:2f:1.0|7:2f:1.0,1:2f:1.0|2:2f:1.0|3:2f:1.0|4:2f:1.0|5:2f:1.0|6:2f:1.0|7:2f:1.0")
 	}
 	p.LoraWANSendInterval = mcfg.Section("lorawan").Key("interval").MustInt(60)
 	p.LoraWANSerialPort = mcfg.Section("lorawan").Key("serial_port").MustString("/dev/ttyS0")
