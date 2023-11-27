@@ -78,7 +78,7 @@ func sendData(moduleconfig *config.Moduleconfig) {
 			log.Debug(records)
 			utils.Checklog(err)
 
-			for j, element := range strings.Split(moduleconfig.LoraWANSharedFilesElements[i], "|") {
+			for _, element := range strings.Split(moduleconfig.LoraWANSharedFilesElements[i], "|") {
 
 				log.Debug(element)
 
