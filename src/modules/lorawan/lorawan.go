@@ -73,6 +73,10 @@ func main() {
 
 	joined := rn2483.MacJoin(rn2483.OTAA)
 
+	if !joined {
+		joinlora()
+	}
+
 	log.Info(joined)
 	log.Debug(rn2483.MacGetStatus())
 
@@ -144,6 +148,7 @@ func sendData(moduleconfig *config.Moduleconfig) {
 		err := rn2483.MacTx(false, uint8(1), data, callback)
 		if err != nil {
 			log.Error("FEHLER: " + err.Error())
+			
 		}
 		data = []byte{}
 	}
@@ -164,4 +169,29 @@ func loraHardwareReset() {
 	exec.Command("echo 1 > /sys/class/gpio/gpio496/value")
 	time.Sleep(500 * time.Millisecond)
 	log.Info("hardware reset done")
+}
+
+func joinlora() {
+
+	jointry := 0
+
+	for {
+
+		time.Sleep(60 * time.Second)
+		joined := rn2483.MacJoin(rn2483.OTAA)
+		jointry++
+
+		if joined {
+			break
+		} else {
+
+			if jointry == 10 {
+				loraHardwareReset()
+				jointry = 0
+			}
+
+		}
+
+	}
+
 }
