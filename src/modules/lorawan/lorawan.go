@@ -73,6 +73,8 @@ func main() {
 
 	joined := rn2483.MacJoin(rn2483.OTAA)
 
+	log.Debug(joined)
+
 	if !joined {
 		joinlora()
 	}
@@ -148,7 +150,7 @@ func sendData(moduleconfig *config.Moduleconfig) {
 		err := rn2483.MacTx(false, uint8(1), data, callback)
 		if err != nil {
 			log.Error("FEHLER: " + err.Error())
-			
+
 		}
 		data = []byte{}
 	}
@@ -177,15 +179,20 @@ func joinlora() {
 
 	for {
 
+		log.Debug("wait for next join...")
 		time.Sleep(60 * time.Second)
+		log.Debug("try to join")
 		joined := rn2483.MacJoin(rn2483.OTAA)
+		log.Debug(joined)
 		jointry++
+		log.Debug("trial no: " + fmt.Sprintf("%v", jointry))
 
 		if joined {
 			break
 		} else {
 
 			if jointry == 10 {
+				log.Debug("call reset")
 				loraHardwareReset()
 				jointry = 0
 			}
