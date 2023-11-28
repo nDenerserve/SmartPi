@@ -3,7 +3,10 @@ package main
 import (
 	"encoding/binary"
 	"encoding/csv"
+	"flag"
+	"fmt"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -16,15 +19,39 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var appVersion = "No Version Provided"
+var serialName = "/dev/ttySC0"
+
 func main() {
 
 	moduleconfig := config.NewModuleconfig()
 
+	version := flag.Bool("v", false, "prints current version information")
+	devEUI := flag.Bool("deveui", false, "prints the devEUI of the LoraWAN module")
+	moduleReset := flag.Bool("reset", false, "hardwarereset of the LoraWAN module")
+	flag.Parse()
+	if *version {
+		fmt.Println(appVersion)
+		os.Exit(0)
+	} else if *devEUI {
+		rn2483.SetName(serialName)
+		rn2483.SetBaud(57600)
+		rn2483.SetTimeout(time.Millisecond * 500)
+		rn2483.Connect()
+		defer rn2483.Disconnect()
+		fmt.Println(rn2483.MacGetDeviceEUI())
+		os.Exit(0)
+	} else if *moduleReset {
+		loraHardwareReset()
+		os.Exit(0)
+	}
+
 	log.SetLevel(moduleconfig.LogLevel)
 
-	log.Info("Start lorawan")
+	loraHardwareReset()
 
-	rn2483.SetName("/dev/ttySC0")
+	log.Info("starting lorawan")
+	rn2483.SetName(serialName)
 	rn2483.SetBaud(57600)
 	rn2483.SetTimeout(time.Millisecond * 500)
 
@@ -74,17 +101,17 @@ func sendData(moduleconfig *config.Moduleconfig) {
 			reader := csv.NewReader(file)
 			reader.Comma = ';'
 			records, err := reader.Read()
-			log.Debug("!!!!!")
-			log.Debug(records)
+			// log.Debug("!!!!!")
+			// log.Debug(records)
 			utils.Checklog(err)
 
 			for _, element := range strings.Split(moduleconfig.LoraWANSharedFilesElements[i], "|") {
 
-				log.Debug(element)
+				// log.Debug(element)
 
 				tmpElements := strings.Split(string(element), ":")
-				log.Debug(tmpElements)
-				log.Debug(len(tmpElements))
+				// log.Debug(tmpElements)
+				// log.Debug(len(tmpElements))
 				elementNumber, err := strconv.Atoi(tmpElements[0])
 				utils.Checklog(err)
 				numberLength, err := strconv.Atoi(tmpElements[1][:1])
@@ -118,6 +145,23 @@ func sendData(moduleconfig *config.Moduleconfig) {
 		if err != nil {
 			log.Error("FEHLER: " + err.Error())
 		}
+		data = []byte{}
 	}
+}
 
+// system("echo 496 > /sys/class/gpio/export");
+// system("echo 497 > /sys/class/gpio/export");
+// system("echo 498 > /sys/class/gpio/export");
+// system("echo 499 > /sys/class/gpio/export");
+// echo "out" > /sys/class/gpio/gpio496/direction
+// echo 1 > /sys/class/gpio/gpio496/value
+func loraHardwareReset() {
+	log.Info("lora module hardware reset")
+	exec.Command("echo 496 > /sys/class/gpio/export")
+	exec.Command("echo \"out\" > /sys/class/gpio/gpio496/direction")
+	exec.Command("echo 0 > /sys/class/gpio/gpio496/value")
+	time.Sleep(300 * time.Millisecond)
+	exec.Command("echo 1 > /sys/class/gpio/gpio496/value")
+	time.Sleep(500 * time.Millisecond)
+	log.Info("hardware reset done")
 }
