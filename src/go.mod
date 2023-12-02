@@ -7,7 +7,7 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/goburrow/serial v0.1.0
 	github.com/gorilla/context v1.1.1
-	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/mux v1.8.1
 	github.com/influxdata/influxdb1-client v0.0.0-20220302092344-a9ab5670611c
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/msteinert/pam v1.2.0
