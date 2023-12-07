@@ -147,9 +147,18 @@ func sendData(moduleconfig *config.Moduleconfig) {
 
 		log.Debug(rn2483.MacGetStatus())
 
+	Send:
 		err := rn2483.MacTx(false, uint8(1), data, callback)
 		if err != nil {
+
 			log.Error("FEHLER: " + err.Error())
+
+			if err == rn2483.ErrNotJoined {
+				log.Info("Try to join")
+				if joinlora() {
+					goto Send
+				}
+			}
 
 		}
 		data = []byte{}
@@ -173,9 +182,10 @@ func loraHardwareReset() {
 	log.Info("hardware reset done")
 }
 
-func joinlora() {
+func joinlora() bool {
 
 	jointry := 0
+	resetcounter := 0
 
 	for {
 
@@ -195,10 +205,19 @@ func joinlora() {
 				log.Debug("call reset")
 				loraHardwareReset()
 				jointry = 0
+				resetcounter++
+			}
+
+			if resetcounter == 10 {
+				log.Info("Sleep for a long time ...")
+				time.Sleep(3600 * time.Second)
+				log.Info("Wake up ...")
+				loraHardwareReset()
+				resetcounter = 0
 			}
 
 		}
 
 	}
-
+	return true
 }
