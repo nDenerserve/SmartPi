@@ -84,6 +84,13 @@ var (
 			VoltageRmsOffset:      1.0,
 			PowerCorrectionFactor: 0.019413,
 		},
+		"YHDC_SCT4333QL": CTFactors{
+			CurrentResistor:       7.5,
+			CurrentClampFactor:    (1.0 / 60.0),
+			CurrentRmsOffset:      1.032,
+			VoltageRmsOffset:      1.0,
+			PowerCorrectionFactor: 0.019413,
+		},
 		"400A/033V": CTFactors{
 			CurrentResistor:       1.0,
 			CurrentClampFactor:    0.08325,
@@ -404,14 +411,14 @@ func ReadCurrent(d *i2c.Device, c *config.Config, phase models.Phase) (current f
 		outcome := float64(DeviceFetchInt(d, 4, command))
 		cr := CTTypes[c.CTType[phase]].CurrentResistor
 		var ccf float64
-		if c.CTType[phase] == "YHDC_SCT013" {
+		if c.CTType[phase] == "YHDC_SCT013" || c.CTType[phase] == "YHDC_SCT4333QL" {
 			ccf = CTTypes[c.CTType[phase]].CurrentClampFactor
 		} else if c.CTType[phase] == "400A/033V" {
 			ccf = CTTypes[c.CTType[phase]].CurrentClampFactor
 		} else {
 			ccf = 1.0 / (float64(c.CTTypePrimaryCurrent[phase]) / 100.0)
 		}
-		// fmt.Println("CalibrationfactorI: ", phase, "  ", c.CalibrationfactorI[phase])
+
 		oc := CTTypes[c.CTType[phase]].CurrentRmsOffset
 		// outcome = outcome - 7300
 		current = (((((outcome * 0.3535) / rmsFactor) / cr) / ccf) * 100.0 * oc * c.CalibrationfactorI[phase])
@@ -477,7 +484,7 @@ func ReadActiveWatts(d *i2c.Device, c *config.Config, phase models.Phase) (watts
 	}
 
 	var pcf float64
-	if c.CTType[phase] == "YHDC_SCT013" {
+	if c.CTType[phase] == "YHDC_SCT013" || c.CTType[phase] == "YHDC_SCT4333QL" {
 		pcf = 1.0
 	} else if c.CTType[phase] == "400A/033V" {
 		pcf = 0.5
@@ -537,7 +544,7 @@ func ReadActiveEnergy(d *i2c.Device, c *config.Config, phase models.Phase) (ener
 	}
 
 	var pcf float64
-	if c.CTType[phase] == "YHDC_SCT013" {
+	if c.CTType[phase] == "YHDC_SCT013" || c.CTType[phase] == "YHDC_SCT4333QL" {
 		pcf = 1.0
 	} else if c.CTType[phase] == "400A/033V" {
 		pcf = 0.5
@@ -622,7 +629,7 @@ func ReadApparentPower(d *i2c.Device, c *config.Config, phase models.Phase) floa
 	}
 
 	var pcf float64
-	if c.CTType[phase] == "YHDC_SCT013" {
+	if c.CTType[phase] == "YHDC_SCT013" || c.CTType[phase] == "YHDC_SCT4333QL" {
 		pcf = 1.0
 	} else if c.CTType[phase] == "400A/033V" {
 		pcf = 0.5
@@ -652,7 +659,7 @@ func ReadReactivePower(d *i2c.Device, c *config.Config, phase models.Phase) (rew
 	}
 
 	var pcf float64
-	if c.CTType[phase] == "YHDC_SCT013" {
+	if c.CTType[phase] == "YHDC_SCT013" || c.CTType[phase] == "YHDC_SCT4333QL" {
 		pcf = 1.0
 	} else if c.CTType[phase] == "400A/033V" {
 		pcf = 0.5
