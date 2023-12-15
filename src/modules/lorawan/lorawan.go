@@ -57,6 +57,7 @@ func main() {
 
 	// Connect the RN2483 via serial
 	rn2483.Connect()
+	rn2483.MacSetDataRate(5)
 
 	// Make sure the app closes the connection at the end the free the resource
 	defer rn2483.Disconnect()
