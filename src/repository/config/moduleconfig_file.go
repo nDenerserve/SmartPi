@@ -41,6 +41,7 @@ type Moduleconfig struct {
 	LoraWANSendInterval        int
 	LoraWANApplicationEUI      string
 	LoraWANApplicationKey      string
+	LoraWANDataRate            int
 
 	// s := strings.Split("a,b,c", ",")
 }
@@ -95,6 +96,7 @@ func (p *Moduleconfig) ReadParameterFromFile() {
 	p.LoraWANSerialPort = mcfg.Section("lorawan").Key("serial_port").MustString("/dev/ttyS0")
 	p.LoraWANApplicationEUI = mcfg.Section("lorawan").Key("applicationEUI").MustString("")
 	p.LoraWANApplicationKey = mcfg.Section("lorawan").Key("applicationKey").MustString("")
+	p.LoraWANDataRate = mcfg.Section("lorawan").Key("datarate").MustInt(5)
 
 }
 
@@ -129,6 +131,7 @@ func (p *Moduleconfig) SaveParameterToFile() {
 	_, merr = mcfg.Section("lorawan").NewKey("serial_port", p.LoraWANSerialPort)
 	_, merr = mcfg.Section("lorawan").NewKey("applicationEUI", p.LoraWANApplicationEUI)
 	_, merr = mcfg.Section("lorawan").NewKey("applicationKey", p.LoraWANApplicationKey)
+	_, merr = mcfg.Section("lorawan").NewKey("datarate", strconv.FormatInt(int64(p.LoraWANDataRate), 10))
 
 	tmpFile := "/tmp/smartpi_modules"
 	merr := mcfg.SaveTo(tmpFile)

@@ -27,3 +27,4 @@ serial_port = "/dev/ttySC0"
 interval = 60
 applicationEUI = ""
 applicationKey = ""
+datarate = 5 # 0-5
