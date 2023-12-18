@@ -1,0 +1,19 @@
+[Unit]
+Description=SmartPi
+Wants=syslog.target network.target
+After=syslog.target network.target remote-fs.target nss-lookup.target systemd-journald-dev-log.socket
+Before= smartpiserver.service smartpimodbusserver.service smartpiemeterserver.service
+
+[Service]
+Type=simple
+PIDFile=/run/smartpireadout.pid
+ExecStart=/usr/local/bin/smartpireadout
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+StandardOutput=null
+StandardError=journal
+RemainAfterExit=yes
+User=smartpi
+
+[Install]
+WantedBy=multi-user.target 

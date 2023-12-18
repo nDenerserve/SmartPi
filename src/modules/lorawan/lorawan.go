@@ -149,20 +149,25 @@ func sendData(moduleconfig *config.Moduleconfig) {
 		log.Debug(rn2483.MacGetStatus())
 
 	Send:
-		err := rn2483.MacTx(false, uint8(1), data, callback)
-		if err != nil {
+		if len(data) > 0 {
+			err := rn2483.MacTx(false, uint8(1), data, callback)
+			if err != nil {
 
-			log.Error("FEHLER: " + err.Error())
+				log.Error("FEHLER: " + err.Error())
 
-			if err == rn2483.ErrNotJoined {
-				log.Info("Try to join")
-				if joinlora() {
-					goto Send
+				if err == rn2483.ErrNotJoined {
+					log.Info("Try to join")
+					if joinlora() {
+						goto Send
+					}
 				}
-			}
 
+			}
+			data = []byte{}
+		} else {
+			log.Info("Datalength = 0. No send required.")
 		}
-		data = []byte{}
+
 	}
 }
 
