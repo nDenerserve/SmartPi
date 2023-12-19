@@ -51,7 +51,7 @@ require (
 	github.com/prometheus/procfs v0.11.1 // indirect
 	github.com/rs/cors v1.10.1
 	github.com/x448/float16 v0.8.4
-	golang.org/x/crypto v0.16.0
+	golang.org/x/crypto v0.17.0
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
