@@ -16,7 +16,7 @@ require (
 	github.com/nDenerserve/mbserver v0.0.0-20230619125728-ce6fed969ee0
 	github.com/nDenerserve/structs v1.1.0
 	github.com/oleiade/reflections v1.0.1
-	github.com/prometheus/client_golang v1.17.0
+	github.com/prometheus/client_golang v1.18.0
 	github.com/prometheus/common v0.45.0
 	github.com/secsy/goftp v0.0.0-20200609142545-aa2de14babf4
 	github.com/sirupsen/logrus v1.9.3
@@ -47,8 +47,8 @@ require (
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/influxdata/influxdb-client-go/v2 v2.12.4
 	github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839 // indirect
-	github.com/prometheus/client_model v0.4.1-0.20230718164431-9a2bf3000d16 // indirect
-	github.com/prometheus/procfs v0.11.1 // indirect
+	github.com/prometheus/client_model v0.5.0 // indirect
+	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/rs/cors v1.10.1
 	github.com/x448/float16 v0.8.4
 	golang.org/x/crypto v0.17.0
