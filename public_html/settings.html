@@ -176,9 +176,10 @@
                                     <md-option value="YHDC_SCT4333QL">YHDC_SCT4333QL</md-option>
                                     <md-option value="400A/033V">400A/0.33V</md-option>
                                     <md-option value="X/1A">Current transformer 1A sec current</md-option>
+                                    <md-option value="X/5A">Current transformer 5A sec current (only SmartPi 5A Version)</md-option>
                                 </md-select>
                             </md-input-container>
-                            <md-input-container class="md-block" flex="8" ng-if="measurement.current.phase1.sensor=='X/1A'">
+                            <md-input-container class="md-block" flex="8" ng-if="measurement.current.phase1.sensor=='X/1A' || measurement.current.phase1.sensor=='X/5A'">
                                 <label>Secondary current [A]</label>
                                 <input name="PrimarycurrentPhase1" ng-model="measurement.current.phase1.primarycurrent" ng-change="showSaveButton('measurement')">
                             </md-input-container>
@@ -197,9 +198,10 @@
                                     <md-option value="YHDC_SCT4333QL">YHDC_SCT4333QL</md-option>
                                     <md-option value="400A/033V">400A/0.33V</md-option>
                                     <md-option value="X/1A">Current transformer 1A sec current</md-option>
+                                    <md-option value="X/5A">Current transformer 5A sec current (only SmartPi 5A Version)</md-option>
                                 </md-select>
                             </md-input-container>
-                            <md-input-container class="md-block" flex="8" ng-if="measurement.current.phase2.sensor=='X/1A'">
+                            <md-input-container class="md-block" flex="8" ng-if="measurement.current.phase1.sensor=='X/1A' || measurement.current.phase1.sensor=='X/5A'">
                                 <label>Secondary current [A]</label>
                                 <input name="PrimarycurrentPhase2" ng-model="measurement.current.phase2.primarycurrent" ng-change="showSaveButton('measurement')">
                             </md-input-container>
@@ -218,9 +220,10 @@
                                     <md-option value="YHDC_SCT4333QL">YHDC_SCT4333QL</md-option>
                                     <md-option value="400A/033V">400A/0.33V</md-option>
                                     <md-option value="X/1A">Current transformer 1A sec current</md-option>
+                                    <md-option value="X/5A">Current transformer 5A sec current (only SmartPi 5A Version)</md-option>
                                 </md-select>
                             </md-input-container>
-                            <md-input-container class="md-block" flex="8" ng-if="measurement.current.phase3.sensor=='X/1A'">
+                            <md-input-container class="md-block" flex="8" ng-if="measurement.current.phase1.sensor=='X/1A' || measurement.current.phase1.sensor=='X/5A'">
                                 <label>Secondary current [A]</label>
                                 <input name="PrimarycurrentPhase3" ng-model="measurement.current.phase3.primarycurrent" ng-change="showSaveButton('measurement')">
                             </md-input-container>
@@ -239,9 +242,10 @@
                                     <md-option value="YHDC_SCT4333QL">YHDC_SCT4333QL</md-option>
                                     <md-option value="400A/033V">400A/0.33V</md-option>
                                     <md-option value="X/1A">Current transformer 1A sec current</md-option>
+                                    <md-option value="X/5A">Current transformer 5A sec current (only SmartPi 5A Version)</md-option>
                                 </md-select>
                             </md-input-container>
-                            <md-input-container class="md-block" flex="8" ng-if="measurement.current.phase4.sensor=='X/1A'">
+                            <md-input-container class="md-block" flex="8" ng-if="measurement.current.phase1.sensor=='X/1A' || measurement.current.phase1.sensor=='X/5A'">
                                 <label>Secondary current [A]</label>
                                 <input name="PrimarycurrentPhase4" ng-model="measurement.current.phase4.primarycurrent" ng-change="showSaveButton('measurement')">
                             </md-input-container>

@@ -105,6 +105,13 @@ var (
 			VoltageRmsOffset:      1.0,
 			PowerCorrectionFactor: 0.043861,
 		},
+		"X/5A": CTFactors{
+			CurrentResistor:       0.068,
+			CurrentClampFactor:    5.0,
+			CurrentRmsOffset:      1.010725941,
+			VoltageRmsOffset:      1.0,
+			PowerCorrectionFactor: 0.043861,
+		},
 	}
 )
 
@@ -416,7 +423,7 @@ func ReadCurrent(d *i2c.Device, c *config.Config, phase models.Phase) (current f
 		} else if c.CTType[phase] == "400A/033V" {
 			ccf = CTTypes[c.CTType[phase]].CurrentClampFactor
 		} else {
-			ccf = 1.0 / (float64(c.CTTypePrimaryCurrent[phase]) / 100.0)
+			ccf = CTTypes[c.CTType[phase]].CurrentClampFactor / (float64(c.CTTypePrimaryCurrent[phase]) / 100.0)
 		}
 
 		oc := CTTypes[c.CTType[phase]].CurrentRmsOffset
