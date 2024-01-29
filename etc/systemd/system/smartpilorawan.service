@@ -1,5 +1,5 @@
 [Unit]
-Description=SmartPi
+Description=SmartPiLoRaWAN
 Wants=syslog.target network.target
 After=syslog.target network.target remote-fs.target nss-lookup.target systemd-journald-dev-log.socket
 
