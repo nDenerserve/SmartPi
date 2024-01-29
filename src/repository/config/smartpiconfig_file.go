@@ -381,6 +381,7 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("database").NewKey("database_enabled", strconv.FormatBool(p.DatabaseEnabled))
 	_, err = cfg.Section("database").NewKey("sqlite_enabled", strconv.FormatBool(p.SQLLiteEnabled))
 	_, err = cfg.Section("database").NewKey("sqlite_dir", p.DatabaseDir)
+	_, err = cfg.Section("database").NewKey("influxversion", p.Influxversion)
 	_, err = cfg.Section("database").NewKey("influxuser", p.Influxuser)
 	_, err = cfg.Section("database").NewKey("influxpassword", p.Influxpassword)
 	_, err = cfg.Section("database").NewKey("influxdatabase", p.Influxdatabase)
