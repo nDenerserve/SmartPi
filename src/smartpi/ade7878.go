@@ -112,6 +112,13 @@ var (
 			VoltageRmsOffset:      1.0,
 			PowerCorrectionFactor: 0.043861,
 		},
+		"600A/100mA": CTFactors{
+			CurrentResistor:       3.75,
+			CurrentClampFactor:    (0.1 / 6),
+			CurrentRmsOffset:      1.032,
+			VoltageRmsOffset:      1.0,
+			PowerCorrectionFactor: 0.019413,
+		},
 	}
 )
 
@@ -418,14 +425,11 @@ func ReadCurrent(d *i2c.Device, c *config.Config, phase models.Phase) (current f
 		outcome := float64(DeviceFetchInt(d, 4, command))
 		cr := CTTypes[c.CTType[phase]].CurrentResistor
 		var ccf float64
-		if c.CTType[phase] == "YHDC_SCT013" || c.CTType[phase] == "YHDC_SCT4333QL" {
-			ccf = CTTypes[c.CTType[phase]].CurrentClampFactor
-		} else if c.CTType[phase] == "400A/033V" {
+		if c.CTType[phase] == "YHDC_SCT013" || c.CTType[phase] == "YHDC_SCT4333QL" || c.CTType[phase] == "400A/033V" || c.CTType[phase] == "600A/100mA" {
 			ccf = CTTypes[c.CTType[phase]].CurrentClampFactor
 		} else {
 			ccf = CTTypes[c.CTType[phase]].CurrentClampFactor / (float64(c.CTTypePrimaryCurrent[phase]) / 100.0)
 		}
-
 		oc := CTTypes[c.CTType[phase]].CurrentRmsOffset
 		// outcome = outcome - 7300
 		current = (((((outcome * 0.3535) / rmsFactor) / cr) / ccf) * 100.0 * oc * c.CalibrationfactorI[phase])
