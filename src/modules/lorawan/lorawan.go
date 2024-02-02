@@ -160,6 +160,12 @@ func sendData(moduleconfig *config.Moduleconfig) {
 					if joinlora() {
 						goto Send
 					}
+				} else {
+					log.Error("Reset LoraWAN module")
+					loraHardwareReset()
+					if joinlora() {
+						goto Send
+					}
 				}
 
 			}
