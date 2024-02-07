@@ -15,7 +15,7 @@ ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 StandardOutput=null
 StandardError=journal
-RemainAfterExit=yes
+RemainAfterExit=no
 User=smartpi
 
 [Install]
