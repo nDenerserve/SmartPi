@@ -36,7 +36,7 @@ require (
 	github.com/saltosystems/winrt-go v0.0.0-20230921082907-2ab5b7d431e1 // indirect
 	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07 // indirect
 	github.com/tinygo-org/cbgo v0.0.4 // indirect
-	golang.org/x/term v0.16.0 // indirect
+	golang.org/x/term v0.17.0 // indirect
 )
 
 require (
@@ -50,10 +50,10 @@ require (
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/rs/cors v1.10.1
 	github.com/x448/float16 v0.8.4
-	golang.org/x/crypto v0.18.0
-	golang.org/x/net v0.20.0 // indirect
+	golang.org/x/crypto v0.20.0
+	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 	periph.io/x/conn/v3 v3.7.0
 	periph.io/x/devices/v3 v3.7.1
