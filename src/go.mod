@@ -16,8 +16,8 @@ require (
 	github.com/nDenerserve/mbserver v0.0.0-20230619125728-ce6fed969ee0
 	github.com/nDenerserve/structs v1.1.0
 	github.com/oleiade/reflections v1.0.1
-	github.com/prometheus/client_golang v1.18.0
-	github.com/prometheus/common v0.46.0
+	github.com/prometheus/client_golang v1.19.0
+	github.com/prometheus/common v0.48.0
 	github.com/secsy/goftp v0.0.0-20200609142545-aa2de14babf4
 	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
