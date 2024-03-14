@@ -47,6 +47,7 @@ import (
 	"github.com/nDenerserve/SmartPi/smartpi"
 	"github.com/nDenerserve/SmartPi/utils"
 	"github.com/prometheus/client_golang/prometheus"
+	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
@@ -149,11 +150,12 @@ func BasicAuth(realm string, handler http.HandlerFunc, c *config.Config, u *smar
 	}
 }
 
-func init() {
-	prometheus.MustRegister(version.NewCollector("smartpi"))
-}
-
 var appVersion = "No Version Provided"
+
+func init() {
+	version.Version = appVersion
+	prometheus.MustRegister(versioncollector.NewCollector("smartpi"))
+}
 
 type Softwareinformations struct {
 	Softwareversion string
@@ -203,9 +205,9 @@ func main() {
 	user := smartpi.NewUser()
 	controller := controllers.Controller{}
 
-	version := flag.Bool("v", false, "prints current version information")
+	versionFlag := flag.Bool("v", false, "prints current version information")
 	flag.Parse()
-	if *version {
+	if *versionFlag {
 		fmt.Println(appVersion)
 		os.Exit(0)
 	}
