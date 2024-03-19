@@ -1,4 +1,5 @@
 BINARY_READOUT=smartpireadout
+BINARY_SMARTPIDC=smartpidcreadout
 BINARY_SERVER=smartpiserver
 BINARY_FTPUPLOAD=smartpiftpupload
 BINARY_MODBUSSERVER=smartpimodbusserver
@@ -31,7 +32,7 @@ endif
 $(info    VERSION is $(VERSION))
 
 
-all: format makedir get buildsmartpireadout buildsmartpiserver buildsmartpiftpupload buildsmartpimodbusserver buildsmartpiemeterserver buildsmartpietemperaturereadout buildsmartpielorawan
+all: format makedir get buildsmartpireadout buildsmartpidcreadout buildsmartpiserver buildsmartpiftpupload buildsmartpimodbusserver buildsmartpiemeterserver buildsmartpietemperaturereadout buildsmartpielorawan
 
 
 makedir:
@@ -54,6 +55,11 @@ buildsmartpireadout:
 	@echo "start building smartpireadout..."
 	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_READOUT) -ldflags="-X main.appVersion=${VERSION}" readout/*.go
 	@echo "building smartpireadout done"
+
+buildsmartpidcreadout:
+	@echo "start building smartpidcreadout..."
+	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_SMARTPIDC) -ldflags="-X main.appVersion=${VERSION}" dcreadout/readout.go
+	@echo "building smartpidcreadout done"
 
 buildsmartpiserver:
 	@echo "start building smartpiserver..."

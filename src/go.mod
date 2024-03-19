@@ -37,6 +37,7 @@ require (
 	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07 // indirect
 	github.com/tinygo-org/cbgo v0.0.4 // indirect
 	golang.org/x/term v0.18.0 // indirect
+	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
 )
 
 require (
@@ -46,9 +47,11 @@ require (
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/influxdata/influxdb-client-go/v2 v2.13.0
 	github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839 // indirect
+	github.com/julien040/go-ternary v0.0.0-20230119180150-f0435f66948e
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/rs/cors v1.10.1
+	github.com/sandertv/go-formula/v2 v2.0.0-alpha.7
 	github.com/x448/float16 v0.8.4
 	golang.org/x/crypto v0.21.0
 	golang.org/x/net v0.21.0 // indirect

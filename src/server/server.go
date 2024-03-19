@@ -197,6 +197,7 @@ func getSoftwareInformations(w http.ResponseWriter, r *http.Request) {
 func main() {
 
 	smartpiconfig := config.NewConfig()
+	smartpidcconfig := config.NewDCconfig()
 	moduleconfig := config.NewModuleconfig()
 
 	user := smartpi.NewUser()
@@ -231,6 +232,7 @@ func main() {
 	router.HandleFunc("/api/v1/login", controller.Login()).Methods("POST")
 	router.HandleFunc("/api/v1/module/digitalout/{address}/{port}", utils.TokenVerifyMiddleWare(controller.SetDigitalout(moduleconfig))).Methods("PUT")
 	router.HandleFunc("/api/v1/module/digitalout/{address}", utils.TokenVerifyMiddleWare(controller.ReadDigitalout(moduleconfig))).Methods("GET")
+	router.HandleFunc("/api/v1/smartpidc/values/now/{format}", controller.SmartPiDCLiveValues(smartpidcconfig)).Methods("GET")
 
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir(smartpiconfig.DocRoot)))
 

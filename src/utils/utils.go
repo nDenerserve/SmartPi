@@ -281,3 +281,15 @@ func Monthchange(a, b time.Time) int {
 
 	return month
 }
+
+func Int2StringSlice(intSlice []int) []string {
+
+	stringSlice := []string{}
+
+	for i := range intSlice {
+		number := intSlice[i]
+		text := strconv.Itoa(number)
+		stringSlice = append(stringSlice, text)
+	}
+	return stringSlice
+}
