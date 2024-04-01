@@ -22,18 +22,16 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	gopkg.in/ini.v1 v1.67.0
-	tinygo.org/x/bluetooth v0.8.0
+	tinygo.org/x/bluetooth v0.9.0
 )
 
 require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
-	github.com/fatih/structs v1.1.0 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/google/uuid v1.3.1 // indirect
-	github.com/muka/go-bluetooth v0.0.0-20221213043340-85dc80edc4e1 // indirect
 	github.com/oapi-codegen/runtime v1.0.0 // indirect
-	github.com/saltosystems/winrt-go v0.0.0-20230921082907-2ab5b7d431e1 // indirect
+	github.com/saltosystems/winrt-go v0.0.0-20240320113951-a2e4fc03f5f4 // indirect
 	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07 // indirect
 	github.com/tinygo-org/cbgo v0.0.4 // indirect
 	golang.org/x/term v0.18.0 // indirect
