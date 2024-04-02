@@ -18,7 +18,6 @@ require (
 	github.com/oleiade/reflections v1.0.1
 	github.com/prometheus/client_golang v1.19.0
 	github.com/prometheus/common v0.48.0
-	github.com/secsy/goftp v0.0.0-20200609142545-aa2de14babf4
 	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	gopkg.in/ini.v1 v1.67.0
@@ -30,6 +29,8 @@ require (
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/google/uuid v1.3.1 // indirect
+	github.com/hashicorp/errwrap v1.0.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/oapi-codegen/runtime v1.0.0 // indirect
 	github.com/saltosystems/winrt-go v0.0.0-20240320113951-a2e4fc03f5f4 // indirect
 	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07 // indirect
@@ -45,6 +46,7 @@ require (
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/influxdata/influxdb-client-go/v2 v2.13.0
 	github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839 // indirect
+	github.com/jlaffaye/ftp v0.2.0
 	github.com/julien040/go-ternary v0.0.0-20230119180150-f0435f66948e
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
