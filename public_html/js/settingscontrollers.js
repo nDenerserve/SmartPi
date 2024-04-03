@@ -1,10 +1,10 @@
 smartpi.controller('MainCtrl', function($scope, $rootScope, $mdDialog, $interval, UserData, $GetConfigData, $SetConfigData, $GetUserData, $GetSoftwareInformations, $ScanWifi, $GetNetworkConnections, $DeleteWifiConnection, $CreateWifiConnection, $ActivateWifiConnection, $DeactivateWifiConnection, $ChangeWifiSecurity) {
 
-        $scope.nodelocation = window.location.protocol + '//' + window.location.hostname + ':1880';
-        $scope.networklocation = window.location.protocol + '//' + window.location.hostname + ':8080';
-        $scope.grafanalocation = window.location.protocol + '//' + window.location.hostname + ':3000';
-        $scope.influxdblocation = window.location.protocol + '//' + window.location.hostname + ':8086';
-        $scope.filebrowserlocation = window.location.protocol + '//' + window.location.hostname + ':4201';
+        $scope.nodelocation = 'http://' + window.location.hostname + ':1880';
+        $scope.networklocation = 'http://' + window.location.hostname + ':8080';
+        $scope.grafanalocation = 'http://' + window.location.hostname + ':3000';
+        $scope.influxdblocation = 'http://' + window.location.hostname + ':8086';
+        $scope.filebrowserlocation = 'http://' + window.location.hostname + ':4201';    
         $scope.websshlocation = 'https://' + window.location.hostname + ':4200';
 
 
