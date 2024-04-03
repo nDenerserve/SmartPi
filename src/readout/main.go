@@ -48,6 +48,7 @@ import (
 	//import the Paho Go MQTT library
 
 	"github.com/prometheus/client_golang/prometheus"
+	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 )
@@ -242,24 +243,25 @@ func configWatcher(config *config.Config) {
 	log.Debug("init done 3")
 }
 
+var appVersion = "No Version Provided"
+
 func init() {
 	log.SetFormatter(&log.TextFormatter{})
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.DebugLevel)
 
-	prometheus.MustRegister(version.NewCollector("smartpi"))
+	version.Version = appVersion
+	prometheus.MustRegister(versioncollector.NewCollector("smartpi"))
 }
-
-var appVersion = "No Version Provided"
 
 func main() {
 	smartpiconfig := config.NewConfig()
 
 	go configWatcher(smartpiconfig)
 
-	version := flag.Bool("v", false, "prints current version information")
+	versionFlag := flag.Bool("v", false, "prints current version information")
 	flag.Parse()
-	if *version {
+	if *versionFlag {
 		fmt.Println(appVersion)
 		os.Exit(0)
 	}
