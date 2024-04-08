@@ -95,7 +95,18 @@ var (
 			UpperLimit:               3.14,
 			Unit:                     "A",
 		},
-		"HSTS016I 300A": {
+		"HSTS016L 200A": {
+			MeasurementType:          "Current",
+			SensorType:               "Hall",
+			Calculation:              "((v-2.5)*200)/0.625",
+			ConversionFactor:         390.022321429,
+			MaxVal:                   200,
+			CalibrationTargetVoltage: 2.5,
+			LowerLimit:               1.86,
+			UpperLimit:               3.14,
+			Unit:                     "A",
+		},
+		"HSTS016L 300A": {
 			MeasurementType:          "Current",
 			SensorType:               "Hall",
 			Calculation:              "((v-2.5)*300)/0.625",
