@@ -27,6 +27,7 @@
 package config
 
 import (
+	"encoding/hex"
 	"io"
 	"os"
 	"strconv"
@@ -66,6 +67,7 @@ type DCconfig struct {
 
 	// [device]
 	I2CDevice              string
+	ADCAddress             []byte
 	InputType              map[int]string
 	InputName              map[int]string
 	InputCalibrationOffset map[int]float64
@@ -164,6 +166,17 @@ func (p *DCconfig) ReadDCParameterFromFile() {
 
 	// [device]
 	p.I2CDevice = dccfg.Section("device").Key("i2c_device").MustString("/dev/i2c-1")
+	adcaddresses := strings.Split(dccfg.Section("device").Key("adc_address").String(), ",")
+
+	if len(adcaddresses) == 0 {
+		adcaddresses = append(adcaddresses, "0x6e")
+	}
+
+	for _, element := range adcaddresses {
+		hexval, _ := hex.DecodeString(strings.Trim(element, "0x"))
+		p.ADCAddress = append(p.ADCAddress, hexval[0])
+	}
+
 	p.Samplerate = dccfg.Section("device").Key("samplerate").MustInt(1)
 
 	// [input]
@@ -276,6 +289,16 @@ func (p *DCconfig) SaveDCParameterToFile() {
 
 	// [device]
 	_, dcerr = dccfg.Section("device").NewKey("i2c_device", p.I2CDevice)
+
+	var slice []byte
+	var hexstring []string
+	slice = nil
+	hexstring = nil
+	for _, element := range p.ADCAddress {
+		slice = append(slice, element)
+		hexstring = append(hexstring, "0x"+hex.EncodeToString(slice))
+	}
+	_, dcerr = dccfg.Section("device").NewKey("adc_address", strings.Join(hexstring, ","))
 	_, dcerr = dccfg.Section("device").NewKey("samplerate", strconv.FormatInt(int64(p.Samplerate), 10))
 
 	// [input]
@@ -293,21 +316,21 @@ func (p *DCconfig) SaveDCParameterToFile() {
 	_, dcerr = dccfg.Section("input").NewKey("input_name_4", p.InputName[models.Input4])
 
 	// [calculations]
-	_, err = cfg.Section("calculations").NewKey("power_1", strings.Join(utils.Int2StringSlice(p.Power[0][:]), "|"))
-	_, err = cfg.Section("calculations").NewKey("power_2", strings.Join(utils.Int2StringSlice(p.Power[1][:]), "|"))
-	_, err = cfg.Section("calculations").NewKey("power_3", strings.Join(utils.Int2StringSlice(p.Power[2][:]), "|"))
-	_, err = cfg.Section("calculations").NewKey("power_name_1", p.PowerName[0])
-	_, err = cfg.Section("calculations").NewKey("power_name_2", p.PowerName[1])
-	_, err = cfg.Section("calculations").NewKey("power_name_3", p.PowerName[2])
-	_, err = cfg.Section("calculations").NewKey("energy_production_name_1", p.EnergyProductionName[0])
-	_, err = cfg.Section("calculations").NewKey("energy_production_name_2", p.EnergyProductionName[1])
-	_, err = cfg.Section("calculations").NewKey("energy_production_name_3", p.EnergyProductionName[2])
-	_, err = cfg.Section("calculations").NewKey("energy_consumption_name_1", p.EnergyConsumptionName[0])
-	_, err = cfg.Section("calculations").NewKey("energy_consumption_name_2", p.EnergyConsumptionName[1])
-	_, err = cfg.Section("calculations").NewKey("energy_consumption_name_3", p.EnergyConsumptionName[2])
-	_, err = cfg.Section("calculations").NewKey("energy_balanced_name_1", p.EnergyBalancedName[0])
-	_, err = cfg.Section("calculations").NewKey("energy_balanced_name_2", p.EnergyBalancedName[1])
-	_, err = cfg.Section("calculations").NewKey("energy_balanced_name_3", p.EnergyBalancedName[2])
+	_, dcerr = dccfg.Section("calculations").NewKey("power_1", strings.Join(utils.Int2StringSlice(p.Power[0][:]), "|"))
+	_, dcerr = dccfg.Section("calculations").NewKey("power_2", strings.Join(utils.Int2StringSlice(p.Power[1][:]), "|"))
+	_, dcerr = dccfg.Section("calculations").NewKey("power_3", strings.Join(utils.Int2StringSlice(p.Power[2][:]), "|"))
+	_, dcerr = dccfg.Section("calculations").NewKey("power_name_1", p.PowerName[0])
+	_, dcerr = dccfg.Section("calculations").NewKey("power_name_3", p.PowerName[2])
+	_, dcerr = dccfg.Section("calculations").NewKey("power_name_2", p.PowerName[1])
+	_, dcerr = dccfg.Section("calculations").NewKey("energy_production_name_1", p.EnergyProductionName[0])
+	_, dcerr = dccfg.Section("calculations").NewKey("energy_production_name_2", p.EnergyProductionName[1])
+	_, dcerr = dccfg.Section("calculations").NewKey("energy_production_name_3", p.EnergyProductionName[2])
+	_, dcerr = dccfg.Section("calculations").NewKey("energy_consumption_name_1", p.EnergyConsumptionName[0])
+	_, dcerr = dccfg.Section("calculations").NewKey("energy_consumption_name_2", p.EnergyConsumptionName[1])
+	_, dcerr = dccfg.Section("calculations").NewKey("energy_consumption_name_3", p.EnergyConsumptionName[2])
+	_, dcerr = dccfg.Section("calculations").NewKey("energy_balanced_name_1", p.EnergyBalancedName[0])
+	_, dcerr = dccfg.Section("calculations").NewKey("energy_balanced_name_2", p.EnergyBalancedName[1])
+	_, dcerr = dccfg.Section("calculations").NewKey("energy_balanced_name_3", p.EnergyBalancedName[2])
 
 	// [ftp]
 	_, dcerr = dccfg.Section("ftp").NewKey("ftp_upload", strconv.FormatBool(p.FTPupload))

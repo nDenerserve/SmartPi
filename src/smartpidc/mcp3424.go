@@ -1,7 +1,6 @@
 package smartpidc
 
 import (
-	"fmt"
 	"math"
 	"strconv"
 	"time"
@@ -18,7 +17,7 @@ import (
 const (
 
 	// I2C address for MCP3424 - base address for MCP3424
-	MCP3424_ADDRESS uint16 = 0x68
+	// MCP3424_ADDRESS uint16 = 0x68
 	// fields in configuration register
 	MCP342X_GAIN_FIELD   byte    = 0x03 // PGA field
 	MCP342X_GAIN_X1      byte    = 0x00 // PGA gain X1
@@ -143,7 +142,7 @@ var (
 			MeasurementType:          "Voltage",
 			SensorType:               "Direct",
 			Calculation:              "v",
-			ConversionFactor:         15.98837209,
+			ConversionFactor:         16.38703529,
 			MaxVal:                   120,
 			CalibrationTargetVoltage: 0,
 			LowerLimit:               0.0,
@@ -153,7 +152,7 @@ var (
 	}
 )
 
-func readoutDevice(i2cBus string) ([4]float64, error) {
+func readoutDevice(i2cBus string, c *config.DCconfig) ([4]float64, error) {
 
 	var ret [4]float64
 	var write []byte
@@ -169,7 +168,7 @@ func readoutDevice(i2cBus string) ([4]float64, error) {
 	}
 	defer bus.Close()
 
-	dev := i2c.Dev{Bus: bus, Addr: MCP3424_ADDRESS}
+	dev := i2c.Dev{Bus: bus, Addr: uint16(c.ADCAddress[0])}
 
 	for i := 0; i < 4; i++ {
 
@@ -197,8 +196,8 @@ func readoutDevice(i2cBus string) ([4]float64, error) {
 			return ret, err
 		}
 
-		fmt.Printf("%v\n", read[0:])
-		log.Debug("Raw-Input: " + strconv.Itoa(i) + ": " + strconv.FormatFloat(float64(int(read[0])*256+int(read[1]))/RESOLUTION_16BIT, 'f', -1, 64))
+		// fmt.Printf("%v\n", read[0:])
+		// log.Debug("Raw-Input: " + strconv.Itoa(i) + ": " + strconv.FormatFloat(float64(int(read[0])*256+int(read[1]))/RESOLUTION_16BIT, 'f', -1, 64))
 
 		ret[i] = float64(int(read[0])*256+int(read[1])) / RESOLUTION_16BIT
 
@@ -214,18 +213,19 @@ func readoutDevice(i2cBus string) ([4]float64, error) {
 
 func CalibrateInput(c *config.DCconfig, input int) {
 
-	rawValues, err := readoutDevice(c.I2CDevice)
+	rawValues, err := readoutDevice(c.I2CDevice, c)
 	if err != nil {
 		log.Error(err)
 
 	}
 
 	for i := 0; i < len(rawValues); i++ {
-		if i == input {
+		if i == (input - 1) {
 			log.Info("Calibrate input: " + strconv.Itoa(input))
 
-			log.Debug(c.InputType[i])
-			log.Debug(rawValues[i])
+			log.Debug("--------------------------------------------------------------------------------")
+			log.Debug("Input-Type " + strconv.Itoa(i) + ": " + c.InputType[i] + "     Input-Formular " + strconv.Itoa(i) + ": " + InputTypes[c.InputType[i]].Calculation)
+			log.Debug("Value " + strconv.Itoa(i) + ": " + strconv.FormatFloat(rawValues[i], 'f', -1, 64))
 
 			calibrationOffset := (rawValues[i] / InputTypes[c.InputType[i]].ConversionFactor) - InputTypes[c.InputType[i]].CalibrationTargetVoltage
 
@@ -243,7 +243,7 @@ func GetValues(c *config.DCconfig) [4]float64 {
 	var ret [4]float64
 	var calibratedVal float64
 
-	rawValues, err := readoutDevice(c.I2CDevice)
+	rawValues, err := readoutDevice(c.I2CDevice, c)
 
 	if err != nil {
 		log.Error(err)
