@@ -124,7 +124,7 @@ var dcerr error
 
 func (p *DCconfig) ReadDCParameterFromFile() {
 
-	dccfg, dcerr = ini.Load("/etc/smartpidc")
+	dccfg, dcerr = ini.LooseLoad("/etc/smartpidc")
 	if dcerr != nil {
 		panic(dcerr)
 	}
@@ -166,7 +166,7 @@ func (p *DCconfig) ReadDCParameterFromFile() {
 
 	// [device]
 	p.I2CDevice = dccfg.Section("device").Key("i2c_device").MustString("/dev/i2c-1")
-	adcaddresses := strings.Split(dccfg.Section("device").Key("adc_address").String(), ",")
+	adcaddresses := strings.Split(dccfg.Section("device").Key("adc_address").MustString("0x6e"), ",")
 
 	if len(adcaddresses) == 0 {
 		adcaddresses = append(adcaddresses, "0x6e")

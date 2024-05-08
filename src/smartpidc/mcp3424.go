@@ -1,6 +1,7 @@
 package smartpidc
 
 import (
+	"fmt"
 	"math"
 	"strconv"
 	"time"
@@ -196,8 +197,8 @@ func readoutDevice(i2cBus string, c *config.DCconfig) ([4]float64, error) {
 			return ret, err
 		}
 
-		// fmt.Printf("%v\n", read[0:])
-		// log.Debug("Raw-Input: " + strconv.Itoa(i) + ": " + strconv.FormatFloat(float64(int(read[0])*256+int(read[1]))/RESOLUTION_16BIT, 'f', -1, 64))
+		fmt.Printf("%v\n", read[0:])
+		log.Debug("Raw-Input: " + strconv.Itoa(i) + ": " + strconv.FormatFloat(float64(int(read[0])*256+int(read[1]))/RESOLUTION_16BIT, 'f', -1, 64))
 
 		ret[i] = float64(int(read[0])*256+int(read[1])) / RESOLUTION_16BIT
 
