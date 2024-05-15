@@ -169,6 +169,8 @@ func readoutDevice(i2cBus string, c *config.DCconfig) ([4]float64, error) {
 	}
 	defer bus.Close()
 
+	log.Debug("i2c-address: " + string(c.ADCAddress[0]))
+
 	dev := i2c.Dev{Bus: bus, Addr: uint16(c.ADCAddress[0])}
 
 	for i := 0; i < 4; i++ {
