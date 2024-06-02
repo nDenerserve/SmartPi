@@ -18,7 +18,7 @@ require (
 	github.com/nDenerserve/structs v1.1.0
 	github.com/oleiade/reflections v1.0.1
 	github.com/prometheus/client_golang v1.19.1
-	github.com/prometheus/common v0.51.1
+	github.com/prometheus/common v0.53.0
 	github.com/rs/cors v1.11.0
 	github.com/sandertv/go-formula/v2 v2.0.0-alpha.7
 	github.com/sirupsen/logrus v1.9.3
