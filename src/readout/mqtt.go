@@ -91,7 +91,7 @@ func publishMQTTCalculations(c *config.Config, mqttclient mqtt.Client, ec1m floa
 	// Let's try to (re-)connect if MQTT connection was lost.
 	if !mqttclient.IsConnected() {
 		if mqtttoken := mqttclient.Connect(); mqtttoken.Wait() && mqtttoken.Error() != nil {
-			log.Debugf("Connecting to MQTT broker failed. %q", mqtttoken.Error())
+			log.Errorf("Connecting to MQTT broker failed. %q", mqtttoken.Error())
 		}
 	}
 	if mqttclient.IsConnected() {
