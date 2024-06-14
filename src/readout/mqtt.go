@@ -34,10 +34,10 @@ func newMQTTClient(c *config.Config) (mqttclient mqtt.Client) {
 	return mqttclient
 }
 
-func publishMQTT(m mqtt.Client, status *bool, t string, v float64) bool {
+func publishMQTT(m mqtt.Client, qos uint8, status *bool, t string, v float64) bool {
 	if *status {
 		log.Debugf("  -> ", t, ":", v)
-		token := m.Publish(t, 0, false, strconv.FormatFloat(v, 'f', 6, 64))
+		token := m.Publish(t, byte(qos), false, strconv.FormatFloat(v, 'f', 6, 64))
 		if !token.WaitTimeout(2 * time.Second) {
 			log.Debugf("  MQTT Timeout. Stopping MQTT sequence.")
 			return false
@@ -64,23 +64,23 @@ func publishMQTTReadouts(c *config.Config, mqttclient mqtt.Client, values *smart
 
 		// Status is used to stop MQTT publication sequence in case of first error.
 		var status = true
-		publishMQTT(mqttclient, &status, c.MQTTtopic+"/I4", values.Current[models.PhaseN])
+		publishMQTT(mqttclient, c.MQTTQoS, &status, c.MQTTtopic+"/I4", values.Current[models.PhaseN])
 		for _, p := range smartpi.MainPhases {
 			label := p.PhaseNumber()
-			publishMQTT(mqttclient, &status, c.MQTTtopic+"/I"+label, values.Current[p])
-			publishMQTT(mqttclient, &status, c.MQTTtopic+"/V"+label, values.Voltage[p])
-			publishMQTT(mqttclient, &status, c.MQTTtopic+"/P"+label, values.ActiveWatts[p])
-			publishMQTT(mqttclient, &status, c.MQTTtopic+"/COS"+label, values.CosPhi[p])
-			publishMQTT(mqttclient, &status, c.MQTTtopic+"/F"+label, values.Frequency[p])
-			publishMQTT(mqttclient, &status, c.MQTTtopic+"/Ec"+label, values.Energyconsumption[p])
-			publishMQTT(mqttclient, &status, c.MQTTtopic+"/Ep"+label, values.Energyproduction[p])
+			publishMQTT(mqttclient, c.MQTTQoS, &status, c.MQTTtopic+"/I"+label, values.Current[p])
+			publishMQTT(mqttclient, c.MQTTQoS, &status, c.MQTTtopic+"/V"+label, values.Voltage[p])
+			publishMQTT(mqttclient, c.MQTTQoS, &status, c.MQTTtopic+"/P"+label, values.ActiveWatts[p])
+			publishMQTT(mqttclient, c.MQTTQoS, &status, c.MQTTtopic+"/COS"+label, values.CosPhi[p])
+			publishMQTT(mqttclient, c.MQTTQoS, &status, c.MQTTtopic+"/F"+label, values.Frequency[p])
+			publishMQTT(mqttclient, c.MQTTQoS, &status, c.MQTTtopic+"/Ec"+label, values.Energyconsumption[p])
+			publishMQTT(mqttclient, c.MQTTQoS, &status, c.MQTTtopic+"/Ep"+label, values.Energyproduction[p])
 		}
 		pTotalBalanced = 0.0
 		for _, p := range smartpi.MainPhases {
 			pTotalBalanced = pTotalBalanced + values.ActiveWatts[p]
 		}
-		publishMQTT(mqttclient, &status, c.MQTTtopic+"/Ptot", pTotalBalanced)
-		publishMQTT(mqttclient, &status, c.MQTTtopic+"/Ebal", wattHourBalanced)
+		publishMQTT(mqttclient, c.MQTTQoS, &status, c.MQTTtopic+"/Ptot", pTotalBalanced)
+		publishMQTT(mqttclient, c.MQTTQoS, &status, c.MQTTtopic+"/Ebal", wattHourBalanced)
 		log.Debug("MQTT done.")
 	}
 }
@@ -99,10 +99,10 @@ func publishMQTTCalculations(c *config.Config, mqttclient mqtt.Client, ec1m floa
 
 		// Status is used to stop MQTT publication sequence in case of first error.
 		var status = true
-		publishMQTT(mqttclient, &status, c.MQTTtopic+"/Ec1m", ec1m)
-		publishMQTT(mqttclient, &status, c.MQTTtopic+"/Ep1m", ep1m)
-		publishMQTT(mqttclient, &status, c.MQTTtopic+"/EcTot", cc)
-		publishMQTT(mqttclient, &status, c.MQTTtopic+"/EpTot", pc)
+		publishMQTT(mqttclient, c.MQTTQoS, &status, c.MQTTtopic+"/Ec1m", ec1m)
+		publishMQTT(mqttclient, c.MQTTQoS, &status, c.MQTTtopic+"/Ep1m", ep1m)
+		publishMQTT(mqttclient, c.MQTTQoS, &status, c.MQTTtopic+"/EcTot", cc)
+		publishMQTT(mqttclient, c.MQTTQoS, &status, c.MQTTtopic+"/EpTot", pc)
 
 		log.Debug("MQTT calculations done.")
 	}

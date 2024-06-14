@@ -114,6 +114,7 @@ type Config struct {
 	MQTTuser         string
 	MQTTpass         string
 	MQTTtopic        string
+	MQTTQoS          uint8
 
 	// [modbus slave]
 	ModbusRTUenabled bool
@@ -288,6 +289,7 @@ func (p *Config) ReadParameterFromFile() {
 	p.MQTTuser = cfg.Section("mqtt").Key("mqtt_username").String()
 	p.MQTTpass = cfg.Section("mqtt").Key("mqtt_password").String()
 	p.MQTTtopic = cfg.Section("mqtt").Key("mqtt_topic").String()
+	p.MQTTQoS = uint8(cfg.Section("mqtt").Key("mqtt_qos").MustUint(0))
 
 	// [modbus slave]
 	p.ModbusRTUenabled = cfg.Section("modbus").Key("modbus_rtu_enabled").MustBool(false)
@@ -455,6 +457,7 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("mqtt").NewKey("mqtt_username", p.MQTTuser)
 	_, err = cfg.Section("mqtt").NewKey("mqtt_password", p.MQTTpass)
 	_, err = cfg.Section("mqtt").NewKey("mqtt_topic", p.MQTTtopic)
+	_, err = cfg.Section("mqtt").NewKey("mqtt_qos", strconv.FormatUint(uint64(p.MQTTQoS), 10))
 
 	// [modbus slave]
 	_, err = cfg.Section("modbus").NewKey("modbus_rtu_enabled", strconv.FormatBool(p.ModbusRTUenabled))
