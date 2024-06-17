@@ -32,6 +32,8 @@ package linuxtools
 
 import (
 	"errors"
+	"fmt"
+	"io"
 	"os/exec"
 	"strings"
 
@@ -59,24 +61,30 @@ func GetUsers() {
 
 }
 
-func ChangePassword(user string, newpassword string) (bool, error) {
-	_, err := exec.Command("/bin/sh", "-c", `echo "echo '`+user+`:`+newpassword+`' | chpasswd" >> /tmp/changepass.sh`).Output()
+func changePass(user string, newpassword string) (bool, error) {
+	cmd := exec.Command("sudo", "chpasswd")
+	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return false, err
 	}
-	_, err = exec.Command("/bin/sh", "-c", `chmod +x /tmp/changepass.sh`).Output()
+
+	go func() {
+		defer stdin.Close()
+		io.WriteString(stdin, user+":"+newpassword+"\n")
+	}()
+
+	out, err := cmd.CombinedOutput()
+	mess := fmt.Sprintf("%s", out)
 	if err != nil {
 		return false, err
 	}
-	_, err = exec.Command("/bin/sh", "-c", `sudo /tmp/changepass.sh`).Output()
-	if err != nil {
-		return false, err
+
+	if mess != "0" {
+		return false, errors.New(mess)
 	}
-	_, err = exec.Command("/bin/sh", "-c", `rm /tmp/changepass.sh`).Output()
-	if err != nil {
-		return false, err
-	}
+
 	return true, nil
+
 }
 
 func GetGroupsFromUser(user string) ([]string, error) {
