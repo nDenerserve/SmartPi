@@ -72,6 +72,7 @@ shared_file="smartpi_values"
 port=1080
 docroot="/var/smartpi/www"
 app_key = "ew980723j35h97fqw4!234490#t33465"
+dashboard = "smartpi"
 
 [mqtt]
 mqtt_enabled=0

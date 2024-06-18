@@ -101,6 +101,7 @@ type Config struct {
 	WebserverPort        int
 	DocRoot              string
 	AppKey               string
+	Dashboard            string
 
 	// [csv]
 	CSVdecimalpoint string
@@ -443,7 +444,7 @@ func (p *Config) SaveParameterToFile() {
 	_, err = cfg.Section("webserver").NewKey("shared_calculated_file", p.SharedCalculatedFile)
 	_, err = cfg.Section("webserver").NewKey("port", strconv.FormatInt(int64(p.WebserverPort), 10))
 	_, err = cfg.Section("webserver").NewKey("docroot", p.DocRoot)
-	_, err = cfg.Section("appkey").NewKey("appkey", p.AppKey)
+	_, err = cfg.Section("webserver").NewKey("appkey", p.AppKey)
 
 	// [csv]
 	_, err = cfg.Section("csv").NewKey("decimalpoint", p.CSVdecimalpoint)
