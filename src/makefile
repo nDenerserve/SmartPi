@@ -33,7 +33,7 @@ endif
 $(info    VERSION is $(VERSION))
 
 
-all: format makedir get buildsmartpireadout buildsmartpidcreadout buildsmartpiserver buildsmartpiftpupload buildsmartpimodbusserver buildsmartpiemeterserver buildsmartpietemperaturereadout buildsmartpielorawan
+all: format makedir get buildsmartpireadout buildsmartpidcreadout buildsmartpiserver buildsmartpiftpupload buildsmartpimodbusserver buildsmartpiemeterserver buildsmartpietemperaturereadout buildsmartpilorawan
 
 
 makedir:
