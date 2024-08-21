@@ -27,8 +27,8 @@ func main() {
 	moduleconfig := config.NewModuleconfig()
 
 	version := flag.Bool("v", false, "prints current version information")
-	devEUI := flag.Bool("deveui", false, "prints the devEUI of the LoraWAN module")
-	moduleReset := flag.Bool("reset", false, "hardwarereset of the LoraWAN module")
+	devEUI := flag.Bool("deveui", false, "prints the devEUI of the LoRaWAN module")
+	moduleReset := flag.Bool("reset", false, "hardwarereset of the LoRaWAN module")
 	flag.Parse()
 	if *version {
 		fmt.Println(appVersion)
@@ -62,11 +62,11 @@ func main() {
 	// Make sure the app closes the connection at the end the free the resource
 	defer rn2483.Disconnect()
 
-	err := rn2483.MacSetApplicationEUI(moduleconfig.LoraWANApplicationEUI)
+	err := rn2483.MacSetApplicationEUI(moduleconfig.LoRaWANApplicationEUI)
 	if err != nil {
 		log.Error(err)
 	}
-	err = rn2483.MacSetApplicationKey(moduleconfig.LoraWANApplicationKey)
+	err = rn2483.MacSetApplicationKey(moduleconfig.LoRaWANApplicationKey)
 	if err != nil {
 		log.Error(err)
 	}
@@ -92,7 +92,7 @@ func sendData(moduleconfig *config.Moduleconfig) {
 
 	var data []byte
 
-	tick := time.Tick(time.Duration(moduleconfig.LoraWANSendInterval) * time.Second)
+	tick := time.Tick(time.Duration(moduleconfig.LoRaWANSendInterval) * time.Second)
 
 	for ; ; <-tick {
 		log.Info(time.Now())
@@ -100,7 +100,7 @@ func sendData(moduleconfig *config.Moduleconfig) {
 			log.Debugf("Received message on port %v: %s", port, string(data))
 		}
 
-		for i, sharedfile := range moduleconfig.LoraWANSharedDirs {
+		for i, sharedfile := range moduleconfig.LoRaWANSharedDirs {
 
 			file, err := os.Open(sharedfile)
 			utils.Checklog(err)
@@ -112,7 +112,7 @@ func sendData(moduleconfig *config.Moduleconfig) {
 			// log.Debug(records)
 			utils.Checklog(err)
 
-			for _, element := range strings.Split(moduleconfig.LoraWANSharedFilesElements[i], "|") {
+			for _, element := range strings.Split(moduleconfig.LoRaWANSharedFilesElements[i], "|") {
 
 				// log.Debug(element)
 
@@ -161,7 +161,7 @@ func sendData(moduleconfig *config.Moduleconfig) {
 						goto Send
 					}
 				} else {
-					log.Error("Error quit LoraWAN-Service")
+					log.Error("Error quit LoRaWAN-Service")
 					os.Exit(1)
 					// loraHardwareReset()
 					// if joinlora() {

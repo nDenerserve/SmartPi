@@ -6,6 +6,7 @@ BINARY_MODBUSSERVER=smartpimodbusserver
 BINARY_EMETERSERVER=smartpiemeterserver
 BINARY_ETEMPERATUREREADOUT=smartpietemperaturereadout
 BINARY_LORAWAN=smartpilorawan
+BINARY_LTE=smartpilte
 
 #VERSION=0.3.7
 VERS = $(shell git describe --always --long --dirty)
@@ -86,10 +87,15 @@ buildsmartpietemperaturereadout:
 	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_ETEMPERATUREREADOUT) -ldflags="-X main.appVersion=${VERSION}" modules/etemperature/etemperature.go
 	@echo "building smartpietemperaturereadout done"
 
-buildsmartpielorawan:
+buildsmartpilorawan:
 	@echo "start building smartpilorawan..."
 	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_LORAWAN) -ldflags="-X main.appVersion=${VERSION}" modules/lorawan/lorawan.go
 	@echo "building smartpilorawan done"
+
+buildsmartpilte:
+	@echo "start building smartpilte..."
+	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_LORAWAN) -ldflags="-X main.appVersion=${VERSION}" modules/lte/lte.go
+	@echo "building smartpilte done"
 
 install:
 	@echo install

@@ -34,14 +34,19 @@ type Moduleconfig struct {
 	EtemperatureSharedFile        string
 
 	// [lorawan]
-	LoraWANEnabled             bool
-	LoraWANSharedDirs          []string
-	LoraWANSharedFilesElements []string
-	LoraWANSerialPort          string
-	LoraWANSendInterval        int
-	LoraWANApplicationEUI      string
-	LoraWANApplicationKey      string
-	LoraWANDataRate            int
+	LoRaWANEnabled             bool
+	LoRaWANSharedDirs          []string
+	LoRaWANSharedFilesElements []string
+	LoRaWANSerialPort          string
+	LoRaWANSendInterval        int
+	LoRaWANApplicationEUI      string
+	LoRaWANApplicationKey      string
+	LoRaWANDataRate            int
+
+	// [LTE]
+	LteEnabled bool
+	LteAPN     string
+	LteSimPin  string
 
 	// s := strings.Split("a,b,c", ",")
 }
@@ -72,7 +77,7 @@ func (p *Moduleconfig) ReadParameterFromFile() {
 	// [digitalout]
 	p.AllowedDigitalOutUser = strings.Split(mcfg.Section("digitalout").Key("allowed_user").String(), ",")
 
-	//[etemperature]
+	// [etemperature]
 	p.AllowedEtemperatureUser = strings.Split(mcfg.Section("etemperature").Key("allowed_user").String(), ",")
 	if p.EtemperatureI2CAddress, err = utils.DecodeUint16(mcfg.Section("etemperature").Key("i2c_address").MustString("0x52")); err != nil {
 		log.Fatal(err)
@@ -82,21 +87,24 @@ func (p *Moduleconfig) ReadParameterFromFile() {
 	p.EtemperatureSharedDir = mcfg.Section("etemperature").Key("shared_dir").MustString("/var/run")
 	p.EtemperatureSharedFile = mcfg.Section("etemperature").Key("shared_file").MustString("smartpi_etemperature_values")
 
-	//[lorawan]
-	p.LoraWANEnabled = mcfg.Section("lorawan").Key("shared_file_enabled").MustBool(true)
-	p.LoraWANSharedDirs = strings.Split(mcfg.Section("lorawan").Key("shared_files_path").String(), ",")
-	if len(p.LoraWANSharedDirs) == 0 {
-		p.LoraWANSharedDirs = append(p.LoraWANSharedDirs, "/var/run/smartpi_values")
+	// [lorawan]
+	p.LoRaWANEnabled = mcfg.Section("lorawan").Key("lorawan_enabled").MustBool(true)
+	p.LoRaWANSharedDirs = strings.Split(mcfg.Section("lorawan").Key("shared_files_path").String(), ",")
+	if len(p.LoRaWANSharedDirs) == 0 {
+		p.LoRaWANSharedDirs = append(p.LoRaWANSharedDirs, "/var/run/smartpi_values")
 	}
-	p.LoraWANSharedFilesElements = strings.Split(mcfg.Section("lorawan").Key("shared_files_elements").String(), ",")
-	if len(p.LoraWANSharedFilesElements) == 0 {
-		p.LoraWANSharedFilesElements = append(p.LoraWANSharedFilesElements, "1:2f:1.0|2:2f:1.0|3:2f:1.0|4:2f:1.0|5:2f:1.0|6:2f:1.0|7:2f:1.0,1:2f:1.0|2:2f:1.0|3:2f:1.0|4:2f:1.0|5:2f:1.0|6:2f:1.0|7:2f:1.0")
+	p.LoRaWANSharedFilesElements = strings.Split(mcfg.Section("lorawan").Key("shared_files_elements").String(), ",")
+	if len(p.LoRaWANSharedFilesElements) == 0 {
+		p.LoRaWANSharedFilesElements = append(p.LoRaWANSharedFilesElements, "1:2f:1.0|2:2f:1.0|3:2f:1.0|4:2f:1.0|5:2f:1.0|6:2f:1.0|7:2f:1.0,1:2f:1.0|2:2f:1.0|3:2f:1.0|4:2f:1.0|5:2f:1.0|6:2f:1.0|7:2f:1.0")
 	}
-	p.LoraWANSendInterval = mcfg.Section("lorawan").Key("interval").MustInt(60)
-	p.LoraWANSerialPort = mcfg.Section("lorawan").Key("serial_port").MustString("/dev/ttyS0")
-	p.LoraWANApplicationEUI = mcfg.Section("lorawan").Key("applicationEUI").MustString("")
-	p.LoraWANApplicationKey = mcfg.Section("lorawan").Key("applicationKey").MustString("")
-	p.LoraWANDataRate = mcfg.Section("lorawan").Key("datarate").MustInt(5)
+	p.LoRaWANSendInterval = mcfg.Section("lorawan").Key("interval").MustInt(60)
+	p.LoRaWANSerialPort = mcfg.Section("lorawan").Key("serial_port").MustString("/dev/ttyS0")
+	p.LoRaWANApplicationEUI = mcfg.Section("lorawan").Key("applicationEUI").MustString("")
+	p.LoRaWANApplicationKey = mcfg.Section("lorawan").Key("applicationKey").MustString("")
+	p.LoRaWANDataRate = mcfg.Section("lorawan").Key("datarate").MustInt(5)
+
+	// [LTE]
+	p.LteEnabled = mcfg.Section("lte").Key("enabled").MustBool(true)
 
 }
 
@@ -124,14 +132,14 @@ func (p *Moduleconfig) SaveParameterToFile() {
 	_, merr = mcfg.Section("etemperature").NewKey("shared_file", p.EtemperatureSharedFile)
 
 	//[lorawan]
-	_, merr = mcfg.Section("lorawan").NewKey("shared_file_enabled", strconv.FormatBool(p.LoraWANEnabled))
-	_, merr = mcfg.Section("lorawan").NewKey("shared_files_path", strings.Join(p.LoraWANSharedDirs[:], ","))
-	_, merr = mcfg.Section("lorawan").NewKey("shared_files_elements", strings.Join(p.LoraWANSharedFilesElements[:], ","))
+	_, merr = mcfg.Section("lorawan").NewKey("shared_file_enabled", strconv.FormatBool(p.LoRaWANEnabled))
+	_, merr = mcfg.Section("lorawan").NewKey("shared_files_path", strings.Join(p.LoRaWANSharedDirs[:], ","))
+	_, merr = mcfg.Section("lorawan").NewKey("shared_files_elements", strings.Join(p.LoRaWANSharedFilesElements[:], ","))
 	_, merr = mcfg.Section("lorawan").NewKey("interval", strconv.FormatInt(int64(p.EtemperatureSamplerate), 60))
-	_, merr = mcfg.Section("lorawan").NewKey("serial_port", p.LoraWANSerialPort)
-	_, merr = mcfg.Section("lorawan").NewKey("applicationEUI", p.LoraWANApplicationEUI)
-	_, merr = mcfg.Section("lorawan").NewKey("applicationKey", p.LoraWANApplicationKey)
-	_, merr = mcfg.Section("lorawan").NewKey("datarate", strconv.FormatInt(int64(p.LoraWANDataRate), 10))
+	_, merr = mcfg.Section("lorawan").NewKey("serial_port", p.LoRaWANSerialPort)
+	_, merr = mcfg.Section("lorawan").NewKey("applicationEUI", p.LoRaWANApplicationEUI)
+	_, merr = mcfg.Section("lorawan").NewKey("applicationKey", p.LoRaWANApplicationKey)
+	_, merr = mcfg.Section("lorawan").NewKey("datarate", strconv.FormatInt(int64(p.LoRaWANDataRate), 10))
 
 	tmpFile := "/tmp/smartpi_modules"
 	merr := mcfg.SaveTo(tmpFile)
