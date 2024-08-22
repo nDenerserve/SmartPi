@@ -34,7 +34,7 @@ import (
 	// "fmt"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"reflect"
@@ -83,7 +83,7 @@ func ReadConfig(w http.ResponseWriter, r *http.Request) {
 func WriteConfig(w http.ResponseWriter, r *http.Request) {
 	var wc writeconfiguration
 
-	b, _ := ioutil.ReadAll(r.Body)
+	b, _ := io.ReadAll(r.Body)
 
 	if err := json.Unmarshal(b, &wc); err != nil {
 		log.Println(err)
