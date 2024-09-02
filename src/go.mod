@@ -19,7 +19,7 @@ require (
 	github.com/oleiade/reflections v1.0.1
 	github.com/prometheus/client_golang v1.20.0
 	github.com/prometheus/common v0.57.0
-	github.com/rs/cors v1.11.0
+	github.com/rs/cors v1.11.1
 	github.com/sandertv/go-formula/v2 v2.0.0-alpha.7
 	github.com/sirupsen/logrus v1.9.3
 	github.com/x448/float16 v0.8.4
