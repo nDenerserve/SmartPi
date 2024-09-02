@@ -83,8 +83,8 @@ github.com/prometheus/common v0.57.0 h1:Ro/rKjwdq9mZn1K5QPctzh+MA4Lp0BuYk5ZZEVho
 github.com/prometheus/common v0.57.0/go.mod h1:7uRPFSUTbfZWsJ7MHY56sqt7hLQu3bxXHDnNhl8E9qI=
 github.com/prometheus/procfs v0.15.1 h1:YagwOFzUgYfKKHX6Dr+sHT7km/hxC76UB0learggepc=
 github.com/prometheus/procfs v0.15.1/go.mod h1:fB45yRUv8NstnjriLhBQLuOUt+WW4BsoGhij/e3PBqk=
-github.com/rs/cors v1.11.0 h1:0B9GE/r9Bc2UxRMMtymBkHTenPkHDv0CW4Y98GBY+po=
-github.com/rs/cors v1.11.0/go.mod h1:XyqrcTp5zjWr1wsJ8PIRZssZ8b/WMcMf71DJnit4EMU=
+github.com/rs/cors v1.11.1 h1:eU3gRzXLRK57F5rKMGMZURNdIG4EoAmX8k94r9wXWHA=
+github.com/rs/cors v1.11.1/go.mod h1:XyqrcTp5zjWr1wsJ8PIRZssZ8b/WMcMf71DJnit4EMU=
 github.com/saltosystems/winrt-go v0.0.0-20240509164145-4f7860a3bd2b h1:du3zG5fd8snsFN6RBoLA7fpaYV9ZQIsyH9snlk2Zvik=
 github.com/saltosystems/winrt-go v0.0.0-20240509164145-4f7860a3bd2b/go.mod h1:CIltaIm7qaANUIvzr0Vmz71lmQMAIbGJ7cvgzX7FMfA=
 github.com/sandertv/go-formula/v2 v2.0.0-alpha.7 h1:j6ZnqcpnlGG9oBdhfiGgQ4aQAHEKsMlePvOfD+y5O6s=
