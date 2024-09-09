@@ -7,6 +7,7 @@ BINARY_EMETERSERVER=smartpiemeterserver
 BINARY_ETEMPERATUREREADOUT=smartpietemperaturereadout
 BINARY_LORAWAN=smartpilorawan
 BINARY_LTE=smartpilte
+BINARY_CSV=smartpicsvexport
 
 #VERSION=0.3.7
 VERS = $(shell git describe --always --long --dirty)
@@ -33,7 +34,7 @@ endif
 $(info    VERSION is $(VERSION))
 
 
-all: format makedir get buildsmartpireadout buildsmartpidcreadout buildsmartpiserver buildsmartpiftpupload buildsmartpimodbusserver buildsmartpiemeterserver buildsmartpietemperaturereadout buildsmartpilorawan
+all: format makedir get buildsmartpireadout buildsmartpidcreadout buildsmartpiserver buildsmartpiftpupload buildsmartpimodbusserver buildsmartpiemeterserver buildsmartpietemperaturereadout buildsmartpilorawan buildsmartpicsvexport
 
 
 makedir:
@@ -94,8 +95,13 @@ buildsmartpilorawan:
 
 buildsmartpilte:
 	@echo "start building smartpilte..."
-	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_LORAWAN) -ldflags="-X main.appVersion=${VERSION}" modules/lte/lte.go
+	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_LTE) -ldflags="-X main.appVersion=${VERSION}" modules/lte/lte.go
 	@echo "building smartpilte done"
+
+buildsmartpicsvexport:
+	@echo "start building smartpicsvexport..."
+	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_CSV) -ldflags="-X main.appVersion=${VERSION}" csvexport/csvexport.go
+	@echo "building smartpicsvexport done"
 
 install:
 	@echo install
