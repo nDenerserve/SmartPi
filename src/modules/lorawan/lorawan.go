@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -31,7 +32,7 @@ func main() {
 	moduleReset := flag.Bool("reset", false, "hardwarereset of the LoRaWAN module")
 	flag.Parse()
 	if *version {
-		fmt.Println(appVersion)
+		log.Debug(appVersion)
 		os.Exit(0)
 	} else if *devEUI {
 		rn2483.SetName(serialName)
@@ -39,7 +40,7 @@ func main() {
 		rn2483.SetTimeout(time.Millisecond * 500)
 		rn2483.Connect()
 		defer rn2483.Disconnect()
-		fmt.Println(rn2483.MacGetDeviceEUI())
+		log.Debug(rn2483.MacGetDeviceEUI())
 		os.Exit(0)
 	} else if *moduleReset {
 		loraHardwareReset()
@@ -185,12 +186,25 @@ func sendData(moduleconfig *config.Moduleconfig) {
 // echo "out" > /sys/class/gpio/gpio496/direction
 // echo 1 > /sys/class/gpio/gpio496/value
 func loraHardwareReset() {
+	sh := os.Getenv("SHELL")
 	log.Info("lora module hardware reset")
-	exec.Command("echo 496 > /sys/class/gpio/export")
-	exec.Command("echo \"out\" > /sys/class/gpio/gpio496/direction")
-	exec.Command("echo 0 > /sys/class/gpio/gpio496/value")
-	time.Sleep(300 * time.Millisecond)
-	exec.Command("echo 1 > /sys/class/gpio/gpio496/value")
+	cmd := exec.Command(sh, "-c", "echo 496 > /sys/class/gpio/export")
+	log.Debug(cmd)
+	out, _ := cmd.CombinedOutput()
+	log.Debug(fmt.Sprintf("%s", out))
+	cmd = exec.Command(sh, "-c", "echo \"out\" > /sys/class/gpio/gpio496/direction")
+	log.Debug(cmd)
+	out, _ = cmd.CombinedOutput()
+	log.Debug(fmt.Sprintf("%s", out))
+	cmd = exec.Command(sh, "-c", "echo 0 > /sys/class/gpio/gpio496/value")
+	log.Debug(cmd)
+	out, _ = cmd.CombinedOutput()
+	log.Debug(fmt.Sprintf("%s", out))
+	time.Sleep(500 * time.Millisecond)
+	cmd = exec.Command(sh, "-c", "echo 1 > /sys/class/gpio/gpio496/value")
+	log.Debug(cmd)
+	out, _ = cmd.CombinedOutput()
+	log.Debug(fmt.Sprintf("%s", out))
 	time.Sleep(500 * time.Millisecond)
 	log.Info("hardware reset done")
 }
@@ -233,4 +247,33 @@ func joinlora() bool {
 
 	}
 	return true
+}
+
+func getSc16is752GpioNumber() (int, error) {
+
+	var gpionumber = 0
+	var err error
+
+	sh := os.Getenv("SHELL") //fetch default shell
+	log.Debug(sh)
+	cmd := exec.Command(sh, "-c", "ls -la /sys/class/gpio | grep 3f804000.i2c")
+	log.Debug(cmd)
+	out, _ := cmd.CombinedOutput()
+	log.Debug(fmt.Sprintf("%s", out))
+	lines := strings.Split(string(out), "\n")
+	for i, line := range lines {
+		if i == 0 {
+			log.Debug(line)
+			gpio := strings.Split(line, "gpio/gpio")
+			log.Debug(gpio[len(gpio)-1])
+			re := regexp.MustCompile("[0-9]+")
+			gpionumberstring := re.FindString(gpio[len(gpio)-1])
+			log.Debug(gpionumberstring)
+			gpionumber, err = strconv.Atoi(gpionumberstring)
+			if err != nil {
+				return 0, err
+			}
+		}
+	}
+	return gpionumber, nil
 }
