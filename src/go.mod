@@ -17,13 +17,13 @@ require (
 	github.com/nDenerserve/mbserver v0.0.0-20230619125728-ce6fed969ee0
 	github.com/nDenerserve/structs v1.1.0
 	github.com/oleiade/reflections v1.0.1
-	github.com/prometheus/client_golang v1.20.3
-	github.com/prometheus/common v0.55.0
+	github.com/prometheus/client_golang v1.20.4
+	github.com/prometheus/common v0.60.0
 	github.com/rs/cors v1.11.1
 	github.com/sandertv/go-formula/v2 v2.0.0-alpha.7
 	github.com/sirupsen/logrus v1.9.3
 	github.com/x448/float16 v0.8.4
-	golang.org/x/crypto v0.25.0
+	golang.org/x/crypto v0.27.0
 	golang.org/x/exp v0.0.0-20230728194245-b0cb94b80691
 	gopkg.in/ini.v1 v1.67.0
 	periph.io/x/conn/v3 v3.7.0
@@ -48,7 +48,7 @@ require (
 	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07 // indirect
 	github.com/tinygo-org/cbgo v0.0.4 // indirect
 	github.com/tinygo-org/pio v0.0.0-20231216154340-cd888eb58899 // indirect
-	golang.org/x/term v0.22.0 // indirect
+	golang.org/x/term v0.24.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
 )
 
@@ -62,8 +62,8 @@ require (
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
-	golang.org/x/net v0.27.0 // indirect
+	golang.org/x/net v0.29.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 )
