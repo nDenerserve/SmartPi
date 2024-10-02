@@ -15,13 +15,14 @@ import (
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	client "github.com/influxdata/influxdb1-client/v2"
+	"github.com/nDenerserve/SmartPi/models"
 	"github.com/nDenerserve/SmartPi/repository/config"
 	"github.com/nDenerserve/SmartPi/smartpi/network"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func InsertInfluxData(c *config.DCconfig, inputconfig []int, values []float64, power []float64, energyConsumed []float64, energyProduced []float64) {
+func InsertInfluxData(c *config.DCconfig, inputconfig []models.InputType, values []float64, power []float64, energyConsumed []float64, energyProduced []float64) {
 
 	client := influxdb2.NewClient(c.Influxdatabase, c.InfluxAPIToken)
 	defer client.Close()

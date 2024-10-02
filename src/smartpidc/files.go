@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/julien040/go-ternary"
 	"github.com/nDenerserve/SmartPi/models"
 	"github.com/nDenerserve/SmartPi/repository/config"
 	log "github.com/sirupsen/logrus"
@@ -27,7 +26,7 @@ type tMeasurement struct {
 	Values []tValue `json:"values" xml:"values"`
 }
 
-func WriteSharedFile(c *config.DCconfig, inputconfig []int, values []float64, power []float64, energyConsumed []float64, energyProduced []float64) {
+func WriteSharedFile(c *config.DCconfig, inputconfig []models.InputType, values []float64, power []float64, energyConsumed []float64, energyProduced []float64) {
 	var f *os.File
 	var err error
 	var measurement tMeasurement
@@ -41,9 +40,9 @@ func WriteSharedFile(c *config.DCconfig, inputconfig []int, values []float64, po
 	s = append(s, timeStamp)
 
 	for j := range values {
-		if inputconfig[j] != 0 {
+		if inputconfig[j] != models.NotUsed {
 			if !math.IsNaN(values[j]) {
-				measurement.Values = append(measurement.Values, tValue{Input: "input" + strconv.Itoa(j), Value: values[j], Unit: ternary.If(inputconfig[j] == models.Voltage, "V", "A")})
+				measurement.Values = append(measurement.Values, tValue{Input: "input" + strconv.Itoa(j), Value: values[j], Unit: inputconfig[j].UnitSymbol()})
 			}
 
 			s = append(s, fmt.Sprint(values[j]))
