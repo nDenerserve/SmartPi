@@ -245,9 +245,5 @@ func main() {
 		os.Exit(0)
 	}
 
-	go pollSmartPiDC(smartpidcconfig)
-
-	for {
-	}
-
+	pollSmartPiDC(smartpidcconfig)
 }
