@@ -5,6 +5,7 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/nDenerserve/SmartPi/models"
 	"github.com/nDenerserve/SmartPi/repository/config"
 	log "github.com/sirupsen/logrus"
 )
@@ -47,7 +48,7 @@ func publishMQTT(m mqtt.Client, status *bool, t string, v float64) bool {
 	return false
 }
 
-func PublishMQTTReadouts(c *config.DCconfig, mqttclient mqtt.Client, inputconfig []int, values []float64, power []float64, energyConsumed []float64, energyProduced []float64) {
+func PublishMQTTReadouts(c *config.DCconfig, mqttclient mqtt.Client, inputconfig []models.InputType, values []float64, power []float64, energyConsumed []float64, energyProduced []float64) {
 	//[basetopic]/[node]/[keyname]
 	// Let's try to (re-)connect if MQTT connection was lost.
 	if !mqttclient.IsConnected() {

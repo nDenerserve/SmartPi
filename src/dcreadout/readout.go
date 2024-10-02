@@ -15,7 +15,6 @@ import (
 	"github.com/nDenerserve/SmartPi/models"
 	"github.com/nDenerserve/SmartPi/repository/config"
 	"github.com/nDenerserve/SmartPi/smartpidc"
-	"github.com/nDenerserve/SmartPi/utils"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -31,7 +30,7 @@ func pollSmartPiDC(config *config.DCconfig) {
 	var accumulatorEnergyBalanced []float64
 	var accumulatorInput []float64
 	var accumulatorPower []float64
-	inputConfiguration := [4]int{models.NotUsed, models.NotUsed, models.NotUsed, models.NotUsed}
+	inputConfiguration := []models.InputType{models.NotUsed, models.NotUsed, models.NotUsed, models.NotUsed}
 
 	if config.MQTTenabled {
 		mqttclient = smartpidc.NewMQTTClient(config)
@@ -68,7 +67,7 @@ func pollSmartPiDC(config *config.DCconfig) {
 	accumulatorEnergyProduced = make([]float64, powerCalculationCounter)
 	accumulatorEnergyBalanced = make([]float64, powerCalculationCounter)
 
-	log.Debug("InputConfiguration: " + strings.Join(utils.Int2StringSlice(inputConfiguration[:]), "|"))
+	log.Debug("InputConfiguration: " + strings.Join(models.InputTypesAsStrings(inputConfiguration), "|"))
 
 	tick := time.Tick(time.Duration(1000/config.Samplerate) * time.Millisecond)
 
@@ -138,19 +137,19 @@ func pollSmartPiDC(config *config.DCconfig) {
 
 			// Publish readouts to MQTT.
 			if config.MQTTenabled && (config.MQTTpublishintervall == "sample") {
-				smartpidc.PublishMQTTReadouts(config, mqttclient, inputConfiguration[:], values[:], power, energyConsumed, energyProduced)
+				smartpidc.PublishMQTTReadouts(config, mqttclient, inputConfiguration, values[:], power, energyConsumed, energyProduced)
 			}
 
 			log.Debug("SharedFileEnable: " + strconv.FormatBool(config.SharedFileEnabled))
 
 			if config.SharedFileEnabled {
-				smartpidc.WriteSharedFile(config, inputConfiguration[:], values[:], power, energyConsumed, energyProduced)
+				smartpidc.WriteSharedFile(config, inputConfiguration, values[:], power, energyConsumed, energyProduced)
 			}
 
 			// write Database for FastData
 			if config.DatabaseEnabled && (config.DatabaseStoreIntervall == "sample") {
 				log.Debug("Write sample data to database")
-				smartpidc.InsertInfluxData(config, inputConfiguration[:], values[:], power, energyConsumed, energyProduced)
+				smartpidc.InsertInfluxData(config, inputConfiguration, values[:], power, energyConsumed, energyProduced)
 			}
 
 		}
@@ -163,13 +162,13 @@ func pollSmartPiDC(config *config.DCconfig) {
 
 			// Publish readouts to MQTT.
 			if config.MQTTenabled && (config.MQTTpublishintervall == "minute") {
-				smartpidc.PublishMQTTReadouts(config, mqttclient, inputConfiguration[:], values[:], power, accumulatorEnergyConsumed, accumulatorEnergyProduced)
+				smartpidc.PublishMQTTReadouts(config, mqttclient, inputConfiguration, values[:], power, accumulatorEnergyConsumed, accumulatorEnergyProduced)
 				smartpidc.PublishMQTTCalculations(config, mqttclient, accumulatorEnergyBalanced)
 			}
 
 			if config.DatabaseEnabled && (config.DatabaseStoreIntervall == "minute") {
 				log.Debug("Write minute data to database")
-				smartpidc.InsertInfluxData(config, inputConfiguration[:], accumulatorInput[:], accumulatorPower, accumulatorEnergyConsumed, accumulatorEnergyProduced)
+				smartpidc.InsertInfluxData(config, inputConfiguration, accumulatorInput[:], accumulatorPower, accumulatorEnergyConsumed, accumulatorEnergyProduced)
 			}
 
 		}
