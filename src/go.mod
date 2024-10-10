@@ -1,8 +1,8 @@
 module github.com/nDenerserve/SmartPi
 
-go 1.22.0
+go 1.22.6
 
-toolchain go1.22.8
+toolchain go1.23.1
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.5.0
@@ -11,7 +11,6 @@ require (
 	github.com/gorilla/context v1.1.2
 	github.com/gorilla/mux v1.8.1
 	github.com/influxdata/influxdb1-client v0.0.0-20220302092344-a9ab5670611c
-	github.com/julien040/go-ternary v1.0.0
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/msteinert/pam v1.2.0
 	github.com/nDenerserve/RN2483 v0.0.0-20231123165121-2ab5d8f2030a
