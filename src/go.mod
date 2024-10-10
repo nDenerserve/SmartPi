@@ -1,6 +1,6 @@
 module github.com/nDenerserve/SmartPi
 
-go 1.22.6
+go 1.21.4
 toolchain go1.23.2
 
 require (
