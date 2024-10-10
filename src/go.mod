@@ -1,7 +1,7 @@
 module github.com/nDenerserve/SmartPi
 
 go 1.21.4
-toolchain go1.23.2
+toolchain go1.22.8
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.5.0
