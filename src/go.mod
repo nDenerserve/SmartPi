@@ -11,7 +11,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/influxdata/influxdb1-client v0.0.0-20220302092344-a9ab5670611c
 	github.com/julien040/go-ternary v1.0.0
-	github.com/mattn/go-sqlite3 v1.14.22
+	github.com/mattn/go-sqlite3 v1.14.24
 	github.com/msteinert/pam v1.2.0
 	github.com/nDenerserve/RN2483 v0.0.0-20231123165121-2ab5d8f2030a
 	github.com/nDenerserve/go-rpigpio v0.0.0-20160701025123-bce6190607da
