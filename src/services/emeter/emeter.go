@@ -279,7 +279,11 @@ func ping(config *config.Config) {
 
 	// fmt.Printf("%x", config.EmeterSerial)
 
-	datagram = append(datagram, config.EmeterSerial...)
+	// datagram = append(datagram, config.EmeterSerial...)
+	datagram = append(datagram, config.EmeterSerial[3])
+	datagram = append(datagram, config.EmeterSerial[2])
+	datagram = append(datagram, config.EmeterSerial[1])
+	datagram = append(datagram, config.EmeterSerial[0])
 
 	// Ticker measuring time in ms (with overflow)
 	tickerMeasuringTimeByte := make([]byte, 4)
