@@ -12,11 +12,11 @@ Type=simple
 PIDFile=/run/smartpilorawan.pid
 ExecStart=/usr/local/bin/smartpilorawan
 ExecReload=/bin/kill -HUP $MAINPID
-Restart=always
+Restart=on-failure
 RestartSec=2s
 StandardOutput=null
 StandardError=journal
-RemainAfterExit=no
+RemainAfterExit=yes
 User=smartpi
 StartLimitBurst=0
 
