@@ -113,8 +113,8 @@ var (
 			PowerCorrectionFactor: 0.043861,
 		},
 		"600A/100mA": CTFactors{
-			CurrentResistor:       3.75,
-			CurrentClampFactor:    (0.1 / 6),
+			CurrentResistor:       3.74,
+			CurrentClampFactor:    (0.1 / 3),
 			CurrentRmsOffset:      1.032,
 			VoltageRmsOffset:      1.0,
 			PowerCorrectionFactor: 0.019413,
