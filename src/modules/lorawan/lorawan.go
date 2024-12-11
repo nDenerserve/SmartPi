@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"crypto/md5"
 	"encoding/binary"
 	"encoding/csv"
@@ -312,4 +313,30 @@ func getSc16is752GpioNumber() (int, error) {
 func generateLoRaWANApplicationKey(deviceEUI string, salt string) string {
 	hash := md5.Sum([]byte(deviceEUI + salt))
 	return strings.ToUpper(hex.EncodeToString(hash[:]))
+}
+
+func getRaspberrySerial() (string, string) {
+	serial := ""
+	model := ""
+
+	file, err := os.Open("/proc/cpuinfo")
+	utils.Checklog(err)
+
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "Model") {
+			substring := strings.Split(line, ": ")
+			if len(substring) > 1 {
+				model = (substring[len(substring)-1])
+			}
+		} else if strings.Contains(line, "Serial") {
+			substring := strings.Split(line, ": ")
+			if len(substring) > 1 {
+				serial = (substring[len(substring)-1])
+			}
+		}
+	}
+	return serial, model
 }
