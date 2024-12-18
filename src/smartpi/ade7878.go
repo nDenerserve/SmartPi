@@ -239,8 +239,14 @@ func InitADE7878(c *config.Config) (*i2c.Device, error) {
 	//     panic(err)
 	// }
 
+	// Data sheet:
+	// ... The DICOEFF 24-bit signed register is used in the digital integrator algorithm. At power-up or after a reset, its value is 0x000000.
+	// Before turning on the integrator, this register must be initialized with 0xFFF8000. As stated in the Current Waveform Gain Registers
+	// section, the serial ports of the ADE7878 work on 32-, 16-, or 8-bit words. Similar to the registers shown in Figure 35, the DICOEFF
+	// 24-bit signed register is accessed as a 32-bit register with four MSBs padded with 0s and sign extended to 28 bits, which
+	// practically means it is transmitted equal to 0xFFF8000...
 	// 0x43B5 (DICOEFF-REGISTER)
-	err = WriteRegister(d, "DICOEFF", 0xFF, 0xFF, 0x80, 0x00)
+	err = WriteRegister(d, "DICOEFF", 0x0F, 0xFF, 0x80, 0x00)
 	if err != nil {
 		panic(err)
 	}
