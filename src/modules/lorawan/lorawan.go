@@ -25,6 +25,7 @@ import (
 
 var appVersion = "No Version Provided"
 var serialName = "/dev/ttySC0"
+var datarate uint8 = 5
 
 func main() {
 
@@ -79,7 +80,7 @@ func main() {
 
 	// Connect the RN2483 via serial
 	rn2483.Connect()
-	rn2483.MacSetDataRate(5)
+	rn2483.MacSetDataRate(datarate)
 
 	// Make sure the app closes the connection at the end the free the resource
 	defer rn2483.Disconnect()
@@ -241,22 +242,24 @@ func joinlora() bool {
 
 	jointry := 0
 	resetcounter := 0
+	setDatarateCounter := 0
 
 	for {
 
 		log.Debug("wait for next join...")
-		time.Sleep(60 * time.Second)
+		time.Sleep(30 * time.Second)
 		log.Debug("try to join")
 		joined := rn2483.MacJoin(rn2483.OTAA)
 		log.Debug(joined)
 		jointry++
+		setDatarateCounter++
 		log.Debug("trial no: " + fmt.Sprintf("%v", jointry))
 
 		if joined {
 			break
 		} else {
 
-			if jointry == 10 {
+			if jointry == 50 {
 				log.Debug("call reset")
 				loraHardwareReset(496)
 				loraHardwareReset(504)
@@ -265,15 +268,27 @@ func joinlora() bool {
 				resetcounter++
 			}
 
-			if resetcounter == 10 {
-				log.Info("Sleep for a long time ...")
-				time.Sleep(3600 * time.Second)
-				log.Info("Wake up ...")
-				loraHardwareReset(496)
-				loraHardwareReset(504)
-				loraHardwareReset(576)
-				resetcounter = 0
+			if setDatarateCounter == 8 {
+
+				if datarate > 0 {
+					datarate--
+				} else if datarate == 0 {
+					datarate = 5
+				}
+				rn2483.MacSetDataRate(datarate)
+				log.Infof("set datarate to: %s", datarate)
+				setDatarateCounter = 0
 			}
+
+			// if resetcounter == 10 {
+			// 	log.Info("Sleep for a long time ...")
+			// 	time.Sleep(3600 * time.Second)
+			// 	log.Info("Wake up ...")
+			// 	loraHardwareReset(496)
+			// 	loraHardwareReset(504)
+			// 	loraHardwareReset(576)
+			// 	resetcounter = 0
+			// }
 
 		}
 
