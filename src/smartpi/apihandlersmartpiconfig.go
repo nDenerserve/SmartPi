@@ -123,7 +123,34 @@ func WriteConfig(w http.ResponseWriter, r *http.Request) {
 					case int:
 						err = reflections.SetField(configuration.(*config.Config), confignames[i], int(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int()))
 					case bool:
+
 						err = reflections.SetField(configuration.(*config.Config), confignames[i], b2i(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool()))
+					}
+				case "uint8":
+					switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
+					case float64:
+						err = reflections.SetField(configuration.(*config.Config), confignames[i], uint8(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float()))
+					case string:
+						tmpintval, _ := strconv.Atoi(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String())
+						intval := uint8(tmpintval)
+						err = reflections.SetField(configuration.(*config.Config), confignames[i], intval)
+					case int:
+						err = reflections.SetField(configuration.(*config.Config), confignames[i], uint8(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int()))
+					case bool:
+						err = reflections.SetField(configuration.(*config.Config), confignames[i], uint8(b2i(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool())))
+					}
+				case "uint32":
+					switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
+					case float64:
+						err = reflections.SetField(configuration.(*config.Config), confignames[i], uint32(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Float()))
+					case string:
+						tmpintval, _ := strconv.Atoi(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).String())
+						intval := uint32(tmpintval)
+						err = reflections.SetField(configuration.(*config.Config), confignames[i], intval)
+					case int:
+						err = reflections.SetField(configuration.(*config.Config), confignames[i], uint32(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Int()))
+					case bool:
+						err = reflections.SetField(configuration.(*config.Config), confignames[i], uint32(b2i(reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool())))
 					}
 				case "float64":
 					switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
