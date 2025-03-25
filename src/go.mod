@@ -1,7 +1,6 @@
 module github.com/nDenerserve/SmartPi
 
 go 1.22.6
-
 toolchain go1.23.1
 
 require (
@@ -19,18 +18,18 @@ require (
 	github.com/nDenerserve/structs v1.1.0
 	github.com/oleiade/reflections v1.1.0
 	github.com/prometheus/client_golang v1.20.5
-	github.com/prometheus/common v0.61.0
+	github.com/prometheus/common v0.62.0
 	github.com/rs/cors v1.11.1
 	github.com/sandertv/go-formula/v2 v2.0.0-alpha.7
 	github.com/sirupsen/logrus v1.9.3
 	github.com/x448/float16 v0.8.4
-	golang.org/x/crypto v0.31.0
+	golang.org/x/crypto v0.35.0
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
 	gopkg.in/ini.v1 v1.67.0
 	periph.io/x/conn/v3 v3.7.1
-	periph.io/x/devices/v3 v3.7.2
-	periph.io/x/host/v3 v3.8.2
-	tinygo.org/x/bluetooth v0.10.0
+	periph.io/x/devices/v3 v3.7.3
+	periph.io/x/host/v3 v3.8.3
+	tinygo.org/x/bluetooth v0.11.0
 )
 
 require (
@@ -53,15 +52,15 @@ require (
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/saltosystems/winrt-go v0.0.0-20240509164145-4f7860a3bd2b // indirect
-	github.com/soypat/cyw43439 v0.0.0-20240609122733-da9153086796 // indirect
+	github.com/soypat/cyw43439 v0.0.0-20241116210509-ae1ce0e084c5 // indirect
 	github.com/soypat/seqs v0.0.0-20240527012110-1201bab640ef // indirect
 	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07 // indirect
 	github.com/tinygo-org/cbgo v0.0.4 // indirect
 	github.com/tinygo-org/pio v0.0.0-20231216154340-cd888eb58899 // indirect
-	golang.org/x/net v0.32.0 // indirect
+	golang.org/x/net v0.36.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
-	golang.org/x/term v0.27.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/term v0.29.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
-	google.golang.org/protobuf v1.35.2 // indirect
+	google.golang.org/protobuf v1.36.1 // indirect
 )
