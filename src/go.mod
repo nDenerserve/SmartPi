@@ -2,7 +2,7 @@ module github.com/nDenerserve/SmartPi
 
 go 1.23.0
 
-toolchain go1.23.1
+toolchain go1.24.1
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.5.0
@@ -27,7 +27,7 @@ require (
 	golang.org/x/crypto v0.35.0
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
 	gopkg.in/ini.v1 v1.67.0
-	periph.io/x/conn/v3 v3.7.1
+	periph.io/x/conn/v3 v3.7.2
 	periph.io/x/devices/v3 v3.7.3
 	periph.io/x/host/v3 v3.8.3
 	tinygo.org/x/bluetooth v0.11.0
