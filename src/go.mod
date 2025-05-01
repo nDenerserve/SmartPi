@@ -29,7 +29,7 @@ require (
 	gopkg.in/ini.v1 v1.67.0
 	periph.io/x/conn/v3 v3.7.2
 	periph.io/x/devices/v3 v3.7.4
-	periph.io/x/host/v3 v3.8.3
+	periph.io/x/host/v3 v3.8.5
 	tinygo.org/x/bluetooth v0.11.0
 )
 
