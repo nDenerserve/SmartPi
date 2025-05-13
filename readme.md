@@ -80,7 +80,8 @@ For secure 24/7 operation, we recommend that you also create a tmpf for the log 
     echo "tmpfs /var/tmp tmpfs defaults,noatime,mode=1777,size=30M 0 0" | sudo tee -a /etc/fstab
     echo "tmpfs /tmp tmpfs defaults,noatime,mode=1777,size=20M 0 0" | sudo tee -a /etc/fstab
     
-If you want to compile yourself, increase the value for tmp to 200M.
+> [!IMPORTANT]
+> If you want to compile yourself, increase the value for tmp temporary to 200M.
     
 
 ##### Optimize the logfile (for bullseye):
