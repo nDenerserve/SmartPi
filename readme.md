@@ -2,10 +2,12 @@
 
 [![CircleCI](https://circleci.com/gh/nDenerserve/SmartPi.svg?style=svg)](https://circleci.com/gh/nDenerserve/SmartPi)
 
-[SmartPi open source](http://www.enerserve.eu.eu/products/smartpi).
+[SmartPi open source](https://enerserve.eu/products/smartpi/).
+
+The development of the graphical user interface is outsourced and is carried out in the project [SmartPi-GUI](https://github.com/nDenerserve/SmartPi-GUI).
 
 ## Forum
-https://forum.enerserve.eu
+https://forum.enerserve.eu (not online )
 
 ## Installation
 The easiest way is to download a prebuild image.
