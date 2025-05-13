@@ -306,6 +306,7 @@ In order for the `${PATH}` to be updated, you will need to logout.
 > Executables files are located in the bin directory under the SmartPi directory.
 
 Copy the executables to /usr/local/bin and make them executable:
+
     cd /usr/local/bin
     sudo chmod a+x smartpi*
 
