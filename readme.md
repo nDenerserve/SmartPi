@@ -364,3 +364,4 @@ Or you can add it later via webgui:
  * new project structure
  * removed support for sqlite
  * tool to converting data from sqlite to influxDB
+ * split config file in two seperate files
