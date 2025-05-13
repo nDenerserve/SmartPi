@@ -5,6 +5,7 @@
 [SmartPi open source](https://enerserve.eu/products/smartpi/).
 
 The development of the graphical user interface is outsourced and is carried out in the project [SmartPi-GUI](https://github.com/nDenerserve/SmartPi-GUI).
+![Dashboard](https://github.com/nDenerserve/SmartPi/blob/master/img/dashboard.jpg?raw=true)
 
 ## Forum
 https://forum.enerserve.eu (work in progress)
