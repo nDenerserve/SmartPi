@@ -26,36 +26,15 @@
 package utils
 
 import (
-	log "github.com/sirupsen/logrus"
+	"fmt"
+	"os/exec"
 )
 
-func Checkpanic(e error) {
-	if e != nil {
-		panic(e)
+// runCommand runs a shell command and returns its output or an error
+func RunCommand(cmd string, args ...string) (string, error) {
+	out, err := exec.Command(cmd, args...).CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("command failed: %s, output: %s", err, out)
 	}
-}
-
-func Checklog(e error) {
-	if e != nil {
-		log.Println(e)
-	}
-}
-
-// findCommonStrings takes two arrays of strings and returns an array of common strings
-func FindCommonStrings(arr1, arr2 []string) []string {
-	// Create a map to keep track of strings in the first array
-	strMap := make(map[string]bool)
-	for _, str := range arr1 {
-		strMap[str] = true
-	}
-
-	// Iterate through the second array and find common strings
-	var commonStrings []string
-	for _, str := range arr2 {
-		if strMap[str] {
-			commonStrings = append(commonStrings, str)
-		}
-	}
-
-	return commonStrings
+	return string(out), nil
 }

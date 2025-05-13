@@ -8,9 +8,9 @@ const (
 	PhaseN
 )
 
-type Phase uint
+type SmartPiPhase uint
 
-func (p Phase) String() string {
+func (p SmartPiPhase) String() string {
 	switch p {
 	case PhaseA:
 		return "A"
@@ -24,7 +24,7 @@ func (p Phase) String() string {
 	panic("Unreachable")
 }
 
-func (p Phase) PhaseNumber() string {
+func (p SmartPiPhase) PhaseNumber() string {
 	switch p {
 	case PhaseA:
 		return "1"
@@ -38,7 +38,7 @@ func (p Phase) PhaseNumber() string {
 	panic("Unreachable")
 }
 
-func PhaseNameFromNumber(p string) Phase {
+func PhaseNameFromNumber(p string) SmartPiPhase {
 	switch p {
 	case "1":
 		return PhaseA

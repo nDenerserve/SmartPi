@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/nDenerserve/SmartPi/repository/config"
+	"github.com/nDenerserve/SmartPi/smartpi/config"
 	"github.com/nDenerserve/SmartPi/utils"
 	log "github.com/sirupsen/logrus"
 	"periph.io/x/conn/v3/i2c"

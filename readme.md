@@ -5,6 +5,7 @@
 [SmartPi open source](https://enerserve.eu/products/smartpi/).
 
 The development of the graphical user interface is outsourced and is carried out in the project [SmartPi-GUI](https://github.com/nDenerserve/SmartPi-GUI).
+![Dashboard](https://github.com/nDenerserve/SmartPi/blob/master/img/dashboard.jpg?raw=true)
 
 ## Forum
 https://forum.enerserve.eu (work in progress)
@@ -277,13 +278,13 @@ and add:
 
 ##### Install go
 Download the archive and extract it into /usr/local, creating a Go tree in /usr/local/go.
-Currently version 1.20.5 is up to date. You may need to adapt the filename according to latest version.
+Currently version 1.24.3 is up to date. You may need to adapt the filename according to latest version.
 
     cd /usr/local
 
-    sudo wget https://go.dev/dl/go1.21.4.linux-arm64.tar.gz
-    sudo tar -xvzf go1.21.4.linux-arm64.tar.gz
-    sudo rm go1.21.4.linux-arm64.tar.gz
+    sudo wget https://go.dev/dl/go1.24.3.linux-arm64.tar.gz
+    sudo tar -xvzf go1.24.3.linux-arm64.tar.gz
+    sudo rm go1.24.3.linux-arm64.tar.gz
     echo 'PATH="/usr/local/go/bin:${PATH}"' | sudo tee -a /etc/profile
 
 
