@@ -287,7 +287,15 @@ Currently version 1.20.5 is up to date. You may need to adapt the filename accor
 
 In order for the `${PATH}` to be updated, you will need to logout.
 
+##### Install libpam0g-dev
+    sudo apt install libpam0g-dev
+
 ##### Building source
+
+> [!WARNING]
+> Please make sure that there is enough space on the tmpfs file system. 200MB is sufficient.
+> Temporarily this is possible with the following command:
+> mount -o remount,size=200m /tmp
 
     cd ~
     git clone github.com:nDenerserve/SmartPi.git
