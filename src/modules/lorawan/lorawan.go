@@ -18,7 +18,7 @@ import (
 	"github.com/x448/float16"
 
 	rn2483 "github.com/nDenerserve/RN2483"
-	"github.com/nDenerserve/SmartPi/repository/config"
+	"github.com/nDenerserve/SmartPi/smartpi/config"
 	"github.com/nDenerserve/SmartPi/utils"
 	log "github.com/sirupsen/logrus"
 )

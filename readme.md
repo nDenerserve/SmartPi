@@ -11,7 +11,7 @@ https://forum.enerserve.eu
 The easiest way is to download a prebuild image.
 Further information under: https://www.enerserve.eu/service.html
 
-Download Raspbian Bullseye Lite (64bit) (the big bullsyeye should also work) from https://www.raspberrypi.com/software/ and copy it on your SD card. The easiest way is to use the Raspbbery Pi Imager.
+Download Raspbian Bookworm Lite (64bit) (the big bullsyeye should also work) from https://www.raspberrypi.com/software/ and copy it on your SD card. The easiest way is to use the Raspbbery Pi Imager.
 
 Create a user with the name smartpi and a password of your choice. We use the password smart4pi here. During installation, please use the password you have chosen and replace smart4pi with the one you have chosen.
 
@@ -80,7 +80,8 @@ For secure 24/7 operation, we recommend that you also create a tmpf for the log 
     echo "tmpfs /var/tmp tmpfs defaults,noatime,mode=1777,size=30M 0 0" | sudo tee -a /etc/fstab
     echo "tmpfs /tmp tmpfs defaults,noatime,mode=1777,size=20M 0 0" | sudo tee -a /etc/fstab
     
-If you want to compile yourself, increase the value for tmp to 200M.
+> [!IMPORTANT]
+> If you want to compile yourself, increase the value for tmp temporary to 200M.
     
 
 ##### Optimize the logfile (for bullseye):
@@ -274,26 +275,44 @@ and add:
 
 ##### Install go
 Download the archive and extract it into /usr/local, creating a Go tree in /usr/local/go.
-Currently version 1.20.5 is up to date. You may need to adapt the filename according to latest version.
+Currently version 1.24.3 is up to date. You may need to adapt the filename according to latest version.
 
     cd /usr/local
 
-    sudo wget https://go.dev/dl/go1.21.4.linux-arm64.tar.gz
-    sudo tar -xvzf go1.21.4.linux-arm64.tar.gz
-    sudo rm go1.21.4.linux-arm64.tar.gz
+    sudo wget https://go.dev/dl/go1.24.3.linux-arm64.tar.gz
+    sudo tar -xvzf go1.24.3.linux-arm64.tar.gz
+    sudo rm go1.24.3.linux-arm64.tar.gz
     echo 'PATH="/usr/local/go/bin:${PATH}"' | sudo tee -a /etc/profile
 
 
 In order for the `${PATH}` to be updated, you will need to logout.
 
+##### Install libpam0g-dev
+    sudo apt install libpam0g-dev
+
 ##### Building source
+
+> [!WARNING]
+> Please make sure that there is enough space on the tmpfs file system. 200MB is sufficient.
+> Temporarily this is possible with the following command:
+> mount -o remount,size=200m /tmp
 
     cd ~
     git clone github.com:nDenerserve/SmartPi.git
     cd ~/SmartPi/src
     make
 
-NOTE: Executables files are located in the bin directory
+> [!NOTE]
+> Executables files are located in the bin directory under the SmartPi directory.
+
+Copy the executables to /usr/local/bin and make them executable:
+
+    cd /usr/local/bin
+    sudo chmod a+x smartpi*
+
+> [!TIP]
+> If you want to run the SmartPi services as system services, you can copy the files from the Github directory /etc/systemd/system/ into the corresponding directory on the SmartPi, make them executable and adapt them if necessary. 
+> The corresponding services can be started with sudo systemctl enable/start/stop/disable [name of the service to be executed]
 
 
 ##### Add Api-Key to config-file
