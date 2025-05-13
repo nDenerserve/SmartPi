@@ -1,0 +1,48 @@
+[device]
+i2c_device                 = /dev/i2c-1
+power_frequency            = 50
+samplerate                 = 1
+integrator                 = false
+storesamples               = false
+ct_type_1                  = YHDC_SCT013
+ct_type_2                  = YHDC_SCT013
+ct_type_3                  = YHDC_SCT013
+ct_type_4                  = YHDC_SCT013
+ct_type_1_primary_current  = 100
+ct_type_2_primary_current  = 100
+ct_type_3_primary_current  = 100
+ct_type_4_primary_current  = 100
+change_current_direction_1 = false
+change_current_direction_2 = false
+change_current_direction_3 = false
+change_current_direction_4 = false
+measure_current_1          = true
+measure_current_2          = true
+measure_current_3          = true
+measure_current_4          = true
+measure_voltage_1          = true
+measure_voltage_2          = true
+measure_voltage_3          = true
+voltage_1                  = 230
+voltage_2                  = 230
+voltage_3                  = 230
+calibrationfactorI_1       = 1
+calibrationfactorI_2       = 1
+calibrationfactorI_3       = 1
+calibrationfactorI_4       = 1
+calibrationfactorU_1       = 1
+calibrationfactorU_2       = 1
+calibrationfactorU_3       = 1
+
+[gui]
+gui_max_current_1 = 100
+gui_max_current_2 = 100
+gui_max_current_3 = 100
+gui_max_current_4 = 100
+
+[emeter]
+emeter_enabled           = true
+emeter_multicast_address = 239.12.255.254
+emeter_multicast_port    = 9522
+emeter_susy_id           = 270
+emeter_serial            = 1247304338

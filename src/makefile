@@ -58,10 +58,10 @@ buildsmartpireadout:
 	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_READOUT) -ldflags="-X main.appVersion=${VERSION}" readout/*.go
 	@echo "building smartpireadout done"
 
-buildsmartpidcreadout:
-	@echo "start building smartpidcreadout..."
-	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_SMARTPIDC) -ldflags="-X main.appVersion=${VERSION}" dcreadout/readout.go
-	@echo "building smartpidcreadout done"
+# buildsmartpidcreadout:
+# 	@echo "start building smartpidcreadout..."
+# 	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_SMARTPIDC) -ldflags="-X main.appVersion=${VERSION}" dcreadout/readout.go
+# 	@echo "building smartpidcreadout done"
 
 buildsmartpiserver:
 	@echo "start building smartpiserver..."

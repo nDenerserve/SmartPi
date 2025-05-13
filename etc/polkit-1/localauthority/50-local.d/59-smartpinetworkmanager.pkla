@@ -1,0 +1,6 @@
+[NetworkManager.settings.modify.system allow some user]
+Identity=unix-user:smartpi;
+Action=org.freedesktop.NetworkManager.settings.modify.system
+ResultAny=yes
+ResultInactive=yes
+ResultActive=yes

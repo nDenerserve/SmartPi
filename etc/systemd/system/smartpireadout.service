@@ -5,6 +5,7 @@ After=syslog.target network.target remote-fs.target nss-lookup.target systemd-jo
 Before= smartpiserver.service smartpimodbusserver.service smartpiemeterserver.service
 
 [Service]
+PermissionsStartOnly=True
 Type=simple
 PIDFile=/run/smartpireadout.pid
 ExecStart=/usr/local/bin/smartpireadout
@@ -12,8 +13,10 @@ ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 StandardOutput=null
 StandardError=journal
-RemainAfterExit=no
+RemainAfterExit=yes
 User=smartpi
+RuntimeDirectory=smartpi
+RuntimeDirectoryMode=755
 
 [Install]
 WantedBy=multi-user.target 
