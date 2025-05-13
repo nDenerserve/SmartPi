@@ -6,8 +6,8 @@ BINARY_MODBUSSERVER=smartpimodbusserver
 BINARY_EMETERSERVER=smartpiemeterserver
 BINARY_ETEMPERATUREREADOUT=smartpietemperaturereadout
 BINARY_LORAWAN=smartpilorawan
-BINARY_LTE=smartpilte
-BINARY_CSV=smartpicsvexport
+BINARY_EXPORT=smartpiexport
+BINARY_SQLITE2INFLUXDB=smartpisqlite2influxdb
 
 #VERSION=0.3.7
 VERS = $(shell git describe --always --long --dirty)
@@ -34,7 +34,7 @@ endif
 $(info    VERSION is $(VERSION))
 
 
-all: format makedir get buildsmartpireadout buildsmartpidcreadout buildsmartpiserver buildsmartpiftpupload buildsmartpimodbusserver buildsmartpiemeterserver buildsmartpietemperaturereadout buildsmartpilorawan buildsmartpicsvexport
+all: format makedir get buildsmartpireadout buildsmartpiserver buildsmartpiftpupload buildsmartpimodbusserver buildsmartpiemeterserver buildsmartpietemperaturereadout buildsmartpilorawan buildsmartpiexport buildsmartpisqlite2influxdb
 
 
 makedir:
@@ -55,7 +55,7 @@ format:
 
 buildsmartpireadout:
 	@echo "start building smartpireadout..."
-	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_READOUT) -ldflags="-X main.appVersion=${VERSION}" readout/*.go
+	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_READOUT) -ldflags="-X main.appVersion=${VERSION}" smartpiac/readout.go
 	@echo "building smartpireadout done"
 
 # buildsmartpidcreadout:
@@ -65,22 +65,22 @@ buildsmartpireadout:
 
 buildsmartpiserver:
 	@echo "start building smartpiserver..."
-	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_SERVER) -ldflags="-X main.appVersion=${VERSION}" server/server.go
+	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_SERVER) -ldflags="-X main.appVersion=${VERSION}" smartpi/server/server.go
 	@echo "building smartpiserver done"
 
 buildsmartpiftpupload:
 	@echo "start building smartpiftpupload..."
-	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_FTPUPLOAD) -ldflags="-X main.appVersion=${VERSION}" ftpupload/ftpupload.go
+	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_FTPUPLOAD) -ldflags="-X main.appVersion=${VERSION}" smartpiac/ftp/ftpupload.go
 	@echo "building smartpiftpupload done"
 
 buildsmartpimodbusserver:
 	@echo "start building smartpimodbusserver..."
-	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_MODBUSSERVER) -ldflags="-X main.appVersion=${VERSION}" services/modbus/modbusserver.go
+	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_MODBUSSERVER) -ldflags="-X main.appVersion=${VERSION}" smartpiac/connectivity/modbus/modbusserver.go
 	@echo "building smartpimodbusserver done"
 
 buildsmartpiemeterserver:
 	@echo "start building smartpiemeterserver..."
-	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_EMETERSERVER) -ldflags="-X main.appVersion=${VERSION}" services/emeter/emeter.go
+	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_EMETERSERVER) -ldflags="-X main.appVersion=${VERSION}" smartpiac/connectivity/energymeter/*.go
 	@echo "building smartpiemeterserver done"
 
 buildsmartpietemperaturereadout:
@@ -93,15 +93,19 @@ buildsmartpilorawan:
 	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_LORAWAN) -ldflags="-X main.appVersion=${VERSION}" modules/lorawan/lorawan.go
 	@echo "building smartpilorawan done"
 
-buildsmartpilte:
-	@echo "start building smartpilte..."
-	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_LTE) -ldflags="-X main.appVersion=${VERSION}" modules/lte/lte.go
-	@echo "building smartpilte done"
+buildsmartpiexport:
+	@echo "start building smartpiexport..."
+	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_EXPORT) -ldflags="-X main.appVersion=${VERSION}" smartpiac/export/export.go
+	@echo "building smartpiexport done"
 
-buildsmartpicsvexport:
-	@echo "start building smartpicsvexport..."
-	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_CSV) -ldflags="-X main.appVersion=${VERSION}" csvexport/csvexport.go
-	@echo "building smartpicsvexport done"
+buildsmartpisqlite2influxdb:
+	@echo "start building smartpisqlite2influxdb..."
+	$(GOBUILD) -o ../bin$(LBITS)/$(BINARY_SQLITE2INFLUXDB) -ldflags="-X main.appVersion=${VERSION}" smartpiac/convert/sqlite2influxdb.go
+	@echo "building smartpisqlite2influxdb done"
+
+
+
+	
 
 install:
 	@echo install
