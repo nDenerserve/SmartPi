@@ -357,3 +357,10 @@ Or you can add it later via webgui:
  ### 06/19/23
  * added support for SMA energy meter (test)
  * SmartPi can replace the SMA energy meter
+
+ ### 05/12/25
+ * new GUI
+ * GUI use only influxDB
+ * new project structure
+ * removed support for sqlite
+ * tool to converting data from sqlite to influxDB
