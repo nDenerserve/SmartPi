@@ -310,6 +310,10 @@ Copy the executables to /usr/local/bin and make them executable:
     cd /usr/local/bin
     sudo chmod a+x smartpi*
 
+> [!TIP]
+> If you want to run the SmartPi services as system services, you can copy the files from the Github directory /etc/systemd/system/ into the corresponding directory on the SmartPi, make them executable and adapt them if necessary. 
+> The corresponding services can be started with sudo systemctl enable/start/stop/disable [name of the service to be executed]
+
 
 ##### Add Api-Key to config-file
 
