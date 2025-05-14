@@ -85,6 +85,13 @@ For secure 24/7 operation, we recommend that you also create a tmpf for the log 
     
 > [!IMPORTANT]
 > If you want to compile yourself, increase the value for tmp temporary to 200M.
+> Temporarily increase the memory with the following command:
+> sudo mount -o remount,size=200m /tmp
+
+> [!WARNING]
+> If you want to update the system, you will need more space for /var/tmp.
+> Temporarily increase the memory with the following command:
+> sudo mount -o remount,size=200m /var/tmp
     
 
 ##### Optimize the logfile (for bullseye):
@@ -298,7 +305,7 @@ In order for the `${PATH}` to be updated, you will need to logout.
 > [!WARNING]
 > Please make sure that there is enough space on the tmpfs file system. 200MB is sufficient.
 > Temporarily this is possible with the following command:
-> mount -o remount,size=200m /tmp
+> sudo mount -o remount,size=200m /tmp
 
     cd ~
     git clone github.com:nDenerserve/SmartPi.git
