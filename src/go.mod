@@ -7,7 +7,7 @@ require (
 	github.com/goburrow/serial v0.1.0
 	github.com/nDenerserve/RN2483 v0.0.0-20231123165121-2ab5d8f2030a
 	github.com/oleiade/reflections v1.1.0
-	github.com/prometheus/common v0.63.0
+	github.com/prometheus/common v0.64.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/x448/float16 v0.8.4
 	periph.io/x/conn/v3 v3.7.2
