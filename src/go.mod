@@ -54,7 +54,7 @@ require (
 	github.com/prometheus/client_golang v1.22.0
 	github.com/rs/cors v1.11.1
 	go.etcd.io/etcd v3.3.27+incompatible
-	golang.org/x/crypto v0.38.0
+	golang.org/x/crypto v0.39.0
 	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6
 	golang.org/x/sys v0.33.0 // indirect
 	gopkg.in/ini.v1 v1.67.0
