@@ -14,7 +14,6 @@ import (
 type Moduleconfig struct {
 	// [base]
 	I2CDevice string
-	Webserver bool
 	Vfs       bool
 	LogLevel  log.Level
 
@@ -54,7 +53,6 @@ func (p *Moduleconfig) ReadParameterFromFile() {
 
 	// [base]
 	p.I2CDevice = mcfg.Section("base").Key("i2c_device").MustString("/dev/i2c-1")
-	p.Webserver = mcfg.Section("base").Key("webserver").MustBool(true)
 	p.Vfs = mcfg.Section("base").Key("vfs").MustBool(true)
 	p.LogLevel, merr = log.ParseLevel(mcfg.Section("base").Key("loglevel").MustString("info"))
 	if merr != nil {
@@ -96,7 +94,6 @@ func (p *Moduleconfig) SaveParameterToFile() {
 
 	// [base]
 	_, merr = mcfg.Section("base").NewKey("i2c_device", p.I2CDevice)
-	_, merr = mcfg.Section("base").NewKey("webserver", strconv.FormatBool(p.Webserver))
 	_, merr = mcfg.Section("base").NewKey("vfs", strconv.FormatBool(p.Vfs))
 	_, merr = mcfg.Section("base").NewKey("loglevel", p.LogLevel.String())
 

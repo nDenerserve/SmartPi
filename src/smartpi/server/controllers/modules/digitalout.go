@@ -2,7 +2,6 @@ package modulescontrollers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	"github.com/nDenerserve/SmartPi/smartpi/server/serverutils"
 	"github.com/nDenerserve/SmartPi/utils"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/exp/slices"
 )
 
 func (c ModulesController) SetDigitalout(mconf *config.Moduleconfig, conf *config.SmartPiConfig) http.HandlerFunc {
@@ -33,6 +33,7 @@ func (c ModulesController) SetDigitalout(mconf *config.Moduleconfig, conf *confi
 		vars := mux.Vars(r)
 		address := utils.Reverse(vars["address"])
 		portstring := vars["port"]
+		log.Debug("SetDigitalout: Vars: ", vars, " Address: ", address, " Portstring: ", portstring)
 
 		addr, err := strconv.ParseUint(address, 2, 8)
 		if err != nil {
@@ -43,9 +44,8 @@ func (c ModulesController) SetDigitalout(mconf *config.Moduleconfig, conf *confi
 
 		a := ^uint8(addr + 0xD8)
 
-		if utils.CheckAllowedUser(user.Role, mconf.AllowedDigitalOutUser) {
+		if slices.Contains(mconf.AllowedDigitalOutUser, user.Name) {
 
-			log.Debug("Address: " + fmt.Sprintf("%02X", a) + "    Port: " + portstring)
 			portstring = strings.TrimSpace(portstring)
 			if portstring[len(portstring)-1:] == ";" {
 				portstring = portstring[:len(portstring)-1]
@@ -94,6 +94,8 @@ func (c ModulesController) ReadDigitalout(mconf *config.Moduleconfig, conf *conf
 
 		user, err := serverutils.DecryptUserdataFromToken(r, conf)
 
+		log.Debug("ReadDigitalout: user: ", user, " mconf.AllowedDigitalOutUser: ", mconf.AllowedDigitalOutUser)
+
 		if err != nil {
 			error.Message = err.Error()
 			serverutils.RespondWithError(w, http.StatusUnauthorized, error)
@@ -102,6 +104,8 @@ func (c ModulesController) ReadDigitalout(mconf *config.Moduleconfig, conf *conf
 
 		vars := mux.Vars(r)
 		address := vars["address"]
+
+		log.Debug("SetDigitalout: Vars: ", vars, " Address: ", address)
 
 		addr, err := strconv.ParseUint(address, 2, 8)
 
@@ -113,7 +117,7 @@ func (c ModulesController) ReadDigitalout(mconf *config.Moduleconfig, conf *conf
 
 		a := ^uint8(addr + 0xD8)
 
-		if utils.CheckAllowedUser(user.Role, mconf.AllowedDigitalOutUser) {
+		if slices.Contains(mconf.AllowedDigitalOutUser, user.Name) {
 
 			moduleRepo := modulesRepository.ModulesRepository{}
 

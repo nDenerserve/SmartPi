@@ -77,6 +77,8 @@ func Reverse(s string) string {
 
 func CheckAllowedUser(userRole []string, configRole []string) bool {
 
+	log.Debug("CheckAllowedUser: userRole: ", userRole, " configRole: ", configRole)
+
 	userAllowed := false
 
 	for _, uv := range userRole {
