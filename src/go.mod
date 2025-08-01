@@ -51,7 +51,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.28
 	github.com/msteinert/pam v1.2.0
 	github.com/nDenerserve/mbserver v0.0.0-20230619125728-ce6fed969ee0
-	github.com/prometheus/client_golang v1.22.0
+	github.com/prometheus/client_golang v1.23.0
 	github.com/rs/cors v1.11.1
 	go.etcd.io/etcd v3.3.27+incompatible
 	golang.org/x/crypto v0.39.0
