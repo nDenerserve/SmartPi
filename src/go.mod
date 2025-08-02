@@ -48,7 +48,7 @@ require (
 	github.com/influxdata/influxdb1-client v0.0.0-20220302092344-a9ab5670611c
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/labstack/gommon v0.4.2
-	github.com/mattn/go-sqlite3 v1.14.28
+	github.com/mattn/go-sqlite3 v1.14.30
 	github.com/msteinert/pam v1.2.0
 	github.com/nDenerserve/mbserver v0.0.0-20230619125728-ce6fed969ee0
 	github.com/prometheus/client_golang v1.23.0
