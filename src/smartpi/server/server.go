@@ -19,6 +19,7 @@ import (
 
 	"github.com/nDenerserve/SmartPi/smartpi/config"
 	"github.com/nDenerserve/SmartPi/smartpi/server/controllers"
+	modulescontrollers "github.com/nDenerserve/SmartPi/smartpi/server/controllers/modules"
 	"github.com/nDenerserve/SmartPi/smartpi/server/serverutils"
 )
 
@@ -57,13 +58,15 @@ func main() {
 
 	smartpiConfig := config.NewSmartPiConfig()
 	smartpiACConfig := config.NewSmartPiACConfig()
-	// moduleConfig := config.NewModuleconfig()
+	moduleConfig := config.NewModuleconfig()
 	controller := controllers.Controller{}
+	modulesController := modulescontrollers.ModulesController{}
 
 	log.SetLevel(smartpiConfig.LogLevel)
 
 	go configWatcher(smartpiConfig)
 	go acConfigWatcher(smartpiACConfig)
+	go moduleConfigWatcher(moduleConfig)
 
 	router := mux.NewRouter()
 
@@ -104,6 +107,8 @@ func main() {
 	router.HandleFunc("/api/v1/smartpiac/csvexport/start/{start}/stop/{stop}", controller.SmartPiCsvExport(smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/smartpiac/csvexport/start/{start}/stop/{stop}/aggregate/{aggregate}", controller.SmartPiCsvExport(smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/smartpiac/livedata/value/{valueId}/{format}", controller.SmartPiLiveValues(smartpiConfig)).Methods("GET")
+	router.HandleFunc("/api/v1/module/digitalout/{address}/{port}", serverutils.TokenVerifyMiddleWare(modulesController.SetDigitalout(moduleConfig, smartpiConfig), smartpiConfig)).Methods("PUT")
+	router.HandleFunc("/api/v1/module/digitalout/{address}", serverutils.TokenVerifyMiddleWare(modulesController.ReadDigitalout(moduleConfig, smartpiConfig), smartpiConfig)).Methods("GET")
 
 	router.PathPrefix("/assets").Handler(http.FileServer(http.Dir(smartpiConfig.DocRoot + "/")))
 	// Catch-all: Serve our JavaScript application's entry-point (index.html).
@@ -207,4 +212,37 @@ func acConfigWatcher(acConfig *config.SmartPiACConfig) {
 	}
 	<-done
 	log.Debug("acConfig watcher init done 3")
+}
+
+func moduleConfigWatcher(moduleConfig *config.Moduleconfig) {
+	log.Debug("Start SmartPi moduleConfig watcher")
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer watcher.Close()
+	log.Debug("moduleConfig watcher init done 1")
+	done := make(chan bool)
+	go func() {
+		for {
+			select {
+			case event := <-watcher.Events:
+				log.Println("event:", event)
+				if event.Op&fsnotify.Write == fsnotify.Write {
+					log.Println("modified file:", event.Name)
+					moduleConfig.ReadParameterFromFile()
+				}
+			case err := <-watcher.Errors:
+				log.Println("error:", err)
+			}
+		}
+	}()
+
+	log.Debug("moduleConfig watcher init done 2")
+	err = watcher.Add("/etc/smartpiModules")
+	if err != nil {
+		log.Fatal(err)
+	}
+	<-done
+	log.Debug("moduleConfig watcher init done 3")
 }
