@@ -14,7 +14,6 @@ require (
 )
 
 require (
-	github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -33,9 +32,8 @@ require (
 	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	golang.org/x/net v0.41.0 // indirect
+	golang.org/x/net v0.42.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
-	golang.org/x/tools v0.33.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 )
 
@@ -56,11 +54,10 @@ require (
 	github.com/prometheus/client_golang v1.23.0
 	github.com/rs/cors v1.11.1
 	go.etcd.io/etcd v3.3.27+incompatible
-	golang.org/x/crypto v0.40.0
+	golang.org/x/crypto v0.41.0
 	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6
-	golang.org/x/sys v0.34.0 // indirect
+	golang.org/x/sys v0.35.0 // indirect
 	gopkg.in/ini.v1 v1.67.0
-	honnef.co/go/tools v0.6.1
 	periph.io/x/devices/v3 v3.7.4
 	periph.io/x/host/v3 v3.8.5
 )
