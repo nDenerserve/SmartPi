@@ -1,6 +1,6 @@
 module github.com/nDenerserve/SmartPi
 
-go 1.23.2
+go 1.24.0
 
 require (
 	github.com/fatih/structs v1.1.0
@@ -56,9 +56,9 @@ require (
 	github.com/prometheus/client_golang v1.23.2
 	github.com/rs/cors v1.11.1
 	go.etcd.io/etcd v3.3.27+incompatible
-	golang.org/x/crypto v0.41.0
+	golang.org/x/crypto v0.42.0
 	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6
-	golang.org/x/sys v0.35.0 // indirect
+	golang.org/x/sys v0.36.0 // indirect
 	gopkg.in/ini.v1 v1.67.0
 	periph.io/x/devices/v3 v3.7.4
 	periph.io/x/host/v3 v3.8.5
