@@ -284,16 +284,17 @@ and add:
 
 
 ##### Install go
+
 Download the archive and extract it into /usr/local, creating a Go tree in /usr/local/go.
-Currently version 1.24.3 is up to date. You may need to adapt the filename according to latest version.
+
+Go version 1.24.0 or newer is supported. You may need to adapt the filename according to latest version.
 
     cd /usr/local
 
-    sudo wget https://go.dev/dl/go1.24.3.linux-arm64.tar.gz
-    sudo tar -xvzf go1.24.3.linux-arm64.tar.gz
-    sudo rm go1.24.3.linux-arm64.tar.gz
+    sudo wget https://go.dev/dl/go1.25.1.linux-arm64.tar.gz
+    sudo tar -xvzf go1.25.1.linux-arm64.tar.gz
+    sudo rm go1.25.1.linux-arm64.tar.gz
     echo 'PATH="/usr/local/go/bin:${PATH}"' | sudo tee -a /etc/profile
-
 
 In order for the `${PATH}` to be updated, you will need to logout.
 
