@@ -99,7 +99,7 @@ func pollSmartPi(acConfig *config.SmartPiACConfig, config *config.SmartPiConfig,
 	}
 
 	if config.SmartpicloudEnabled {
-		smartpicloudMQTTclient = smartpiacConnectivity.NewMQTTClient(config)
+		smartpicloudMQTTclient = smartpiacConnectivity.NewSmartPicloudMQTTClient(config)
 	}
 
 	accumulator := makeReadoutAccumulator()
@@ -159,7 +159,7 @@ func pollSmartPi(acConfig *config.SmartPiACConfig, config *config.SmartPiConfig,
 			}
 			// Publish readouts to SmartPicloud via MQTT.
 			if config.SmartpicloudEnabled {
-				smartpiacConnectivity.PublishMQTTReadouts(config, smartpicloudMQTTclient, &readouts, wattHourBalanced)
+				smartpiacConnectivity.PublishSmartPicloudMQTTReadouts(config, smartpicloudMQTTclient, &readouts, wattHourBalanced)
 			}
 
 			// Update InfluxDB (FastMeasurement) database.
@@ -212,7 +212,7 @@ func pollSmartPi(acConfig *config.SmartPiACConfig, config *config.SmartPiConfig,
 			}
 			// Publish readouts to SmartPicloud via MQTT.
 			if config.SmartpicloudEnabled {
-				smartpiacConnectivity.PublishMQTTCalculations(config, smartpicloudMQTTclient, consumedWattHourBalanced60s, producedWattHourBalanced60s, consumedCounter, producedCounter)
+				smartpiacConnectivity.PublishSmartPicloudMQTTCalculations(config, smartpicloudMQTTclient, consumedWattHourBalanced60s, producedWattHourBalanced60s, consumedCounter, producedCounter)
 			}
 		}
 
