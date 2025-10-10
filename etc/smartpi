@@ -49,6 +49,17 @@ mqtt_password      =
 mqtt_topic         = 
 mqtt_qos           = 0
 
+[smartpicloud]
+smartpicloud_enabled            = false
+smartpicloud_username           = 
+smartpicloud_mqtt_broker_scheme = tcp://
+smartpicloud_mqtt_broker_url    = 
+smartpicloud_mqtt_broker_port   = 
+smartpicloud_mqtt_username      = 
+smartpicloud_mqtt_password      = 
+smartpicloud_mqtt_topic         = 
+smartpicloud_mqtt_qos           = 0
+
 [modbus]
 modbus_rtu_enabled   = false
 modbus_tcp_enabled   = false
