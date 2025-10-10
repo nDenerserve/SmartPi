@@ -229,7 +229,7 @@ func (p *SmartPiConfig) ReadParameterFromFile() {
 	p.SmartpicloudMQTTbrokerport = cfg.Section("smartpicloud").Key("smartpicloud_mqtt_broker_port").String()
 	p.SmartpicloudMQTTuser = cfg.Section("smartpicloud").Key("smartpicloud_mqtt_username").String()
 	p.SmartpicloudMQTTpass = cfg.Section("smartpicloud").Key("smartpicloud_mqtt_password").String()
-	p.SmartpicloudMQTTtopic = cfg.Section("smartpicloud").Key("smartpicloud_mqtt_topic").String()
+	p.SmartpicloudMQTTtopic = "smartpiac/" + cfg.Section("smartpicloud").Key("smartpicloud_mqtt_username").String()
 	p.SmartpicloudMQTTQoS = uint8(cfg.Section("smartpicloud").Key("smartpicloud_mqtt_qos").MustUint(0))
 
 	// [modbus slave]
@@ -307,7 +307,6 @@ func (p *SmartPiConfig) SaveParameterToFile() {
 	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_broker_port", p.MQTTbrokerport)
 	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_username", p.MQTTuser)
 	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_password", p.MQTTpass)
-	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_topic", p.MQTTtopic)
 	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_qos", strconv.FormatUint(uint64(p.MQTTQoS), 10))
 
 	// [modbus slave]
