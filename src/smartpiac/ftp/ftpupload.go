@@ -28,7 +28,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/tls"
 	"flag"
 	"fmt"
 	"os"
@@ -82,12 +81,11 @@ func main() {
 		startDate = time.Now().AddDate(0, 0, -1)
 	}
 
-	tlsConfig := &tls.Config{
-		// Enable TLS 1.2.
-		InsecureSkipVerify: true,
-		MaxVersion:         tls.VersionTLS12,
-	}
-	ftpdialoption := ftp.DialWithExplicitTLS(tlsConfig)
+	// tlsConfig := &tls.Config{
+	// 	InsecureSkipVerify: true,
+	// 	// MaxVersion:         tls.VersionTLS12,
+	// }
+	// ftpdialoption := ftp.DialWithExplicitTLS(tlsConfig)
 
 	// startDate = startDate.UTC()
 	endDate := time.Now()
@@ -97,7 +95,7 @@ func main() {
 
 	result, _ := smartpiacDatabase.ReadData(smartpiConfig, startDate, endDate)
 
-	if smartpiConfig.FTPcsv {
+	if smartpiConfig.FTPxml {
 
 		xml, _ := smartpiacUtils.CreateLegacyXML(result)
 		log.Debug(xml)
@@ -108,64 +106,8 @@ func main() {
 			ftpserver = ftpserver + ":21"
 		}
 
-		client, err := ftp.Dial(ftpserver, ftpdialoption)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = client.Login(smartpiConfig.FTPuser, smartpiConfig.FTPpass)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		ftp_path := smartpiConfig.FTPpath
-		pathlist := strings.Split(ftp_path, "/")
-		for i := 0; i < len(pathlist); i++ {
-			if len(pathlist[i]) == 0 {
-				pathlist = append(pathlist[:i], pathlist[i+1:]...)
-			}
-		}
-
-		workingpath := "/"
-		createpath := ""
-
-		for j := 0; j < len(pathlist); j++ {
-			if j > 0 {
-				workingpath = workingpath + pathlist[j-1] + "/"
-			}
-			createpath = createpath + "/" + pathlist[j]
-		}
-
-		filename := time.Now().Format("20060102150405") + "_" + smartpiConfig.Serial + ".csv"
-		err = client.Stor(createpath+"/"+filename, file)
-		if err != nil {
-			panic(err)
-		} else {
-			err = os.WriteFile("/var/smartpi/csvftp", []byte(endDate.Local().Format("2006-01-02 15:04:05")), 0644)
-			if err != nil {
-				panic(err)
-			}
-			if err := client.Quit(); err != nil {
-				log.Fatal(err)
-			}
-
-		}
-
-	}
-
-	if smartpiConfig.FTPxml {
-
-		csv, _ := smartpiacUtils.CreateLegacyCSV(result, smartpiConfig.CSVdecimalpoint)
-		log.Debug(csv)
-
-		file := bytes.NewBufferString(csv)
-
-		ftpserver := smartpiConfig.FTPserver
-		if !strings.Contains(ftpserver, ":") {
-			ftpserver = ftpserver + ":21"
-		}
-
-		client, err := ftp.Dial(ftpserver, ftpdialoption)
+		client, err := ftp.Dial(ftpserver)
+		// client, err := ftp.Dial(ftpserver, ftpdialoption)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -194,6 +136,64 @@ func main() {
 		}
 
 		filename := time.Now().Format("20060102150405") + "_" + smartpiConfig.Serial + ".xml"
+		err = client.Stor(createpath+"/"+filename, file)
+		if err != nil {
+			panic(err)
+		} else {
+			err = os.WriteFile("/var/smartpi/csvftp", []byte(endDate.Local().Format("2006-01-02 15:04:05")), 0644)
+			if err != nil {
+				panic(err)
+			}
+			if err := client.Quit(); err != nil {
+				log.Fatal(err)
+			}
+
+		}
+
+	}
+
+	if smartpiConfig.FTPcsv {
+
+		csv, _ := smartpiacUtils.CreateLegacyCSV(result, smartpiConfig.CSVdecimalpoint)
+		log.Debug(csv)
+
+		file := bytes.NewBufferString(csv)
+
+		ftpserver := smartpiConfig.FTPserver
+		if !strings.Contains(ftpserver, ":") {
+			ftpserver = ftpserver + ":21"
+		}
+
+		client, err := ftp.Dial(ftpserver)
+		// client, err := ftp.Dial(ftpserver, ftpdialoption)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = client.Login(smartpiConfig.FTPuser, smartpiConfig.FTPpass)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		ftp_path := smartpiConfig.FTPpath
+		pathlist := strings.Split(ftp_path, "/")
+		for i := 0; i < len(pathlist); i++ {
+			if len(pathlist[i]) == 0 {
+				pathlist = append(pathlist[:i], pathlist[i+1:]...)
+			}
+		}
+
+		workingpath := "/"
+		createpath := ""
+
+		for j := 0; j < len(pathlist); j++ {
+			if j > 0 {
+				workingpath = workingpath + pathlist[j-1] + "/"
+			}
+			createpath = createpath + "/" + pathlist[j]
+		}
+
+		filename := time.Now().Format("20060102150405") + "_" + smartpiConfig.Serial + ".csv"
 		err = client.Stor(createpath+"/"+filename, file)
 		if err != nil {
 			panic(err)
