@@ -107,6 +107,12 @@ var (
 			CurrentRmsOffset:      1.032,
 			VoltageRmsOffset:      1.0,
 			PowerCorrectionFactor: 0.019413,
+		}, "ROGOWSKI": CTFactors{
+			CurrentResistor:       1.0,
+			CurrentClampFactor:    1.0,
+			CurrentRmsOffset:      1.010725941,
+			VoltageRmsOffset:      1.0,
+			PowerCorrectionFactor: 0.043861,
 		},
 	}
 )
@@ -424,9 +430,12 @@ func ReadCurrent(d *i2c.Device, c *config.SmartPiACConfig, phase models.SmartPiP
 		outcome := float64(DeviceFetchInt(d, 4, command))
 		cr := CTTypes[c.CTType[phase]].CurrentResistor
 		var ccf float64
-		if c.CTType[phase] == "YHDC_SCT013" || c.CTType[phase] == "YHDC_SCT4333QL" || c.CTType[phase] == "400A/033V" || c.CTType[phase] == "600A/100mA" {
+		switch c.CTType[phase] {
+		case "YHDC_SCT013", "YHDC_SCT4333QL", "400A/033V", "600A/100mA":
 			ccf = CTTypes[c.CTType[phase]].CurrentClampFactor
-		} else {
+		case "ROGOWSKI":
+			ccf = CTTypes[c.CTType[phase]].CurrentClampFactor / (100.0 / (float64(c.CTTypeRogowskiVoltage[phase])) * 100.0)
+		default:
 			ccf = CTTypes[c.CTType[phase]].CurrentClampFactor / (float64(c.CTTypePrimaryCurrent[phase]) / 100.0)
 		}
 		oc := CTTypes[c.CTType[phase]].CurrentRmsOffset
@@ -494,12 +503,17 @@ func ReadActiveWatts(d *i2c.Device, c *config.SmartPiACConfig, phase models.Smar
 	}
 
 	var pcf float64
-	if c.CTType[phase] == "YHDC_SCT013" || c.CTType[phase] == "YHDC_SCT4333QL" {
+	switch c.CTType[phase] {
+	case "YHDC_SCT013":
 		pcf = 1.0
-	} else if c.CTType[phase] == "400A/033V" {
+	case "400A/033V":
 		pcf = 0.5
-	} else {
-		pcf = 200.0 / (float64(c.CTTypePrimaryCurrent[phase]))
+	case "YHDC_SCT4333QL", "600A/100mA":
+		pcf = 1.0 / 3.0
+	case "ROGOWSKI":
+		pcf = (float64(c.CTTypeRogowskiVoltage[phase])) / 1635.43
+	default:
+		pcf = (float64(c.CTTypePrimaryCurrent[phase])) / 308.51
 	}
 
 	outcome := float64(DeviceFetchInt(d, 4, command))
@@ -554,12 +568,17 @@ func ReadActiveEnergy(d *i2c.Device, c *config.SmartPiACConfig, phase models.Sma
 	}
 
 	var pcf float64
-	if c.CTType[phase] == "YHDC_SCT013" || c.CTType[phase] == "YHDC_SCT4333QL" {
+	switch c.CTType[phase] {
+	case "YHDC_SCT013":
 		pcf = 1.0
-	} else if c.CTType[phase] == "400A/033V" {
+	case "400A/033V":
 		pcf = 0.5
-	} else {
-		pcf = 200.0 / (float64(c.CTTypePrimaryCurrent[phase]))
+	case "YHDC_SCT4333QL", "600A/100mA":
+		pcf = 1.0 / 3.0
+	case "ROGOWSKI":
+		pcf = (float64(c.CTTypeRogowskiVoltage[phase])) / 1635.43
+	default:
+		pcf = (float64(c.CTTypePrimaryCurrent[phase])) / 308.51
 	}
 
 	outcome := float64(DeviceFetchInt(d, 4, command))
@@ -639,12 +658,17 @@ func ReadApparentPower(d *i2c.Device, c *config.SmartPiACConfig, phase models.Sm
 	}
 
 	var pcf float64
-	if c.CTType[phase] == "YHDC_SCT013" || c.CTType[phase] == "YHDC_SCT4333QL" {
+	switch c.CTType[phase] {
+	case "YHDC_SCT013":
 		pcf = 1.0
-	} else if c.CTType[phase] == "400A/033V" {
+	case "400A/033V":
 		pcf = 0.5
-	} else {
-		pcf = 200.0 / (float64(c.CTTypePrimaryCurrent[phase]))
+	case "YHDC_SCT4333QL", "600A/100mA":
+		pcf = 1.0 / 3.0
+	case "ROGOWSKI":
+		pcf = (float64(c.CTTypeRogowskiVoltage[phase])) / 1635.43
+	default:
+		pcf = (float64(c.CTTypePrimaryCurrent[phase])) / 308.51
 	}
 
 	if c.MeasureCurrent[phase] {
@@ -669,12 +693,17 @@ func ReadReactivePower(d *i2c.Device, c *config.SmartPiACConfig, phase models.Sm
 	}
 
 	var pcf float64
-	if c.CTType[phase] == "YHDC_SCT013" || c.CTType[phase] == "YHDC_SCT4333QL" {
+	switch c.CTType[phase] {
+	case "YHDC_SCT013":
 		pcf = 1.0
-	} else if c.CTType[phase] == "400A/033V" {
+	case "400A/033V":
 		pcf = 0.5
-	} else {
-		pcf = 200.0 / (float64(c.CTTypePrimaryCurrent[phase]))
+	case "YHDC_SCT4333QL", "600A/100mA":
+		pcf = 1.0 / 3.0
+	case "ROGOWSKI":
+		pcf = (float64(c.CTTypeRogowskiVoltage[phase])) / 1635.43
+	default:
+		pcf = (float64(c.CTTypePrimaryCurrent[phase])) / 308.51
 	}
 
 	outcome := float64(DeviceFetchInt(d, 4, command))
