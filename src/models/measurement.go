@@ -28,3 +28,9 @@ type TMeasurement struct {
 	Ipaddress       string      `json:"ipaddress" xml:"ipaddress"`
 	Datasets        []*TDataset `json:"datasets" xml:"datasets"`
 }
+
+type TLivePower struct {
+	Time  string  `json:"time" xml:"time"`
+	Info  string  `json:"info" xml:"info"`
+	Power float32 `json:"power" xml:"power"`
+}

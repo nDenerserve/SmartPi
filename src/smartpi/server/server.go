@@ -74,6 +74,7 @@ func main() {
 	router.HandleFunc("/api/v1/login", controller.Login(smartpiConfig)).Methods("POST")
 	// router.HandleFunc("/api/v1/smartpiac/livedata/{phaseId}/{valueId}", serverutils.CheckConfigForPasswordMiddleWare(controller.SmartPiLiveValues(smartpiConfig), smartpiConfig))
 	router.HandleFunc("/api/all/all/now", controller.SmartPiLiveValues(smartpiConfig)).Methods("GET") // for e.manager compatibility
+	router.HandleFunc("/api/v1/smartpiac/livepower", controller.SmartPiLivePower(smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/smartpiac/livedata", controller.SmartPiLiveValues(smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/smartpiac/livedata/{format}", controller.SmartPiLiveValues(smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/smartpiac/livedata/{phaseId}/{valueId}", controller.SmartPiLiveValues(smartpiConfig)).Methods("GET")

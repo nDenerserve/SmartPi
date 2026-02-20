@@ -22,6 +22,38 @@ import (
 	smartpiRepository "github.com/nDenerserve/SmartPi/smartpi/server/repository/smartpi"
 )
 
+func (c Controller) SmartPiLivePower(conf *config.SmartPiConfig) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		vars := mux.Vars(r)
+
+		format := "json"
+		if vars["format"] != "" {
+			format = vars["format"]
+		}
+
+		smartpiRepo := smartpiRepository.SmartPiRepository{}
+
+		measurement := smartpiRepo.LivePower(conf)
+
+		if format == "xml" {
+			// XML output of request
+			type response struct {
+				models.TLivePower
+			}
+			if err := xml.NewEncoder(w).Encode(response{measurement}); err != nil {
+				panic(err)
+			}
+		} else {
+			// JSON output of request
+			if err := json.NewEncoder(w).Encode(measurement); err != nil {
+				panic(err)
+			}
+		}
+	}
+}
+
 func (c Controller) SmartPiLiveValues(conf *config.SmartPiConfig) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {

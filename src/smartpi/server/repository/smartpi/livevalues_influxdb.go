@@ -15,6 +15,41 @@ import (
 	"github.com/nDenerserve/SmartPi/utils"
 )
 
+func (s SmartPiRepository) LivePower(conf *config.SmartPiConfig) models.TLivePower {
+
+	var livePower models.TLivePower
+	var info string
+
+	log.Debug("SharedDir: " + conf.SharedDir + "/smartpi_values")
+	file, err := os.Open(conf.SharedDir + "/smartpi_values")
+	utils.Checklog(err)
+	defer file.Close()
+	reader := csv.NewReader(file)
+	reader.Comma = ';'
+	records, err := reader.Read()
+	utils.Checklog(err)
+
+	t := time.Now()
+
+	var val float64
+	val1, err1 := strconv.ParseFloat(records[8], 32)
+	val2, err2 := strconv.ParseFloat(records[9], 32)
+	val3, err3 := strconv.ParseFloat(records[10], 32)
+
+	if err1 != nil || err2 != nil || err3 != nil {
+		val = 0.0
+		info = "warning: parse error. set value to 0.0"
+	} else {
+		val = val1 + val2 + val3
+	}
+
+	livePower.Time = t.Format(time.RFC3339)
+	livePower.Power = float32(val)
+	livePower.Info = info
+
+	return livePower
+}
+
 func (s SmartPiRepository) LiveValues(phaseId string, valueId string, conf *config.SmartPiConfig) models.TMeasurement {
 
 	var phases = []*models.TPhase{}

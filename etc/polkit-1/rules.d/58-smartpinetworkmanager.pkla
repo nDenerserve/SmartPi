@@ -1,0 +1,6 @@
+[Let adm group modify system settings for network]
+Identity=unix-group:smartpiadmin
+Action=org.freedesktop.NetworkManager.*
+ResultAny=yes
+ResultInactive=yes
+ResultActive=yes
