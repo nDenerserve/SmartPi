@@ -7,7 +7,7 @@ require (
 	github.com/goburrow/serial v0.1.0
 	github.com/nDenerserve/RN2483 v0.0.0-20231123165121-2ab5d8f2030a
 	github.com/oleiade/reflections v1.1.0
-	github.com/prometheus/common v0.67.4
+	github.com/prometheus/common v0.67.5
 	github.com/sirupsen/logrus v1.9.4
 	github.com/x448/float16 v0.8.4
 	periph.io/x/conn/v3 v3.7.2
@@ -36,7 +36,7 @@ require (
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	golang.org/x/net v0.49.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
-	google.golang.org/protobuf v1.36.10 // indirect
+	google.golang.org/protobuf v1.36.11 // indirect
 )
 
 require (
