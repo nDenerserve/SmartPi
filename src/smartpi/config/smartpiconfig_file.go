@@ -223,13 +223,12 @@ func (p *SmartPiConfig) ReadParameterFromFile() {
 
 	// [smartpicloud]
 	p.SmartpicloudEnabled = cfg.Section("smartpicloud").Key("smartpicloud_enabled").MustBool(false)
-	p.SmartpicloudMQTTbroker = cfg.Section("smartpicloud").Key("smartpicloud_username").String()
 	p.SmartpicloudMQTTbrokerscheme = cfg.Section("smartpicloud").Key("smartpicloud_mqtt_broker_scheme").MustString("tcp://")
 	p.SmartpicloudMQTTbroker = cfg.Section("smartpicloud").Key("smartpicloud_mqtt_broker_url").String()
 	p.SmartpicloudMQTTbrokerport = cfg.Section("smartpicloud").Key("smartpicloud_mqtt_broker_port").String()
 	p.SmartpicloudMQTTuser = cfg.Section("smartpicloud").Key("smartpicloud_mqtt_username").String()
 	p.SmartpicloudMQTTpass = cfg.Section("smartpicloud").Key("smartpicloud_mqtt_password").String()
-	p.SmartpicloudMQTTtopic = "smartpiac/" + cfg.Section("smartpicloud").Key("smartpicloud_mqtt_username").String()
+	p.SmartpicloudMQTTtopic = "smartpiac/" + cfg.Section("smartpicloud").Key("smartpicloud_mqtt_topic").String()
 	p.SmartpicloudMQTTQoS = uint8(cfg.Section("smartpicloud").Key("smartpicloud_mqtt_qos").MustUint(0))
 
 	// [modbus slave]
@@ -300,14 +299,14 @@ func (p *SmartPiConfig) SaveParameterToFile() {
 	_, err = cfg.Section("mqtt").NewKey("mqtt_qos", strconv.FormatUint(uint64(p.MQTTQoS), 10))
 
 	// [smartpicloud]
-	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_enabled", strconv.FormatBool(p.MQTTenabled))
-	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_username", p.MQTTbrokerscheme)
-	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_broker_scheme", p.MQTTbrokerscheme)
-	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_broker_url", p.MQTTbroker)
-	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_broker_port", p.MQTTbrokerport)
-	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_username", p.MQTTuser)
-	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_password", p.MQTTpass)
-	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_qos", strconv.FormatUint(uint64(p.MQTTQoS), 10))
+	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_enabled", strconv.FormatBool(p.SmartpicloudEnabled))
+	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_broker_scheme", p.SmartpicloudMQTTbrokerscheme)
+	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_broker_url", p.SmartpicloudMQTTbroker)
+	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_broker_port", p.SmartpicloudMQTTbrokerport)
+	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_username", p.SmartpicloudMQTTuser)
+	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_password", p.SmartpicloudMQTTpass)
+	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_topic", p.SmartpicloudMQTTtopic)
+	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_qos", strconv.FormatUint(uint64(p.SmartpicloudMQTTQoS), 10))
 
 	// [modbus slave]
 	_, err = cfg.Section("modbus").NewKey("modbus_rtu_enabled", strconv.FormatBool(p.ModbusRTUenabled))
