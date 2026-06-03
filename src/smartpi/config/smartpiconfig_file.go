@@ -305,7 +305,6 @@ func (p *SmartPiConfig) SaveParameterToFile() {
 	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_broker_port", p.SmartpicloudMQTTbrokerport)
 	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_username", p.SmartpicloudMQTTuser)
 	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_password", p.SmartpicloudMQTTpass)
-	// _, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_topic", p.SmartpicloudMQTTtopic)
 	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_qos", strconv.FormatUint(uint64(p.SmartpicloudMQTTQoS), 10))
 
 	// [modbus slave]
