@@ -10,7 +10,7 @@ require (
 	github.com/prometheus/common v0.67.5
 	github.com/sirupsen/logrus v1.9.4
 	github.com/x448/float16 v0.8.4
-	periph.io/x/conn/v3 v3.7.2
+	periph.io/x/conn/v3 v3.7.3
 )
 
 require (
