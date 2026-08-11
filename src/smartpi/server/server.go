@@ -111,6 +111,10 @@ func main() {
 	router.HandleFunc("/api/v1/module/digitalout/{address}/{port}", serverutils.TokenVerifyMiddleWare(modulesController.SetDigitalout(moduleConfig, smartpiConfig), smartpiConfig)).Methods("PUT")
 	router.HandleFunc("/api/v1/module/digitalout/{address}", serverutils.TokenVerifyMiddleWare(modulesController.ReadDigitalout(moduleConfig, smartpiConfig), smartpiConfig)).Methods("GET")
 
+	// 4-20mA analog output module routes (MCP4725)
+	router.HandleFunc("/api/v1/module/analogout420ma/{address}/{current}", serverutils.TokenVerifyMiddleWare(modulesController.SetAnalogOut420mA(moduleConfig, smartpiConfig), smartpiConfig)).Methods("PUT")
+	router.HandleFunc("/api/v1/module/analogout420ma/{address}", serverutils.TokenVerifyMiddleWare(modulesController.ReadAnalogOut420mA(moduleConfig, smartpiConfig), smartpiConfig)).Methods("GET")
+
 	router.PathPrefix("/assets").Handler(http.FileServer(http.Dir(smartpiConfig.DocRoot + "/")))
 	// Catch-all: Serve our JavaScript application's entry-point (index.html).
 	router.PathPrefix("/").HandlerFunc(IndexHandler(smartpiConfig.DocRoot + "/index.html"))

@@ -20,6 +20,9 @@ type Moduleconfig struct {
 	// [digitalout]
 	AllowedDigitalOutUser []string
 
+	// [analogout420ma]
+	AllowedAnalogOut420mAUser []string
+
 	// [etemperature]
 	AllowedEtemperatureUser       []string
 	EtemperatureI2CAddress        uint16
@@ -62,6 +65,9 @@ func (p *Moduleconfig) ReadParameterFromFile() {
 	// [digitalout]
 	p.AllowedDigitalOutUser = strings.Split(mcfg.Section("digitalout").Key("allowed_user").String(), ",")
 
+	// [analogout420ma]
+	p.AllowedAnalogOut420mAUser = strings.Split(mcfg.Section("analogout420ma").Key("allowed_user").String(), ",")
+
 	// [etemperature]
 	p.AllowedEtemperatureUser = strings.Split(mcfg.Section("etemperature").Key("allowed_user").String(), ",")
 	if p.EtemperatureI2CAddress, err = utils.DecodeUint16(mcfg.Section("etemperature").Key("i2c_address").MustString("0x52")); err != nil {
@@ -99,6 +105,9 @@ func (p *Moduleconfig) SaveParameterToFile() {
 
 	// [digitalout]
 	_, merr = mcfg.Section("digitalout").NewKey("allowed_user", strings.Join(p.AllowedDigitalOutUser, ","))
+
+	// [analogout420ma]
+	_, merr = mcfg.Section("analogout420ma").NewKey("allowed_user", strings.Join(p.AllowedAnalogOut420mAUser, ","))
 
 	//[etemperature]
 	_, merr = mcfg.Section("etemperature").NewKey("allowed_user", strings.Join(p.AllowedEtemperatureUser, ","))
