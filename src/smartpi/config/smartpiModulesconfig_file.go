@@ -64,12 +64,21 @@ func (p *Moduleconfig) ReadParameterFromFile() {
 
 	// [digitalout]
 	p.AllowedDigitalOutUser = strings.Split(mcfg.Section("digitalout").Key("allowed_user").String(), ",")
+	if len(p.AllowedDigitalOutUser) == 0 {
+		p.AllowedDigitalOutUser = append(p.AllowedDigitalOutUser, "root", "smartpi")
+	}
 
 	// [analogout420ma]
 	p.AllowedAnalogOut420mAUser = strings.Split(mcfg.Section("analogout420ma").Key("allowed_user").String(), ",")
+	if len(p.AllowedAnalogOut420mAUser) == 0 {
+		p.AllowedAnalogOut420mAUser = append(p.AllowedAnalogOut420mAUser, "root", "smartpi")
+	}
 
 	// [etemperature]
 	p.AllowedEtemperatureUser = strings.Split(mcfg.Section("etemperature").Key("allowed_user").String(), ",")
+	if len(p.AllowedEtemperatureUser) == 0 {
+		p.AllowedEtemperatureUser = append(p.AllowedEtemperatureUser, "root", "smartpi")
+	}
 	if p.EtemperatureI2CAddress, err = utils.DecodeUint16(mcfg.Section("etemperature").Key("i2c_address").MustString("0x52")); err != nil {
 		log.Fatal(err)
 	}
