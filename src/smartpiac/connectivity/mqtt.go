@@ -14,6 +14,9 @@ import (
 	smartpiacDevice "github.com/nDenerserve/SmartPi/smartpiac/device"
 )
 
+// NewMQTTClient connects to the local MQTT broker. A failed connection is only
+// logged, because the client reconnects on its own and the publish functions
+// retry before every publication.
 func NewMQTTClient(c *config.SmartPiConfig) (mqttclient mqtt.Client) {
 	log.Debugf("Connecting to MQTT broker at %s", (c.MQTTbroker + ":" + c.MQTTbrokerport))
 	//create a MQTTClientOptions struct setting the broker address, clientid, user and password
@@ -35,6 +38,10 @@ func NewMQTTClient(c *config.SmartPiConfig) (mqttclient mqtt.Client) {
 	return mqttclient
 }
 
+// publishMQTT publishes a single value to one topic. status is shared across a
+// publication sequence: once a publication has failed it stays false and the
+// remaining values of that sequence are skipped, so that a broken connection
+// does not block the measurement loop for every single topic.
 func publishMQTT(m mqtt.Client, qos uint8, status *bool, t string, v float64) bool {
 	if *status {
 		log.Debug("  -> ", t, ":", v)
@@ -51,6 +58,10 @@ func publishMQTT(m mqtt.Client, qos uint8, status *bool, t string, v float64) bo
 	return false
 }
 
+// PublishMQTTReadouts publishes one set of readouts to the local broker. The
+// values are either a single sample or, if a publication interval is configured,
+// the aggregated values of the last interval - the topics are the same in both
+// cases.
 func PublishMQTTReadouts(c *config.SmartPiConfig, mqttclient mqtt.Client, values *models.ADE7878Readout, wattHourBalanced float64) {
 	var pTotalBalanced float64
 	//[basetopic]/[node]/[keyname]
@@ -86,6 +97,10 @@ func PublishMQTTReadouts(c *config.SmartPiConfig, mqttclient mqtt.Client, values
 	}
 }
 
+// PublishMQTTCalculations publishes the calculated minute values to the local
+// broker: the consumed and produced energy of the last minute (ec1m, ep1m) and
+// the totals from the persistent counter files (cc, pc). This always runs once
+// per minute, independent of the readout publication interval.
 func PublishMQTTCalculations(c *config.SmartPiConfig, mqttclient mqtt.Client, ec1m float64, ep1m float64, cc float64, pc float64) {
 
 	//[basetopic]/[node]/[keyname]
@@ -109,6 +124,8 @@ func PublishMQTTCalculations(c *config.SmartPiConfig, mqttclient mqtt.Client, ec
 	}
 }
 
+// NewSmartPicloudMQTTClient connects to the SmartPicloud broker. It behaves
+// exactly like NewMQTTClient but uses the cloud credentials.
 func NewSmartPicloudMQTTClient(c *config.SmartPiConfig) (mqttclient mqtt.Client) {
 	log.Debugf("Connecting to SmartPiMQTT broker at %s", (c.SmartpicloudMQTTbroker + ":" + c.SmartpicloudMQTTbrokerport))
 	//create a MQTTClientOptions struct setting the broker address, clientid, user and password
@@ -130,6 +147,9 @@ func NewSmartPicloudMQTTClient(c *config.SmartPiConfig) (mqttclient mqtt.Client)
 	return mqttclient
 }
 
+// PublishSmartPicloudMQTTReadouts publishes one set of readouts to SmartPicloud.
+// It mirrors PublishMQTTReadouts but uses the cloud topic and QoS, and is
+// throttled by its own publication interval.
 func PublishSmartPicloudMQTTReadouts(c *config.SmartPiConfig, mqttclient mqtt.Client, values *models.ADE7878Readout, wattHourBalanced float64) {
 	var pTotalBalanced float64
 	//[basetopic]/[node]/[keyname]
@@ -165,6 +185,8 @@ func PublishSmartPicloudMQTTReadouts(c *config.SmartPiConfig, mqttclient mqtt.Cl
 	}
 }
 
+// PublishSmartPicloudMQTTCalculations publishes the calculated minute values to
+// SmartPicloud, see PublishMQTTCalculations.
 func PublishSmartPicloudMQTTCalculations(c *config.SmartPiConfig, mqttclient mqtt.Client, ec1m float64, ep1m float64, cc float64, pc float64) {
 
 	//[basetopic]/[node]/[keyname]

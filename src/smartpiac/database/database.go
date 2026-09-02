@@ -15,7 +15,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func UpdateInfluxDatabase(c *config.SmartPiConfig, data models.ReadoutAccumulator, consumedWattHourBalanced float64, producedWattHourBalanced float64) {
+// UpdateInfluxDatabase stores the aggregated values of one minute. It is called
+// once per minute when individual samples are not stored.
+func UpdateInfluxDatabase(c *config.SmartPiConfig, data *models.ADE7878Readout, consumedWattHourBalanced float64, producedWattHourBalanced float64) {
 	t := time.Now()
 
 	logLine := "## InfluxDB database update minute values ##"
