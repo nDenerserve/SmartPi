@@ -57,17 +57,9 @@ import (
 	"github.com/prometheus/common/version"
 )
 
-func makeReadoutAccumulator() (r models.ReadoutAccumulator) {
-	r.Current = make(models.Readings)
-	r.Voltage = make(models.Readings)
-	r.ActiveWatts = make(models.Readings)
-	r.CosPhi = make(models.Readings)
-	r.Frequency = make(models.Readings)
-	r.WattHoursConsumed = make(models.Readings)
-	r.WattHoursProduced = make(models.Readings)
-	return r
-}
-
+// makeReadout returns an empty readout with all reading maps allocated. A fresh
+// readout is built for every sample so that a phase which is not measured in
+// this round simply has no entry instead of carrying over a stale value.
 func makeReadout() (r models.ADE7878Readout) {
 	r.Current = make(models.Readings)
 	r.Voltage = make(models.Readings)
@@ -83,11 +75,32 @@ func makeReadout() (r models.ADE7878Readout) {
 	return r
 }
 
+// pollSmartPi is the measurement loop of the readout daemon. It never returns
+// and is meant to be run in its own goroutine.
+//
+// The loop is driven by a ticker derived from the configured samplerate. Every
+// tick all phases are read from the ADE7878 and the resulting readout is fed to
+// the various sinks, each of which runs on its own schedule:
+//
+//   - Prometheus metrics and the shared file are updated on every sample.
+//   - MQTT and SmartPicloud publish on every sample, or - if a publication
+//     interval is configured - once per interval from aggregated values.
+//   - InfluxDB either stores every sample (StoreSamples) or one aggregated
+//     record per minute.
+//   - The persistent energy counter files are updated once per minute.
+//
+// Aggregation is done by models.ReadoutAggregator, which averages instantaneous
+// quantities and sums up energy, so that reducing the publication rate does not
+// lose any energy.
 func pollSmartPi(acConfig *config.SmartPiACConfig, config *config.SmartPiConfig, device *i2c.Device) {
 	var mqttclient mqtt.Client
 	var smartpicloudMQTTclient mqtt.Client
-	var wattHourBalanced, wattHourBalancedAccu, consumedWattHourBalanced60s, producedWattHourBalanced60s float64
+	// wattHourBalanced holds the balanced energy (sum over all phases, signed)
+	// of the current sample. It is reset after every sample, once all per-sample
+	// sinks have consumed it.
+	var wattHourBalanced, consumedWattHourBalanced60s, producedWattHourBalanced60s float64
 	var p models.SmartPiPhase
+	// Energy counters read back from the persistent counter files.
 	var consumedCounter, producedCounter float64
 	var measureFrequency bool = true
 
@@ -102,11 +115,29 @@ func pollSmartPi(acConfig *config.SmartPiACConfig, config *config.SmartPiConfig,
 		smartpicloudMQTTclient = smartpiacConnectivity.NewSmartPicloudMQTTClient(config)
 	}
 
-	accumulator := makeReadoutAccumulator()
+	// i counts the samples within the current minute and wraps around at
+	// 60*samplerate. It drives everything that happens once per minute.
 	i := 0
+
+	// Minute values for the database and the energy counters are aggregated
+	// over the whole 60 second window.
+	influxAggregator := models.NewReadoutAggregator()
+
+	// Readouts are published on every sample unless a publication interval is
+	// configured. In that case the samples of a window are aggregated and only
+	// the condensed readout is published. Both sinks keep their own aggregator
+	// and their own window, so they can be throttled independently - typically
+	// the cloud connection is published less often than the local broker.
+	mqttAggregator := models.NewReadoutAggregator()
+	smartpicloudAggregator := models.NewReadoutAggregator()
+	mqttWindowStart := time.Now()
+	smartpicloudWindowStart := mqttWindowStart
 
 	tick := time.Tick(time.Duration(1000/acConfig.Samplerate) * time.Millisecond)
 
+	// Measuring the frequency costs ~70ms per phase because the ADE7878 needs to
+	// capture several full cycles. At more than 4 samples per second that no
+	// longer fits into a sampling interval, so frequency measurement is dropped.
 	// disable measuring frequency if samplerate higher than 4 samples/second
 	if acConfig.Samplerate > 4 {
 		measureFrequency = false
@@ -114,34 +145,43 @@ func pollSmartPi(acConfig *config.SmartPiACConfig, config *config.SmartPiConfig,
 
 	for {
 		readouts := makeReadout()
-		// Restart the accumulator loop every 60 seconds.
+		// Restart the accumulator loop every 60 seconds. Normally the minute
+		// block below has already emptied the aggregator at this point; the
+		// reset only matters if the samplerate was changed at runtime and the
+		// counter wrapped without the minute block ever firing. In that case
+		// the partial window is discarded.
 		if i > (60*acConfig.Samplerate - 1) {
 			i = 0
-			accumulator = makeReadoutAccumulator()
+			influxAggregator.Reset()
 		}
 
 		startTime := time.Now()
 
 		// Update readouts and the accumlator.
+		// The neutral conductor only carries a current reading, all other
+		// quantities are read per main phase.
 		smartpiacDevice.ReadPhase(device, acConfig, models.PhaseN, measureFrequency, &readouts)
-		accumulator.Current[models.PhaseN] += readouts.Current[models.PhaseN] / (60.0 * float64(acConfig.Samplerate))
 		for _, p = range smartpiacDevice.MainPhases {
 			smartpiacDevice.ReadPhase(device, acConfig, p, measureFrequency, &readouts)
-			accumulator.Current[p] += readouts.Current[p] / (60.0 * float64(acConfig.Samplerate))
-			accumulator.Voltage[p] += readouts.Voltage[p] / (60.0 * float64(acConfig.Samplerate))
-			accumulator.ActiveWatts[p] += readouts.ActiveWatts[p] / (60.0 * float64(acConfig.Samplerate))
-			accumulator.CosPhi[p] += readouts.CosPhi[p] / (60.0 * float64(acConfig.Samplerate))
-			accumulator.Frequency[p] += readouts.Frequency[p] / (60.0 * float64(acConfig.Samplerate))
 
+			// Split the active power of this sample into consumed and produced
+			// energy. Dividing by 3600*samplerate converts the power in watts
+			// into the watt hours accumulated during one sampling interval.
+			// Only the matching direction is written, the other one stays unset
+			// so that summing up the two never mixes both directions.
 			if readouts.ActiveWatts[p] >= 0 {
 				readouts.Energyconsumption[p] = math.Abs(readouts.ActiveWatts[p]) / (3600.0 * float64(acConfig.Samplerate))
-				accumulator.WattHoursConsumed[p] += readouts.Energyconsumption[p]
 			} else {
 				readouts.Energyproduction[p] = math.Abs(readouts.ActiveWatts[p]) / (3600.0 * float64(acConfig.Samplerate))
-				accumulator.WattHoursProduced[p] += readouts.Energyproduction[p]
 			}
+			// The balanced energy keeps its sign, so consumption on one phase
+			// and production on another cancel each other out.
 			wattHourBalanced += readouts.ActiveWatts[p] / (3600.0 * float64(acConfig.Samplerate))
 		}
+		// Feed the completed sample into the minute aggregator. This has to
+		// happen after the phase loop, because only then the readout carries the
+		// derived energy values as well.
+		influxAggregator.Add(&readouts, wattHourBalanced)
 
 		// Update metrics endpoint.
 		smartpiacDatabase.UpdatePrometheusMetrics(&readouts, acConfig)
@@ -154,12 +194,35 @@ func pollSmartPi(acConfig *config.SmartPiACConfig, config *config.SmartPiConfig,
 			}
 
 			// Publish readouts to MQTT.
+			// Without a publication interval every sample is sent as it is.
+			// Otherwise the samples are collected and one condensed readout is
+			// published as soon as the window has elapsed.
 			if config.MQTTenabled {
-				smartpiacConnectivity.PublishMQTTReadouts(config, mqttclient, &readouts, wattHourBalanced)
+				if config.MQTTinterval <= 0 {
+					smartpiacConnectivity.PublishMQTTReadouts(config, mqttclient, &readouts, wattHourBalanced)
+				} else {
+					mqttAggregator.Add(&readouts, wattHourBalanced)
+					if time.Since(mqttWindowStart) >= time.Duration(config.MQTTinterval)*time.Second {
+						aggregatedReadouts, aggregatedWattHourBalanced := mqttAggregator.Snapshot()
+						smartpiacConnectivity.PublishMQTTReadouts(config, mqttclient, &aggregatedReadouts, aggregatedWattHourBalanced)
+						mqttAggregator.Reset()
+						mqttWindowStart = time.Now()
+					}
+				}
 			}
 			// Publish readouts to SmartPicloud via MQTT.
 			if config.SmartpicloudEnabled {
-				smartpiacConnectivity.PublishSmartPicloudMQTTReadouts(config, smartpicloudMQTTclient, &readouts, wattHourBalanced)
+				if config.SmartpicloudMQTTinterval <= 0 {
+					smartpiacConnectivity.PublishSmartPicloudMQTTReadouts(config, smartpicloudMQTTclient, &readouts, wattHourBalanced)
+				} else {
+					smartpicloudAggregator.Add(&readouts, wattHourBalanced)
+					if time.Since(smartpicloudWindowStart) >= time.Duration(config.SmartpicloudMQTTinterval)*time.Second {
+						aggregatedReadouts, aggregatedWattHourBalanced := smartpicloudAggregator.Snapshot()
+						smartpiacConnectivity.PublishSmartPicloudMQTTReadouts(config, smartpicloudMQTTclient, &aggregatedReadouts, aggregatedWattHourBalanced)
+						smartpicloudAggregator.Reset()
+						smartpicloudWindowStart = time.Now()
+					}
+				}
 			}
 
 			// Update InfluxDB (FastMeasurement) database.
@@ -168,7 +231,8 @@ func pollSmartPi(acConfig *config.SmartPiACConfig, config *config.SmartPiConfig,
 			if config.DatabaseEnabled && acConfig.StoreSamples {
 				smartpiacDatabase.UpdateSampleInfluxDatabase(config, &readouts, wattHourBalanced)
 			}
-			wattHourBalancedAccu += wattHourBalanced
+			// All per-sample sinks have seen this sample, start over. The minute
+			// aggregator has its own copy of the value.
 			wattHourBalanced = 0
 		}
 
@@ -176,19 +240,29 @@ func pollSmartPi(acConfig *config.SmartPiACConfig, config *config.SmartPiConfig,
 		// Energymeasurement is only enabled if samplerate < 4
 		if i == (60*acConfig.Samplerate - 1) {
 
+			// Condense the last minute into a single readout and immediately
+			// start the next window. minuteWattHourBalanced is the signed energy
+			// balance of the whole minute.
+			minuteReadouts, minuteWattHourBalanced := influxAggregator.Snapshot()
+			influxAggregator.Reset()
+
 			// balanced value
+			// Split the signed balance into the two unsigned directions that the
+			// database and the counter files expect.
 			consumedWattHourBalanced60s = 0.0
 			producedWattHourBalanced60s = 0.0
 
-			if wattHourBalancedAccu >= 0 {
-				consumedWattHourBalanced60s = math.Abs(wattHourBalancedAccu)
+			if minuteWattHourBalanced >= 0 {
+				consumedWattHourBalanced60s = math.Abs(minuteWattHourBalanced)
 			} else {
-				producedWattHourBalanced60s = math.Abs(wattHourBalancedAccu)
+				producedWattHourBalanced60s = math.Abs(minuteWattHourBalanced)
 			}
 
 			// Update InfluxDB database.
+			// When every sample is stored anyway, only the calculated minute
+			// energies are added on top of the samples already written above.
 			if config.DatabaseEnabled && !acConfig.StoreSamples {
-				smartpiacDatabase.UpdateInfluxDatabase(config, accumulator, consumedWattHourBalanced60s, producedWattHourBalanced60s)
+				smartpiacDatabase.UpdateInfluxDatabase(config, &minuteReadouts, consumedWattHourBalanced60s, producedWattHourBalanced60s)
 			} else if config.DatabaseEnabled && acConfig.StoreSamples {
 				smartpiacDatabase.UpdateCalculatedInfluxDatabase(config, consumedWattHourBalanced60s, producedWattHourBalanced60s)
 			}
@@ -197,16 +271,20 @@ func pollSmartPi(acConfig *config.SmartPiACConfig, config *config.SmartPiConfig,
 			producedCounter = 0.0
 
 			// Update persistent counter files and read Values from not updated files
+			// Only the counter matching the direction of this minute is
+			// incremented, the other one is read back unchanged so that both
+			// totals can be published together.
 			if acConfig.CounterEnabled {
-				if wattHourBalancedAccu >= 0 {
-					consumedCounter = smartpiacFile.UpdateCounterFile(config, consumerCounterFile, math.Abs(wattHourBalancedAccu))
+				if minuteWattHourBalanced >= 0 {
+					consumedCounter = smartpiacFile.UpdateCounterFile(config, consumerCounterFile, math.Abs(minuteWattHourBalanced))
 					producedCounter = smartpiacFile.ReadCounterFile(config, producerCounterFile)
 				} else {
-					producedCounter = smartpiacFile.UpdateCounterFile(config, producerCounterFile, math.Abs(wattHourBalancedAccu))
+					producedCounter = smartpiacFile.UpdateCounterFile(config, producerCounterFile, math.Abs(minuteWattHourBalanced))
 					consumedCounter = smartpiacFile.ReadCounterFile(config, consumerCounterFile)
 				}
-				wattHourBalancedAccu = 0.0
 			}
+			// The calculated minute values are always published once per minute,
+			// independent of the readout publication interval.
 			if config.MQTTenabled {
 				smartpiacConnectivity.PublishMQTTCalculations(config, mqttclient, consumedWattHourBalanced60s, producedWattHourBalanced60s, consumedCounter, producedCounter)
 			}
@@ -216,6 +294,9 @@ func pollSmartPi(acConfig *config.SmartPiACConfig, config *config.SmartPiConfig,
 			}
 		}
 
+		// Reading all phases must fit into one sampling interval. If it does
+		// not, samples are effectively dropped and the loop drifts, so this is
+		// logged as an error.
 		delay := time.Since(startTime) - (time.Duration(1000/acConfig.Samplerate) * time.Millisecond)
 		if int64(delay) > 0 {
 			log.Errorf("Readout delayed: %s", delay)
@@ -225,6 +306,7 @@ func pollSmartPi(acConfig *config.SmartPiACConfig, config *config.SmartPiConfig,
 	}
 }
 
+// appVersion is set at build time via -ldflags.
 var appVersion = "No Version Provided"
 
 func init() {
@@ -236,11 +318,16 @@ func init() {
 	prometheus.MustRegister(versioncollector.NewCollector("smartpi"))
 }
 
+// main wires up the readout daemon: it loads both configuration files, starts
+// the measurement loop in the background and then serves the Prometheus metrics
+// endpoint in the foreground.
 func main() {
 
 	smartpiConfig := config.NewSmartPiConfig()
 	smartpiACConfig := config.NewSmartPiACConfig()
 
+	// Both configuration files are watched so that changes take effect without
+	// restarting the daemon.
 	go configWatcher(smartpiConfig)
 	go acConfigWatcher(smartpiACConfig)
 
@@ -261,6 +348,7 @@ func main() {
 
 	device, _ := smartpiacDevice.InitADE7878(smartpiACConfig)
 
+	// The measurement loop runs forever in its own goroutine.
 	go pollSmartPi(smartpiACConfig, smartpiConfig, device)
 
 	//http.Handle("/metrics", prometheus.Handler())
@@ -281,6 +369,9 @@ func main() {
 	}
 }
 
+// configWatcher reloads /etc/smartpi whenever the file is written to, so that
+// settings such as the MQTT publication interval can be changed at runtime.
+// It blocks forever and is meant to be run in its own goroutine.
 func configWatcher(config *config.SmartPiConfig) {
 	log.Debug("Start SmartPi watcher")
 	watcher, err := fsnotify.NewWatcher()
@@ -314,6 +405,9 @@ func configWatcher(config *config.SmartPiConfig) {
 	log.Debug("init done 3")
 }
 
+// acConfigWatcher does the same as configWatcher for the AC measurement
+// configuration in /etc/smartpiAC. It blocks forever and is meant to be run in
+// its own goroutine.
 func acConfigWatcher(acConfig *config.SmartPiACConfig) {
 	log.Debug("Start SmartPi watcher")
 	watcher, err := fsnotify.NewWatcher()

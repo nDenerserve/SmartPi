@@ -29,7 +29,11 @@ import (
 // 	Current_1, Current_2, Current_3, Current_4, Voltage_1, Voltage_2, Voltage_3, Power_1, Power_2, Power_3, Cosphi_1, Cosphi_2, Cosphi_3, Frequency_1, Frequency_2, Frequency_3, Energy_pos_1, Energy_pos_2, Energy_pos_3, Energy_neg_1, Energy_neg_2, Energy_neg_3 float64
 // }
 
-func InsertInfluxDataV1(c *config.SmartPiConfig, t time.Time, v models.ReadoutAccumulator, consumedWattHourBalanced float64, producedWattHourBalanced float64) {
+// InsertInfluxDataV1 writes one aggregated minute record to an InfluxDB 1.x
+// server. v carries the averaged instantaneous values and the summed energy of
+// the last minute, consumedWattHourBalanced and producedWattHourBalanced are the
+// two unsigned halves of the minute's energy balance.
+func InsertInfluxDataV1(c *config.SmartPiConfig, t time.Time, v *models.ADE7878Readout, consumedWattHourBalanced float64, producedWattHourBalanced float64) {
 
 	dbc, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr:     c.Influxdatabase,
@@ -67,12 +71,12 @@ func InsertInfluxDataV1(c *config.SmartPiConfig, t time.Time, v models.ReadoutAc
 		"F1":      float64(v.Frequency[models.PhaseA]),
 		"F2":      float64(v.Frequency[models.PhaseB]),
 		"F3":      float64(v.Frequency[models.PhaseC]),
-		"Ec1":     float64(v.WattHoursConsumed[models.PhaseA]),
-		"Ec2":     float64(v.WattHoursConsumed[models.PhaseB]),
-		"Ec3":     float64(v.WattHoursConsumed[models.PhaseC]),
-		"Ep1":     float64(v.WattHoursProduced[models.PhaseA]),
-		"Ep2":     float64(v.WattHoursProduced[models.PhaseB]),
-		"Ep3":     float64(v.WattHoursProduced[models.PhaseC]),
+		"Ec1":     float64(v.Energyconsumption[models.PhaseA]),
+		"Ec2":     float64(v.Energyconsumption[models.PhaseB]),
+		"Ec3":     float64(v.Energyconsumption[models.PhaseC]),
+		"Ep1":     float64(v.Energyproduction[models.PhaseA]),
+		"Ep2":     float64(v.Energyproduction[models.PhaseB]),
+		"Ep3":     float64(v.Energyproduction[models.PhaseC]),
 		"bEc":     float64(consumedWattHourBalanced),
 		"bEp":     float64(producedWattHourBalanced),
 	}
@@ -89,7 +93,9 @@ func InsertInfluxDataV1(c *config.SmartPiConfig, t time.Time, v models.ReadoutAc
 	}
 }
 
-func InsertInfluxData(c *config.SmartPiConfig, t time.Time, v models.ReadoutAccumulator, consumedWattHourBalanced float64, producedWattHourBalanced float64) {
+// InsertInfluxData writes one aggregated minute record to InfluxDB, dispatching
+// to the 1.x client if the configuration asks for it.
+func InsertInfluxData(c *config.SmartPiConfig, t time.Time, v *models.ADE7878Readout, consumedWattHourBalanced float64, producedWattHourBalanced float64) {
 
 	if c.Influxversion == "1" {
 		InsertInfluxDataV1(c, t, v, consumedWattHourBalanced, producedWattHourBalanced)
@@ -123,12 +129,12 @@ func InsertInfluxData(c *config.SmartPiConfig, t time.Time, v models.ReadoutAccu
 		"F1":      float64(v.Frequency[models.PhaseA]),
 		"F2":      float64(v.Frequency[models.PhaseB]),
 		"F3":      float64(v.Frequency[models.PhaseC]),
-		"Ec1":     float64(v.WattHoursConsumed[models.PhaseA]),
-		"Ec2":     float64(v.WattHoursConsumed[models.PhaseB]),
-		"Ec3":     float64(v.WattHoursConsumed[models.PhaseC]),
-		"Ep1":     float64(v.WattHoursProduced[models.PhaseA]),
-		"Ep2":     float64(v.WattHoursProduced[models.PhaseB]),
-		"Ep3":     float64(v.WattHoursProduced[models.PhaseC]),
+		"Ec1":     float64(v.Energyconsumption[models.PhaseA]),
+		"Ec2":     float64(v.Energyconsumption[models.PhaseB]),
+		"Ec3":     float64(v.Energyconsumption[models.PhaseC]),
+		"Ep1":     float64(v.Energyproduction[models.PhaseA]),
+		"Ep2":     float64(v.Energyproduction[models.PhaseB]),
+		"Ep3":     float64(v.Energyproduction[models.PhaseC]),
 		"bEc":     float64(consumedWattHourBalanced),
 		"bEp":     float64(producedWattHourBalanced),
 	}

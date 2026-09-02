@@ -93,6 +93,10 @@ type SmartPiConfig struct {
 	MQTTpass         string
 	MQTTtopic        string
 	MQTTQoS          uint8
+	// MQTTinterval is the readout publication interval in seconds. Zero (the
+	// default) publishes every sample, any larger value publishes one
+	// aggregated readout per interval.
+	MQTTinterval int
 
 	// [smartpicloud]
 	SmartpicloudEnabled          bool
@@ -104,6 +108,10 @@ type SmartPiConfig struct {
 	SmartpicloudMQTTpass         string
 	SmartpicloudMQTTtopic        string
 	SmartpicloudMQTTQoS          uint8
+	// SmartpicloudMQTTinterval is the readout publication interval in seconds
+	// for the cloud connection, independent of MQTTinterval. Zero publishes
+	// every sample.
+	SmartpicloudMQTTinterval int
 
 	// [modbus slave]
 	ModbusRTUenabled bool
@@ -220,6 +228,7 @@ func (p *SmartPiConfig) ReadParameterFromFile() {
 	p.MQTTpass = cfg.Section("mqtt").Key("mqtt_password").String()
 	p.MQTTtopic = cfg.Section("mqtt").Key("mqtt_topic").String()
 	p.MQTTQoS = uint8(cfg.Section("mqtt").Key("mqtt_qos").MustUint(0))
+	p.MQTTinterval = cfg.Section("mqtt").Key("mqtt_publish_interval").MustInt(0)
 
 	// [smartpicloud]
 	p.SmartpicloudEnabled = cfg.Section("smartpicloud").Key("smartpicloud_enabled").MustBool(false)
@@ -230,6 +239,7 @@ func (p *SmartPiConfig) ReadParameterFromFile() {
 	p.SmartpicloudMQTTpass = cfg.Section("smartpicloud").Key("smartpicloud_mqtt_password").String()
 	p.SmartpicloudMQTTtopic = "smartpiac/" + cfg.Section("smartpicloud").Key("smartpicloud_mqtt_username").String()
 	p.SmartpicloudMQTTQoS = uint8(cfg.Section("smartpicloud").Key("smartpicloud_mqtt_qos").MustUint(0))
+	p.SmartpicloudMQTTinterval = cfg.Section("smartpicloud").Key("smartpicloud_mqtt_publish_interval").MustInt(0)
 
 	// [modbus slave]
 	p.ModbusRTUenabled = cfg.Section("modbus").Key("modbus_rtu_enabled").MustBool(false)
@@ -297,6 +307,7 @@ func (p *SmartPiConfig) SaveParameterToFile() {
 	_, err = cfg.Section("mqtt").NewKey("mqtt_password", p.MQTTpass)
 	_, err = cfg.Section("mqtt").NewKey("mqtt_topic", p.MQTTtopic)
 	_, err = cfg.Section("mqtt").NewKey("mqtt_qos", strconv.FormatUint(uint64(p.MQTTQoS), 10))
+	_, err = cfg.Section("mqtt").NewKey("mqtt_publish_interval", strconv.FormatInt(int64(p.MQTTinterval), 10))
 
 	// [smartpicloud]
 	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_enabled", strconv.FormatBool(p.SmartpicloudEnabled))
@@ -306,6 +317,7 @@ func (p *SmartPiConfig) SaveParameterToFile() {
 	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_username", p.SmartpicloudMQTTuser)
 	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_password", p.SmartpicloudMQTTpass)
 	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_qos", strconv.FormatUint(uint64(p.SmartpicloudMQTTQoS), 10))
+	_, err = cfg.Section("smartpicloud").NewKey("smartpicloud_mqtt_publish_interval", strconv.FormatInt(int64(p.SmartpicloudMQTTinterval), 10))
 
 	// [modbus slave]
 	_, err = cfg.Section("modbus").NewKey("modbus_rtu_enabled", strconv.FormatBool(p.ModbusRTUenabled))
