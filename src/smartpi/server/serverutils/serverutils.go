@@ -12,7 +12,7 @@ import (
 	"github.com/nDenerserve/SmartPi/models"
 	"github.com/nDenerserve/SmartPi/smartpi/config"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func CompareHashAndPassword(hashedPassword string, password []byte) bool {

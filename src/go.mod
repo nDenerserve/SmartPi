@@ -5,6 +5,7 @@ go 1.25.0
 require (
 	github.com/fatih/structs v1.1.0
 	github.com/goburrow/serial v0.1.0
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/nDenerserve/RN2483 v0.0.0-20231123165121-2ab5d8f2030a
 	github.com/oleiade/reflections v1.1.0
 	github.com/prometheus/common v0.70.1
@@ -37,7 +38,6 @@ require (
 require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/davecgh/go-spew v1.1.1
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/gorilla/mux v1.8.1
