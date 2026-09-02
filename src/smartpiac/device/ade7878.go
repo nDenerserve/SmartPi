@@ -513,7 +513,7 @@ func ReadActiveWatts(d *i2c.Device, c *config.SmartPiACConfig, phase models.Smar
 	case "ROGOWSKI":
 		pcf = (float64(c.CTTypeRogowskiVoltage[phase])) / 1635.43
 	default:
-		pcf = (float64(c.CTTypePrimaryCurrent[phase])) / 308.51
+		pcf = 200 / (float64(c.CTTypePrimaryCurrent[phase]))
 	}
 
 	outcome := float64(DeviceFetchInt(d, 4, command))
@@ -578,7 +578,7 @@ func ReadActiveEnergy(d *i2c.Device, c *config.SmartPiACConfig, phase models.Sma
 	case "ROGOWSKI":
 		pcf = (float64(c.CTTypeRogowskiVoltage[phase])) / 1635.43
 	default:
-		pcf = (float64(c.CTTypePrimaryCurrent[phase])) / 308.51
+		pcf = 200 / (float64(c.CTTypePrimaryCurrent[phase]))
 	}
 
 	outcome := float64(DeviceFetchInt(d, 4, command))
@@ -668,7 +668,7 @@ func ReadApparentPower(d *i2c.Device, c *config.SmartPiACConfig, phase models.Sm
 	case "ROGOWSKI":
 		pcf = (float64(c.CTTypeRogowskiVoltage[phase])) / 1635.43
 	default:
-		pcf = (float64(c.CTTypePrimaryCurrent[phase])) / 308.51
+		pcf = 200 / (float64(c.CTTypePrimaryCurrent[phase]))
 	}
 
 	if c.MeasureCurrent[phase] {
@@ -703,7 +703,7 @@ func ReadReactivePower(d *i2c.Device, c *config.SmartPiACConfig, phase models.Sm
 	case "ROGOWSKI":
 		pcf = (float64(c.CTTypeRogowskiVoltage[phase])) / 1635.43
 	default:
-		pcf = (float64(c.CTTypePrimaryCurrent[phase])) / 308.51
+		pcf = 200 / (float64(c.CTTypePrimaryCurrent[phase]))
 	}
 
 	outcome := float64(DeviceFetchInt(d, 4, command))
