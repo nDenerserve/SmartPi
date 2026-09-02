@@ -10,7 +10,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
-	"go.etcd.io/etcd/version"
 
 	"net/http"
 
@@ -45,13 +44,13 @@ var responseCount = promauto.NewCounterVec(
 	[]string{"code", "method"},
 )
 
+// appVersion is set at build time via -ldflags, see the makefile.
 var appVersion = "No Version Provided"
 
 func init() {
 	log.SetFormatter(&log.TextFormatter{})
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.DebugLevel)
-	version.Version = appVersion
 }
 
 func main() {
