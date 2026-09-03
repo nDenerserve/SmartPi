@@ -22,12 +22,23 @@ func (c ModulesController) SetDigitalout(mconf *config.Moduleconfig, conf *confi
 
 		var error models.Error
 
-		user, err := serverutils.DecryptUserdataFromToken(r, conf)
-
-		if err != nil {
-			error.Message = err.Error()
-			serverutils.RespondWithError(w, http.StatusUnauthorized, error)
-			return
+		// TokenVerifyMiddleWare already required the digitalout scope for a
+		// device token - a stronger, per-token grant made explicitly by an
+		// operator, and device tokens have no OS user to check here anyway.
+		// The username allowlist below only applies to session tokens, same
+		// as before device tokens existed.
+		if !serverutils.IsDeviceToken(r) {
+			user, err := serverutils.DecryptUserdataFromToken(r, conf)
+			if err != nil {
+				error.Message = err.Error()
+				serverutils.RespondWithError(w, http.StatusUnauthorized, error)
+				return
+			}
+			if !slices.Contains(mconf.AllowedDigitalOutUser, user.Name) {
+				error.Message = "User not allowed"
+				serverutils.RespondWithError(w, http.StatusUnauthorized, error)
+				return
+			}
 		}
 
 		vars := mux.Vars(r)
@@ -44,45 +55,36 @@ func (c ModulesController) SetDigitalout(mconf *config.Moduleconfig, conf *confi
 
 		a := ^uint8(addr + 0xD8)
 
-		if slices.Contains(mconf.AllowedDigitalOutUser, user.Name) {
-
-			portstring = strings.TrimSpace(portstring)
-			if portstring[len(portstring)-1:] == ";" {
-				portstring = portstring[:len(portstring)-1]
-			}
-			ports := strings.Split(portstring, ";")
-			portmap := make(map[int]bool)
-			for _, e := range ports {
-				parts := strings.Split(e, "=")
-				k, err := strconv.Atoi(parts[0])
-				v, err := strconv.ParseBool(parts[1])
-				if err != nil {
-					error.Message = err.Error()
-					serverutils.RespondWithError(w, http.StatusBadRequest, error)
-					return
-				}
-				portmap[k] = v
-			}
-			moduleRepo := modulesRepository.ModulesRepository{}
-
-			status, err := moduleRepo.SetDigitalOut(uint16(a), portmap, mconf)
-			status.Moduleaddress = address
+		portstring = strings.TrimSpace(portstring)
+		if portstring[len(portstring)-1:] == ";" {
+			portstring = portstring[:len(portstring)-1]
+		}
+		ports := strings.Split(portstring, ";")
+		portmap := make(map[int]bool)
+		for _, e := range ports {
+			parts := strings.Split(e, "=")
+			k, err := strconv.Atoi(parts[0])
+			v, err := strconv.ParseBool(parts[1])
 			if err != nil {
 				error.Message = err.Error()
-				serverutils.RespondWithError(w, http.StatusInternalServerError, error)
+				serverutils.RespondWithError(w, http.StatusBadRequest, error)
 				return
 			}
+			portmap[k] = v
+		}
+		moduleRepo := modulesRepository.ModulesRepository{}
 
-			if err := json.NewEncoder(w).Encode(status); err != nil {
-				panic(err)
-			}
-
-		} else {
-			error.Message = "User not allowed"
-			serverutils.RespondWithError(w, http.StatusUnauthorized, error)
+		status, err := moduleRepo.SetDigitalOut(uint16(a), portmap, mconf)
+		status.Moduleaddress = address
+		if err != nil {
+			error.Message = err.Error()
+			serverutils.RespondWithError(w, http.StatusInternalServerError, error)
 			return
 		}
 
+		if err := json.NewEncoder(w).Encode(status); err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -92,14 +94,24 @@ func (c ModulesController) ReadDigitalout(mconf *config.Moduleconfig, conf *conf
 
 		var error models.Error
 
-		user, err := serverutils.DecryptUserdataFromToken(r, conf)
+		// See SetDigitalout above: a device token already carries the
+		// digitalout scope required by TokenVerifyMiddleWare, so the
+		// username allowlist below only applies to session tokens.
+		if !serverutils.IsDeviceToken(r) {
+			user, err := serverutils.DecryptUserdataFromToken(r, conf)
 
-		log.Debug("ReadDigitalout: user: ", user, " mconf.AllowedDigitalOutUser: ", mconf.AllowedDigitalOutUser)
+			log.Debug("ReadDigitalout: user: ", user, " mconf.AllowedDigitalOutUser: ", mconf.AllowedDigitalOutUser)
 
-		if err != nil {
-			error.Message = err.Error()
-			serverutils.RespondWithError(w, http.StatusUnauthorized, error)
-			return
+			if err != nil {
+				error.Message = err.Error()
+				serverutils.RespondWithError(w, http.StatusUnauthorized, error)
+				return
+			}
+			if !slices.Contains(mconf.AllowedDigitalOutUser, user.Name) {
+				error.Message = "User not allowed"
+				serverutils.RespondWithError(w, http.StatusUnauthorized, error)
+				return
+			}
 		}
 
 		vars := mux.Vars(r)
@@ -117,27 +129,18 @@ func (c ModulesController) ReadDigitalout(mconf *config.Moduleconfig, conf *conf
 
 		a := ^uint8(addr + 0xD8)
 
-		if slices.Contains(mconf.AllowedDigitalOutUser, user.Name) {
+		moduleRepo := modulesRepository.ModulesRepository{}
 
-			moduleRepo := modulesRepository.ModulesRepository{}
-
-			status, err := moduleRepo.ReadDigitalOutStatus(uint16(a), mconf)
-			status.Moduleaddress = address
-			if err != nil {
-				error.Message = err.Error()
-				serverutils.RespondWithError(w, http.StatusInternalServerError, error)
-				return
-			}
-
-			if err := json.NewEncoder(w).Encode(status); err != nil {
-				panic(err)
-			}
-
-		} else {
-			error.Message = "User not allowed"
-			serverutils.RespondWithError(w, http.StatusUnauthorized, error)
+		status, err := moduleRepo.ReadDigitalOutStatus(uint16(a), mconf)
+		status.Moduleaddress = address
+		if err != nil {
+			error.Message = err.Error()
+			serverutils.RespondWithError(w, http.StatusInternalServerError, error)
 			return
 		}
 
+		if err := json.NewEncoder(w).Encode(status); err != nil {
+			panic(err)
+		}
 	}
 }
