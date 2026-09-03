@@ -23,6 +23,9 @@ type Moduleconfig struct {
 	// [analogout420ma]
 	AllowedAnalogOut420mAUser []string
 
+	// [analogin]
+	AllowedAnalogInUser []string
+
 	// [etemperature]
 	AllowedEtemperatureUser       []string
 	EtemperatureI2CAddress        uint16
@@ -74,6 +77,12 @@ func (p *Moduleconfig) ReadParameterFromFile() {
 		p.AllowedAnalogOut420mAUser = append(p.AllowedAnalogOut420mAUser, "root", "smartpi")
 	}
 
+	// [analogin]
+	p.AllowedAnalogInUser = strings.Split(mcfg.Section("analogin").Key("allowed_user").String(), ",")
+	if len(p.AllowedAnalogInUser) == 0 {
+		p.AllowedAnalogInUser = append(p.AllowedAnalogInUser, "root", "smartpi")
+	}
+
 	// [etemperature]
 	p.AllowedEtemperatureUser = strings.Split(mcfg.Section("etemperature").Key("allowed_user").String(), ",")
 	if len(p.AllowedEtemperatureUser) == 0 {
@@ -117,6 +126,9 @@ func (p *Moduleconfig) SaveParameterToFile() {
 
 	// [analogout420ma]
 	_, merr = mcfg.Section("analogout420ma").NewKey("allowed_user", strings.Join(p.AllowedAnalogOut420mAUser, ","))
+
+	// [analogin]
+	_, merr = mcfg.Section("analogin").NewKey("allowed_user", strings.Join(p.AllowedAnalogInUser, ","))
 
 	//[etemperature]
 	_, merr = mcfg.Section("etemperature").NewKey("allowed_user", strings.Join(p.AllowedEtemperatureUser, ","))
