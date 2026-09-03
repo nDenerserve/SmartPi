@@ -16,6 +16,29 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+// parseModuleAddress resolves the bus address of a digital-out module from
+// the {address} path segment. A 0x-prefixed value (case-insensitive) is used
+// directly as the module's hexadecimal I2C bus address. Otherwise the value
+// is read as the on/off pattern of the module's three jumper switches (e.g.
+// "111" for all three on) - a binary number that the module's hardware
+// wiring maps onto its actual bus address via one's complement, which is
+// what the +0xD8 and bitwise-not below reproduce.
+func parseModuleAddress(address string) (uint8, error) {
+	if strings.HasPrefix(address, "0x") || strings.HasPrefix(address, "0X") {
+		addr, err := strconv.ParseUint(address[2:], 16, 8)
+		if err != nil {
+			return 0, err
+		}
+		return uint8(addr), nil
+	}
+
+	jumpers, err := strconv.ParseUint(address, 2, 8)
+	if err != nil {
+		return 0, err
+	}
+	return ^uint8(jumpers + 0xD8), nil
+}
+
 func (c ModulesController) SetDigitalout(mconf *config.Moduleconfig, conf *config.SmartPiConfig) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -42,18 +65,22 @@ func (c ModulesController) SetDigitalout(mconf *config.Moduleconfig, conf *confi
 		}
 
 		vars := mux.Vars(r)
-		address := utils.Reverse(vars["address"])
+		address := vars["address"]
 		portstring := vars["port"]
+		// The jumper encoding's bit order only makes sense reversed (see
+		// parseModuleAddress); a 0x-prefixed hex address is used exactly as
+		// given, reversing it would turn it into a different address.
+		if !strings.HasPrefix(address, "0x") && !strings.HasPrefix(address, "0X") {
+			address = utils.Reverse(address)
+		}
 		log.Debug("SetDigitalout: Vars: ", vars, " Address: ", address, " Portstring: ", portstring)
 
-		addr, err := strconv.ParseUint(address, 2, 8)
+		a, err := parseModuleAddress(address)
 		if err != nil {
 			error.Message = err.Error()
 			serverutils.RespondWithError(w, http.StatusBadRequest, error)
 			return
 		}
-
-		a := ^uint8(addr + 0xD8)
 
 		portstring = strings.TrimSpace(portstring)
 		if portstring[len(portstring)-1:] == ";" {
@@ -119,15 +146,12 @@ func (c ModulesController) ReadDigitalout(mconf *config.Moduleconfig, conf *conf
 
 		log.Debug("SetDigitalout: Vars: ", vars, " Address: ", address)
 
-		addr, err := strconv.ParseUint(address, 2, 8)
-
+		a, err := parseModuleAddress(address)
 		if err != nil {
 			error.Message = err.Error()
 			serverutils.RespondWithError(w, http.StatusBadRequest, error)
 			return
 		}
-
-		a := ^uint8(addr + 0xD8)
 
 		moduleRepo := modulesRepository.ModulesRepository{}
 
