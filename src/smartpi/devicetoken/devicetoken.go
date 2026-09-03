@@ -81,6 +81,7 @@ const touchInterval = time.Minute
 const (
 	ScopeDigitalOut  = "digitalout"
 	ScopeAnalogOut   = "analogout"
+	ScopeAnalogIn    = "analogin"
 	ScopeConfigRead  = "config:read"
 	ScopeConfigWrite = "config:write"
 	ScopeNetwork     = "network"
@@ -88,7 +89,7 @@ const (
 
 // Scopes lists every scope a token can be granted, in the order they should
 // be offered when creating one.
-var Scopes = []string{ScopeDigitalOut, ScopeAnalogOut, ScopeConfigRead, ScopeConfigWrite, ScopeNetwork}
+var Scopes = []string{ScopeDigitalOut, ScopeAnalogOut, ScopeAnalogIn, ScopeConfigRead, ScopeConfigWrite, ScopeNetwork}
 
 // ValidScope reports whether scope is one of the known Scopes.
 func ValidScope(scope string) bool {
