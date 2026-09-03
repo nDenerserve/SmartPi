@@ -48,7 +48,7 @@ mqtt_username         =
 mqtt_password         = 
 mqtt_topic            = 
 mqtt_qos              = 0
-mqtt_publish_interval = 0
+mqtt_publish_interval = 60
 
 [smartpicloud]
 smartpicloud_enabled               = false
@@ -60,7 +60,7 @@ smartpicloud_mqtt_username         =
 smartpicloud_mqtt_password         = 
 smartpicloud_mqtt_topic            = 
 smartpicloud_mqtt_qos              = 0
-smartpicloud_mqtt_publish_interval = 0
+smartpicloud_mqtt_publish_interval = 60
 
 [modbus]
 modbus_rtu_enabled   = false
