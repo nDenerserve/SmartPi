@@ -133,6 +133,7 @@ func TokenVerifyMiddleWare(next http.HandlerFunc, conf *config.SmartPiConfig, to
 
 		bearer, ok := bearerToken(r)
 		if !ok {
+			logAuthRejected(r, "missing or malformed Authorization header")
 			errorObject.Message = "Invalid token."
 			RespondWithError(w, http.StatusUnauthorized, errorObject)
 			return
@@ -140,30 +141,51 @@ func TokenVerifyMiddleWare(next http.HandlerFunc, conf *config.SmartPiConfig, to
 
 		if devicetoken.LooksLikeToken(bearer) {
 			tok, found := tokens.Lookup(bearer)
-			if !found || !tok.HasScope(scope) {
+			if !found {
+				logAuthRejected(r, "unknown or revoked device token")
+				errorObject.Message = "Invalid token."
+				RespondWithError(w, http.StatusUnauthorized, errorObject)
+				return
+			}
+			if !tok.HasScope(scope) {
+				logAuthRejected(r, fmt.Sprintf("device token %q (%s) lacks scope %q", tok.Label, tok.ID, scope))
 				errorObject.Message = "Invalid token."
 				RespondWithError(w, http.StatusUnauthorized, errorObject)
 				return
 			}
 			tokens.TouchLastUsed(tok.ID)
+			log.Debugf("%s %s authenticated with device token %q (%s)", r.Method, r.URL.Path, tok.Label, tok.ID)
 			next.ServeHTTP(w, r)
 			return
 		}
 
 		token, err := parseSessionToken(bearer, conf)
 		if err != nil {
+			logAuthRejected(r, "invalid session token: "+err.Error())
 			errorObject.Message = err.Error()
 			RespondWithError(w, http.StatusUnauthorized, errorObject)
 			return
 		}
 		if !token.Valid {
+			logAuthRejected(r, "invalid session token")
 			errorObject.Message = "Invalid token."
 			RespondWithError(w, http.StatusUnauthorized, errorObject)
 			return
 		}
+		log.Debugf("%s %s authenticated with session token", r.Method, r.URL.Path)
 		next.ServeHTTP(w, r)
 	})
 
+}
+
+// logAuthRejected logs a rejected request at Warn level - unlike a successful
+// authentication (logged at Debug, since it is the routine case), a rejection
+// is worth seeing without first having to turn the log level up, since it is
+// the one thing an operator debugging "nothing seems to arrive" actually
+// needs: whether the request reached the server at all, and if so why it was
+// turned away. It never includes the bearer value itself.
+func logAuthRejected(r *http.Request, reason string) {
+	log.Warnf("Rejected %s %s from %s: %s", r.Method, r.URL.Path, r.RemoteAddr, reason)
 }
 
 // RequireSessionToken gates next behind a session token specifically - a
@@ -179,7 +201,14 @@ func RequireSessionToken(next http.HandlerFunc, conf *config.SmartPiConfig) http
 		var errorObject models.Error
 
 		bearer, ok := bearerToken(r)
-		if !ok || devicetoken.LooksLikeToken(bearer) {
+		if !ok {
+			logAuthRejected(r, "missing or malformed Authorization header")
+			errorObject.Message = "Invalid token."
+			RespondWithError(w, http.StatusUnauthorized, errorObject)
+			return
+		}
+		if devicetoken.LooksLikeToken(bearer) {
+			logAuthRejected(r, "device token used against a session-only endpoint")
 			errorObject.Message = "Invalid token."
 			RespondWithError(w, http.StatusUnauthorized, errorObject)
 			return
@@ -187,11 +216,13 @@ func RequireSessionToken(next http.HandlerFunc, conf *config.SmartPiConfig) http
 
 		token, err := parseSessionToken(bearer, conf)
 		if err != nil {
+			logAuthRejected(r, "invalid session token: "+err.Error())
 			errorObject.Message = err.Error()
 			RespondWithError(w, http.StatusUnauthorized, errorObject)
 			return
 		}
 		if !token.Valid {
+			logAuthRejected(r, "invalid session token")
 			errorObject.Message = "Invalid token."
 			RespondWithError(w, http.StatusUnauthorized, errorObject)
 			return
