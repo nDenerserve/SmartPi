@@ -21,12 +21,26 @@ func (c ModulesController) SetAnalogOut420mA(mconf *config.Moduleconfig, conf *c
 	return func(w http.ResponseWriter, r *http.Request) {
 		var error models.Error
 
-		user, err := serverutils.DecryptUserdataFromToken(r, conf)
+		// TokenVerifyMiddleWare already required the analogout scope for a
+		// device token - a stronger, per-token grant made explicitly by an
+		// operator, and device tokens have no OS user to check here anyway.
+		// The username allowlist below only applies to session tokens, same
+		// as before device tokens existed.
+		if !serverutils.IsDeviceToken(r) {
+			user, err := serverutils.DecryptUserdataFromToken(r, conf)
+			if err != nil {
+				error.Message = err.Error()
+				serverutils.RespondWithError(w, http.StatusUnauthorized, error)
+				return
+			}
 
-		if err != nil {
-			error.Message = err.Error()
-			serverutils.RespondWithError(w, http.StatusUnauthorized, error)
-			return
+			log.Debugf("User: %s, Allowed users: %v", user.Name, mconf.AllowedAnalogOut420mAUser)
+			if !slices.Contains(mconf.AllowedAnalogOut420mAUser, user.Name) {
+				log.Warnf("User %s not allowed to set analogout420ma (allowed: %v)", user.Name, mconf.AllowedAnalogOut420mAUser)
+				error.Message = "User not allowed"
+				serverutils.RespondWithError(w, http.StatusUnauthorized, error)
+				return
+			}
 		}
 
 		vars := mux.Vars(r)
@@ -57,28 +71,19 @@ func (c ModulesController) SetAnalogOut420mA(mconf *config.Moduleconfig, conf *c
 			return
 		}
 
-		log.Debugf("User: %s, Allowed users: %v", user.Name, mconf.AllowedAnalogOut420mAUser)
-		if slices.Contains(mconf.AllowedAnalogOut420mAUser, user.Name) {
-			log.Debug("User is allowed, calling repository")
-			moduleRepo := modulesRepository.ModulesRepository{}
+		log.Debug("User is allowed, calling repository")
+		moduleRepo := modulesRepository.ModulesRepository{}
 
-			status, err := moduleRepo.SetAnalogOut420mA(uint16(address), current, mconf)
-			status.Moduleaddress = addressStr
-			if err != nil {
-				error.Message = err.Error()
-				serverutils.RespondWithError(w, http.StatusInternalServerError, error)
-				return
-			}
-
-			if err := json.NewEncoder(w).Encode(status); err != nil {
-				panic(err)
-			}
-
-		} else {
-			log.Warnf("User %s not allowed to set analogout420ma (allowed: %v)", user.Name, mconf.AllowedAnalogOut420mAUser)
-			error.Message = "User not allowed"
-			serverutils.RespondWithError(w, http.StatusUnauthorized, error)
+		status, err := moduleRepo.SetAnalogOut420mA(uint16(address), current, mconf)
+		status.Moduleaddress = addressStr
+		if err != nil {
+			error.Message = err.Error()
+			serverutils.RespondWithError(w, http.StatusInternalServerError, error)
 			return
+		}
+
+		if err := json.NewEncoder(w).Encode(status); err != nil {
+			panic(err)
 		}
 	}
 }
@@ -88,14 +93,24 @@ func (c ModulesController) ReadAnalogOut420mA(mconf *config.Moduleconfig, conf *
 	return func(w http.ResponseWriter, r *http.Request) {
 		var error models.Error
 
-		user, err := serverutils.DecryptUserdataFromToken(r, conf)
+		// See SetAnalogOut420mA above: a device token already carries the
+		// analogout scope required by TokenVerifyMiddleWare, so the username
+		// allowlist below only applies to session tokens.
+		if !serverutils.IsDeviceToken(r) {
+			user, err := serverutils.DecryptUserdataFromToken(r, conf)
+			if err != nil {
+				error.Message = err.Error()
+				serverutils.RespondWithError(w, http.StatusUnauthorized, error)
+				return
+			}
 
-		log.Debug("ReadAnalogOut420mA: user: ", user, " mconf.AllowedAnalogOut420mAUser: ", mconf.AllowedAnalogOut420mAUser)
-
-		if err != nil {
-			error.Message = err.Error()
-			serverutils.RespondWithError(w, http.StatusUnauthorized, error)
-			return
+			log.Debugf("User: %s, Allowed users: %v", user.Name, mconf.AllowedAnalogOut420mAUser)
+			if !slices.Contains(mconf.AllowedAnalogOut420mAUser, user.Name) {
+				log.Warnf("User %s not allowed to read analogout420ma (allowed: %v)", user.Name, mconf.AllowedAnalogOut420mAUser)
+				error.Message = "User not allowed"
+				serverutils.RespondWithError(w, http.StatusUnauthorized, error)
+				return
+			}
 		}
 
 		vars := mux.Vars(r)
@@ -111,28 +126,19 @@ func (c ModulesController) ReadAnalogOut420mA(mconf *config.Moduleconfig, conf *
 			return
 		}
 
-		log.Debugf("User: %s, Allowed users: %v", user.Name, mconf.AllowedAnalogOut420mAUser)
-		if slices.Contains(mconf.AllowedAnalogOut420mAUser, user.Name) {
-			log.Debug("User is allowed, calling repository")
-			moduleRepo := modulesRepository.ModulesRepository{}
+		log.Debug("User is allowed, calling repository")
+		moduleRepo := modulesRepository.ModulesRepository{}
 
-			status, err := moduleRepo.ReadAnalogOut420mAStatus(uint16(address), mconf)
-			status.Moduleaddress = addressStr
-			if err != nil {
-				error.Message = err.Error()
-				serverutils.RespondWithError(w, http.StatusInternalServerError, error)
-				return
-			}
-
-			if err := json.NewEncoder(w).Encode(status); err != nil {
-				panic(err)
-			}
-
-		} else {
-			log.Warnf("User %s not allowed to read analogout420ma (allowed: %v)", user.Name, mconf.AllowedAnalogOut420mAUser)
-			error.Message = "User not allowed"
-			serverutils.RespondWithError(w, http.StatusUnauthorized, error)
+		status, err := moduleRepo.ReadAnalogOut420mAStatus(uint16(address), mconf)
+		status.Moduleaddress = addressStr
+		if err != nil {
+			error.Message = err.Error()
+			serverutils.RespondWithError(w, http.StatusInternalServerError, error)
 			return
+		}
+
+		if err := json.NewEncoder(w).Encode(status); err != nil {
+			panic(err)
 		}
 	}
 }

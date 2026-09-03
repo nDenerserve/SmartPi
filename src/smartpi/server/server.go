@@ -10,7 +10,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
-	"go.etcd.io/etcd/version"
 
 	"net/http"
 
@@ -18,6 +17,7 @@ import (
 	"github.com/rs/cors"
 
 	"github.com/nDenerserve/SmartPi/smartpi/config"
+	"github.com/nDenerserve/SmartPi/smartpi/devicetoken"
 	"github.com/nDenerserve/SmartPi/smartpi/server/controllers"
 	modulescontrollers "github.com/nDenerserve/SmartPi/smartpi/server/controllers/modules"
 	"github.com/nDenerserve/SmartPi/smartpi/server/serverutils"
@@ -45,13 +45,13 @@ var responseCount = promauto.NewCounterVec(
 	[]string{"code", "method"},
 )
 
+// appVersion is set at build time via -ldflags, see the makefile.
 var appVersion = "No Version Provided"
 
 func init() {
 	log.SetFormatter(&log.TextFormatter{})
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.DebugLevel)
-	version.Version = appVersion
 }
 
 func main() {
@@ -61,6 +61,15 @@ func main() {
 	moduleConfig := config.NewModuleconfig()
 	controller := controllers.Controller{}
 	modulesController := modulescontrollers.ModulesController{}
+
+	// Device tokens (see package devicetoken) are kept separate from the ini
+	// config above: they are revoked by deleting them from this store, not by
+	// reloading a file, and they must keep working across an appkey rotation,
+	// which only ever invalidates session tokens.
+	deviceTokens, err := devicetoken.NewStore(devicetoken.DefaultPath)
+	if err != nil {
+		log.Fatalf("Could not load device token store: %s", err)
+	}
 
 	log.SetLevel(smartpiConfig.LogLevel)
 
@@ -81,15 +90,19 @@ func main() {
 	router.HandleFunc("/api/v1/smartpiac/livedata/{phaseId}/{valueId}/{format}", controller.SmartPiLiveValues(smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/smartpiac/livedata/value/{valueId}", controller.SmartPiLiveValues(smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/smartpiac/livedata/value/{valueId}/{format}", controller.SmartPiLiveValues(smartpiConfig)).Methods("GET")
-	router.HandleFunc("/api/v1/config/network/listconnections", serverutils.TokenVerifyMiddleWare(controller.ConnectionList(), smartpiConfig)).Methods("GET")
-	router.HandleFunc("/api/v1/config/network/addstaticiptoconnection/ip/{ipaddress}/cidrsuffix/{cidrsuffix}/connection/{connection}", serverutils.TokenVerifyMiddleWare(controller.AddStaticIpToConnection(), smartpiConfig)).Methods("GET")
-	router.HandleFunc("/api/v1/config/network/removestaticipfromconnection/ip/{ipaddress}/cidrsuffix/{cidrsuffix}/connection/{connection}", serverutils.TokenVerifyMiddleWare(controller.RemoveStaticIpFromConnection(), smartpiConfig)).Methods("GET")
-	router.HandleFunc("/api/v1/config/network/scanwifi", serverutils.TokenVerifyMiddleWare(controller.ScanWifi(), smartpiConfig)).Methods("GET")
-	router.HandleFunc("/api/v1/config/network/createconnection", serverutils.TokenVerifyMiddleWare(controller.CreateConnection(), smartpiConfig)).Methods("POST")
-	router.HandleFunc("/api/v1/config/readsmartpiacconfiguration", serverutils.TokenVerifyMiddleWare(controller.ReadSmartPiACConfig(smartpiACConfig), smartpiConfig)).Methods("GET")
-	router.HandleFunc("/api/v1/config/writesmartpiacconfiguration", serverutils.TokenVerifyMiddleWare(controller.WriteSmartPiACConfig(smartpiACConfig), smartpiConfig)).Methods("POST")
-	router.HandleFunc("/api/v1/config/readsmartpiconfiguration", serverutils.TokenVerifyMiddleWare(controller.ReadSmartPiConfig(smartpiConfig), smartpiConfig)).Methods("GET")
-	router.HandleFunc("/api/v1/config/writesmartpiconfiguration", serverutils.TokenVerifyMiddleWare(controller.WriteSmartPiConfig(smartpiConfig), smartpiConfig)).Methods("POST")
+	router.HandleFunc("/api/v1/config/network/listconnections", serverutils.TokenVerifyMiddleWare(controller.ConnectionList(), smartpiConfig, deviceTokens, devicetoken.ScopeNetwork)).Methods("GET")
+	router.HandleFunc("/api/v1/config/network/addstaticiptoconnection/ip/{ipaddress}/cidrsuffix/{cidrsuffix}/connection/{connection}", serverutils.TokenVerifyMiddleWare(controller.AddStaticIpToConnection(), smartpiConfig, deviceTokens, devicetoken.ScopeNetwork)).Methods("GET")
+	router.HandleFunc("/api/v1/config/network/removestaticipfromconnection/ip/{ipaddress}/cidrsuffix/{cidrsuffix}/connection/{connection}", serverutils.TokenVerifyMiddleWare(controller.RemoveStaticIpFromConnection(), smartpiConfig, deviceTokens, devicetoken.ScopeNetwork)).Methods("GET")
+	router.HandleFunc("/api/v1/config/network/scanwifi", serverutils.TokenVerifyMiddleWare(controller.ScanWifi(), smartpiConfig, deviceTokens, devicetoken.ScopeNetwork)).Methods("GET")
+	router.HandleFunc("/api/v1/config/network/createconnection", serverutils.TokenVerifyMiddleWare(controller.CreateConnection(), smartpiConfig, deviceTokens, devicetoken.ScopeNetwork)).Methods("POST")
+	router.HandleFunc("/api/v1/config/readsmartpiacconfiguration", serverutils.TokenVerifyMiddleWare(controller.ReadSmartPiACConfig(smartpiACConfig), smartpiConfig, deviceTokens, devicetoken.ScopeConfigRead)).Methods("GET")
+	router.HandleFunc("/api/v1/config/writesmartpiacconfiguration", serverutils.TokenVerifyMiddleWare(controller.WriteSmartPiACConfig(smartpiACConfig), smartpiConfig, deviceTokens, devicetoken.ScopeConfigWrite)).Methods("POST")
+	router.HandleFunc("/api/v1/config/readsmartpiconfiguration", serverutils.TokenVerifyMiddleWare(controller.ReadSmartPiConfig(smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeConfigRead)).Methods("GET")
+	router.HandleFunc("/api/v1/config/writesmartpiconfiguration", serverutils.TokenVerifyMiddleWare(controller.WriteSmartPiConfig(smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeConfigWrite)).Methods("POST")
+
+	router.HandleFunc("/api/v1/tokens", serverutils.RequireSessionToken(controller.ListDeviceTokens(deviceTokens), smartpiConfig)).Methods("GET")
+	router.HandleFunc("/api/v1/tokens", serverutils.RequireSessionToken(controller.CreateDeviceToken(deviceTokens, smartpiConfig), smartpiConfig)).Methods("POST")
+	router.HandleFunc("/api/v1/tokens/{id}", serverutils.RequireSessionToken(controller.DeleteDeviceToken(deviceTokens), smartpiConfig)).Methods("DELETE")
 	router.HandleFunc("/api/v1/smartpiac/progressdata/value/{value}", controller.SmartPiProgressdata(smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/smartpiac/progressdata/value/{value}/starttime/{starttime}/stoptime/{stoptime}", controller.SmartPiProgressdata(smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/smartpiac/progressdata/value/{value}/starttime/{starttime}", controller.SmartPiProgressdata(smartpiConfig)).Methods("GET")
@@ -108,12 +121,12 @@ func main() {
 	router.HandleFunc("/api/v1/smartpiac/csvexport/start/{start}/stop/{stop}", controller.SmartPiCsvExport(smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/smartpiac/csvexport/start/{start}/stop/{stop}/aggregate/{aggregate}", controller.SmartPiCsvExport(smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/smartpiac/livedata/value/{valueId}/{format}", controller.SmartPiLiveValues(smartpiConfig)).Methods("GET")
-	router.HandleFunc("/api/v1/module/digitalout/{address}/{port}", serverutils.TokenVerifyMiddleWare(modulesController.SetDigitalout(moduleConfig, smartpiConfig), smartpiConfig)).Methods("PUT")
-	router.HandleFunc("/api/v1/module/digitalout/{address}", serverutils.TokenVerifyMiddleWare(modulesController.ReadDigitalout(moduleConfig, smartpiConfig), smartpiConfig)).Methods("GET")
+	router.HandleFunc("/api/v1/module/digitalout/{address}/{port}", serverutils.TokenVerifyMiddleWare(modulesController.SetDigitalout(moduleConfig, smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeDigitalOut)).Methods("PUT")
+	router.HandleFunc("/api/v1/module/digitalout/{address}", serverutils.TokenVerifyMiddleWare(modulesController.ReadDigitalout(moduleConfig, smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeDigitalOut)).Methods("GET")
 
 	// 4-20mA analog output module routes (MCP4725)
-	router.HandleFunc("/api/v1/module/analogout420ma/{address}/{current}", serverutils.TokenVerifyMiddleWare(modulesController.SetAnalogOut420mA(moduleConfig, smartpiConfig), smartpiConfig)).Methods("PUT")
-	router.HandleFunc("/api/v1/module/analogout420ma/{address}", serverutils.TokenVerifyMiddleWare(modulesController.ReadAnalogOut420mA(moduleConfig, smartpiConfig), smartpiConfig)).Methods("GET")
+	router.HandleFunc("/api/v1/module/analogout420ma/{address}/{current}", serverutils.TokenVerifyMiddleWare(modulesController.SetAnalogOut420mA(moduleConfig, smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeAnalogOut)).Methods("PUT")
+	router.HandleFunc("/api/v1/module/analogout420ma/{address}", serverutils.TokenVerifyMiddleWare(modulesController.ReadAnalogOut420mA(moduleConfig, smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeAnalogOut)).Methods("GET")
 
 	router.PathPrefix("/assets").Handler(http.FileServer(http.Dir(smartpiConfig.DocRoot + "/")))
 	// Catch-all: Serve our JavaScript application's entry-point (index.html).

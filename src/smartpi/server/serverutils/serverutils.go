@@ -11,8 +11,9 @@ import (
 
 	"github.com/nDenerserve/SmartPi/models"
 	"github.com/nDenerserve/SmartPi/smartpi/config"
+	"github.com/nDenerserve/SmartPi/smartpi/devicetoken"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func CompareHashAndPassword(hashedPassword string, password []byte) bool {
@@ -48,84 +49,185 @@ func GenerateToken(user models.User, conf *config.SmartPiConfig) (string, error)
 	return tokenString, nil
 }
 
+// bearerToken extracts the token value from an "Authorization: Bearer <value>"
+// header. It reports false if the header is missing or not in that exact
+// two-part shape.
+func bearerToken(r *http.Request) (string, bool) {
+	parts := strings.Split(r.Header.Get("Authorization"), " ")
+	if len(parts) != 2 {
+		return "", false
+	}
+	return parts[1], true
+}
+
+// parseSessionToken parses and verifies bearer as a session JWT signed with
+// conf.AppKey. It never accepts a device token (see devicetoken.Prefix) -
+// callers that also need to accept those check devicetoken.LooksLikeToken
+// first and take a different path entirely.
+func parseSessionToken(bearer string, conf *config.SmartPiConfig) (*jwt.Token, error) {
+	return jwt.Parse(bearer, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("There was an error")
+		}
+		return []byte(conf.AppKey), nil
+	})
+}
+
+// DecryptUserdataFromToken resolves the human user behind a session token.
+// It is only meaningful for session tokens - a device token has no OS user
+// behind it, only the scopes it was granted at creation - so callers that
+// also accept device tokens must check IsDeviceToken first and skip this for
+// those requests rather than calling it and treating a resulting error as
+// "unauthenticated".
 func DecryptUserdataFromToken(r *http.Request, conf *config.SmartPiConfig) (models.User, error) {
 
-	authHeader := r.Header.Get("Authorization")
-	bearerToken := strings.Split(authHeader, " ")
-
-	if len(bearerToken) == 2 {
-		authToken := bearerToken[1]
-
-		token, error := jwt.Parse(authToken, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("There was an error")
-			}
-
-			return []byte(conf.AppKey), nil
-		})
-
-		if error != nil {
-			return models.User{}, error
-		}
-
-		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			user := models.User{
-				Name: claims["username"].(string),
-			}
-			return user, nil
-
-		} else {
-			log.Printf("Invalid JWT Token")
-			return models.User{}, error
-		}
-
-	} else {
+	bearer, ok := bearerToken(r)
+	if !ok {
 		var errorObject models.Error
 		errorObject.Message = "Invalid Token"
 		return models.User{}, errorObject
 	}
 
+	token, err := parseSessionToken(bearer, conf)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		user := models.User{
+			Name: claims["username"].(string),
+		}
+		return user, nil
+	}
+
+	log.Printf("Invalid JWT Token")
+	return models.User{}, err
 }
 
-func TokenVerifyMiddleWare(next http.HandlerFunc, conf *config.SmartPiConfig) http.HandlerFunc {
+// IsDeviceToken reports whether the request's bearer token is a device token
+// (see package devicetoken) rather than a session token. Handlers that gate
+// on a per-user allowlist alongside TokenVerifyMiddleWare - AllowedDigitalOutUser
+// and AllowedAnalogOut420mAUser - use this to skip that allowlist for device
+// tokens: a device token's access is already scoped per-token at creation
+// time in the web UI, by an operator who is themselves already subject to
+// that allowlist, so re-checking an OS username that a device token never
+// had in the first place would only lock every device token out.
+func IsDeviceToken(r *http.Request) bool {
+	bearer, ok := bearerToken(r)
+	return ok && devicetoken.LooksLikeToken(bearer)
+}
+
+// TokenVerifyMiddleWare gates next behind a bearer token that carries scope.
+//
+// A session token (a JWT signed with conf.AppKey) satisfies every scope, the
+// same unconditional access it has always had - session tokens represent a
+// logged-in human, and scoping human access is a separate, independent
+// concern from this change. A device token only passes if it exists in
+// tokens and was explicitly granted scope when it was created; everything
+// else about it, including its validity, is decided by that lookup alone -
+// it is neither signed nor time-limited.
+func TokenVerifyMiddleWare(next http.HandlerFunc, conf *config.SmartPiConfig, tokens *devicetoken.Store, scope string) http.HandlerFunc {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var errorObject models.Error
-		authHeader := r.Header.Get("Authorization")
-		bearerToken := strings.Split(authHeader, " ")
 
-		log.Debug(bearerToken)
-
-		if len(bearerToken) == 2 {
-			authToken := bearerToken[1]
-
-			token, error := jwt.Parse(authToken, func(token *jwt.Token) (interface{}, error) {
-				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-					return nil, fmt.Errorf(("There was an error"))
-				}
-
-				return []byte(conf.AppKey), nil
-			})
-
-			if error != nil {
-				errorObject.Message = error.Error()
-				RespondWithError(w, http.StatusUnauthorized, errorObject)
-				return
-			}
-
-			if token.Valid {
-				next.ServeHTTP(w, r)
-			} else {
-				errorObject.Message = error.Error()
-				RespondWithError(w, http.StatusUnauthorized, errorObject)
-				return
-			}
-		} else {
+		bearer, ok := bearerToken(r)
+		if !ok {
+			logAuthRejected(r, "missing or malformed Authorization header")
 			errorObject.Message = "Invalid token."
 			RespondWithError(w, http.StatusUnauthorized, errorObject)
 			return
 		}
 
+		if devicetoken.LooksLikeToken(bearer) {
+			tok, found := tokens.Lookup(bearer)
+			if !found {
+				logAuthRejected(r, "unknown or revoked device token")
+				errorObject.Message = "Invalid token."
+				RespondWithError(w, http.StatusUnauthorized, errorObject)
+				return
+			}
+			if !tok.HasScope(scope) {
+				logAuthRejected(r, fmt.Sprintf("device token %q (%s) lacks scope %q", tok.Label, tok.ID, scope))
+				errorObject.Message = "Invalid token."
+				RespondWithError(w, http.StatusUnauthorized, errorObject)
+				return
+			}
+			tokens.TouchLastUsed(tok.ID)
+			log.Debugf("%s %s authenticated with device token %q (%s)", r.Method, r.URL.Path, tok.Label, tok.ID)
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		token, err := parseSessionToken(bearer, conf)
+		if err != nil {
+			logAuthRejected(r, "invalid session token: "+err.Error())
+			errorObject.Message = err.Error()
+			RespondWithError(w, http.StatusUnauthorized, errorObject)
+			return
+		}
+		if !token.Valid {
+			logAuthRejected(r, "invalid session token")
+			errorObject.Message = "Invalid token."
+			RespondWithError(w, http.StatusUnauthorized, errorObject)
+			return
+		}
+		log.Debugf("%s %s authenticated with session token", r.Method, r.URL.Path)
+		next.ServeHTTP(w, r)
+	})
+
+}
+
+// logAuthRejected logs a rejected request at Warn level - unlike a successful
+// authentication (logged at Debug, since it is the routine case), a rejection
+// is worth seeing without first having to turn the log level up, since it is
+// the one thing an operator debugging "nothing seems to arrive" actually
+// needs: whether the request reached the server at all, and if so why it was
+// turned away. It never includes the bearer value itself.
+func logAuthRejected(r *http.Request, reason string) {
+	log.Warnf("Rejected %s %s from %s: %s", r.Method, r.URL.Path, r.RemoteAddr, reason)
+}
+
+// RequireSessionToken gates next behind a session token specifically - a
+// device token is never accepted here, regardless of what scopes it carries.
+// This is deliberately stricter than TokenVerifyMiddleWare and used only for
+// the token-management endpoints themselves: if a device token could manage
+// tokens, a leaked digitalout-scoped token could mint itself a
+// config:write-scoped replacement, and per-token scoping would stop meaning
+// anything.
+func RequireSessionToken(next http.HandlerFunc, conf *config.SmartPiConfig) http.HandlerFunc {
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var errorObject models.Error
+
+		bearer, ok := bearerToken(r)
+		if !ok {
+			logAuthRejected(r, "missing or malformed Authorization header")
+			errorObject.Message = "Invalid token."
+			RespondWithError(w, http.StatusUnauthorized, errorObject)
+			return
+		}
+		if devicetoken.LooksLikeToken(bearer) {
+			logAuthRejected(r, "device token used against a session-only endpoint")
+			errorObject.Message = "Invalid token."
+			RespondWithError(w, http.StatusUnauthorized, errorObject)
+			return
+		}
+
+		token, err := parseSessionToken(bearer, conf)
+		if err != nil {
+			logAuthRejected(r, "invalid session token: "+err.Error())
+			errorObject.Message = err.Error()
+			RespondWithError(w, http.StatusUnauthorized, errorObject)
+			return
+		}
+		if !token.Valid {
+			logAuthRejected(r, "invalid session token")
+			errorObject.Message = "Invalid token."
+			RespondWithError(w, http.StatusUnauthorized, errorObject)
+			return
+		}
+		next.ServeHTTP(w, r)
 	})
 
 }
