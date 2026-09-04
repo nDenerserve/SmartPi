@@ -373,3 +373,19 @@ Or you can add it later via webgui:
  * removed support for sqlite
  * tool to converting data from sqlite to influxDB
  * split config file in two seperate files
+
+ ### 09/04/26
+ * added module (analog input 4-20mA / 0-10V, 4 channels)
+ * added module (4-20mA output)
+ * added module (digital out, 4 channels)
+ * added SmartPi Cloud
+ * added I2C bus scan endpoint
+ * added revocable, scoped device tokens for the API
+ * added configurable MQTT/SmartPicloud publish interval (default 60s) with readout aggregation
+ * added LiveTotalPower to the API
+ * added rogowski coil voltage option
+ * allowed a direct hex address for the digital-out module endpoint
+ * fixed errors in current transformer power correction factor calculation (issue #271)
+ * fixed SmartPicloud MQTT topic and config file handling issues
+ * added root and smartpi as default users for digitalout, analogout420ma, etemperature
+ * new website build with updated views and assets
