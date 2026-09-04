@@ -132,6 +132,11 @@ func main() {
 	router.HandleFunc("/api/v1/module/analogin/{address}/{channel}", serverutils.TokenVerifyMiddleWare(modulesController.ReadAnalogInChannel(moduleConfig, smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeAnalogIn)).Methods("GET")
 	router.HandleFunc("/api/v1/module/analogin/{address}", serverutils.TokenVerifyMiddleWare(modulesController.ReadAnalogIn(moduleConfig, smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeAnalogIn)).Methods("GET")
 
+	// I2C bus scan: reports occupied addresses on the configured bus (see
+	// repository/modules/i2cscan.go for why this shells out to i2cdetect
+	// instead of probing directly).
+	router.HandleFunc("/api/v1/i2c/scan", serverutils.TokenVerifyMiddleWare(modulesController.ScanI2C(moduleConfig), smartpiConfig, deviceTokens, devicetoken.ScopeI2CScan)).Methods("GET")
+
 	router.PathPrefix("/assets").Handler(http.FileServer(http.Dir(smartpiConfig.DocRoot + "/")))
 	// Catch-all: Serve our JavaScript application's entry-point (index.html).
 	router.PathPrefix("/").HandlerFunc(IndexHandler(smartpiConfig.DocRoot + "/index.html"))
