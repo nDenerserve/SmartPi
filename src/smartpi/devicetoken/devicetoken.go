@@ -85,11 +85,12 @@ const (
 	ScopeConfigRead  = "config:read"
 	ScopeConfigWrite = "config:write"
 	ScopeNetwork     = "network"
+	ScopeI2CScan     = "i2c:scan"
 )
 
 // Scopes lists every scope a token can be granted, in the order they should
 // be offered when creating one.
-var Scopes = []string{ScopeDigitalOut, ScopeAnalogOut, ScopeAnalogIn, ScopeConfigRead, ScopeConfigWrite, ScopeNetwork}
+var Scopes = []string{ScopeDigitalOut, ScopeAnalogOut, ScopeAnalogIn, ScopeConfigRead, ScopeConfigWrite, ScopeNetwork, ScopeI2CScan}
 
 // ValidScope reports whether scope is one of the known Scopes.
 func ValidScope(scope string) bool {
