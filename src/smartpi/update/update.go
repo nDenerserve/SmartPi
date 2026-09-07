@@ -75,11 +75,28 @@ func InspectDeb(path string) (name, version string, err error) {
 		return "", "", fmt.Errorf("reading package metadata from %s: %w", filepath.Base(path), err)
 	}
 
-	lines := strings.Split(strings.TrimRight(string(out), "\n"), "\n")
-	if len(lines) < 2 || lines[0] == "" || lines[1] == "" {
+	fields := parseControlFields(string(out))
+	name, version = fields["Package"], fields["Version"]
+	if name == "" || version == "" {
 		return "", "", fmt.Errorf("could not determine package name and version from %s", filepath.Base(path))
 	}
-	return lines[0], lines[1], nil
+	return name, version, nil
+}
+
+// parseControlFields parses the "Field: value" lines dpkg-deb -f prints -
+// unlike, say, dpkg-query's -f format strings, it always echoes the field
+// name too, not just the value - into a name to value map.
+func parseControlFields(out string) map[string]string {
+	fields := map[string]string{}
+	scanner := bufio.NewScanner(strings.NewReader(out))
+	for scanner.Scan() {
+		key, value, found := strings.Cut(scanner.Text(), ":")
+		if !found {
+			continue
+		}
+		fields[strings.TrimSpace(key)] = strings.TrimSpace(value)
+	}
+	return fields
 }
 
 // CleanStaleUploads removes every .deb file left behind in dir (the

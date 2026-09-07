@@ -45,6 +45,19 @@ func TestValidPackageName(t *testing.T) {
 	}
 }
 
+func TestParseControlFields(t *testing.T) {
+	// dpkg-deb -f <archive> Package Version echoes the field name on every
+	// line ("Package: smartpi"), not just the bare value - unlike, say,
+	// dpkg-query -W -f='${Version}'.
+	out := "Package: smartpi\nVersion: 2026.09.04-trixie\n"
+
+	got := parseControlFields(out)
+	want := map[string]string{"Package": "smartpi", "Version": "2026.09.04-trixie"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("got %+v, want %+v", got, want)
+	}
+}
+
 func TestParseSearchOutput(t *testing.T) {
 	out := "smartpi - SmartPi energy monitor\n" +
 		"smartpi-modules - SmartPi optional hardware modules\n" +
