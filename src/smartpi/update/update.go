@@ -26,15 +26,39 @@ import (
 	"time"
 )
 
-// StagingDir holds uploaded .deb files until apt-get has consumed them. It
-// lives on /var/tmp, which the readme.md setup mounts as tmpfs, so a file
-// left behind by a crashed upload never survives a reboot.
-const StagingDir = "/var/tmp/smartpi/update"
+// commandInC builds a command that runs with LC_ALL=C - and thus LANGUAGE
+// unset, which would otherwise override LC_ALL for gettext lookups - so its
+// output is always in the untranslated, English form every parser in this
+// file expects, regardless of the system's configured locale. Without this,
+// a device set up with e.g. German as its locale would have apt translate
+// strings this package matches literally, such as "[upgradable from: ...]"
+// in Upgradable, silently turning every match into no match at all.
+func commandInC(name string, args ...string) *exec.Cmd {
+	cmd := exec.Command(name, args...)
+	env := make([]string, 0, len(os.Environ())+1)
+	for _, kv := range os.Environ() {
+		if strings.HasPrefix(kv, "LC_ALL=") || strings.HasPrefix(kv, "LANGUAGE=") {
+			continue
+		}
+		env = append(env, kv)
+	}
+	cmd.Env = append(env, "LC_ALL=C")
+	return cmd
+}
 
-// logDir and stateFile live on /var/smartpi instead, which is not tmpfs:
-// both need to survive the very service restart an update may trigger, so
-// that the status endpoint can still report how the last job ended once
-// smartpiserver comes back up.
+// DefaultStagingDir is where uploaded .deb files are held until apt-get has
+// consumed them, unless overridden by config.SmartPiConfig.UpdateStagingDir.
+// It deliberately does not live under /var/tmp: the readme.md setup mounts
+// that as a tmpfs sized for logs and small scratch files (20-30M by default,
+// see its "Create tmpfs in /etc/fstab" section), which a real SmartPi
+// release package - several statically linked Go binaries in one .deb -
+// does not reliably fit in. /var/smartpi is the same persistent, non-tmpfs
+// storage devicetoken.DefaultPath already uses for tokens.json.
+const DefaultStagingDir = "/var/smartpi/update-uploads"
+
+// logDir and stateFile also live on /var/smartpi: both need to survive the
+// very service restart an update may trigger, so that the status endpoint
+// can still report how the last job ended once smartpiserver comes back up.
 const (
 	logDir    = "/var/smartpi/update-logs"
 	stateFile = "/var/smartpi/update-job.json"
@@ -66,16 +90,55 @@ func IsAllowedDebPackage(name string) bool {
 // InspectDeb reads the package name and version out of a .deb file's control
 // data, without installing it.
 func InspectDeb(path string) (name, version string, err error) {
-	out, err := exec.Command("dpkg-deb", "-f", path, "Package", "Version").Output()
+	out, err := commandInC("dpkg-deb", "-f", path, "Package", "Version").Output()
 	if err != nil {
 		return "", "", fmt.Errorf("reading package metadata from %s: %w", filepath.Base(path), err)
 	}
 
-	lines := strings.Split(strings.TrimRight(string(out), "\n"), "\n")
-	if len(lines) < 2 || lines[0] == "" || lines[1] == "" {
+	fields := parseControlFields(string(out))
+	name, version = fields["Package"], fields["Version"]
+	if name == "" || version == "" {
 		return "", "", fmt.Errorf("could not determine package name and version from %s", filepath.Base(path))
 	}
-	return lines[0], lines[1], nil
+	return name, version, nil
+}
+
+// parseControlFields parses the "Field: value" lines dpkg-deb -f prints -
+// unlike, say, dpkg-query's -f format strings, it always echoes the field
+// name too, not just the value - into a name to value map.
+func parseControlFields(out string) map[string]string {
+	fields := map[string]string{}
+	scanner := bufio.NewScanner(strings.NewReader(out))
+	for scanner.Scan() {
+		key, value, found := strings.Cut(scanner.Text(), ":")
+		if !found {
+			continue
+		}
+		fields[strings.TrimSpace(key)] = strings.TrimSpace(value)
+	}
+	return fields
+}
+
+// CleanStaleUploads removes every .deb file left behind in dir (the
+// configured staging directory) by a previous upload, as long as no install
+// job is currently running. It is best-effort (errors are simply ignored)
+// and meant to be called before staging a new upload: now that staging
+// happens on persistent storage rather than tmpfs (see DefaultStagingDir),
+// an abandoned upload would otherwise sit there forever instead of being
+// reclaimed by the next reboot.
+func CleanStaleUploads(dir string) {
+	if status, err := CurrentStatus(); err != nil || status.State == "running" {
+		return
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	for _, e := range entries {
+		if !e.IsDir() && strings.HasSuffix(e.Name(), ".deb") {
+			os.Remove(filepath.Join(dir, e.Name()))
+		}
+	}
 }
 
 // InstalledVersion returns the currently installed version of pkg, or "" if
@@ -84,7 +147,7 @@ func InspectDeb(path string) (name, version string, err error) {
 // non-zero and writes "no packages found" to stderr for it, which is exactly
 // as informative as an empty result to every caller here.
 func InstalledVersion(pkg string) string {
-	out, err := exec.Command("dpkg-query", "-W", "-f=${Version}", pkg).Output()
+	out, err := commandInC("dpkg-query", "-W", "-f=${Version}", pkg).Output()
 	if err != nil {
 		return ""
 	}
@@ -348,7 +411,7 @@ func tailFile(path string, maxBytes int64) (string, error) {
 // never restarts a service, so it carries none of StartInstall's risk - and
 // returns its combined output for display.
 func Refresh() (string, error) {
-	out, err := exec.Command("sudo", "apt-get", "update").CombinedOutput()
+	out, err := commandInC("sudo", "apt-get", "update").CombinedOutput()
 	if err != nil {
 		return string(out), fmt.Errorf("apt-get update failed: %w", err)
 	}
@@ -365,7 +428,7 @@ type PackageSummary struct {
 // repositories (apt-cache search, restricted to names so a package's
 // description text can't produce surprising matches).
 func Search(term string) ([]PackageSummary, error) {
-	out, err := exec.Command("apt-cache", "search", "--names-only", term).Output()
+	out, err := commandInC("apt-cache", "search", "--names-only", term).Output()
 	if err != nil {
 		return nil, fmt.Errorf("apt-cache search failed: %w", err)
 	}
@@ -373,7 +436,9 @@ func Search(term string) ([]PackageSummary, error) {
 }
 
 func parseSearchOutput(out string) []PackageSummary {
-	var results []PackageSummary
+	// Initialized rather than nil so a genuinely empty result still encodes
+	// to "[]", not "null" - the same reasoning as parseUpgradableOutput.
+	results := []PackageSummary{}
 	for _, line := range strings.Split(strings.TrimRight(out, "\n"), "\n") {
 		if line == "" {
 			continue
@@ -394,7 +459,7 @@ type PackageInfo struct {
 
 // Info reports name's installed and candidate (best available) version.
 func Info(name string) (PackageInfo, error) {
-	out, err := exec.Command("apt-cache", "policy", name).Output()
+	out, err := commandInC("apt-cache", "policy", name).Output()
 	if err != nil {
 		return PackageInfo{}, fmt.Errorf("apt-cache policy failed: %w", err)
 	}
@@ -438,7 +503,7 @@ func Upgradable() ([]UpgradablePackage, error) {
 	// every invocation ("apt does not have a stable CLI interface") - not a
 	// real error, so it is deliberately discarded here rather than folded
 	// into err via CombinedOutput.
-	out, err := exec.Command("apt", "list", "--upgradable").Output()
+	out, err := commandInC("apt", "list", "--upgradable").Output()
 	if err != nil {
 		return nil, fmt.Errorf("apt list --upgradable failed: %w", err)
 	}
@@ -446,7 +511,11 @@ func Upgradable() ([]UpgradablePackage, error) {
 }
 
 func parseUpgradableOutput(out string) []UpgradablePackage {
-	var results []UpgradablePackage
+	// Initialized rather than nil so a genuinely empty result still encodes
+	// to "[]", not "null" - which reads exactly like the locale bug this
+	// package used to have (see commandInC), where every line silently
+	// failed to match and looked the same as "nothing to upgrade".
+	results := []UpgradablePackage{}
 	for _, line := range strings.Split(out, "\n") {
 		m := upgradableLineRE.FindStringSubmatch(line)
 		if m == nil {

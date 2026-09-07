@@ -143,7 +143,7 @@ func main() {
 	// endpoints above - these are at least as privileged as minting a
 	// config:write device token, so a device token must never reach them.
 	router.HandleFunc("/api/v1/update/version", serverutils.RequireSessionToken(controller.GetUpdateVersion(appVersion), smartpiConfig)).Methods("GET")
-	router.HandleFunc("/api/v1/update/package", serverutils.RequireSessionToken(controller.UploadUpdatePackage(), smartpiConfig)).Methods("POST")
+	router.HandleFunc("/api/v1/update/package", serverutils.RequireSessionToken(controller.UploadUpdatePackage(smartpiConfig), smartpiConfig)).Methods("POST")
 	router.HandleFunc("/api/v1/update/status", serverutils.RequireSessionToken(controller.GetUpdateStatus(), smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/apt/refresh", serverutils.RequireSessionToken(controller.RefreshAptCache(), smartpiConfig)).Methods("POST")
 	router.HandleFunc("/api/v1/apt/search", serverutils.RequireSessionToken(controller.SearchAptPackages(), smartpiConfig)).Methods("GET")

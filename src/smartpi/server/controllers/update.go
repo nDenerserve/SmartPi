@@ -11,16 +11,17 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/nDenerserve/SmartPi/models"
+	"github.com/nDenerserve/SmartPi/smartpi/config"
 	"github.com/nDenerserve/SmartPi/smartpi/server/serverutils"
 	"github.com/nDenerserve/SmartPi/smartpi/update"
 )
 
-// maxUploadBytes bounds the size of an uploaded .deb, generously - see the
-// readme.md note on temporarily growing /var/tmp to 200M for updates - while
-// still keeping a runaway or malicious upload from filling the tmpfs it is
-// staged on.
+// maxUploadBytes bounds the size of an uploaded .deb, generously - while
+// still keeping a runaway or malicious upload from filling the staging
+// directory's filesystem (config.SmartPiConfig.UpdateStagingDir).
 const maxUploadBytes = 200 << 20
 
 // updatePackageName is the package SmartPi's own release .deb is expected to
@@ -52,9 +53,11 @@ func (c Controller) GetUpdateVersion(appVersion string) http.HandlerFunc {
 // and starts installing it. The HTTP response only confirms the install was
 // started - poll GetUpdateStatus for its outcome, since installing "smartpi"
 // itself can restart smartpiserver mid-request.
-func (c Controller) UploadUpdatePackage() http.HandlerFunc {
+func (c Controller) UploadUpdatePackage(conf *config.SmartPiConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var errorObject models.Error
+
+		stagingDir := conf.UpdateStagingDir
 
 		r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
 		if err := r.ParseMultipartForm(32 << 20); err != nil {
@@ -77,18 +80,21 @@ func (c Controller) UploadUpdatePackage() http.HandlerFunc {
 			return
 		}
 
-		if err := os.MkdirAll(update.StagingDir, 0700); err != nil {
+		if err := os.MkdirAll(stagingDir, 0700); err != nil {
+			log.Errorf("update: creating staging directory %s: %v", stagingDir, err)
 			errorObject.Message = "Could not prepare the upload directory."
 			serverutils.RespondWithError(w, http.StatusInternalServerError, errorObject)
 			return
 		}
+		update.CleanStaleUploads(stagingDir)
 
 		// Each upload gets its own filename rather than a fixed one, so a
 		// second upload arriving while a previous install is still starting
 		// up can never overwrite the file that install is reading.
-		destPath := filepath.Join(update.StagingDir, fmt.Sprintf("upload-%d.deb", time.Now().UnixNano()))
+		destPath := filepath.Join(stagingDir, fmt.Sprintf("upload-%d.deb", time.Now().UnixNano()))
 		if err := saveUploadedFile(file, destPath); err != nil {
-			errorObject.Message = "Could not store the uploaded file."
+			log.Errorf("update: storing upload at %s: %v", destPath, err)
+			errorObject.Message = fmt.Sprintf("Could not store the uploaded file: %v", err)
 			serverutils.RespondWithError(w, http.StatusInternalServerError, errorObject)
 			return
 		}
