@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/nDenerserve/SmartPi/models"
 	"github.com/nDenerserve/SmartPi/smartpi/server/serverutils"
@@ -78,17 +79,20 @@ func (c Controller) UploadUpdatePackage() http.HandlerFunc {
 		}
 
 		if err := os.MkdirAll(update.StagingDir, 0700); err != nil {
+			log.Errorf("update: creating staging directory %s: %v", update.StagingDir, err)
 			errorObject.Message = "Could not prepare the upload directory."
 			serverutils.RespondWithError(w, http.StatusInternalServerError, errorObject)
 			return
 		}
+		update.CleanStaleUploads()
 
 		// Each upload gets its own filename rather than a fixed one, so a
 		// second upload arriving while a previous install is still starting
 		// up can never overwrite the file that install is reading.
 		destPath := filepath.Join(update.StagingDir, fmt.Sprintf("upload-%d.deb", time.Now().UnixNano()))
 		if err := saveUploadedFile(file, destPath); err != nil {
-			errorObject.Message = "Could not store the uploaded file."
+			log.Errorf("update: storing upload at %s: %v", destPath, err)
+			errorObject.Message = fmt.Sprintf("Could not store the uploaded file: %v", err)
 			serverutils.RespondWithError(w, http.StatusInternalServerError, errorObject)
 			return
 		}
