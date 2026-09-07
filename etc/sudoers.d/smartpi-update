@@ -1,0 +1,17 @@
+# Allows the "smartpi" user - the account smartpiserver.service runs as, see
+# etc/systemd/system/smartpiserver.service - to manage system packages for
+# the web UI's settings "Update" tab (upload+install a smartpi .deb, and
+# search/install/upgrade packages from the repositories already configured
+# on the device).
+#
+# This is deliberately left unscoped rather than pinned to specific
+# arguments: apt-get install can already run arbitrary root-owned postinst
+# scripts for any package in a configured repository, so a sudoers pattern
+# restricting *which* arguments are allowed would not add real security, only
+# the appearance of it. Access is instead gated at the HTTP layer, by
+# requiring a logged-in session token - see RequireSessionToken in
+# src/smartpi/server/serverutils/serverutils.go - the same boundary already
+# relied on for changing a user's password (linuxtoolsRepository.ChangePassword)
+# and for network reconfiguration (see the NetworkManager polkit rules next
+# to this file).
+smartpi ALL=(root) NOPASSWD: /usr/bin/apt-get, /usr/bin/systemd-run, /usr/bin/systemctl

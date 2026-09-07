@@ -389,3 +389,8 @@ Or you can add it later via webgui:
  * fixed SmartPicloud MQTT topic and config file handling issues
  * added root and smartpi as default users for digitalout, analogout420ma, etemperature
  * new website build with updated views and assets
+
+ ### 09/07/26
+ * added a self-update API: upload a smartpi .deb to have it installed, backed by an async job status endpoint since installing smartpi itself can restart the webserver mid-request
+ * added an apt API to search, install and upgrade packages from the repositories already configured on the device
+ * requires the new etc/sudoers.d/smartpi-update rule (grants the smartpi user passwordless apt-get/systemd-run/systemctl)
