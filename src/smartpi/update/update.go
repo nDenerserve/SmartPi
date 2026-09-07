@@ -26,14 +26,15 @@ import (
 	"time"
 )
 
-// StagingDir holds uploaded .deb files until apt-get has consumed them. It
-// deliberately does not live under /var/tmp: the readme.md setup mounts that
-// as a tmpfs sized for logs and small scratch files (20-30M by default, see
-// its "Create tmpfs in /etc/fstab" section), which a real SmartPi release
-// package - several statically linked Go binaries in one .deb - does not
-// reliably fit in. /var/smartpi is the same persistent, non-tmpfs storage
-// devicetoken.DefaultPath already uses for tokens.json.
-const StagingDir = "/var/smartpi/update-uploads"
+// DefaultStagingDir is where uploaded .deb files are held until apt-get has
+// consumed them, unless overridden by config.SmartPiConfig.UpdateStagingDir.
+// It deliberately does not live under /var/tmp: the readme.md setup mounts
+// that as a tmpfs sized for logs and small scratch files (20-30M by default,
+// see its "Create tmpfs in /etc/fstab" section), which a real SmartPi
+// release package - several statically linked Go binaries in one .deb -
+// does not reliably fit in. /var/smartpi is the same persistent, non-tmpfs
+// storage devicetoken.DefaultPath already uses for tokens.json.
+const DefaultStagingDir = "/var/smartpi/update-uploads"
 
 // logDir and stateFile also live on /var/smartpi: both need to survive the
 // very service restart an update may trigger, so that the status endpoint
@@ -81,23 +82,24 @@ func InspectDeb(path string) (name, version string, err error) {
 	return lines[0], lines[1], nil
 }
 
-// CleanStaleUploads removes every .deb file left behind in StagingDir by a
-// previous upload, as long as no install job is currently running. It is
-// best-effort (errors are simply ignored) and meant to be called before
-// staging a new upload: now that StagingDir lives on persistent storage
-// rather than tmpfs (see above), an abandoned upload would otherwise sit
-// there forever instead of being reclaimed by the next reboot.
-func CleanStaleUploads() {
+// CleanStaleUploads removes every .deb file left behind in dir (the
+// configured staging directory) by a previous upload, as long as no install
+// job is currently running. It is best-effort (errors are simply ignored)
+// and meant to be called before staging a new upload: now that staging
+// happens on persistent storage rather than tmpfs (see DefaultStagingDir),
+// an abandoned upload would otherwise sit there forever instead of being
+// reclaimed by the next reboot.
+func CleanStaleUploads(dir string) {
 	if status, err := CurrentStatus(); err != nil || status.State == "running" {
 		return
 	}
-	entries, err := os.ReadDir(StagingDir)
+	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return
 	}
 	for _, e := range entries {
 		if !e.IsDir() && strings.HasSuffix(e.Name(), ".deb") {
-			os.Remove(filepath.Join(StagingDir, e.Name()))
+			os.Remove(filepath.Join(dir, e.Name()))
 		}
 	}
 }

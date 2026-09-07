@@ -394,3 +394,4 @@ Or you can add it later via webgui:
  * added a self-update API: upload a smartpi .deb to have it installed, backed by an async job status endpoint since installing smartpi itself can restart the webserver mid-request
  * added an apt API to search, install and upgrade packages from the repositories already configured on the device
  * requires the new etc/sudoers.d/smartpi-update rule (grants the smartpi user passwordless apt-get/systemd-run/systemctl)
+ * the .deb upload staging directory now defaults to /var/smartpi/update-uploads (not a tmpfs) and is configurable via [update] staging_dir in /etc/smartpi

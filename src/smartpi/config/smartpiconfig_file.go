@@ -33,6 +33,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/nDenerserve/SmartPi/smartpi/update"
 	"github.com/nDenerserve/SmartPi/utils"
 
 	log "github.com/sirupsen/logrus"
@@ -119,6 +120,13 @@ type SmartPiConfig struct {
 	ModbusRTUAddress uint8
 	ModbusRTUDevice  string
 	ModbusTCPAddress string
+
+	// [update]
+	// UpdateStagingDir holds uploaded .deb files until they are installed
+	// (see package update). It must not point into a size-constrained tmpfs
+	// mount (e.g. the /var/tmp the readme.md setup mounts that way) - a real
+	// SmartPi release package does not reliably fit in one.
+	UpdateStagingDir string
 }
 
 var cfg *ini.File
@@ -248,6 +256,9 @@ func (p *SmartPiConfig) ReadParameterFromFile() {
 	p.ModbusRTUDevice = cfg.Section("modbus").Key("modbus_rtu_device_id").MustString("/dev/serial0")
 	p.ModbusTCPAddress = cfg.Section("modbus").Key("modbus_tcp_address").MustString(":502")
 
+	// [update]
+	p.UpdateStagingDir = cfg.Section("update").Key("staging_dir").MustString(update.DefaultStagingDir)
+
 }
 
 func (p *SmartPiConfig) SaveParameterToFile() {
@@ -325,6 +336,9 @@ func (p *SmartPiConfig) SaveParameterToFile() {
 	_, err = cfg.Section("modbus").NewKey("modbus_rtu_address", strconv.FormatUint(uint64(p.ModbusRTUAddress), 10))
 	_, err = cfg.Section("modbus").NewKey("modbus_rtu_device_id", p.ModbusRTUDevice)
 	_, err = cfg.Section("modbus").NewKey("modbus_tcp_address", p.ModbusTCPAddress)
+
+	// [update]
+	_, err = cfg.Section("update").NewKey("staging_dir", p.UpdateStagingDir)
 
 	tmpFile := "/tmp/smartpi_test"
 	err := cfg.SaveTo(tmpFile)
