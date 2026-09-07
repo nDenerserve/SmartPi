@@ -137,6 +137,20 @@ func main() {
 	// instead of probing directly).
 	router.HandleFunc("/api/v1/i2c/scan", serverutils.TokenVerifyMiddleWare(modulesController.ScanI2C(moduleConfig), smartpiConfig, deviceTokens, devicetoken.ScopeI2CScan)).Methods("GET")
 
+	// Self-update (settings "Update" tab): upload+install a smartpi .deb, and
+	// search/install/upgrade packages from the repositories already
+	// configured on the device. Session-only, like the token management
+	// endpoints above - these are at least as privileged as minting a
+	// config:write device token, so a device token must never reach them.
+	router.HandleFunc("/api/v1/update/version", serverutils.RequireSessionToken(controller.GetUpdateVersion(appVersion), smartpiConfig)).Methods("GET")
+	router.HandleFunc("/api/v1/update/package", serverutils.RequireSessionToken(controller.UploadUpdatePackage(), smartpiConfig)).Methods("POST")
+	router.HandleFunc("/api/v1/update/status", serverutils.RequireSessionToken(controller.GetUpdateStatus(), smartpiConfig)).Methods("GET")
+	router.HandleFunc("/api/v1/apt/refresh", serverutils.RequireSessionToken(controller.RefreshAptCache(), smartpiConfig)).Methods("POST")
+	router.HandleFunc("/api/v1/apt/search", serverutils.RequireSessionToken(controller.SearchAptPackages(), smartpiConfig)).Methods("GET")
+	router.HandleFunc("/api/v1/apt/upgradable", serverutils.RequireSessionToken(controller.ListUpgradablePackages(), smartpiConfig)).Methods("GET")
+	router.HandleFunc("/api/v1/apt/package/{name}", serverutils.RequireSessionToken(controller.GetAptPackageInfo(), smartpiConfig)).Methods("GET")
+	router.HandleFunc("/api/v1/apt/install", serverutils.RequireSessionToken(controller.InstallAptPackage(), smartpiConfig)).Methods("POST")
+
 	router.PathPrefix("/assets").Handler(http.FileServer(http.Dir(smartpiConfig.DocRoot + "/")))
 	// Catch-all: Serve our JavaScript application's entry-point (index.html).
 	router.PathPrefix("/").HandlerFunc(IndexHandler(smartpiConfig.DocRoot + "/index.html"))
