@@ -2,8 +2,29 @@ package update
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
+
+func TestCommandInC_ForcesCLocale(t *testing.T) {
+	t.Setenv("LC_ALL", "de_DE.UTF-8")
+	t.Setenv("LANGUAGE", "de_DE:de")
+
+	cmd := commandInC("echo", "hi")
+
+	var lcAll string
+	for _, kv := range cmd.Env {
+		if strings.HasPrefix(kv, "LANGUAGE=") {
+			t.Fatalf("LANGUAGE should have been stripped, got %q", kv)
+		}
+		if name, value, ok := strings.Cut(kv, "="); ok && name == "LC_ALL" {
+			lcAll = value
+		}
+	}
+	if lcAll != "C" {
+		t.Fatalf("LC_ALL = %q, want \"C\"", lcAll)
+	}
+}
 
 func TestIsAllowedDebPackage(t *testing.T) {
 	tests := []struct {
@@ -75,8 +96,8 @@ func TestParseSearchOutput(t *testing.T) {
 }
 
 func TestParseSearchOutput_Empty(t *testing.T) {
-	if got := parseSearchOutput(""); got != nil {
-		t.Fatalf("got %+v, want nil", got)
+	if got := parseSearchOutput(""); len(got) != 0 {
+		t.Fatalf("got %+v, want empty", got)
 	}
 }
 
@@ -128,7 +149,7 @@ grafana/stable 11.0.0 armhf [upgradable from: 10.9.0]
 }
 
 func TestParseUpgradableOutput_NoneUpgradable(t *testing.T) {
-	if got := parseUpgradableOutput("Listing... Done\n"); got != nil {
-		t.Fatalf("got %+v, want nil", got)
+	if got := parseUpgradableOutput("Listing... Done\n"); len(got) != 0 {
+		t.Fatalf("got %+v, want empty", got)
 	}
 }
