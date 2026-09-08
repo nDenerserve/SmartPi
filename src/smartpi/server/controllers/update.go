@@ -237,6 +237,27 @@ func (c Controller) ListUpgradablePackages() http.HandlerFunc {
 	}
 }
 
+// UpgradeAllPackages upgrades every package that currently has a newer
+// version available in the repositories already configured on the device -
+// the same set ListUpgradablePackages reports - in one apt-get run. Like
+// UploadUpdatePackage and InstallAptPackage, this only starts the job - poll
+// GetUpdateStatus for its outcome.
+func (c Controller) UpgradeAllPackages() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var errorObject models.Error
+
+		job, err := update.StartUpgradeAll()
+		if err != nil {
+			errorObject.Message = err.Error()
+			serverutils.RespondWithError(w, http.StatusConflict, errorObject)
+			return
+		}
+
+		w.WriteHeader(http.StatusAccepted)
+		serverutils.ResponseJSON(w, job)
+	}
+}
+
 // installAptPackageRequest is the body of POST /api/v1/apt/install.
 type installAptPackageRequest struct {
 	Package string `json:"package"`
