@@ -191,9 +191,12 @@ type Status struct {
 	// "succeeded" or "failed".
 	ExitCode int `json:"exitCode"`
 	// Log is the tail of the job's combined stdout/stderr, populated only
-	// while State is "running" - once a job has finished, its log is no
+	// while State is "running" or "failed" - once a job has finished
+	// successfully (or there's nothing to show at all), its log is no
 	// longer needed and would otherwise linger in every future status
-	// response as confusingly stale output from a job that is long over.
+	// response as confusingly stale output from a job that is long over. A
+	// failed job is the exception: that's exactly when the log stops being
+	// stale noise and becomes the one place to see why.
 	Log string `json:"log,omitempty"`
 }
 
@@ -219,11 +222,19 @@ func StartInstall(kind, pkg, previousVersion, targetVersion, target string) (Job
 	}, []string{"install", "-y", "-o", "Dpkg::Options::=--force-confold", target})
 }
 
-// StartUpgradeAll launches `apt-get upgrade -y`, upgrading every package
-// that currently has a newer version available in the repositories
-// configured on the device (as of the last Refresh) - the same set
-// Upgradable reports. Like StartInstall, it returns immediately; poll
-// CurrentStatus for the outcome.
+// StartUpgradeAll launches `apt-get dist-upgrade -y`, upgrading every
+// package that currently has a newer version available in the
+// repositories configured on the device (as of the last Refresh) - the
+// same set Upgradable reports. Like StartInstall, it returns immediately;
+// poll CurrentStatus for the outcome.
+//
+// dist-upgrade, not plain upgrade: apt-get upgrade deliberately never
+// installs or removes a package to satisfy one - it silently leaves
+// anything that would require that "kept back" instead, doing nothing for
+// it. That's routine for a kernel/firmware bump (a new linux-image-*
+// pulling in a new linux-headers-*, say), so upgrade alone would leave
+// most of what Upgradable/job.Packages just promised untouched, while
+// still exiting 0 as if there was nothing to do.
 func StartUpgradeAll() (Job, error) {
 	job := Job{Kind: "apt-all"}
 	if pkgs, err := Upgradable(); err == nil {
@@ -233,7 +244,7 @@ func StartUpgradeAll() (Job, error) {
 		}
 		job.Packages = names
 	}
-	return startJob(job, []string{"upgrade", "-y", "-o", "Dpkg::Options::=--force-confold"})
+	return startJob(job, []string{"dist-upgrade", "-y", "-o", "Dpkg::Options::=--force-confold"})
 }
 
 // varTmpPath is where apt-get/dpkg keep scratch files - archive extraction,
@@ -261,7 +272,12 @@ const varTmpEnlargedSize = "200m"
 // exactly that - and the shrink-back step needs to run regardless of
 // whether the Go process that started the job is still around to see it
 // finish.
-func aptGetScript(aptArgs []string) string {
+//
+// It also records apt-get's exit code to exitCodePath itself, right before
+// exiting with that same code - see jobOutcome for why CurrentStatus needs
+// that, rather than relying only on systemd's own bookkeeping for the
+// unit.
+func aptGetScript(aptArgs []string, exitCodePath string) string {
 	quoted := make([]string, len(aptArgs))
 	for i, a := range aptArgs {
 		quoted[i] = shellQuote(a)
@@ -271,13 +287,15 @@ func aptGetScript(aptArgs []string) string {
 	return fmt.Sprintf(`fstype=$(awk '$2 == "%[1]s" {print $3}' /proc/mounts)
 if [ "$fstype" = tmpfs ]; then
   mount -o remount,size=%[2]s %[1]s
-  %[3]s
-  ec=$?
-  mount -o remount %[1]s
-  exit $ec
 fi
 %[3]s
-`, varTmpPath, varTmpEnlargedSize, aptGetCmd)
+ec=$?
+if [ "$fstype" = tmpfs ]; then
+  mount -o remount %[1]s
+fi
+echo $ec > %[4]s
+exit $ec
+`, varTmpPath, varTmpEnlargedSize, aptGetCmd, shellQuote(exitCodePath))
 }
 
 // shellQuote wraps s in single quotes for safe use as one word in a POSIX
@@ -312,6 +330,7 @@ func startJob(job Job, aptArgs []string) (Job, error) {
 
 	unit := fmt.Sprintf("smartpi-update-%d", time.Now().UnixNano())
 	logPath := filepath.Join(logDir, unit+".log")
+	exitCodePath := filepath.Join(logDir, unit+".exitcode")
 
 	args := []string{
 		"systemd-run",
@@ -319,8 +338,9 @@ func startJob(job Job, aptArgs []string) (Job, error) {
 		"--property=KillMode=none",
 		"--property=StandardOutput=file:" + logPath,
 		"--property=StandardError=file:" + logPath,
+		"--setenv=DEBIAN_FRONTEND=noninteractive",
 		"--",
-		"/bin/sh", "-c", aptGetScript(aptArgs),
+		"/bin/sh", "-c", aptGetScript(aptArgs, exitCodePath),
 	}
 	if out, err := exec.Command("sudo", args...).CombinedOutput(); err != nil {
 		return Job{}, fmt.Errorf("starting update: %s (%s)", err, strings.TrimSpace(string(out)))
@@ -345,10 +365,15 @@ func CurrentStatus() (Status, error) {
 		return Status{State: "idle"}, nil
 	}
 
-	state, exitCode := unitState(job.Unit)
+	state, exitCode := jobOutcome(job.Unit)
 
+	// Only omitted for "succeeded"/"idle"/"unknown": once a job is done and
+	// nothing went wrong, or there's nothing to show in the first place,
+	// the log is just stale noise on a routine status poll (see Log's doc
+	// comment) - but a "failed" job is exactly when its log stops being
+	// noise and becomes the one place to see why.
 	var logTail string
-	if state == "running" {
+	if state == "running" || state == "failed" {
 		logTail, _ = tailFile(filepath.Join(logDir, job.Unit+".log"), 64*1024)
 	}
 
@@ -358,6 +383,33 @@ func CurrentStatus() (Status, error) {
 		ExitCode: exitCode,
 		Log:      logTail,
 	}, nil
+}
+
+// jobOutcome reports unit's outcome: "running" while it's still going,
+// "succeeded"/"failed" (with the exit code apt-get itself recorded - see
+// aptGetScript) once it's done, or "unknown" if that can't be determined.
+//
+// The exit-code file, when present, is trusted over asking systemd: a
+// transient unit that finished *successfully* is garbage-collected by
+// systemd within a few seconds of finishing - at which point `systemctl
+// show` reports the exact same defaults (ActiveState=inactive,
+// Result=success, ExecMainStatus=0) as a unit that was only just requested
+// and hasn't started running yet at all. Without the file, a poll landing
+// in either of those windows - right after StartInstall/StartUpgradeAll
+// launches a job, or late enough that a fast job already finished and got
+// collected - was indistinguishable from the other, and the former was
+// being misreported as "succeeded" before it had done anything. A unit
+// that instead *fails* stays loaded until explicitly reset, so this
+// ambiguity is specific to success.
+func jobOutcome(unit string) (state string, exitCode int) {
+	if raw, err := os.ReadFile(filepath.Join(logDir, unit+".exitcode")); err == nil {
+		fmt.Sscanf(strings.TrimSpace(string(raw)), "%d", &exitCode)
+		if exitCode == 0 {
+			return "succeeded", exitCode
+		}
+		return "failed", exitCode
+	}
+	return unitState(unit)
 }
 
 // unitStateExecRetries/unitStateExecRetryDelay bound how hard unitState
@@ -381,6 +433,13 @@ const (
 // though the apt-get run itself was still very much alive. Retrying a few
 // times first, rather than trusting one attempt, avoids that false
 // "unknown" for what is almost always a momentary blip.
+//
+// jobOutcome only ever falls back to this once it finds no exit-code file
+// for the unit. This never reports "succeeded": at this point, ActiveState
+// "inactive" with Result "success" cannot mean genuine success - that
+// always leaves the exit-code file behind first (see aptGetScript), which
+// jobOutcome would have already trusted over ever calling this. See the
+// switch below for what "inactive" (and friends) means instead.
 func unitState(unit string) (state string, exitCode int) {
 	var out []byte
 	var err error
@@ -389,8 +448,7 @@ func unitState(unit string) (state string, exitCode int) {
 			time.Sleep(unitStateExecRetryDelay)
 		}
 		out, err = exec.Command("systemctl", "show", unit,
-			"--property=ActiveState", "--property=SubState",
-			"--property=Result", "--property=ExecMainStatus",
+			"--property=ActiveState", "--property=ExecMainStatus",
 		).Output()
 		if err == nil {
 			break
@@ -412,25 +470,28 @@ func unitState(unit string) (state string, exitCode int) {
 	fmt.Sscanf(props["ExecMainStatus"], "%d", &exitCode)
 
 	switch props["ActiveState"] {
-	case "activating", "reloading":
+	case "activating", "reloading", "active":
 		return "running", exitCode
-	case "active":
-		if props["SubState"] == "running" {
-			return "running", exitCode
-		}
+	case "failed":
+		return "failed", exitCode
+	default:
+		// "inactive"/"deactivating", or ActiveState empty - systemd has no
+		// record of the unit actually running right now. That's routine in
+		// the moment right after StartInstall/StartUpgradeAll launches a
+		// job, before it's had a chance to load - but it's exactly as
+		// consistent with a job that finished (successfully) and was
+		// garbage collected before ever getting to write its exit-code
+		// file, e.g. because it was started by an older smartpiserver build
+		// that predates aptGetScript recording one at all (the version this
+		// device was just upgraded from, say), the device rebooted
+		// mid-job, or `systemctl reset-failed` ran. There is no way to
+		// tell those apart from systemd state alone, so unlike the cases
+		// above, this is never reported as "running" - a real job's brief
+		// moment here resolves to "running" again within a poll or two
+		// anyway, which is a lot cheaper than a caller mistaking a stale
+		// reference for one still going.
+		return "unknown", 0
 	}
-
-	if props["Result"] == "success" {
-		return "succeeded", exitCode
-	}
-	if props["ActiveState"] == "" {
-		// The unit is no longer loaded at all (e.g. the device rebooted
-		// mid-install, or something ran `systemctl reset-failed`). Neither
-		// "succeeded" nor "failed" would be accurate, since we genuinely
-		// don't know.
-		return "unknown", exitCode
-	}
-	return "failed", exitCode
 }
 
 // saveJob persists job atomically: to a temp file in stateFile's directory,

@@ -1,7 +1,9 @@
 package update
 
 import (
+	"os"
 	"os/exec"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -176,7 +178,7 @@ func TestAptGetScript_ValidShell(t *testing.T) {
 	if _, err := exec.LookPath("sh"); err != nil {
 		t.Skip("sh not available")
 	}
-	script := aptGetScript([]string{"install", "-y", "smartpi's-package"})
+	script := aptGetScript([]string{"install", "-y", "smartpi's-package"}, "/var/smartpi/update-logs/unit.exitcode")
 	cmd := exec.Command("sh", "-n")
 	cmd.Stdin = strings.NewReader(script)
 	if out, err := cmd.CombinedOutput(); err != nil {
@@ -184,14 +186,88 @@ func TestAptGetScript_ValidShell(t *testing.T) {
 	}
 }
 
-func TestAptGetScript_QuotesArgsAndRunsBothBranches(t *testing.T) {
-	script := aptGetScript([]string{"install", "-y", "pkg=1.2.3"})
+func TestAptGetScript_QuotesArgsAndRecordsExitCode(t *testing.T) {
+	script := aptGetScript([]string{"install", "-y", "pkg=1.2.3"}, "/var/smartpi/update-logs/unit.exitcode")
 
 	want := "apt-get 'install' '-y' 'pkg=1.2.3'"
-	if n := strings.Count(script, want); n != 2 {
-		t.Fatalf("expected the quoted apt-get command twice (tmpfs and non-tmpfs branch), got %d occurrences in:\n%s", n, script)
+	if n := strings.Count(script, want); n != 1 {
+		t.Fatalf("expected the quoted apt-get command exactly once, got %d occurrences in:\n%s", n, script)
 	}
 	if !strings.Contains(script, varTmpPath) || !strings.Contains(script, varTmpEnlargedSize) {
 		t.Fatalf("script does not remount %s to %s:\n%s", varTmpPath, varTmpEnlargedSize, script)
 	}
+	if !strings.Contains(script, "echo $ec > '/var/smartpi/update-logs/unit.exitcode'") {
+		t.Fatalf("script does not record apt-get's exit code:\n%s", script)
+	}
+}
+
+// TestAptGetScript_RecordsRealExitCode actually runs the generated script
+// (against /bin/true and /bin/false standing in for apt-get, via a PATH
+// override) and checks the exit-code file it writes matches - this is what
+// jobOutcome relies on to tell a genuinely finished job apart from one
+// systemd hasn't started running yet, see jobOutcome's doc comment.
+func TestAptGetScript_RecordsRealExitCode(t *testing.T) {
+	if _, err := exec.LookPath("sh"); err != nil {
+		t.Skip("sh not available")
+	}
+
+	for _, tt := range []struct {
+		binary   string
+		wantCode string
+	}{
+		{"true", "0"},
+		{"false", "1"},
+	} {
+		t.Run(tt.binary, func(t *testing.T) {
+			dir := t.TempDir()
+			// aptGetScript always invokes "apt-get" by name; put a same-named
+			// stand-in on PATH ahead of the real one instead of teaching the
+			// function to run something else.
+			aptGetStub := filepath.Join(dir, "apt-get")
+			if err := os.Symlink(mustLookPath(t, tt.binary), aptGetStub); err != nil {
+				t.Fatal(err)
+			}
+			exitCodePath := filepath.Join(dir, "unit.exitcode")
+
+			cmd := exec.Command("sh", "-c", aptGetScript(nil, exitCodePath))
+			cmd.Env = append(os.Environ(), "PATH="+dir+":"+os.Getenv("PATH"))
+			out, _ := cmd.CombinedOutput()
+
+			got, err := os.ReadFile(exitCodePath)
+			if err != nil {
+				t.Fatalf("exit-code file was not written: %v\nscript output:\n%s", err, out)
+			}
+			if strings.TrimSpace(string(got)) != tt.wantCode {
+				t.Fatalf("exit-code file = %q, want %q", got, tt.wantCode)
+			}
+		})
+	}
+}
+
+// TestUnitState_UnknownUnitReportsUnknown guards against the exact bug
+// jobOutcome's doc comment describes: `systemctl show` on a unit it has
+// never heard of is indistinguishable, from ActiveState alone, from a unit
+// that already finished successfully and was collected (both report
+// ActiveState "inactive"), or from one that was requested but hasn't
+// started yet. It must not be read as "succeeded" - nor as "running",
+// which would leave a genuinely stale job (e.g. one started by an older
+// smartpiserver build that predates aptGetScript's exit-code file) stuck
+// looking active forever.
+func TestUnitState_UnknownUnitReportsUnknown(t *testing.T) {
+	if _, err := exec.LookPath("systemctl"); err != nil {
+		t.Skip("systemctl not available")
+	}
+	state, exitCode := unitState("smartpi-update-test-unit-that-was-never-started")
+	if state != "unknown" {
+		t.Fatalf(`unitState on a never-started unit = %q (exitCode %d), want "unknown"`, state, exitCode)
+	}
+}
+
+func mustLookPath(t *testing.T, name string) string {
+	t.Helper()
+	path, err := exec.LookPath(name)
+	if err != nil {
+		t.Skipf("%s not available: %v", name, err)
+	}
+	return path
 }
