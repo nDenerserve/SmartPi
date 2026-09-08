@@ -191,9 +191,12 @@ type Status struct {
 	// "succeeded" or "failed".
 	ExitCode int `json:"exitCode"`
 	// Log is the tail of the job's combined stdout/stderr, populated only
-	// while State is "running" - once a job has finished, its log is no
+	// while State is "running" or "failed" - once a job has finished
+	// successfully (or there's nothing to show at all), its log is no
 	// longer needed and would otherwise linger in every future status
-	// response as confusingly stale output from a job that is long over.
+	// response as confusingly stale output from a job that is long over. A
+	// failed job is the exception: that's exactly when the log stops being
+	// stale noise and becomes the one place to see why.
 	Log string `json:"log,omitempty"`
 }
 
@@ -364,8 +367,13 @@ func CurrentStatus() (Status, error) {
 
 	state, exitCode := jobOutcome(job.Unit)
 
+	// Only omitted for "succeeded"/"idle"/"unknown": once a job is done and
+	// nothing went wrong, or there's nothing to show in the first place,
+	// the log is just stale noise on a routine status poll (see Log's doc
+	// comment) - but a "failed" job is exactly when its log stops being
+	// noise and becomes the one place to see why.
 	var logTail string
-	if state == "running" {
+	if state == "running" || state == "failed" {
 		logTail, _ = tailFile(filepath.Join(logDir, job.Unit+".log"), 64*1024)
 	}
 
