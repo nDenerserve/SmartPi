@@ -183,8 +183,11 @@ type Status struct {
 	// ExitCode is apt-get's exit status, meaningful only once State is
 	// "succeeded" or "failed".
 	ExitCode int `json:"exitCode"`
-	// Log is the tail of the job's combined stdout/stderr.
-	Log string `json:"log"`
+	// Log is the tail of the job's combined stdout/stderr, populated only
+	// while State is "running" - once a job has finished, its log is no
+	// longer needed and would otherwise linger in every future status
+	// response as confusingly stale output from a job that is long over.
+	Log string `json:"log,omitempty"`
 }
 
 // jobMu serializes StartInstall against itself: two concurrent uploads must
@@ -262,7 +265,11 @@ func CurrentStatus() (Status, error) {
 	}
 
 	state, exitCode := unitState(job.Unit)
-	logTail, _ := tailFile(filepath.Join(logDir, job.Unit+".log"), 64*1024)
+
+	var logTail string
+	if state == "running" {
+		logTail, _ = tailFile(filepath.Join(logDir, job.Unit+".log"), 64*1024)
+	}
 
 	return Status{
 		Job:      job,
