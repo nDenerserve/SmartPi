@@ -167,10 +167,10 @@ type Job struct {
 	// Kind is "deb" for an uploaded package, "apt" for one installed or
 	// upgraded from a configured repository, or "apt-all" for upgrading
 	// every upgradable package at once (see StartUpgradeAll).
-	Kind            string    `json:"kind"`
-	Package         string    `json:"package,omitempty"`
-	PreviousVersion string    `json:"previousVersion,omitempty"`
-	TargetVersion   string    `json:"targetVersion,omitempty"`
+	Kind            string `json:"kind"`
+	Package         string `json:"package,omitempty"`
+	PreviousVersion string `json:"previousVersion,omitempty"`
+	TargetVersion   string `json:"targetVersion,omitempty"`
 	// Packages lists every package being upgraded, for Kind "apt-all" -
 	// Package/PreviousVersion/TargetVersion don't apply when many packages
 	// are upgraded in one shot. Best-effort: left empty if the package list
