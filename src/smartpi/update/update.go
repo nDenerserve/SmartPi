@@ -360,14 +360,42 @@ func CurrentStatus() (Status, error) {
 	}, nil
 }
 
+// unitStateExecRetries/unitStateExecRetryDelay bound how hard unitState
+// tries to run `systemctl show` before giving up - see unitState's doc
+// comment for why a single failed attempt isn't trusted.
+const (
+	unitStateExecRetries    = 3
+	unitStateExecRetryDelay = 200 * time.Millisecond
+)
+
 // unitState queries systemd for unit's current lifecycle state. Reading a
 // unit's status is an unprivileged operation, unlike starting or resetting
 // one, so this deliberately does not go through sudo.
+//
+// Spawning systemctl itself can transiently fail - fork/exec: resource
+// temporarily unavailable - while a large apt-get run (hundreds of
+// packages, their postinst scripts, ...) is under way, especially on the
+// memory-constrained hardware SmartPi typically runs on. A single failed
+// attempt used to be reported as state "unknown" straight away, which a
+// caller polling this can't tell apart from a genuinely lost job - even
+// though the apt-get run itself was still very much alive. Retrying a few
+// times first, rather than trusting one attempt, avoids that false
+// "unknown" for what is almost always a momentary blip.
 func unitState(unit string) (state string, exitCode int) {
-	out, err := exec.Command("systemctl", "show", unit,
-		"--property=ActiveState", "--property=SubState",
-		"--property=Result", "--property=ExecMainStatus",
-	).Output()
+	var out []byte
+	var err error
+	for attempt := 0; attempt < unitStateExecRetries; attempt++ {
+		if attempt > 0 {
+			time.Sleep(unitStateExecRetryDelay)
+		}
+		out, err = exec.Command("systemctl", "show", unit,
+			"--property=ActiveState", "--property=SubState",
+			"--property=Result", "--property=ExecMainStatus",
+		).Output()
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		return "unknown", 0
 	}
