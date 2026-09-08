@@ -150,6 +150,7 @@ func main() {
 	router.HandleFunc("/api/v1/apt/upgradable", serverutils.RequireSessionToken(controller.ListUpgradablePackages(), smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/apt/package/{name}", serverutils.RequireSessionToken(controller.GetAptPackageInfo(), smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/apt/install", serverutils.RequireSessionToken(controller.InstallAptPackage(), smartpiConfig)).Methods("POST")
+	router.HandleFunc("/api/v1/apt/upgrade-all", serverutils.RequireSessionToken(controller.UpgradeAllPackages(), smartpiConfig)).Methods("POST")
 
 	router.PathPrefix("/assets").Handler(http.FileServer(http.Dir(smartpiConfig.DocRoot + "/")))
 	// Catch-all: Serve our JavaScript application's entry-point (index.html).

@@ -165,12 +165,19 @@ type Job struct {
 	// see StartInstall.
 	Unit string `json:"unit"`
 	// Kind is "deb" for an uploaded package, "apt" for one installed or
-	// upgraded from a configured repository.
+	// upgraded from a configured repository, or "apt-all" for upgrading
+	// every upgradable package at once (see StartUpgradeAll).
 	Kind            string    `json:"kind"`
-	Package         string    `json:"package"`
+	Package         string    `json:"package,omitempty"`
 	PreviousVersion string    `json:"previousVersion,omitempty"`
 	TargetVersion   string    `json:"targetVersion,omitempty"`
-	StartedAt       time.Time `json:"startedAt"`
+	// Packages lists every package being upgraded, for Kind "apt-all" -
+	// Package/PreviousVersion/TargetVersion don't apply when many packages
+	// are upgraded in one shot. Best-effort: left empty if the package list
+	// could not be determined up front, which does not stop the upgrade
+	// itself from running.
+	Packages  []string  `json:"packages,omitempty"`
+	StartedAt time.Time `json:"startedAt"`
 }
 
 // Status is a Job plus its current outcome, as reported by systemd and the
@@ -190,18 +197,49 @@ type Status struct {
 	Log string `json:"log,omitempty"`
 }
 
-// jobMu serializes StartInstall against itself: two concurrent uploads must
+// jobMu serializes startJob against itself: two concurrent requests must
 // not both pass the "nothing is running" check and race to launch two
-// installs at once.
+// jobs at once.
 var jobMu sync.Mutex
 
 // StartInstall launches `apt-get install -y <target>` as its own detached
-// systemd unit and returns immediately; poll CurrentStatus for the outcome.
+// systemd unit (see startJob) and returns immediately; poll CurrentStatus
+// for the outcome.
 //
 // target is either a filesystem path to a .deb file, or an apt package
 // reference ("name" or "name=version"). pkg/previousVersion/targetVersion
 // are recorded purely for display - they play no part in what gets
 // installed.
+func StartInstall(kind, pkg, previousVersion, targetVersion, target string) (Job, error) {
+	return startJob(Job{
+		Kind:            kind,
+		Package:         pkg,
+		PreviousVersion: previousVersion,
+		TargetVersion:   targetVersion,
+	}, []string{"install", "-y", "-o", "Dpkg::Options::=--force-confold", target})
+}
+
+// StartUpgradeAll launches `apt-get upgrade -y`, upgrading every package
+// that currently has a newer version available in the repositories
+// configured on the device (as of the last Refresh) - the same set
+// Upgradable reports. Like StartInstall, it returns immediately; poll
+// CurrentStatus for the outcome.
+func StartUpgradeAll() (Job, error) {
+	job := Job{Kind: "apt-all"}
+	if pkgs, err := Upgradable(); err == nil {
+		names := make([]string, len(pkgs))
+		for i, p := range pkgs {
+			names[i] = p.Name
+		}
+		job.Packages = names
+	}
+	return startJob(job, []string{"upgrade", "-y", "-o", "Dpkg::Options::=--force-confold"})
+}
+
+// startJob is the shared implementation behind StartInstall and
+// StartUpgradeAll: it launches `apt-get <aptArgs...>` as its own detached
+// systemd unit and persists job (with Unit and StartedAt filled in) so
+// CurrentStatus can report its outcome.
 //
 // The install is deliberately not run as a plain child process of
 // smartpiserver: installing "smartpi" itself can restart smartpiserver.service
@@ -210,7 +248,7 @@ var jobMu sync.Mutex
 // corrupting the very install in progress. Running it via `systemd-run` moves
 // it into its own unit/cgroup first, and `--property=KillMode=none` on that
 // unit keeps it that way even if something explicitly signals it.
-func StartInstall(kind, pkg, previousVersion, targetVersion, target string) (Job, error) {
+func startJob(job Job, aptArgs []string) (Job, error) {
 	jobMu.Lock()
 	defer jobMu.Unlock()
 
@@ -225,28 +263,21 @@ func StartInstall(kind, pkg, previousVersion, targetVersion, target string) (Job
 	unit := fmt.Sprintf("smartpi-update-%d", time.Now().UnixNano())
 	logPath := filepath.Join(logDir, unit+".log")
 
-	cmd := exec.Command("sudo", "systemd-run",
-		"--unit="+unit,
+	args := append([]string{
+		"systemd-run",
+		"--unit=" + unit,
 		"--property=KillMode=none",
-		"--property=StandardOutput=file:"+logPath,
-		"--property=StandardError=file:"+logPath,
+		"--property=StandardOutput=file:" + logPath,
+		"--property=StandardError=file:" + logPath,
 		"--",
-		"apt-get", "install", "-y",
-		"-o", "Dpkg::Options::=--force-confold",
-		target,
-	)
-	if out, err := cmd.CombinedOutput(); err != nil {
+		"apt-get",
+	}, aptArgs...)
+	if out, err := exec.Command("sudo", args...).CombinedOutput(); err != nil {
 		return Job{}, fmt.Errorf("starting update: %s (%s)", err, strings.TrimSpace(string(out)))
 	}
 
-	job := Job{
-		Unit:            unit,
-		Kind:            kind,
-		Package:         pkg,
-		PreviousVersion: previousVersion,
-		TargetVersion:   targetVersion,
-		StartedAt:       time.Now().UTC(),
-	}
+	job.Unit = unit
+	job.StartedAt = time.Now().UTC()
 	if err := saveJob(job); err != nil {
 		return job, fmt.Errorf("update started but its state could not be saved: %w", err)
 	}
