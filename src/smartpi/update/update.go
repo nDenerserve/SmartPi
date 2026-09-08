@@ -529,7 +529,7 @@ func tailFile(path string, maxBytes int64) (string, error) {
 func Refresh() (string, error) {
 	out, err := commandInC("sudo", "apt-get", "update").CombinedOutput()
 	if err != nil {
-		return string(out), fmt.Errorf("apt-get update failed: %w", err)
+		return string(out), fmt.Errorf("apt-get update failed: %s (%s)", err, strings.TrimSpace(string(out)))
 	}
 	return string(out), nil
 }
