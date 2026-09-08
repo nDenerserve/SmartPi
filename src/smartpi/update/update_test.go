@@ -244,18 +244,22 @@ func TestAptGetScript_RecordsRealExitCode(t *testing.T) {
 	}
 }
 
-// TestUnitState_UnknownUnitReportsRunningNotSucceeded guards against the
-// exact bug jobOutcome's doc comment describes: `systemctl show` on a unit
-// it has never heard of - indistinguishable, from ActiveState/Result
-// alone, from a unit that already finished successfully and was collected
-// - must not be read as "succeeded".
-func TestUnitState_UnknownUnitReportsRunningNotSucceeded(t *testing.T) {
+// TestUnitState_UnknownUnitReportsUnknown guards against the exact bug
+// jobOutcome's doc comment describes: `systemctl show` on a unit it has
+// never heard of is indistinguishable, from ActiveState alone, from a unit
+// that already finished successfully and was collected (both report
+// ActiveState "inactive"), or from one that was requested but hasn't
+// started yet. It must not be read as "succeeded" - nor as "running",
+// which would leave a genuinely stale job (e.g. one started by an older
+// smartpiserver build that predates aptGetScript's exit-code file) stuck
+// looking active forever.
+func TestUnitState_UnknownUnitReportsUnknown(t *testing.T) {
 	if _, err := exec.LookPath("systemctl"); err != nil {
 		t.Skip("systemctl not available")
 	}
 	state, exitCode := unitState("smartpi-update-test-unit-that-was-never-started")
-	if state == "succeeded" {
-		t.Fatalf(`unitState on a never-started unit = "succeeded" (exitCode %d), want anything else`, exitCode)
+	if state != "unknown" {
+		t.Fatalf(`unitState on a never-started unit = %q (exitCode %d), want "unknown"`, state, exitCode)
 	}
 }
 

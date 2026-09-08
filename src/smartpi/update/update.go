@@ -219,11 +219,19 @@ func StartInstall(kind, pkg, previousVersion, targetVersion, target string) (Job
 	}, []string{"install", "-y", "-o", "Dpkg::Options::=--force-confold", target})
 }
 
-// StartUpgradeAll launches `apt-get upgrade -y`, upgrading every package
-// that currently has a newer version available in the repositories
-// configured on the device (as of the last Refresh) - the same set
-// Upgradable reports. Like StartInstall, it returns immediately; poll
-// CurrentStatus for the outcome.
+// StartUpgradeAll launches `apt-get dist-upgrade -y`, upgrading every
+// package that currently has a newer version available in the
+// repositories configured on the device (as of the last Refresh) - the
+// same set Upgradable reports. Like StartInstall, it returns immediately;
+// poll CurrentStatus for the outcome.
+//
+// dist-upgrade, not plain upgrade: apt-get upgrade deliberately never
+// installs or removes a package to satisfy one - it silently leaves
+// anything that would require that "kept back" instead, doing nothing for
+// it. That's routine for a kernel/firmware bump (a new linux-image-*
+// pulling in a new linux-headers-*, say), so upgrade alone would leave
+// most of what Upgradable/job.Packages just promised untouched, while
+// still exiting 0 as if there was nothing to do.
 func StartUpgradeAll() (Job, error) {
 	job := Job{Kind: "apt-all"}
 	if pkgs, err := Upgradable(); err == nil {
@@ -233,7 +241,7 @@ func StartUpgradeAll() (Job, error) {
 		}
 		job.Packages = names
 	}
-	return startJob(job, []string{"upgrade", "-y", "-o", "Dpkg::Options::=--force-confold"})
+	return startJob(job, []string{"dist-upgrade", "-y", "-o", "Dpkg::Options::=--force-confold"})
 }
 
 // varTmpPath is where apt-get/dpkg keep scratch files - archive extraction,
@@ -419,13 +427,11 @@ const (
 // "unknown" for what is almost always a momentary blip.
 //
 // jobOutcome only ever falls back to this once it finds no exit-code file
-// for the unit - i.e. the job hasn't genuinely finished (or crashed hard
-// enough to never write it, e.g. an OOM kill). So unlike jobOutcome, this
-// never reports "succeeded": at this point, ActiveState "inactive" with
-// Result "success" cannot mean genuine success (that always leaves the
-// exit-code file behind first, see aptGetScript) - it means systemd hasn't
-// finished loading/starting the unit yet, which is still "running" as far
-// as a caller is concerned.
+// for the unit. This never reports "succeeded": at this point, ActiveState
+// "inactive" with Result "success" cannot mean genuine success - that
+// always leaves the exit-code file behind first (see aptGetScript), which
+// jobOutcome would have already trusted over ever calling this. See the
+// switch below for what "inactive" (and friends) means instead.
 func unitState(unit string) (state string, exitCode int) {
 	var out []byte
 	var err error
@@ -456,18 +462,27 @@ func unitState(unit string) (state string, exitCode int) {
 	fmt.Sscanf(props["ExecMainStatus"], "%d", &exitCode)
 
 	switch props["ActiveState"] {
+	case "activating", "reloading", "active":
+		return "running", exitCode
 	case "failed":
 		return "failed", exitCode
-	case "":
-		// systemctl doesn't know about this unit at all (e.g. the device
-		// rebooted mid-install, or something ran `systemctl reset-failed`).
-		// "running" would not be accurate, since we genuinely don't know.
-		return "unknown", 0
 	default:
-		// "activating"/"reloading"/"active", or "inactive"/"deactivating"
-		// for a unit that hasn't started running yet - all still "running"
-		// from a caller's point of view.
-		return "running", exitCode
+		// "inactive"/"deactivating", or ActiveState empty - systemd has no
+		// record of the unit actually running right now. That's routine in
+		// the moment right after StartInstall/StartUpgradeAll launches a
+		// job, before it's had a chance to load - but it's exactly as
+		// consistent with a job that finished (successfully) and was
+		// garbage collected before ever getting to write its exit-code
+		// file, e.g. because it was started by an older smartpiserver build
+		// that predates aptGetScript recording one at all (the version this
+		// device was just upgraded from, say), the device rebooted
+		// mid-job, or `systemctl reset-failed` ran. There is no way to
+		// tell those apart from systemd state alone, so unlike the cases
+		// above, this is never reported as "running" - a real job's brief
+		// moment here resolves to "running" again within a poll or two
+		// anyway, which is a lot cheaper than a caller mistaking a stale
+		// reference for one still going.
+		return "unknown", 0
 	}
 }
 
