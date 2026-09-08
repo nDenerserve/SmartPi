@@ -261,7 +261,12 @@ const varTmpEnlargedSize = "200m"
 // exactly that - and the shrink-back step needs to run regardless of
 // whether the Go process that started the job is still around to see it
 // finish.
-func aptGetScript(aptArgs []string) string {
+//
+// It also records apt-get's exit code to exitCodePath itself, right before
+// exiting with that same code - see jobOutcome for why CurrentStatus needs
+// that, rather than relying only on systemd's own bookkeeping for the
+// unit.
+func aptGetScript(aptArgs []string, exitCodePath string) string {
 	quoted := make([]string, len(aptArgs))
 	for i, a := range aptArgs {
 		quoted[i] = shellQuote(a)
@@ -271,13 +276,15 @@ func aptGetScript(aptArgs []string) string {
 	return fmt.Sprintf(`fstype=$(awk '$2 == "%[1]s" {print $3}' /proc/mounts)
 if [ "$fstype" = tmpfs ]; then
   mount -o remount,size=%[2]s %[1]s
-  %[3]s
-  ec=$?
-  mount -o remount %[1]s
-  exit $ec
 fi
 %[3]s
-`, varTmpPath, varTmpEnlargedSize, aptGetCmd)
+ec=$?
+if [ "$fstype" = tmpfs ]; then
+  mount -o remount %[1]s
+fi
+echo $ec > %[4]s
+exit $ec
+`, varTmpPath, varTmpEnlargedSize, aptGetCmd, shellQuote(exitCodePath))
 }
 
 // shellQuote wraps s in single quotes for safe use as one word in a POSIX
@@ -312,6 +319,7 @@ func startJob(job Job, aptArgs []string) (Job, error) {
 
 	unit := fmt.Sprintf("smartpi-update-%d", time.Now().UnixNano())
 	logPath := filepath.Join(logDir, unit+".log")
+	exitCodePath := filepath.Join(logDir, unit+".exitcode")
 
 	args := []string{
 		"systemd-run",
@@ -319,8 +327,9 @@ func startJob(job Job, aptArgs []string) (Job, error) {
 		"--property=KillMode=none",
 		"--property=StandardOutput=file:" + logPath,
 		"--property=StandardError=file:" + logPath,
+		"--setenv=DEBIAN_FRONTEND=noninteractive",
 		"--",
-		"/bin/sh", "-c", aptGetScript(aptArgs),
+		"/bin/sh", "-c", aptGetScript(aptArgs, exitCodePath),
 	}
 	if out, err := exec.Command("sudo", args...).CombinedOutput(); err != nil {
 		return Job{}, fmt.Errorf("starting update: %s (%s)", err, strings.TrimSpace(string(out)))
@@ -345,7 +354,7 @@ func CurrentStatus() (Status, error) {
 		return Status{State: "idle"}, nil
 	}
 
-	state, exitCode := unitState(job.Unit)
+	state, exitCode := jobOutcome(job.Unit)
 
 	var logTail string
 	if state == "running" {
@@ -358,6 +367,33 @@ func CurrentStatus() (Status, error) {
 		ExitCode: exitCode,
 		Log:      logTail,
 	}, nil
+}
+
+// jobOutcome reports unit's outcome: "running" while it's still going,
+// "succeeded"/"failed" (with the exit code apt-get itself recorded - see
+// aptGetScript) once it's done, or "unknown" if that can't be determined.
+//
+// The exit-code file, when present, is trusted over asking systemd: a
+// transient unit that finished *successfully* is garbage-collected by
+// systemd within a few seconds of finishing - at which point `systemctl
+// show` reports the exact same defaults (ActiveState=inactive,
+// Result=success, ExecMainStatus=0) as a unit that was only just requested
+// and hasn't started running yet at all. Without the file, a poll landing
+// in either of those windows - right after StartInstall/StartUpgradeAll
+// launches a job, or late enough that a fast job already finished and got
+// collected - was indistinguishable from the other, and the former was
+// being misreported as "succeeded" before it had done anything. A unit
+// that instead *fails* stays loaded until explicitly reset, so this
+// ambiguity is specific to success.
+func jobOutcome(unit string) (state string, exitCode int) {
+	if raw, err := os.ReadFile(filepath.Join(logDir, unit+".exitcode")); err == nil {
+		fmt.Sscanf(strings.TrimSpace(string(raw)), "%d", &exitCode)
+		if exitCode == 0 {
+			return "succeeded", exitCode
+		}
+		return "failed", exitCode
+	}
+	return unitState(unit)
 }
 
 // unitStateExecRetries/unitStateExecRetryDelay bound how hard unitState
@@ -381,6 +417,15 @@ const (
 // though the apt-get run itself was still very much alive. Retrying a few
 // times first, rather than trusting one attempt, avoids that false
 // "unknown" for what is almost always a momentary blip.
+//
+// jobOutcome only ever falls back to this once it finds no exit-code file
+// for the unit - i.e. the job hasn't genuinely finished (or crashed hard
+// enough to never write it, e.g. an OOM kill). So unlike jobOutcome, this
+// never reports "succeeded": at this point, ActiveState "inactive" with
+// Result "success" cannot mean genuine success (that always leaves the
+// exit-code file behind first, see aptGetScript) - it means systemd hasn't
+// finished loading/starting the unit yet, which is still "running" as far
+// as a caller is concerned.
 func unitState(unit string) (state string, exitCode int) {
 	var out []byte
 	var err error
@@ -389,8 +434,7 @@ func unitState(unit string) (state string, exitCode int) {
 			time.Sleep(unitStateExecRetryDelay)
 		}
 		out, err = exec.Command("systemctl", "show", unit,
-			"--property=ActiveState", "--property=SubState",
-			"--property=Result", "--property=ExecMainStatus",
+			"--property=ActiveState", "--property=ExecMainStatus",
 		).Output()
 		if err == nil {
 			break
@@ -412,25 +456,19 @@ func unitState(unit string) (state string, exitCode int) {
 	fmt.Sscanf(props["ExecMainStatus"], "%d", &exitCode)
 
 	switch props["ActiveState"] {
-	case "activating", "reloading":
+	case "failed":
+		return "failed", exitCode
+	case "":
+		// systemctl doesn't know about this unit at all (e.g. the device
+		// rebooted mid-install, or something ran `systemctl reset-failed`).
+		// "running" would not be accurate, since we genuinely don't know.
+		return "unknown", 0
+	default:
+		// "activating"/"reloading"/"active", or "inactive"/"deactivating"
+		// for a unit that hasn't started running yet - all still "running"
+		// from a caller's point of view.
 		return "running", exitCode
-	case "active":
-		if props["SubState"] == "running" {
-			return "running", exitCode
-		}
 	}
-
-	if props["Result"] == "success" {
-		return "succeeded", exitCode
-	}
-	if props["ActiveState"] == "" {
-		// The unit is no longer loaded at all (e.g. the device rebooted
-		// mid-install, or something ran `systemctl reset-failed`). Neither
-		// "succeeded" nor "failed" would be accurate, since we genuinely
-		// don't know.
-		return "unknown", exitCode
-	}
-	return "failed", exitCode
 }
 
 // saveJob persists job atomically: to a temp file in stateFile's directory,
