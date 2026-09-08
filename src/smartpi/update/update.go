@@ -236,10 +236,60 @@ func StartUpgradeAll() (Job, error) {
 	return startJob(job, []string{"upgrade", "-y", "-o", "Dpkg::Options::=--force-confold"})
 }
 
+// varTmpPath is where apt-get/dpkg keep scratch files - archive extraction,
+// etc. - while installing or upgrading packages.
+const varTmpPath = "/var/tmp"
+
+// varTmpEnlargedSize is the size aptGetScript remounts varTmpPath to, on a
+// system where it turns out to be a tmpfs, before running apt-get.
+const varTmpEnlargedSize = "200m"
+
+// aptGetScript builds the shell command startJob runs as its systemd unit's
+// main process: `apt-get <aptArgs...>`, wrapped so that if varTmpPath is
+// currently mounted as a tmpfs - the readme.md setup instructions have
+// installers do this, sized at only 20-30M by default (see
+// DefaultStagingDir's doc comment) - it is temporarily remounted large
+// enough for apt-get to download and unpack many packages at once (as
+// StartUpgradeAll can do), and remounted back to its normal, fstab-
+// configured size again once apt-get exits. A system that leaves varTmpPath
+// on disk is unaffected: the tmpfs check is a no-op there and nothing is
+// remounted.
+//
+// This lives inside the unit itself, rather than bracketing the
+// systemd-run call below in Go, because the update this triggers can
+// restart smartpiserver.service mid-job - installing "smartpi" itself does
+// exactly that - and the shrink-back step needs to run regardless of
+// whether the Go process that started the job is still around to see it
+// finish.
+func aptGetScript(aptArgs []string) string {
+	quoted := make([]string, len(aptArgs))
+	for i, a := range aptArgs {
+		quoted[i] = shellQuote(a)
+	}
+	aptGetCmd := "apt-get " + strings.Join(quoted, " ")
+
+	return fmt.Sprintf(`fstype=$(awk '$2 == "%[1]s" {print $3}' /proc/mounts)
+if [ "$fstype" = tmpfs ]; then
+  mount -o remount,size=%[2]s %[1]s
+  %[3]s
+  ec=$?
+  mount -o remount %[1]s
+  exit $ec
+fi
+%[3]s
+`, varTmpPath, varTmpEnlargedSize, aptGetCmd)
+}
+
+// shellQuote wraps s in single quotes for safe use as one word in a POSIX
+// shell command line, escaping any single quotes it contains.
+func shellQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
 // startJob is the shared implementation behind StartInstall and
-// StartUpgradeAll: it launches `apt-get <aptArgs...>` as its own detached
-// systemd unit and persists job (with Unit and StartedAt filled in) so
-// CurrentStatus can report its outcome.
+// StartUpgradeAll: it launches `apt-get <aptArgs...>` (see aptGetScript) as
+// its own detached systemd unit and persists job (with Unit and StartedAt
+// filled in) so CurrentStatus can report its outcome.
 //
 // The install is deliberately not run as a plain child process of
 // smartpiserver: installing "smartpi" itself can restart smartpiserver.service
@@ -263,15 +313,15 @@ func startJob(job Job, aptArgs []string) (Job, error) {
 	unit := fmt.Sprintf("smartpi-update-%d", time.Now().UnixNano())
 	logPath := filepath.Join(logDir, unit+".log")
 
-	args := append([]string{
+	args := []string{
 		"systemd-run",
 		"--unit=" + unit,
 		"--property=KillMode=none",
 		"--property=StandardOutput=file:" + logPath,
 		"--property=StandardError=file:" + logPath,
 		"--",
-		"apt-get",
-	}, aptArgs...)
+		"/bin/sh", "-c", aptGetScript(aptArgs),
+	}
 	if out, err := exec.Command("sudo", args...).CombinedOutput(); err != nil {
 		return Job{}, fmt.Errorf("starting update: %s (%s)", err, strings.TrimSpace(string(out)))
 	}

@@ -92,6 +92,10 @@ For secure 24/7 operation, we recommend that you also create a tmpf for the log 
 > If you want to update the system, you will need more space for /var/tmp.
 > Temporarily increase the memory with the following command:
 > sudo mount -o remount,size=200m /var/tmp
+>
+> The web UI's "Update" tab does this automatically around every install/
+> upgrade job it starts (and shrinks /var/tmp back down again afterwards),
+> so this manual step is only needed for updates run by hand at the shell.
     
 
 ##### Optimize the logfile (for bullseye):
