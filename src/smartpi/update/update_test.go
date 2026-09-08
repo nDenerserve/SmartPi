@@ -1,6 +1,7 @@
 package update
 
 import (
+	"os/exec"
 	"reflect"
 	"strings"
 	"testing"
@@ -151,5 +152,46 @@ grafana/stable 11.0.0 armhf [upgradable from: 10.9.0]
 func TestParseUpgradableOutput_NoneUpgradable(t *testing.T) {
 	if got := parseUpgradableOutput("Listing... Done\n"); len(got) != 0 {
 		t.Fatalf("got %+v, want empty", got)
+	}
+}
+
+func TestShellQuote(t *testing.T) {
+	tests := []struct {
+		in   string
+		want string
+	}{
+		{"simple", "'simple'"},
+		{"has space", "'has space'"},
+		{"pkg=1.2.3", "'pkg=1.2.3'"},
+		{"it's", `'it'\''s'`},
+	}
+	for _, tt := range tests {
+		if got := shellQuote(tt.in); got != tt.want {
+			t.Errorf("shellQuote(%q) = %q, want %q", tt.in, got, tt.want)
+		}
+	}
+}
+
+func TestAptGetScript_ValidShell(t *testing.T) {
+	if _, err := exec.LookPath("sh"); err != nil {
+		t.Skip("sh not available")
+	}
+	script := aptGetScript([]string{"install", "-y", "smartpi's-package"})
+	cmd := exec.Command("sh", "-n")
+	cmd.Stdin = strings.NewReader(script)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("generated script is not valid sh: %v\n%s\n---\n%s", err, out, script)
+	}
+}
+
+func TestAptGetScript_QuotesArgsAndRunsBothBranches(t *testing.T) {
+	script := aptGetScript([]string{"install", "-y", "pkg=1.2.3"})
+
+	want := "apt-get 'install' '-y' 'pkg=1.2.3'"
+	if n := strings.Count(script, want); n != 2 {
+		t.Fatalf("expected the quoted apt-get command twice (tmpfs and non-tmpfs branch), got %d occurrences in:\n%s", n, script)
+	}
+	if !strings.Contains(script, varTmpPath) || !strings.Contains(script, varTmpEnlargedSize) {
+		t.Fatalf("script does not remount %s to %s:\n%s", varTmpPath, varTmpEnlargedSize, script)
 	}
 }
