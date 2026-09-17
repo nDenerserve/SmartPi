@@ -5,6 +5,6 @@ type Error struct {
 }
 
 // Error implements error
-func (Error) Error() string {
-	panic("unimplemented")
+func (e Error) Error() string {
+	return e.Message
 }

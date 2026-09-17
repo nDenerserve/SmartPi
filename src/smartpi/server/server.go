@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/prometheus/client_golang/prometheus"
@@ -20,6 +23,8 @@ import (
 	"github.com/nDenerserve/SmartPi/smartpi/devicetoken"
 	"github.com/nDenerserve/SmartPi/smartpi/server/controllers"
 	modulescontrollers "github.com/nDenerserve/SmartPi/smartpi/server/controllers/modules"
+	cronRepository "github.com/nDenerserve/SmartPi/smartpi/server/repository/cron"
+	linuxtoolsRepository "github.com/nDenerserve/SmartPi/smartpi/server/repository/linuxtools"
 	"github.com/nDenerserve/SmartPi/smartpi/server/serverutils"
 )
 
@@ -54,7 +59,16 @@ func init() {
 	log.SetLevel(log.DebugLevel)
 }
 
+// pamCheckFlag is smartpiserver's hidden re-exec entry point - see
+// runPamCheck below and linuxtoolsRepository.ValidateUser for why this
+// exists instead of a normal in-process PAM check.
+const pamCheckFlag = "--pam-check"
+
 func main() {
+
+	if len(os.Args) > 1 && os.Args[1] == pamCheckFlag {
+		os.Exit(runPamCheck())
+	}
 
 	smartpiConfig := config.NewSmartPiConfig()
 	smartpiACConfig := config.NewSmartPiACConfig()
@@ -72,6 +86,16 @@ func main() {
 	}
 
 	log.SetLevel(smartpiConfig.LogLevel)
+
+	// Reconcile /etc/cron.d/smartpi with whatever [ftp] settings are
+	// currently in /etc/smartpi - covers a hand-edited config file or a
+	// cron.d/smartpi that was only ever freshly installed (still commented
+	// out, see etc/cron.d/smartpi), without waiting for the next settings
+	// save to fix it up.
+	cronRepo := cronRepository.CronRepository{}
+	if err := cronRepo.SyncFTPUpload(smartpiConfig.FTPupload, smartpiConfig.FTPsendtimes); err != nil {
+		log.Error(err)
+	}
 
 	go configWatcher(smartpiConfig)
 	go acConfigWatcher(smartpiACConfig)
@@ -103,6 +127,13 @@ func main() {
 	router.HandleFunc("/api/v1/tokens", serverutils.RequireSessionToken(controller.ListDeviceTokens(deviceTokens), smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/tokens", serverutils.RequireSessionToken(controller.CreateDeviceToken(deviceTokens, smartpiConfig), smartpiConfig)).Methods("POST")
 	router.HandleFunc("/api/v1/tokens/{id}", serverutils.RequireSessionToken(controller.DeleteDeviceToken(deviceTokens), smartpiConfig)).Methods("DELETE")
+
+	// Settings "Users" tab: local Linux accounts (the same accounts Login
+	// authenticates against via PAM). Session-only, like the token and
+	// update endpoints above.
+	router.HandleFunc("/api/v1/users", serverutils.RequireSessionToken(controller.ListUsers(), smartpiConfig)).Methods("GET")
+	router.HandleFunc("/api/v1/users", serverutils.RequireSessionToken(controller.CreateUser(), smartpiConfig)).Methods("POST")
+	router.HandleFunc("/api/v1/users/{username}/password", serverutils.RequireSessionToken(controller.ChangeUserPassword(), smartpiConfig)).Methods("POST")
 	router.HandleFunc("/api/v1/smartpiac/progressdata/value/{value}", controller.SmartPiProgressdata(smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/smartpiac/progressdata/value/{value}/starttime/{starttime}/stoptime/{stoptime}", controller.SmartPiProgressdata(smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/smartpiac/progressdata/value/{value}/starttime/{starttime}", controller.SmartPiProgressdata(smartpiConfig)).Methods("GET")
@@ -174,6 +205,37 @@ func main() {
 	log.Print("Starting Smartpi server @Port: " + strconv.Itoa(smartpiConfig.WebserverPort))
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(smartpiConfig.WebserverPort), nil))
 
+}
+
+// runPamCheck is smartpiserver re-exec'd as "smartpiserver --pam-check" via
+// sudo (see etc/sudoers.d/smartpi-users and linuxtoolsRepository.ValidateUser)
+// so that the PAM check inside linuxtoolsRepository.CheckPassword runs as
+// root - smartpiserver.service itself runs unprivileged, and PAM's
+// unix_chkpwd helper refuses to check any account's password other than the
+// caller's own real uid for a non-root caller, which would otherwise make
+// every account besides "smartpi" (including ones created via the settings
+// "Users" tab) permanently unable to log in, regardless of password.
+//
+// Username and password are read from stdin as two newline-terminated
+// lines, never argv, so they don't show up in `ps`. Returns 0 for a valid
+// password, 1 otherwise; nothing is printed, since a caller only checks the
+// exit code.
+func runPamCheck() int {
+	reader := bufio.NewReader(os.Stdin)
+
+	username, err := reader.ReadString('\n')
+	if err != nil {
+		return 1
+	}
+	password, err := reader.ReadString('\n')
+	if err != nil && err != io.EOF {
+		return 1
+	}
+
+	if linuxtoolsRepository.CheckPassword(strings.TrimSuffix(username, "\n"), strings.TrimSuffix(password, "\n")) {
+		return 0
+	}
+	return 1
 }
 
 func IndexHandler(entrypoint string) func(w http.ResponseWriter, r *http.Request) {

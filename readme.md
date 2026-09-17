@@ -329,6 +329,16 @@ Copy the executables to /usr/local/bin and make them executable:
 > If you want to run the SmartPi services as system services, you can copy the files from the Github directory /etc/systemd/system/ into the corresponding directory on the SmartPi, make them executable and adapt them if necessary. 
 > The corresponding services can be started with sudo systemctl enable/start/stop/disable [name of the service to be executed]
 
+Also copy the sudoers rules and the FTP-upload cronjob:
+
+    sudo cp etc/sudoers.d/* /etc/sudoers.d/
+    sudo chmod 440 /etc/sudoers.d/smartpi-*
+    sudo cp etc/cron.d/smartpi /etc/cron.d/smartpi
+
+The settings "Users" tab (create a user, change a password) needs
+etc/sudoers.d/smartpi-users, and the settings "FTP" tab's upload schedule
+needs etc/sudoers.d/smartpi-cron plus /etc/cron.d/smartpi (it ships commented
+out - the web UI uncomments it once FTP upload is enabled there).
 
 ##### Add Api-Key to config-file
 
@@ -399,3 +409,12 @@ Or you can add it later via webgui:
  * added an apt API to search, install and upgrade packages from the repositories already configured on the device
  * requires the new etc/sudoers.d/smartpi-update rule (grants the smartpi user passwordless apt-get/systemd-run/systemctl)
  * the .deb upload staging directory now defaults to /var/smartpi/update-uploads (not a tmpfs) and is configurable via [update] staging_dir in /etc/smartpi
+
+ ### 09/17/26
+ * added a settings "Users" tab/API: list local accounts, create a new one, change a password
+ * requires the new etc/sudoers.d/smartpi-users rule (grants the smartpi user passwordless useradd/chpasswd)
+ * added an upload schedule to the settings "FTP" tab: hourly, or up to 12 fixed times a day
+ * the FTP tab now keeps /etc/cron.d/smartpi's smartpiftpupload line in sync on every settings save - commented out while FTP upload is off, an active schedule while it's on
+ * requires the new etc/sudoers.d/smartpi-cron rule (grants the smartpi user passwordless `tee` of that one file) and a copy of etc/cron.d/smartpi (ships commented out, same as before)
+ * fixed Login: any account other than "smartpi" (e.g. one created via the new "Users" tab) could never log in, since PAM's unix_chkpwd refuses to check another account's password for a non-root caller - Login now re-execs smartpiserver as root via `sudo smartpiserver --pam-check` (username/password over stdin) to do that check, see etc/sudoers.d/smartpi-users' second rule
+ * fixed Login: a wrong password (for any account) crashed the request instead of returning 401 - models.Error.Error() was an unimplemented stub that always panicked

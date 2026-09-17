@@ -5,6 +5,22 @@ import (
 	linuxtoolsRepository "github.com/nDenerserve/SmartPi/smartpi/server/repository/linuxtools"
 )
 
+// ListUsers returns the local Linux accounts usable to log in to the web UI.
+func (u UserRepository) ListUsers() ([]linuxtoolsRepository.LinuxUser, error) {
+	return linuxtoolsRepository.ListUsers()
+}
+
+// CreateUser creates a new local Linux account with the given password.
+func (u UserRepository) CreateUser(username string, password string) error {
+	return linuxtoolsRepository.CreateUser(username, password)
+}
+
+// ChangePassword sets a new password for an existing local Linux account.
+func (u UserRepository) ChangePassword(username string, password string) error {
+	_, err := linuxtoolsRepository.ChangePassword(username, password)
+	return err
+}
+
 func (u UserRepository) ReadUser(username string, password string, user models.User) (models.User, error) {
 
 	if linuxtoolsRepository.ValidateUser(username, password) {

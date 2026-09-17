@@ -112,6 +112,23 @@ func (c ConfigRepository) PrepareConfig(wc models.Writeconfiguration, conf inter
 					case bool:
 						err = reflections.SetField(conf, confignames[i], reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Bool())
 					}
+				case "[24]bool":
+					values := reflect.ValueOf(wc.Msg.(map[string]interface{})[keys[j]]).Interface().([]interface{})
+					var aData [24]bool
+					for idx, v := range values {
+						if idx >= 24 {
+							break
+						}
+						switch v := v.(type) {
+						case bool:
+							aData[idx] = v
+						case float64:
+							aData[idx] = v != 0
+						case string:
+							aData[idx], _ = strconv.ParseBool(v)
+						}
+					}
+					err = reflections.SetField(conf, confignames[i], aData)
 				case "logrus.Level":
 					switch wc.Msg.(map[string]interface{})[keys[j]].(type) {
 					case string:

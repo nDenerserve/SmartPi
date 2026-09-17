@@ -1,0 +1,11 @@
+# Allows the "smartpi" user - the account smartpiserver.service runs as, see
+# etc/systemd/system/smartpiserver.service - to rewrite /etc/cron.d/smartpi,
+# which is root-owned. This is how the web UI's settings "FTP" tab enables/
+# disables the FTP upload cronjob and sets its schedule - see
+# cronRepository.SyncFTPUpload in
+# src/smartpi/server/repository/cron/cron.go.
+#
+# Scoped to that one destination file (via a fixed, non-wildcard argument),
+# unlike etc/sudoers.d/smartpi-update and smartpi-users: "tee /etc/cron.d/
+# smartpi" cannot be redirected to overwrite anything else.
+smartpi ALL=(root) NOPASSWD: /usr/bin/tee /etc/cron.d/smartpi

@@ -10,6 +10,7 @@ import (
 	"github.com/nDenerserve/SmartPi/models"
 	"github.com/nDenerserve/SmartPi/smartpi/config"
 	configRepository "github.com/nDenerserve/SmartPi/smartpi/server/repository/config"
+	cronRepository "github.com/nDenerserve/SmartPi/smartpi/server/repository/cron"
 	"github.com/nDenerserve/SmartPi/smartpi/server/serverutils"
 )
 
@@ -51,6 +52,13 @@ func (c Controller) WriteSmartPiConfig(conf *config.SmartPiConfig) http.HandlerF
 
 		conf.SaveParameterToFile()
 		fmt.Println(conf)
+
+		// Keep /etc/cron.d/smartpi's smartpiftpupload line in sync with the
+		// [ftp] settings just saved - see cronRepository.SyncFTPUpload.
+		cronRepo := cronRepository.CronRepository{}
+		if err := cronRepo.SyncFTPUpload(conf.FTPupload, conf.FTPsendtimes); err != nil {
+			log.Error(err)
+		}
 
 		if err := json.NewEncoder(w).Encode(conf); err != nil {
 			panic(err)

@@ -1,0 +1,9 @@
+# Triggers the FTP export (settings "FTP" tab) - see
+# src/smartpiac/ftp/ftpupload.go. This line is rewritten by the web UI
+# itself whenever the FTP tab's settings are saved (commented out while FTP
+# upload is disabled, an active "0 <hours> * * *" schedule matching the
+# configured send times while it is enabled) - see
+# cronRepository.SyncFTPUpload in
+# src/smartpi/server/repository/cron/cron.go. Edit it by hand only as a
+# fallback; the next settings save overwrites it.
+#0 0 * * * smartpi  /usr/local/bin/smartpiftpupload

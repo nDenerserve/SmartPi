@@ -1,0 +1,25 @@
+# Allows the "smartpi" user - the account smartpiserver.service runs as, see
+# etc/systemd/system/smartpiserver.service - to manage local Linux accounts
+# for the web UI's settings "Users" tab (create a new user, change a user's
+# or its own password).
+#
+# Unscoped the same way etc/sudoers.d/smartpi-update is: useradd can already
+# run arbitrary root-owned skeleton/postinst-style scripts, so a sudoers
+# pattern restricting *which* arguments are allowed would not add real
+# security, only the appearance of it. Access is instead gated at the HTTP
+# layer, by requiring a logged-in session token - see RequireSessionToken in
+# src/smartpi/server/serverutils/serverutils.go.
+smartpi ALL=(root) NOPASSWD: /usr/sbin/useradd, /usr/sbin/chpasswd
+
+# Also allows re-executing smartpiserver itself as root with the fixed
+# "--pam-check" argument - this is how the web UI's Login endpoint verifies
+# a password for any local account, not just "smartpi" itself. See
+# runPamCheck in src/smartpi/server/server.go and
+# linuxtoolsRepository.ValidateUser for why: PAM's unix_chkpwd helper
+# refuses to check any account's password other than the caller's own real
+# uid for a non-root caller, so an in-process check by the unprivileged
+# smartpiserver.service would only ever work for the "smartpi" account.
+# Unlike useradd/chpasswd above, this line is scoped to that one exact
+# argument (no other arguments are accepted) - the username and password
+# being checked go over stdin, not argv, so a fixed argument list is enough.
+smartpi ALL=(root) NOPASSWD: /usr/local/bin/smartpiserver --pam-check
