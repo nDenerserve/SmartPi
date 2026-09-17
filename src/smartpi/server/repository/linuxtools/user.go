@@ -44,9 +44,9 @@ const maxHumanUid = 59999
 // user list shown in the web UI.
 var nonLoginShells = map[string]bool{
 	"/usr/sbin/nologin": true,
-	"/sbin/nologin":      true,
-	"/bin/false":         true,
-	"/usr/bin/false":     true,
+	"/sbin/nologin":     true,
+	"/bin/false":        true,
+	"/usr/bin/false":    true,
 }
 
 // usernameRe mirrors the pattern useradd itself enforces (see NAME_REGEX in
