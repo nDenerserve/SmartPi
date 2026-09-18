@@ -11,8 +11,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"net/http"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 func (c Controller) Login(conf *config.SmartPiConfig) http.HandlerFunc {
@@ -47,8 +45,6 @@ func (c Controller) Login(conf *config.SmartPiConfig) http.HandlerFunc {
 			serverutils.RespondWithError(w, http.StatusUnauthorized, error)
 			return
 		}
-
-		spew.Dump(user)
 
 		token, err := serverutils.GenerateToken(user, conf)
 

@@ -107,7 +107,7 @@ func InsertInfluxData(c *config.SmartPiConfig, t time.Time, v *models.ADE7878Rea
 
 	writeAPI := client.WriteAPIBlocking(c.InfluxOrg, c.InfluxBucket)
 
-	log.Debug("InfluxDB: " + c.Influxdatabase + "  User: " + c.Influxuser + "  Password: " + c.Influxpassword)
+	log.Debug("InfluxDB: " + c.Influxdatabase + "  User: " + c.Influxuser)
 
 	// Create a point and add to batch
 	macaddress := network.GetMacAddr()
@@ -324,7 +324,7 @@ func InsertCalculatedInfluxData(c *config.SmartPiConfig, t time.Time, consumedWa
 
 	writeAPI := client.WriteAPIBlocking(c.InfluxOrg, c.InfluxBucket)
 
-	log.Debug("InfluxDB: " + c.Influxdatabase + "  User: " + c.Influxuser + "  Password: " + c.Influxpassword)
+	log.Debug("InfluxDB: " + c.Influxdatabase + "  User: " + c.Influxuser)
 
 	// Create a point and add to batch
 	macaddress := network.GetMacAddr()
