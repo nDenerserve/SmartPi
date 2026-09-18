@@ -1,0 +1,14 @@
+/*
+ * Let members of smartpiadmin manage NetworkManager without an interactive
+ * session. This replaces 58-smartpinetworkmanager.pkla: polkitd dropped the
+ * .pkla ("local authority") backend starting with the version shipped in
+ * Debian trixie (the polkitd-pkla package was removed upstream, see Debian
+ * bug #1068652), so the equivalent grant has to be expressed as a native
+ * rules.d script instead.
+ */
+polkit.addRule(function(action, subject) {
+    if (action.id.indexOf("org.freedesktop.NetworkManager.") === 0 &&
+        subject.isInGroup("smartpiadmin")) {
+        return polkit.Result.YES;
+    }
+});

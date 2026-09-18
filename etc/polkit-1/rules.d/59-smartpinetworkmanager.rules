@@ -1,0 +1,12 @@
+/*
+ * Let the smartpi system user modify NetworkManager connections - it runs
+ * the smartpiserver backend as an unprivileged systemd service, which has no
+ * login session for polkit to treat as "active". See
+ * 58-smartpinetworkmanager.rules for why this had to move from a .pkla file.
+ */
+polkit.addRule(function(action, subject) {
+    if (action.id === "org.freedesktop.NetworkManager.settings.modify.system" &&
+        subject.user === "smartpi") {
+        return polkit.Result.YES;
+    }
+});

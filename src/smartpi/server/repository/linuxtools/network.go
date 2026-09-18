@@ -37,7 +37,7 @@ import (
 
 // addConnection adds a new network connection (Ethernet or WiFi)
 func (l LinuxToolsRepository) AddConnection(interfaceName, connectionName, connectionType, ssid, password string) error {
-	log.Debugf("AddConnection: %s, %s, %s, %s, %s", interfaceName, connectionName, connectionType, ssid, password)
+	log.Debugf("AddConnection: %s, %s, %s, %s", interfaceName, connectionName, connectionType, ssid)
 	var cmdArgs []string
 
 	if connectionType == "ethernet" {

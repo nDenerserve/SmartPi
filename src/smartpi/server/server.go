@@ -114,26 +114,37 @@ func main() {
 	router.HandleFunc("/api/v1/smartpiac/livedata/{phaseId}/{valueId}/{format}", controller.SmartPiLiveValues(smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/smartpiac/livedata/value/{valueId}", controller.SmartPiLiveValues(smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/smartpiac/livedata/value/{valueId}/{format}", controller.SmartPiLiveValues(smartpiConfig)).Methods("GET")
-	router.HandleFunc("/api/v1/config/network/listconnections", serverutils.TokenVerifyMiddleWare(controller.ConnectionList(), smartpiConfig, deviceTokens, devicetoken.ScopeNetwork)).Methods("GET")
-	router.HandleFunc("/api/v1/config/network/addstaticiptoconnection/ip/{ipaddress}/cidrsuffix/{cidrsuffix}/connection/{connection}", serverutils.TokenVerifyMiddleWare(controller.AddStaticIpToConnection(), smartpiConfig, deviceTokens, devicetoken.ScopeNetwork)).Methods("GET")
-	router.HandleFunc("/api/v1/config/network/removestaticipfromconnection/ip/{ipaddress}/cidrsuffix/{cidrsuffix}/connection/{connection}", serverutils.TokenVerifyMiddleWare(controller.RemoveStaticIpFromConnection(), smartpiConfig, deviceTokens, devicetoken.ScopeNetwork)).Methods("GET")
-	router.HandleFunc("/api/v1/config/network/scanwifi", serverutils.TokenVerifyMiddleWare(controller.ScanWifi(), smartpiConfig, deviceTokens, devicetoken.ScopeNetwork)).Methods("GET")
-	router.HandleFunc("/api/v1/config/network/createconnection", serverutils.TokenVerifyMiddleWare(controller.CreateConnection(), smartpiConfig, deviceTokens, devicetoken.ScopeNetwork)).Methods("POST")
+	// Network settings and config:write are gated to the smartpiadmin group
+	// for session (human) logins, on top of the existing scope check - see
+	// RequireAdminGroup. config:read stays open to any authenticated
+	// session, same as the hardware I/O module routes further down.
+	router.HandleFunc("/api/v1/config/network/listconnections", serverutils.RequireAdminGroup(serverutils.TokenVerifyMiddleWare(controller.ConnectionList(), smartpiConfig, deviceTokens, devicetoken.ScopeNetwork), smartpiConfig)).Methods("GET")
+	// POST, not GET: both mutate the connection's address list (and restart
+	// it), which a GET must never do - see parseIPv4AndCidr's callers.
+	router.HandleFunc("/api/v1/config/network/addstaticiptoconnection/ip/{ipaddress}/cidrsuffix/{cidrsuffix}/connection/{connection}", serverutils.RequireAdminGroup(serverutils.TokenVerifyMiddleWare(controller.AddStaticIpToConnection(), smartpiConfig, deviceTokens, devicetoken.ScopeNetwork), smartpiConfig)).Methods("POST")
+	router.HandleFunc("/api/v1/config/network/removestaticipfromconnection/ip/{ipaddress}/cidrsuffix/{cidrsuffix}/connection/{connection}", serverutils.RequireAdminGroup(serverutils.TokenVerifyMiddleWare(controller.RemoveStaticIpFromConnection(), smartpiConfig, deviceTokens, devicetoken.ScopeNetwork), smartpiConfig)).Methods("POST")
+	router.HandleFunc("/api/v1/config/network/scanwifi", serverutils.RequireAdminGroup(serverutils.TokenVerifyMiddleWare(controller.ScanWifi(), smartpiConfig, deviceTokens, devicetoken.ScopeNetwork), smartpiConfig)).Methods("GET")
+	router.HandleFunc("/api/v1/config/network/createconnection", serverutils.RequireAdminGroup(serverutils.TokenVerifyMiddleWare(controller.CreateConnection(), smartpiConfig, deviceTokens, devicetoken.ScopeNetwork), smartpiConfig)).Methods("POST")
 	router.HandleFunc("/api/v1/config/readsmartpiacconfiguration", serverutils.TokenVerifyMiddleWare(controller.ReadSmartPiACConfig(smartpiACConfig), smartpiConfig, deviceTokens, devicetoken.ScopeConfigRead)).Methods("GET")
-	router.HandleFunc("/api/v1/config/writesmartpiacconfiguration", serverutils.TokenVerifyMiddleWare(controller.WriteSmartPiACConfig(smartpiACConfig), smartpiConfig, deviceTokens, devicetoken.ScopeConfigWrite)).Methods("POST")
+	router.HandleFunc("/api/v1/config/writesmartpiacconfiguration", serverutils.RequireAdminGroup(serverutils.TokenVerifyMiddleWare(controller.WriteSmartPiACConfig(smartpiACConfig), smartpiConfig, deviceTokens, devicetoken.ScopeConfigWrite), smartpiConfig)).Methods("POST")
 	router.HandleFunc("/api/v1/config/readsmartpiconfiguration", serverutils.TokenVerifyMiddleWare(controller.ReadSmartPiConfig(smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeConfigRead)).Methods("GET")
-	router.HandleFunc("/api/v1/config/writesmartpiconfiguration", serverutils.TokenVerifyMiddleWare(controller.WriteSmartPiConfig(smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeConfigWrite)).Methods("POST")
+	router.HandleFunc("/api/v1/config/writesmartpiconfiguration", serverutils.RequireAdminGroup(serverutils.TokenVerifyMiddleWare(controller.WriteSmartPiConfig(smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeConfigWrite), smartpiConfig)).Methods("POST")
 
-	router.HandleFunc("/api/v1/tokens", serverutils.RequireSessionToken(controller.ListDeviceTokens(deviceTokens), smartpiConfig)).Methods("GET")
-	router.HandleFunc("/api/v1/tokens", serverutils.RequireSessionToken(controller.CreateDeviceToken(deviceTokens, smartpiConfig), smartpiConfig)).Methods("POST")
-	router.HandleFunc("/api/v1/tokens/{id}", serverutils.RequireSessionToken(controller.DeleteDeviceToken(deviceTokens), smartpiConfig)).Methods("DELETE")
+	// Token/user management and the self-update endpoints below are already
+	// session-only (RequireSessionToken); RequireAdminGroup additionally
+	// restricts them to smartpiadmin, since a non-admin session could
+	// otherwise mint itself a network-scoped device token (or a new user
+	// account) and route straight around every other check on this list.
+	router.HandleFunc("/api/v1/tokens", serverutils.RequireAdminGroup(serverutils.RequireSessionToken(controller.ListDeviceTokens(deviceTokens), smartpiConfig), smartpiConfig)).Methods("GET")
+	router.HandleFunc("/api/v1/tokens", serverutils.RequireAdminGroup(serverutils.RequireSessionToken(controller.CreateDeviceToken(deviceTokens, smartpiConfig), smartpiConfig), smartpiConfig)).Methods("POST")
+	router.HandleFunc("/api/v1/tokens/{id}", serverutils.RequireAdminGroup(serverutils.RequireSessionToken(controller.DeleteDeviceToken(deviceTokens), smartpiConfig), smartpiConfig)).Methods("DELETE")
 
 	// Settings "Users" tab: local Linux accounts (the same accounts Login
 	// authenticates against via PAM). Session-only, like the token and
 	// update endpoints above.
-	router.HandleFunc("/api/v1/users", serverutils.RequireSessionToken(controller.ListUsers(), smartpiConfig)).Methods("GET")
-	router.HandleFunc("/api/v1/users", serverutils.RequireSessionToken(controller.CreateUser(), smartpiConfig)).Methods("POST")
-	router.HandleFunc("/api/v1/users/{username}/password", serverutils.RequireSessionToken(controller.ChangeUserPassword(), smartpiConfig)).Methods("POST")
+	router.HandleFunc("/api/v1/users", serverutils.RequireAdminGroup(serverutils.RequireSessionToken(controller.ListUsers(), smartpiConfig), smartpiConfig)).Methods("GET")
+	router.HandleFunc("/api/v1/users", serverutils.RequireAdminGroup(serverutils.RequireSessionToken(controller.CreateUser(), smartpiConfig), smartpiConfig)).Methods("POST")
+	router.HandleFunc("/api/v1/users/{username}/password", serverutils.RequireAdminGroup(serverutils.RequireSessionToken(controller.ChangeUserPassword(), smartpiConfig), smartpiConfig)).Methods("POST")
 	router.HandleFunc("/api/v1/smartpiac/progressdata/value/{value}", controller.SmartPiProgressdata(smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/smartpiac/progressdata/value/{value}/starttime/{starttime}/stoptime/{stoptime}", controller.SmartPiProgressdata(smartpiConfig)).Methods("GET")
 	router.HandleFunc("/api/v1/smartpiac/progressdata/value/{value}/starttime/{starttime}", controller.SmartPiProgressdata(smartpiConfig)).Methods("GET")
@@ -173,15 +184,15 @@ func main() {
 	// configured on the device. Session-only, like the token management
 	// endpoints above - these are at least as privileged as minting a
 	// config:write device token, so a device token must never reach them.
-	router.HandleFunc("/api/v1/update/version", serverutils.RequireSessionToken(controller.GetUpdateVersion(appVersion), smartpiConfig)).Methods("GET")
-	router.HandleFunc("/api/v1/update/package", serverutils.RequireSessionToken(controller.UploadUpdatePackage(smartpiConfig), smartpiConfig)).Methods("POST")
-	router.HandleFunc("/api/v1/update/status", serverutils.RequireSessionToken(controller.GetUpdateStatus(), smartpiConfig)).Methods("GET")
-	router.HandleFunc("/api/v1/apt/refresh", serverutils.RequireSessionToken(controller.RefreshAptCache(), smartpiConfig)).Methods("POST")
-	router.HandleFunc("/api/v1/apt/search", serverutils.RequireSessionToken(controller.SearchAptPackages(), smartpiConfig)).Methods("GET")
-	router.HandleFunc("/api/v1/apt/upgradable", serverutils.RequireSessionToken(controller.ListUpgradablePackages(), smartpiConfig)).Methods("GET")
-	router.HandleFunc("/api/v1/apt/package/{name}", serverutils.RequireSessionToken(controller.GetAptPackageInfo(), smartpiConfig)).Methods("GET")
-	router.HandleFunc("/api/v1/apt/install", serverutils.RequireSessionToken(controller.InstallAptPackage(), smartpiConfig)).Methods("POST")
-	router.HandleFunc("/api/v1/apt/upgrade-all", serverutils.RequireSessionToken(controller.UpgradeAllPackages(), smartpiConfig)).Methods("POST")
+	router.HandleFunc("/api/v1/update/version", serverutils.RequireAdminGroup(serverutils.RequireSessionToken(controller.GetUpdateVersion(appVersion), smartpiConfig), smartpiConfig)).Methods("GET")
+	router.HandleFunc("/api/v1/update/package", serverutils.RequireAdminGroup(serverutils.RequireSessionToken(controller.UploadUpdatePackage(smartpiConfig), smartpiConfig), smartpiConfig)).Methods("POST")
+	router.HandleFunc("/api/v1/update/status", serverutils.RequireAdminGroup(serverutils.RequireSessionToken(controller.GetUpdateStatus(), smartpiConfig), smartpiConfig)).Methods("GET")
+	router.HandleFunc("/api/v1/apt/refresh", serverutils.RequireAdminGroup(serverutils.RequireSessionToken(controller.RefreshAptCache(), smartpiConfig), smartpiConfig)).Methods("POST")
+	router.HandleFunc("/api/v1/apt/search", serverutils.RequireAdminGroup(serverutils.RequireSessionToken(controller.SearchAptPackages(), smartpiConfig), smartpiConfig)).Methods("GET")
+	router.HandleFunc("/api/v1/apt/upgradable", serverutils.RequireAdminGroup(serverutils.RequireSessionToken(controller.ListUpgradablePackages(), smartpiConfig), smartpiConfig)).Methods("GET")
+	router.HandleFunc("/api/v1/apt/package/{name}", serverutils.RequireAdminGroup(serverutils.RequireSessionToken(controller.GetAptPackageInfo(), smartpiConfig), smartpiConfig)).Methods("GET")
+	router.HandleFunc("/api/v1/apt/install", serverutils.RequireAdminGroup(serverutils.RequireSessionToken(controller.InstallAptPackage(), smartpiConfig), smartpiConfig)).Methods("POST")
+	router.HandleFunc("/api/v1/apt/upgrade-all", serverutils.RequireAdminGroup(serverutils.RequireSessionToken(controller.UpgradeAllPackages(), smartpiConfig), smartpiConfig)).Methods("POST")
 
 	router.PathPrefix("/assets").Handler(http.FileServer(http.Dir(smartpiConfig.DocRoot + "/")))
 	// Catch-all: Serve our JavaScript application's entry-point (index.html).

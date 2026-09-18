@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -15,6 +16,12 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 )
+
+// AdminGroup is the Linux group a session login's OS user must belong to in
+// order to pass RequireAdminGroup. It is the same group the package's
+// postinst already puts the smartpi system user into to let it manage
+// NetworkManager (see etc/polkit-1/rules.d/58-smartpinetworkmanager.rules).
+const AdminGroup = "smartpiadmin"
 
 func CompareHashAndPassword(hashedPassword string, password []byte) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), password)
@@ -96,12 +103,28 @@ func DecryptUserdataFromToken(r *http.Request, conf *config.SmartPiConfig) (mode
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		user := models.User{
 			Name: claims["username"].(string),
+			Role: rolesFromClaims(claims),
 		}
 		return user, nil
 	}
 
 	log.Printf("Invalid JWT Token")
 	return models.User{}, err
+}
+
+// rolesFromClaims recovers the "role" claim GenerateToken embeds as
+// user.Role. It comes back from jwt.Parse as []interface{} (the generic
+// shape json.Unmarshal gives any array), not []string, so it needs
+// converting one element at a time.
+func rolesFromClaims(claims jwt.MapClaims) []string {
+	raw, _ := claims["role"].([]interface{})
+	roles := make([]string, 0, len(raw))
+	for _, r := range raw {
+		if s, ok := r.(string); ok {
+			roles = append(roles, s)
+		}
+	}
+	return roles
 }
 
 // IsDeviceToken reports whether the request's bearer token is a device token
@@ -225,6 +248,45 @@ func RequireSessionToken(next http.HandlerFunc, conf *config.SmartPiConfig) http
 			logAuthRejected(r, "invalid session token")
 			errorObject.Message = "Invalid token."
 			RespondWithError(w, http.StatusUnauthorized, errorObject)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+
+}
+
+// RequireAdminGroup wraps next so that, for a session token (a logged-in
+// human), the caller's OS user must belong to AdminGroup. It leaves device
+// tokens untouched - a device token's access was already scoped by an admin
+// at creation time, and it has no OS user to check group membership
+// against in the first place, same rationale as IsDeviceToken's other
+// callers (e.g. SetDigitalout's per-user allowlist).
+//
+// It only adds a group check on top of an already-authenticated request: it
+// must wrap the route's existing TokenVerifyMiddleWare or RequireSessionToken
+// call, never replace it, since it does not itself verify a device token's
+// scope or a session token's signature.
+func RequireAdminGroup(next http.HandlerFunc, conf *config.SmartPiConfig) http.HandlerFunc {
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if IsDeviceToken(r) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		var errorObject models.Error
+
+		user, err := DecryptUserdataFromToken(r, conf)
+		if err != nil {
+			logAuthRejected(r, "invalid session token: "+err.Error())
+			errorObject.Message = "Invalid token."
+			RespondWithError(w, http.StatusUnauthorized, errorObject)
+			return
+		}
+		if !slices.Contains(user.Role, AdminGroup) {
+			logAuthRejected(r, fmt.Sprintf("user %q is not a member of %s", user.Name, AdminGroup))
+			errorObject.Message = "Forbidden."
+			RespondWithError(w, http.StatusForbidden, errorObject)
 			return
 		}
 		next.ServeHTTP(w, r)

@@ -88,7 +88,6 @@ func main() {
 	if moduleconfig.LoRaWANApplicationKey == "" {
 		log.Info("No AppKey found. Generating...")
 		moduleconfig.LoRaWANApplicationKey = generateLoRaWANApplicationKey(rn2483.MacGetDeviceEUI(), "_GehE1m")
-		log.Info("Use Appkey: " + moduleconfig.LoRaWANApplicationKey)
 	}
 
 	err := rn2483.MacSetApplicationEUI(moduleconfig.LoRaWANApplicationEUI)
