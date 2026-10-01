@@ -37,7 +37,6 @@ require (
 
 require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
-	github.com/davecgh/go-spew v1.1.1
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/gorilla/mux v1.8.1
@@ -45,7 +44,7 @@ require (
 	github.com/influxdata/influxdb1-client v0.0.0-20220302092344-a9ab5670611c
 	github.com/jlaffaye/ftp v0.2.4
 	github.com/labstack/gommon v0.5.0
-	github.com/mattn/go-sqlite3 v1.14.47
+	github.com/mattn/go-sqlite3 v1.14.52
 	github.com/msteinert/pam v1.2.0
 	github.com/nDenerserve/mbserver v0.0.0-20230619125728-ce6fed969ee0
 	github.com/prometheus/client_golang v1.24.1
