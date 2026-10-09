@@ -7,11 +7,13 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	osuser "os/user"
 	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/msteinert/pam"
+	"github.com/nDenerserve/SmartPi/smartpi/rootcall"
 )
 
 type LinuxUser struct {
@@ -113,7 +115,8 @@ func CreateUser(username string, password string) error {
 		return errors.New("Invalid username.")
 	}
 
-	out, err := exec.Command("sudo", "useradd", "-m", "-s", "/bin/bash", username).CombinedOutput()
+	// useradd runs as root in the root helper (package roothelper)
+	out, err := rootcall.Command(rootcall.UserAdd, username).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%s: %s", err, strings.TrimSpace(string(out)))
 	}
@@ -126,7 +129,18 @@ func CreateUser(username string, password string) error {
 }
 
 func ChangePassword(user string, newpassword string) (bool, error) {
-	cmd := exec.Command("sudo", "chpasswd")
+	// chpasswd reads "user:password" lines: a line break in either value
+	// would start a second line and change another account's password
+	// (e.g. root's)
+	if !ValidUsername(user) {
+		return false, errors.New("Invalid username.")
+	}
+	if strings.ContainsAny(newpassword, "\r\n") {
+		return false, errors.New("The password must not contain line breaks.")
+	}
+	// chpasswd runs as root in the root helper (package roothelper), which
+	// checks the account again; the password goes over stdin, never argv
+	cmd := rootcall.Command(rootcall.Passwd, user)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return false, err
@@ -134,7 +148,7 @@ func ChangePassword(user string, newpassword string) (bool, error) {
 
 	go func() {
 		defer stdin.Close()
-		io.WriteString(stdin, user+":"+newpassword+"\n")
+		io.WriteString(stdin, newpassword+"\n")
 	}()
 
 	// chpasswd prints nothing on success - its exit status is the only
@@ -150,13 +164,25 @@ func ChangePassword(user string, newpassword string) (bool, error) {
 
 }
 
-func GetGroupsFromUser(user string) ([]string, error) {
-	out, err := exec.Command("/bin/sh", "-c", `groups `+user).Output()
+// GetGroupsFromUser returns the names of the groups of a local account
+// (primary and supplementary), like `groups`. It reads the account
+// database directly instead of running a command, so the name is never
+// interpreted by a shell.
+func GetGroupsFromUser(username string) ([]string, error) {
+	u, err := osuser.Lookup(username)
 	if err != nil {
 		return nil, err
 	}
-	tmpstring := string(out)[strings.Index(string(out), ":")+1 : len(string(out))]
-	groups := strings.Fields(tmpstring)
+	gids, err := u.GroupIds()
+	if err != nil {
+		return nil, err
+	}
+	groups := make([]string, 0, len(gids))
+	for _, gid := range gids {
+		if g, err := osuser.LookupGroupId(gid); err == nil {
+			groups = append(groups, g.Name)
+		}
+	}
 	return groups, nil
 }
 
@@ -164,7 +190,7 @@ func GetGroupsFromUser(user string) ([]string, error) {
 // install steps) - ValidateUser re-execs this same binary as root via sudo
 // to run CheckPassword below, and etc/sudoers.d/smartpi-users scopes that
 // sudo rule to exactly this path and argument.
-const smartpiServerPath = "/usr/local/bin/smartpiserver"
+const smartpiServerPath = rootcall.ServerPath
 
 // ValidateUser checks username/password for the Login endpoint - both the
 // original "smartpi" account and any account created via the settings
@@ -177,7 +203,14 @@ const smartpiServerPath = "/usr/local/bin/smartpiserver"
 // call here would only ever succeed for the "smartpi" account, silently
 // rejecting a correct password for every other account. The username and
 // password are passed over stdin, not argv, so they never show up in `ps`.
+//
+// Username and password travel as two lines, so a line break in either of
+// them would shift the lines and check a different account than the one
+// the caller passed - both are rejected.
 func ValidateUser(username string, password string) bool {
+	if !ValidUsername(username) || strings.ContainsAny(password, "\r\n") {
+		return false
+	}
 	cmd := exec.Command("sudo", smartpiServerPath, "--pam-check")
 
 	stdin, err := cmd.StdinPipe()

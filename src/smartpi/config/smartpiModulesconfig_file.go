@@ -1,8 +1,6 @@
 package config
 
 import (
-	"io"
-	"os"
 	"strconv"
 	"strings"
 
@@ -148,27 +146,9 @@ func (p *Moduleconfig) SaveParameterToFile() {
 	_, merr = mcfg.Section("lorawan").NewKey("applicationKey", p.LoRaWANApplicationKey)
 	_, merr = mcfg.Section("lorawan").NewKey("datarate", strconv.FormatInt(int64(p.LoRaWANDataRate), 10))
 
-	tmpFile := "/tmp/smartpiModules"
-	merr := mcfg.SaveTo(tmpFile)
-	if merr != nil {
-		panic(merr)
+	if merr := writeConfigFile(mcfg, "/etc/smartpiModules"); merr != nil {
+		log.Errorf("saving /etc/smartpiModules: %v", merr)
 	}
-
-	srcFile, merr := os.Open(tmpFile)
-	utils.Checklog(merr)
-	defer srcFile.Close()
-
-	destFile, merr := os.Create("/etc/smartpiModules") // creates if file doesn't exist
-	utils.Checklog(merr)
-	defer destFile.Close()
-
-	_, merr = io.Copy(destFile, srcFile)
-	utils.Checklog(merr)
-
-	merr = destFile.Sync()
-	utils.Checklog(merr)
-
-	defer os.Remove(tmpFile)
 }
 
 func NewModuleconfig() *Moduleconfig {

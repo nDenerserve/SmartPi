@@ -16,7 +16,6 @@ Restart=on-failure
 RestartSec=2s
 StandardOutput=null
 StandardError=journal
-RemainAfterExit=yes
 User=root
 StartLimitBurst=0
 
