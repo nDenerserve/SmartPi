@@ -27,13 +27,10 @@
 package config
 
 import (
-	"io"
 	"math/rand"
-	"os"
 	"strconv"
 
 	"github.com/nDenerserve/SmartPi/models"
-	"github.com/nDenerserve/SmartPi/utils"
 
 	log "github.com/sirupsen/logrus"
 	ini "gopkg.in/ini.v1"
@@ -225,27 +222,9 @@ func (p *SmartPiACConfig) SaveParameterToFile() {
 	_, err = cfg.Section("files").NewKey("counter_enabled", strconv.FormatBool(p.CounterEnabled))
 	_, err = cfg.Section("files").NewKey("counterdir", p.CounterDir)
 
-	tmpFile := "/tmp/smartpiAC"
-	acerr := accfg.SaveTo(tmpFile)
-	if acerr != nil {
-		panic(acerr)
+	if acerr := writeConfigFile(accfg, "/etc/smartpiAC"); acerr != nil {
+		log.Errorf("saving /etc/smartpiAC: %v", acerr)
 	}
-
-	srcFile, acerr := os.Open(tmpFile)
-	utils.Checklog(acerr)
-	defer srcFile.Close()
-
-	destFile, acerr := os.Create("/etc/smartpiAC") // creates if file doesn't exist
-	utils.Checklog(acerr)
-	defer destFile.Close()
-
-	_, acerr = io.Copy(destFile, srcFile)
-	utils.Checklog(acerr)
-
-	acerr = destFile.Sync()
-	utils.Checklog(acerr)
-
-	defer os.Remove(tmpFile)
 }
 
 func NewSmartPiACConfig() *SmartPiACConfig {

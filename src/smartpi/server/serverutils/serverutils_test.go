@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 
@@ -212,5 +213,54 @@ func TestRequireSessionToken_AcceptsSessionToken(t *testing.T) {
 
 	if !called || rec.Code != http.StatusOK {
 		t.Fatalf("session token rejected by RequireSessionToken: called=%v code=%d", called, rec.Code)
+	}
+}
+
+func TestSessionTokenExpiry(t *testing.T) {
+	conf := testConfig(t)
+	conf.SessionHours = 2
+	tok, err := GenerateToken(models.User{Name: "bob"}, conf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	parsed, err := parseSessionToken(tok, conf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	exp, _ := parsed.Claims.GetExpirationTime()
+	if exp == nil || time.Until(exp.Time) > 2*time.Hour+time.Minute || time.Until(exp.Time) < 2*time.Hour-time.Minute {
+		t.Errorf("exp %v, want in 2 h", exp)
+	}
+
+	sign := func(claims jwt.MapClaims) string {
+		s, _ := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(conf.AppKey))
+		return s
+	}
+	// tokens from before the expiry was introduced must not work any more
+	if _, err := parseSessionToken(sign(jwt.MapClaims{"username": "bob"}), conf); err == nil {
+		t.Error("token without exp accepted")
+	}
+	if _, err := parseSessionToken(sign(jwt.MapClaims{"username": "bob", "exp": time.Now().Add(-time.Minute).Unix()}), conf); err == nil {
+		t.Error("expired token accepted")
+	}
+	// another algorithm with the same key is not accepted either
+	s384, _ := jwt.NewWithClaims(jwt.SigningMethodHS384, jwt.MapClaims{"exp": time.Now().Add(time.Hour).Unix()}).SignedString([]byte(conf.AppKey))
+	if _, err := parseSessionToken(s384, conf); err == nil {
+		t.Error("HS384 accepted")
+	}
+}
+
+func TestNoTokensWithTheShippedKey(t *testing.T) {
+	for _, key := range []string{"", config.LegacyDefaultAppKey} {
+		conf := &config.SmartPiConfig{AppKey: key}
+		if _, err := GenerateToken(models.User{Name: "bob"}, conf); err == nil {
+			t.Errorf("token signed with key %q", key)
+		}
+		forged, _ := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+			"username": "x", "role": []string{"smartpiadmin"}, "exp": time.Now().Add(time.Hour).Unix(),
+		}).SignedString([]byte(config.LegacyDefaultAppKey))
+		if _, err := parseSessionToken(forged, conf); err == nil {
+			t.Errorf("token with key %q accepted", key)
+		}
 	}
 }

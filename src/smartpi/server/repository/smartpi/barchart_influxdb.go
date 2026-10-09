@@ -9,10 +9,24 @@ import (
 	"github.com/nDenerserve/SmartPi/smartpi/config"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
+	"github.com/nDenerserve/SmartPi/utils"
 	log "github.com/sirupsen/logrus"
 )
 
 func (s SmartPiRepository) BarChart(starttime time.Time, stoptime time.Time, aggregatewindow string, function string, valuelist []string, conf *config.SmartPiConfig) (models.Progressdatalist, error) {
+
+	// the values come from the request and are put into the query
+	if err := utils.FluxDuration(aggregatewindow); err != nil {
+		return models.Progressdatalist{}, err
+	}
+	if err := utils.FluxFunc(function); err != nil {
+		return models.Progressdatalist{}, err
+	}
+	for _, v := range valuelist {
+		if err := utils.FluxField(v); err != nil {
+			return models.Progressdatalist{}, err
+		}
+	}
 
 	// Create a client
 	// You can generate an API Token from the "API Tokens Tab" in the UI

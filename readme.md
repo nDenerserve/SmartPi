@@ -331,14 +331,24 @@ Copy the executables to /usr/local/bin and make them executable:
 
 Also copy the sudoers rules and the FTP-upload cronjob:
 
-    sudo cp etc/sudoers.d/* /etc/sudoers.d/
-    sudo chmod 440 /etc/sudoers.d/smartpi-*
+    sudo rm -f /etc/sudoers.d/smartpi-users /etc/sudoers.d/smartpi-cron /etc/sudoers.d/smartpi-update
+    sudo cp etc/sudoers.d/smartpi /etc/sudoers.d/smartpi
+    sudo chmod 440 /etc/sudoers.d/smartpi
+    sudo visudo -c -f /etc/sudoers.d/smartpi
     sudo cp etc/cron.d/smartpi /etc/cron.d/smartpi
+    sudo chmod 640 /etc/smartpi /etc/smartpiAC /etc/smartpiModules
 
-The settings "Users" tab (create a user, change a password) needs
-etc/sudoers.d/smartpi-users, and the settings "FTP" tab's upload schedule
-needs etc/sudoers.d/smartpi-cron plus /etc/cron.d/smartpi (it ships commented
-out - the web UI uncomments it once FTP upload is enabled there).
+etc/sudoers.d/smartpi only lets the smartpi user run smartpiserver itself as
+root, in its two root modes: `--pam-check` (login password check) and
+`--root-helper` (create a user, set the password of a regular account, the
+FTP upload line of /etc/cron.d/smartpi, apt-get update and package
+installs/upgrades for the "Update" tab). Every argument is checked there -
+see src/smartpi/roothelper. The cron file ships commented out; the web UI
+uncomments it once FTP upload is enabled.
+
+smartpiserver creates its own random signing key for login tokens
+(`[webserver] appkey`) on its first start; logins are valid for
+`[webserver] session_hours` (default 24).
 
 ##### Add Api-Key to config-file
 
@@ -418,3 +428,12 @@ Or you can add it later via webgui:
  * requires the new etc/sudoers.d/smartpi-cron rule (grants the smartpi user passwordless `tee` of that one file) and a copy of etc/cron.d/smartpi (ships commented out, same as before)
  * fixed Login: any account other than "smartpi" (e.g. one created via the new "Users" tab) could never log in, since PAM's unix_chkpwd refuses to check another account's password for a non-root caller - Login now re-execs smartpiserver as root via `sudo smartpiserver --pam-check` (username/password over stdin) to do that check, see etc/sudoers.d/smartpi-users' second rule
  * fixed Login: a wrong password (for any account) crashed the request instead of returning 401 - models.Error.Error() was an unimplemented stub that always panicked
+
+ ### 10/09/26 (security)
+ * fixed Login: a user name with line breaks ran shell commands as the smartpi user (and so as root) - the groups are read without a shell now, and login names must be plain Linux account names
+ * the config read API no longer returns passwords, tokens and the signing key (masked as `********`; sending the mask back keeps the stored value); the config save no longer prints the whole config (with passwords) to the journal
+ * the public chart/progress/CSV endpoints check `value`/`aggregate` before they are used in the InfluxDB query (they were put into the Flux query as they were)
+ * every device gets its own random signing key for login tokens (the shipped default key is public); login tokens expire after `[webserver] session_hours` (default 24) - everyone has to log in again once after the update
+ * /etc/smartpi, /etc/smartpiAC and /etc/smartpiModules are written with mode 0640 and without the fixed /tmp files
+ * replaced the sudo rules for apt-get, systemd-run, systemctl, useradd, chpasswd and tee (each of them a root shell with free arguments) by etc/sudoers.d/smartpi: only `smartpiserver --pam-check` and `smartpiserver --root-helper`, which checks every argument (src/smartpi/roothelper)
+ * new website build (passwords masked in the settings, login token no longer printed to the browser console)

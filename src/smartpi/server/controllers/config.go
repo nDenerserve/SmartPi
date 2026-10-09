@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -19,7 +18,7 @@ func (c Controller) ReadSmartPiConfig(conf *config.SmartPiConfig) http.HandlerFu
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		// configuration := context.Get(r, "Config")
-		if err := json.NewEncoder(w).Encode(conf); err != nil {
+		if err := json.NewEncoder(w).Encode(conf.Public()); err != nil {
 			panic(err)
 		}
 	}
@@ -40,7 +39,15 @@ func (c Controller) WriteSmartPiConfig(conf *config.SmartPiConfig) http.HandlerF
 		if err := json.Unmarshal(b, &wc); err != nil {
 			log.Error(err)
 		}
-		fmt.Println(wc)
+		msg, ok := wc.Msg.(map[string]interface{})
+		if !ok {
+			errorM.Message = "Malformed configuration"
+			serverutils.RespondWithError(w, http.StatusBadRequest, errorM)
+			return
+		}
+		// the signing key cannot be changed here, and secrets the client
+		// got masked and sends back unchanged keep their stored value
+		config.FilterWrite(msg)
 		configRepo := configRepository.ConfigRepository{}
 
 		err := configRepo.PrepareConfig(wc, conf)
@@ -51,7 +58,6 @@ func (c Controller) WriteSmartPiConfig(conf *config.SmartPiConfig) http.HandlerF
 		}
 
 		conf.SaveParameterToFile()
-		fmt.Println(conf)
 
 		// Keep /etc/cron.d/smartpi's smartpiftpupload line in sync with the
 		// [ftp] settings just saved - see cronRepository.SyncFTPUpload.
@@ -60,7 +66,7 @@ func (c Controller) WriteSmartPiConfig(conf *config.SmartPiConfig) http.HandlerF
 			log.Error(err)
 		}
 
-		if err := json.NewEncoder(w).Encode(conf); err != nil {
+		if err := json.NewEncoder(w).Encode(conf.Public()); err != nil {
 			panic(err)
 		}
 	}

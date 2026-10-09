@@ -1,0 +1,24 @@
+# sudo rules of the "smartpi" user - the account smartpiserver.service (and
+# the other SmartPi services) run as.
+#
+# Only smartpiserver itself may be run as root, and only in its two root
+# modes. They check every argument themselves, because sudo only checks the
+# command and anyone acting as the smartpi user can call them:
+#
+#   --pam-check     checks a login password for any local account (PAM's
+#                   unix_chkpwd only checks the caller's own account for a
+#                   non-root caller); user and password come over stdin.
+#                   See runPamCheck in src/smartpi/server/server.go.
+#   --root-helper   the root actions of the web UI: create a user, set the
+#                   password of a regular account (UID 1000-59999, never
+#                   root), set the FTP upload line of /etc/cron.d/smartpi,
+#                   apt-get update, and install/upgrade packages as a
+#                   detached unit (repository packages, or an uploaded
+#                   smartpi*.deb from the staging directory). See
+#                   src/smartpi/roothelper.
+#
+# There are deliberately no rules for apt-get, systemd-run, systemctl,
+# useradd, chpasswd or tee: with free arguments each of them is a root
+# shell for anyone acting as smartpi.
+smartpi ALL=(root) NOPASSWD: /usr/local/bin/smartpiserver --pam-check
+smartpi ALL=(root) NOPASSWD: /usr/local/bin/smartpiserver --root-helper *
