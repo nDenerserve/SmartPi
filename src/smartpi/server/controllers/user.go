@@ -127,6 +127,11 @@ func (c Controller) CreateUser() http.HandlerFunc {
 			serverutils.RespondWithError(w, http.StatusBadRequest, errorObject)
 			return
 		}
+		if !linuxtoolsRepository.ValidUsername(req.Username) {
+			errorObject.Message = "Invalid username."
+			serverutils.RespondWithError(w, http.StatusBadRequest, errorObject)
+			return
+		}
 		if len(req.Password) < minPasswordLength {
 			errorObject.Message = "Password is too short."
 			serverutils.RespondWithError(w, http.StatusBadRequest, errorObject)
