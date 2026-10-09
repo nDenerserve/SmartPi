@@ -16,7 +16,6 @@ ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 StandardOutput=journal
 StandardError=journal
-RemainAfterExit=yes
 User=smartpi
 RuntimeDirectory=smartpi
 RuntimeDirectoryMode=755
