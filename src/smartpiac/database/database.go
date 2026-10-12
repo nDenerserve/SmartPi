@@ -12,6 +12,7 @@ import (
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api"
+	"github.com/nDenerserve/SmartPi/utils"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -60,6 +61,17 @@ func ReadData(conf *config.SmartPiConfig, starttime time.Time, stoptime time.Tim
 	} else if len(params) == 2 {
 		aggregate = params[0]
 		influxFunc = params[1]
+	}
+	// the values are put into the query
+	if aggregate != "" {
+		if err := utils.FluxDuration(aggregate); err != nil {
+			return nil, err
+		}
+	}
+	if influxFunc != "" {
+		if err := utils.FluxFunc(influxFunc); err != nil {
+			return nil, err
+		}
 	}
 
 	client := influxdb2.NewClientWithOptions(conf.Influxdatabase, conf.InfluxAPIToken,

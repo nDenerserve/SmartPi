@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"slices"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
@@ -36,24 +37,24 @@ func CompareHashAndPassword(hashedPassword string, password []byte) bool {
 
 func GenerateToken(user models.User, conf *config.SmartPiConfig) (string, error) {
 
-	var err error
-	secret := conf.AppKey
-
+	if conf.AppKey == "" || conf.AppKey == config.LegacyDefaultAppKey {
+		return "", fmt.Errorf("no signing key configured")
+	}
+	hours := conf.SessionHours
+	if hours <= 0 {
+		hours = 24
+	}
+	now := time.Now()
+	// exp: a token that leaks (browser storage, sniffed over HTTP) is only
+	// usable for a limited time
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": user.Name,
 		"role":     user.Role,
 		"iss":      "enerserve",
+		"iat":      now.Unix(),
+		"exp":      now.Add(time.Duration(hours) * time.Hour).Unix(),
 	})
-
-	tokenString, err := token.SignedString([]byte(secret))
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// spew.Dump(token)
-
-	return tokenString, nil
+	return token.SignedString([]byte(conf.AppKey))
 }
 
 // bearerToken extracts the token value from an "Authorization: Bearer <value>"
@@ -72,12 +73,14 @@ func bearerToken(r *http.Request) (string, bool) {
 // callers that also need to accept those check devicetoken.LooksLikeToken
 // first and take a different path entirely.
 func parseSessionToken(bearer string, conf *config.SmartPiConfig) (*jwt.Token, error) {
+	if conf.AppKey == "" || conf.AppKey == config.LegacyDefaultAppKey {
+		return nil, fmt.Errorf("no signing key configured")
+	}
+	// only HS256, and an expiry is required: tokens issued before tokens
+	// had one would otherwise stay valid forever
 	return jwt.Parse(bearer, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("There was an error")
-		}
 		return []byte(conf.AppKey), nil
-	})
+	}, jwt.WithValidMethods([]string{"HS256"}), jwt.WithExpirationRequired())
 }
 
 // DecryptUserdataFromToken resolves the human user behind a session token.

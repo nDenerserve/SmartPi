@@ -15,7 +15,6 @@ ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 StandardOutput=null
 StandardError=journal
-RemainAfterExit=yes
 User=root
 StartLimitBurst=0
 

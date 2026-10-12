@@ -32,8 +32,9 @@ shared_file_enabled = true
 shared_dir          = /var/run/smartpi
 port                = 1080
 docroot             = /var/smartpi/www
-appkey              = `ew980723j35h97fqw4!234490#t33465`
+appkey              = 
 secure_values       = false
+session_hours       = 24
 
 [csv]
 decimalpoint = 

@@ -127,6 +127,11 @@ func (c Controller) SmartPiChartdata(conf *config.SmartPiConfig) http.HandlerFun
 		if vars["aggregate"] != "" {
 			aggregate = vars["aggregate"]
 		}
+		if err := utils.FluxDuration(aggregate); err != nil {
+			errorM.Message = err.Error()
+			serverutils.RespondWithError(w, http.StatusBadRequest, errorM)
+			return
+		}
 
 		if (vars["starttime"] != "") && (vars["stoptime"] != "") {
 			starttime, err = dateparse.ParseIn(vars["starttime"], time.UTC)
@@ -266,6 +271,18 @@ func (c Controller) SmartPiProgressdata(conf *config.SmartPiConfig) http.Handler
 		}
 
 		valueList := strings.Split(value, ",")
+		if err := utils.FluxDuration(aggregate); err != nil {
+			errorM.Message = err.Error()
+			serverutils.RespondWithError(w, http.StatusBadRequest, errorM)
+			return
+		}
+		for _, v := range valueList {
+			if err := utils.FluxField(v); err != nil {
+				errorM.Message = err.Error()
+				serverutils.RespondWithError(w, http.StatusBadRequest, errorM)
+				return
+			}
+		}
 
 		smartpiRepo := smartpiRepository.SmartPiRepository{}
 		progressdata, err = smartpiRepo.Progressdata(starttime, stoptime, aggregate, valueList, conf)
@@ -385,6 +402,11 @@ func (c Controller) SmartPiCsvExport(conf *config.SmartPiConfig) http.HandlerFun
 
 		if vars["aggregate"] != "" {
 			aggregate = vars["aggregate"]
+			if err := utils.FluxDuration(aggregate); err != nil {
+				errorM.Message = err.Error()
+				serverutils.RespondWithError(w, http.StatusBadRequest, errorM)
+				return
+			}
 			log.Debug("Export CSV-Data from " + start.String() + " to " + stop.String() + ". Aggregate: " + aggregate)
 			log.Debug("Please wait. It may take a while...")
 			// csv, _ = exportCSV(smartpiconfig, start, stop, *decimalpointPtr, *aggregatePtr)

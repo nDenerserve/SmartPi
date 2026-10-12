@@ -24,6 +24,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/nDenerserve/SmartPi/smartpi/rootcall"
 )
 
 // commandInC builds a command that runs with LC_ALL=C - and thus LANGUAGE
@@ -219,7 +221,17 @@ func StartInstall(kind, pkg, previousVersion, targetVersion, target string) (Job
 		Package:         pkg,
 		PreviousVersion: previousVersion,
 		TargetVersion:   targetVersion,
-	}, []string{"install", "-y", "-o", "Dpkg::Options::=--force-confold", target})
+	}, rootcall.AptInstall, target)
+}
+
+// InstallArgs are the apt-get arguments that install target.
+func InstallArgs(target string) []string {
+	return []string{"install", "-y", "-o", "Dpkg::Options::=--force-confold", target}
+}
+
+// UpgradeArgs are the apt-get arguments of StartUpgradeAll.
+func UpgradeArgs() []string {
+	return []string{"dist-upgrade", "-y", "-o", "Dpkg::Options::=--force-confold"}
 }
 
 // StartUpgradeAll launches `apt-get dist-upgrade -y`, upgrading every
@@ -244,7 +256,7 @@ func StartUpgradeAll() (Job, error) {
 		}
 		job.Packages = names
 	}
-	return startJob(job, []string{"dist-upgrade", "-y", "-o", "Dpkg::Options::=--force-confold"})
+	return startJob(job, rootcall.AptUpgrade)
 }
 
 // varTmpPath is where apt-get/dpkg keep scratch files - archive extraction,
@@ -305,8 +317,9 @@ func shellQuote(s string) string {
 }
 
 // startJob is the shared implementation behind StartInstall and
-// StartUpgradeAll: it launches `apt-get <aptArgs...>` (see aptGetScript) as
-// its own detached systemd unit and persists job (with Unit and StartedAt
+// StartUpgradeAll: it has the root helper (package roothelper, action
+// AptInstall/AptUpgrade with args) launch apt-get as its own detached
+// systemd unit (see JobCommand) and persists job (with Unit and StartedAt
 // filled in) so CurrentStatus can report its outcome.
 //
 // The install is deliberately not run as a plain child process of
@@ -316,7 +329,7 @@ func shellQuote(s string) string {
 // corrupting the very install in progress. Running it via `systemd-run` moves
 // it into its own unit/cgroup first, and `--property=KillMode=none` on that
 // unit keeps it that way even if something explicitly signals it.
-func startJob(job Job, aptArgs []string) (Job, error) {
+func startJob(job Job, action string, args ...string) (Job, error) {
 	jobMu.Lock()
 	defer jobMu.Unlock()
 
@@ -329,20 +342,7 @@ func startJob(job Job, aptArgs []string) (Job, error) {
 	}
 
 	unit := fmt.Sprintf("smartpi-update-%d", time.Now().UnixNano())
-	logPath := filepath.Join(logDir, unit+".log")
-	exitCodePath := filepath.Join(logDir, unit+".exitcode")
-
-	args := []string{
-		"systemd-run",
-		"--unit=" + unit,
-		"--property=KillMode=none",
-		"--property=StandardOutput=file:" + logPath,
-		"--property=StandardError=file:" + logPath,
-		"--setenv=DEBIAN_FRONTEND=noninteractive",
-		"--",
-		"/bin/sh", "-c", aptGetScript(aptArgs, exitCodePath),
-	}
-	if out, err := exec.Command("sudo", args...).CombinedOutput(); err != nil {
+	if out, err := rootcall.Command(action, append([]string{unit}, args...)...).CombinedOutput(); err != nil {
 		return Job{}, fmt.Errorf("starting update: %s (%s)", err, strings.TrimSpace(string(out)))
 	}
 
@@ -352,6 +352,31 @@ func startJob(job Job, aptArgs []string) (Job, error) {
 		return job, fmt.Errorf("update started but its state could not be saved: %w", err)
 	}
 	return job, nil
+}
+
+// unitRE matches the unit names startJob generates.
+var unitRE = regexp.MustCompile(`^smartpi-update-[0-9]{1,20}$`)
+
+// ValidUnit reports whether unit is a unit name startJob generates.
+func ValidUnit(unit string) bool {
+	return unitRE.MatchString(unit)
+}
+
+// JobCommand is the systemd-run command line (without systemd-run itself)
+// that runs `apt-get <aptArgs...>` as the detached unit (see aptGetScript),
+// logging to logDir. The root helper runs it.
+func JobCommand(unit string, aptArgs []string) []string {
+	logPath := filepath.Join(logDir, unit+".log")
+	exitCodePath := filepath.Join(logDir, unit+".exitcode")
+	return []string{
+		"--unit=" + unit,
+		"--property=KillMode=none",
+		"--property=StandardOutput=file:" + logPath,
+		"--property=StandardError=file:" + logPath,
+		"--setenv=DEBIAN_FRONTEND=noninteractive",
+		"--",
+		"/bin/sh", "-c", aptGetScript(aptArgs, exitCodePath),
+	}
 }
 
 // CurrentStatus reports the state of the most recently started job, or
@@ -588,7 +613,7 @@ func tailFile(path string, maxBytes int64) (string, error) {
 // never restarts a service, so it carries none of StartInstall's risk - and
 // returns its combined output for display.
 func Refresh() (string, error) {
-	out, err := commandInC("sudo", "apt-get", "update").CombinedOutput()
+	out, err := rootcall.Command(rootcall.AptUpdate).CombinedOutput()
 	if err != nil {
 		return string(out), fmt.Errorf("apt-get update failed: %s (%s)", err, strings.TrimSpace(string(out)))
 	}

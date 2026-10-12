@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/nDenerserve/SmartPi/models"
 	"github.com/nDenerserve/SmartPi/smartpi/config"
+	linuxtoolsRepository "github.com/nDenerserve/SmartPi/smartpi/server/repository/linuxtools"
 	userRepository "github.com/nDenerserve/SmartPi/smartpi/server/repository/user"
 	"github.com/nDenerserve/SmartPi/smartpi/server/serverutils"
 	log "github.com/sirupsen/logrus"
@@ -33,6 +34,15 @@ func (c Controller) Login(conf *config.SmartPiConfig) http.HandlerFunc {
 		if credentials.Password == "" {
 			error.Message = "Password is missing."
 			serverutils.RespondWithError(w, http.StatusBadRequest, error)
+			return
+		}
+
+		// only plain Linux account names: anything else (line breaks,
+		// spaces, shell characters) cannot be a valid login and is
+		// rejected with the same answer as a wrong password
+		if !linuxtoolsRepository.ValidUsername(credentials.Username) {
+			error.Message = "User does not exist or password wrong."
+			serverutils.RespondWithError(w, http.StatusUnauthorized, error)
 			return
 		}
 
@@ -114,6 +124,11 @@ func (c Controller) CreateUser() http.HandlerFunc {
 
 		if req.Username == "" {
 			errorObject.Message = "Username is missing."
+			serverutils.RespondWithError(w, http.StatusBadRequest, errorObject)
+			return
+		}
+		if !linuxtoolsRepository.ValidUsername(req.Username) {
+			errorObject.Message = "Invalid username."
 			serverutils.RespondWithError(w, http.StatusBadRequest, errorObject)
 			return
 		}

@@ -34,11 +34,13 @@ package cronRepository
 
 import (
 	"fmt"
-	"io"
 	"os"
-	"os/exec"
+	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/nDenerserve/SmartPi/smartpi/rootcall"
 )
 
 // CronFilePath is the cron.d file smartpiftpupload's schedule lives in. A
@@ -67,13 +69,57 @@ type CronRepository struct{}
 // server.go's startup path), so it is a plain last-write-wins sync, not an
 // incremental edit.
 func (c CronRepository) SyncFTPUpload(enabled bool, sendtimes [24]bool) error {
-	lines, err := readLines(CronFilePath)
+	state := "off"
+	if enabled {
+		state = "on"
+	}
+	// /etc/cron.d/smartpi is root-owned: the root helper replaces the line
+	// (see WriteFTPUpload), smartpiserver itself runs unprivileged
+	out, err := rootcall.Command(rootcall.CronFTP, state, hourField(sendtimes)).CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%s: %s", err, strings.TrimSpace(string(out)))
+	}
+	return nil
+}
+
+func buildFTPUploadLine(enabled bool, sendtimes [24]bool) string {
+	return ftpLine(enabled, hourField(sendtimes))
+}
+
+func ftpLine(enabled bool, hours string) string {
+	prefix := ""
+	if !enabled {
+		prefix = "#"
+	}
+	return fmt.Sprintf("%s0 %s * * * %s  %s", prefix, hours, ftpUploadUser, ftpUploadCommand)
+}
+
+// hourRE matches what hourField produces: "*" or a comma list of hours.
+var hourRE = regexp.MustCompile(`^(\*|([0-9]|1[0-9]|2[0-3])(,([0-9]|1[0-9]|2[0-3])){0,23})$`)
+
+// ValidHours reports whether hours is a cron hour field hourField produces.
+func ValidHours(hours string) bool {
+	return hourRE.MatchString(hours)
+}
+
+// WriteFTPUpload replaces the smartpiftpupload line of CronFilePath (or
+// adds it) and leaves every other line alone. It runs as root in the root
+// helper; the hour field is checked here because the caller may be anyone
+// acting as the smartpi user, and the line always runs the fixed command as
+// the fixed user.
+func WriteFTPUpload(enabled bool, hours string) error {
+	return writeFTPUpload(CronFilePath, enabled, hours)
+}
+
+func writeFTPUpload(path string, enabled bool, hours string) error {
+	if !ValidHours(hours) {
+		return fmt.Errorf("invalid hours %q", hours)
+	}
+	lines, err := readLines(path)
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
-
-	newLine := buildFTPUploadLine(enabled, sendtimes)
-
+	newLine := ftpLine(enabled, hours)
 	replaced := false
 	for i, line := range lines {
 		if strings.Contains(line, ftpUploadCommand) {
@@ -84,20 +130,17 @@ func (c CronRepository) SyncFTPUpload(enabled bool, sendtimes [24]bool) error {
 	if !replaced {
 		lines = append(lines, newLine)
 	}
-
-	return writeFileAsRoot(CronFilePath, strings.Join(lines, "\n")+"\n")
-}
-
-// buildFTPUploadLine renders the cron.d line for smartpiftpupload: a leading
-// "#" while disabled (matching the file's shipped default), the minute
-// field fixed at "0" - uploads only ever happen on the hour - and the hour
-// field from hourField below.
-func buildFTPUploadLine(enabled bool, sendtimes [24]bool) string {
-	prefix := ""
-	if !enabled {
-		prefix = "#"
+	// written next to the target and renamed: cron ignores file names with
+	// a dot, so it never sees a half written file
+	tmp := filepath.Join(filepath.Dir(path), "."+filepath.Base(path)+".tmp")
+	if err := os.WriteFile(tmp, []byte(strings.Join(lines, "\n")+"\n"), 0644); err != nil {
+		return err
 	}
-	return fmt.Sprintf("%s0 %s * * * %s  %s", prefix, hourField(sendtimes), ftpUploadUser, ftpUploadCommand)
+	if err := os.Chmod(tmp, 0644); err != nil {
+		os.Remove(tmp)
+		return err
+	}
+	return os.Rename(tmp, path)
 }
 
 // hourField turns the 24 hourly on/off flags from the settings "FTP" tab
@@ -132,33 +175,4 @@ func readLines(path string) ([]string, error) {
 		return []string{}, nil
 	}
 	return strings.Split(content, "\n"), nil
-}
-
-// writeFileAsRoot overwrites path with content. smartpiserver runs
-// unprivileged (see etc/systemd/system/smartpiserver.service) and
-// /etc/cron.d/smartpi is root-owned, so this shells out through sudo - see
-// etc/sudoers.d/smartpi-cron for the rule that allows exactly this, and
-// linuxtoolsRepository.ChangePassword for the same stdin-pipe-to-sudo
-// pattern used here.
-func writeFileAsRoot(path string, content string) error {
-	cmd := exec.Command("sudo", "tee", path)
-	cmd.Stdout = io.Discard
-
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		return err
-	}
-
-	go func() {
-		defer stdin.Close()
-		io.WriteString(stdin, content)
-	}()
-
-	var stderr strings.Builder
-	cmd.Stderr = &stderr
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("%s: %s", err, strings.TrimSpace(stderr.String()))
-	}
-	return nil
 }

@@ -28,7 +28,6 @@ package config
 
 import (
 	"bufio"
-	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -78,8 +77,10 @@ type SmartPiConfig struct {
 	WebserverPort     int
 	DocRoot           string
 	AppKey            string
-	Dashboard         string
-	SecureValues      bool
+	// SessionHours is how long a login (session token) stays valid.
+	SessionHours int
+	Dashboard    string
+	SecureValues bool
 
 	// [csv]
 	CSVdecimalpoint string
@@ -220,8 +221,10 @@ func (p *SmartPiConfig) ReadParameterFromFile() {
 	p.SharedDir = cfg.Section("webserver").Key("shared_dir").MustString("/var/run/")
 	p.WebserverPort = cfg.Section("webserver").Key("port").MustInt(1080)
 	p.DocRoot = cfg.Section("webserver").Key("docroot").MustString("/var/smartpi/www")
-	p.AppKey = cfg.Section("webserver").Key("appkey").MustString("ew980723j35h97fqw4!234490#t33465")
+	// no default: smartpiserver generates a key per device (EnsureAppKey)
+	p.AppKey = cfg.Section("webserver").Key("appkey").String()
 	p.SecureValues = cfg.Section("webserver").Key("secure_values").MustBool(false)
+	p.SessionHours = cfg.Section("webserver").Key("session_hours").MustInt(24)
 
 	// [csv]
 	p.CSVdecimalpoint = cfg.Section("csv").Key("decimalpoint").String()
@@ -304,6 +307,7 @@ func (p *SmartPiConfig) SaveParameterToFile() {
 	_, err = cfg.Section("webserver").NewKey("docroot", p.DocRoot)
 	_, err = cfg.Section("webserver").NewKey("appkey", p.AppKey)
 	_, err = cfg.Section("webserver").NewKey("secure_values", strconv.FormatBool(p.SecureValues))
+	_, err = cfg.Section("webserver").NewKey("session_hours", strconv.Itoa(p.SessionHours))
 
 	// [csv]
 	_, err = cfg.Section("csv").NewKey("decimalpoint", p.CSVdecimalpoint)
@@ -340,27 +344,9 @@ func (p *SmartPiConfig) SaveParameterToFile() {
 	// [update]
 	_, err = cfg.Section("update").NewKey("staging_dir", p.UpdateStagingDir)
 
-	tmpFile := "/tmp/smartpi_test"
-	err := cfg.SaveTo(tmpFile)
-	if err != nil {
-		panic(err)
+	if err := writeConfigFile(cfg, "/etc/smartpi"); err != nil {
+		log.Errorf("saving /etc/smartpi: %v", err)
 	}
-
-	srcFile, err := os.Open(tmpFile)
-	utils.Checklog(err)
-	defer srcFile.Close()
-
-	destFile, err := os.Create("/etc/smartpi") // creates if file doesn't exist
-	utils.Checklog(err)
-	defer destFile.Close()
-
-	_, err = io.Copy(destFile, srcFile)
-	utils.Checklog(err)
-
-	err = destFile.Sync()
-	utils.Checklog(err)
-
-	defer os.Remove(tmpFile)
 }
 
 func NewSmartPiConfig() *SmartPiConfig {

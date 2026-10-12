@@ -21,6 +21,8 @@ import (
 
 	"github.com/nDenerserve/SmartPi/smartpi/config"
 	"github.com/nDenerserve/SmartPi/smartpi/devicetoken"
+	"github.com/nDenerserve/SmartPi/smartpi/rootcall"
+	"github.com/nDenerserve/SmartPi/smartpi/roothelper"
 	"github.com/nDenerserve/SmartPi/smartpi/server/controllers"
 	modulescontrollers "github.com/nDenerserve/SmartPi/smartpi/server/controllers/modules"
 	cronRepository "github.com/nDenerserve/SmartPi/smartpi/server/repository/cron"
@@ -69,8 +71,19 @@ func main() {
 	if len(os.Args) > 1 && os.Args[1] == pamCheckFlag {
 		os.Exit(runPamCheck())
 	}
+	// the few root actions (run via sudo, see packages rootcall/roothelper)
+	if len(os.Args) > 1 && os.Args[1] == rootcall.Flag {
+		os.Exit(roothelper.Run(os.Args[2:], os.Stdin, os.Stdout, os.Stderr))
+	}
 
 	smartpiConfig := config.NewSmartPiConfig()
+	// every device signs its session tokens with its own key: the key that
+	// used to be shipped is public, anyone could create admin tokens with it
+	if replaced, err := smartpiConfig.EnsureAppKey(); err != nil {
+		log.Fatalf("Could not create a signing key: %s", err)
+	} else if replaced {
+		log.Info("Created a new signing key for session tokens - everyone has to log in again")
+	}
 	smartpiACConfig := config.NewSmartPiACConfig()
 	moduleConfig := config.NewModuleconfig()
 	controller := controllers.Controller{}
@@ -219,7 +232,7 @@ func main() {
 }
 
 // runPamCheck is smartpiserver re-exec'd as "smartpiserver --pam-check" via
-// sudo (see etc/sudoers.d/smartpi-users and linuxtoolsRepository.ValidateUser)
+// sudo (see etc/sudoers.d/smartpi and linuxtoolsRepository.ValidateUser)
 // so that the PAM check inside linuxtoolsRepository.CheckPassword runs as
 // root - smartpiserver.service itself runs unprivileged, and PAM's
 // unix_chkpwd helper refuses to check any account's password other than the
