@@ -26,12 +26,12 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oapi-codegen/runtime v1.1.1 // indirect
 	github.com/prometheus/client_model v0.6.3 // indirect
-	github.com/prometheus/procfs v0.21.1 // indirect
+	github.com/prometheus/procfs v0.22.0 // indirect
 	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	golang.org/x/net v0.59.0 // indirect
-	golang.org/x/sync v0.21.0 // indirect
+	golang.org/x/sync v0.22.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 )
 
@@ -47,7 +47,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.52
 	github.com/msteinert/pam v1.2.0
 	github.com/nDenerserve/mbserver v0.0.0-20230619125728-ce6fed969ee0
-	github.com/prometheus/client_golang v1.24.1
+	github.com/prometheus/client_golang v1.25.0
 	github.com/rs/cors v1.11.1
 	golang.org/x/crypto v0.57.0
 	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6
