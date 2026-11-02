@@ -30,7 +30,7 @@ require (
 	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	golang.org/x/net v0.59.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 )
@@ -49,9 +49,9 @@ require (
 	github.com/nDenerserve/mbserver v0.0.0-20230619125728-ce6fed969ee0
 	github.com/prometheus/client_golang v1.25.0
 	github.com/rs/cors v1.11.1
-	golang.org/x/crypto v0.57.0
+	golang.org/x/crypto v0.58.0
 	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6
-	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
 	gopkg.in/ini.v1 v1.67.3
 	periph.io/x/devices/v3 v3.7.4
 	periph.io/x/host/v3 v3.8.5
