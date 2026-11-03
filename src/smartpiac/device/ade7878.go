@@ -489,6 +489,18 @@ func ReadVoltage(d *i2c.Device, c *config.SmartPiACConfig, phase models.SmartPiP
 	return voltage, measureVoltage
 }
 
+// powerCalibrationFactor returns the factor by which the power and energy
+// registers must be scaled so that they match the calibrated current and
+// voltage (P = U * I). The voltage factor only applies if the voltage is
+// actually measured.
+func powerCalibrationFactor(c *config.SmartPiACConfig, phase models.SmartPiPhase) float64 {
+	factor := c.CalibrationfactorI[phase]
+	if c.MeasureVoltage[phase] {
+		factor *= c.CalibrationfactorU[phase]
+	}
+	return factor
+}
+
 func ReadActiveWatts(d *i2c.Device, c *config.SmartPiACConfig, phase models.SmartPiPhase) (watts float64) {
 	command := make([]byte, 2)
 	switch phase {
@@ -518,7 +530,7 @@ func ReadActiveWatts(d *i2c.Device, c *config.SmartPiACConfig, phase models.Smar
 
 	outcome := float64(DeviceFetchInt(d, 4, command))
 	if c.MeasureCurrent[phase] {
-		watts = outcome * calibrationCurveFactorCurrent * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf
+		watts = outcome * calibrationCurveFactorCurrent * powerCalibrationFactor(c, phase) * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf
 	} else {
 		watts = 0.0
 	}
@@ -583,7 +595,7 @@ func ReadActiveEnergy(d *i2c.Device, c *config.SmartPiACConfig, phase models.Sma
 
 	outcome := float64(DeviceFetchInt(d, 4, command))
 
-	energy = outcome * calibrationCurveFactorCurrent * calibrationCurveFactorPower / pcf
+	energy = outcome * calibrationCurveFactorCurrent * calibrationCurveFactorPower * powerCalibrationFactor(c, phase) / pcf
 
 	// if c.CurrentDirection[phase] {
 	// 	watts *= -1
@@ -673,7 +685,7 @@ func ReadApparentPower(d *i2c.Device, c *config.SmartPiACConfig, phase models.Sm
 
 	if c.MeasureCurrent[phase] {
 		outcome := float64(DeviceFetchInt(d, 4, command))
-		return outcome * calibrationCurveFactorCurrent * calibrationCurveFactorPower * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf * 1.14989234
+		return outcome * calibrationCurveFactorCurrent * calibrationCurveFactorPower * powerCalibrationFactor(c, phase) * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf * 1.14989234
 	} else {
 		return 0.0
 	}
@@ -708,7 +720,7 @@ func ReadReactivePower(d *i2c.Device, c *config.SmartPiACConfig, phase models.Sm
 
 	outcome := float64(DeviceFetchInt(d, 4, command))
 	if c.MeasureCurrent[phase] {
-		rewatts = outcome * calibrationCurveFactorCurrent * calibrationCurveFactorPower * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf * 2.560177029
+		rewatts = outcome * calibrationCurveFactorCurrent * calibrationCurveFactorPower * powerCalibrationFactor(c, phase) * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf * 2.560177029
 	} else {
 		rewatts = 0.0
 	}
