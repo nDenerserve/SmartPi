@@ -211,9 +211,15 @@ func (p *SmartPiConfig) ReadParameterFromFile() {
 	p.FTPpath = cfg.Section("ftp").Key("ftp_path").String()
 	p.FTPcsv = cfg.Section("ftp").Key("ftp_csv").MustBool(true)
 	p.FTPxml = cfg.Section("ftp").Key("ftp_xml").MustBool(true)
-	sendtimes := strings.Split(cfg.Section("ftp").Key("ftp_sendtimes").MustString("1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"), ",")
+	// Comma-separated like SaveParameterToFile writes it. The default used
+	// to be space-separated, so it was never parsed (every hour false), and
+	// more than 24 entries indexed past the end of the array.
+	sendtimes := strings.Split(cfg.Section("ftp").Key("ftp_sendtimes").MustString("1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"), ",")
 	for i, r := range sendtimes {
-		p.FTPsendtimes[i], _ = strconv.ParseBool(r)
+		if i >= len(p.FTPsendtimes) {
+			break
+		}
+		p.FTPsendtimes[i], _ = strconv.ParseBool(strings.TrimSpace(r))
 	}
 
 	// [webserver]
