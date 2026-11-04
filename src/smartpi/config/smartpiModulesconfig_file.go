@@ -21,6 +21,13 @@ type Moduleconfig struct {
 	// [analogout420ma]
 	AllowedAnalogOut420mAUser []string
 
+	// [analogout010v]
+	AllowedAnalogOut010VUser []string
+	// AnalogOut010VCalibration holds per-board output calibrations, keyed
+	// by I2C address, from the calibration_<address> keys - see
+	// AnalogOutCalibration. A module without an entry is used uncalibrated.
+	AnalogOut010VCalibration map[uint16][4]AnalogOutCalibration
+
 	// [analogin]
 	AllowedAnalogInUser []string
 
@@ -45,6 +52,30 @@ type Moduleconfig struct {
 	// s := strings.Split("a,b,c", ",")
 }
 
+// defaultAllowedUsers is the allowlist a module gets when its
+// allowed_user key is missing or empty.
+var defaultAllowedUsers = []string{"root", "smartpi"}
+
+// splitList splits a comma-separated config value into its trimmed,
+// non-empty entries, falling back to a copy of defaults when none remain.
+//
+// strings.Split alone is not enough: for a missing/empty key it returns
+// [""], never an empty slice, so a "len == 0 -> defaults" check after it
+// never fires - an allowlist then silently ends up as [""] and locks every
+// user out.
+func splitList(raw string, defaults []string) []string {
+	var list []string
+	for _, e := range strings.Split(raw, ",") {
+		if e = strings.TrimSpace(e); e != "" {
+			list = append(list, e)
+		}
+	}
+	if len(list) == 0 {
+		return append([]string(nil), defaults...)
+	}
+	return list
+}
+
 var mcfg *ini.File
 var merr error
 
@@ -64,28 +95,20 @@ func (p *Moduleconfig) ReadParameterFromFile() {
 	}
 
 	// [digitalout]
-	p.AllowedDigitalOutUser = strings.Split(mcfg.Section("digitalout").Key("allowed_user").String(), ",")
-	if len(p.AllowedDigitalOutUser) == 0 {
-		p.AllowedDigitalOutUser = append(p.AllowedDigitalOutUser, "root", "smartpi")
-	}
+	p.AllowedDigitalOutUser = splitList(mcfg.Section("digitalout").Key("allowed_user").String(), defaultAllowedUsers)
 
 	// [analogout420ma]
-	p.AllowedAnalogOut420mAUser = strings.Split(mcfg.Section("analogout420ma").Key("allowed_user").String(), ",")
-	if len(p.AllowedAnalogOut420mAUser) == 0 {
-		p.AllowedAnalogOut420mAUser = append(p.AllowedAnalogOut420mAUser, "root", "smartpi")
-	}
+	p.AllowedAnalogOut420mAUser = splitList(mcfg.Section("analogout420ma").Key("allowed_user").String(), defaultAllowedUsers)
+
+	// [analogout010v]
+	p.AllowedAnalogOut010VUser = splitList(mcfg.Section("analogout010v").Key("allowed_user").String(), defaultAllowedUsers)
+	p.AnalogOut010VCalibration = readAnalogOut010VCalibrations(mcfg.Section("analogout010v"))
 
 	// [analogin]
-	p.AllowedAnalogInUser = strings.Split(mcfg.Section("analogin").Key("allowed_user").String(), ",")
-	if len(p.AllowedAnalogInUser) == 0 {
-		p.AllowedAnalogInUser = append(p.AllowedAnalogInUser, "root", "smartpi")
-	}
+	p.AllowedAnalogInUser = splitList(mcfg.Section("analogin").Key("allowed_user").String(), defaultAllowedUsers)
 
 	// [etemperature]
-	p.AllowedEtemperatureUser = strings.Split(mcfg.Section("etemperature").Key("allowed_user").String(), ",")
-	if len(p.AllowedEtemperatureUser) == 0 {
-		p.AllowedEtemperatureUser = append(p.AllowedEtemperatureUser, "root", "smartpi")
-	}
+	p.AllowedEtemperatureUser = splitList(mcfg.Section("etemperature").Key("allowed_user").String(), defaultAllowedUsers)
 	if p.EtemperatureI2CAddress, err = utils.DecodeUint16(mcfg.Section("etemperature").Key("i2c_address").MustString("0x52")); err != nil {
 		log.Fatal(err)
 	}
@@ -96,14 +119,10 @@ func (p *Moduleconfig) ReadParameterFromFile() {
 
 	// [lorawan]
 	p.LoRaWANEnabled = mcfg.Section("lorawan").Key("lorawan_enabled").MustBool(true)
-	p.LoRaWANSharedDirs = strings.Split(mcfg.Section("lorawan").Key("shared_files_path").String(), ",")
-	if len(p.LoRaWANSharedDirs) == 0 {
-		p.LoRaWANSharedDirs = append(p.LoRaWANSharedDirs, "/var/run/smartpi/smartpi_values")
-	}
-	p.LoRaWANSharedFilesElements = strings.Split(mcfg.Section("lorawan").Key("shared_files_elements").String(), ",")
-	if len(p.LoRaWANSharedFilesElements) == 0 {
-		p.LoRaWANSharedFilesElements = append(p.LoRaWANSharedFilesElements, "1:2f:1.0|2:2f:1.0|3:2f:1.0|4:2f:1.0|5:2f:1.0|6:2f:1.0|7:2f:1.0,1:2f:1.0|2:2f:1.0|3:2f:1.0|4:2f:1.0|5:2f:1.0|6:2f:1.0|7:2f:1.0")
-	}
+	p.LoRaWANSharedDirs = splitList(mcfg.Section("lorawan").Key("shared_files_path").String(),
+		[]string{"/var/run/smartpi/smartpi_values"})
+	p.LoRaWANSharedFilesElements = splitList(mcfg.Section("lorawan").Key("shared_files_elements").String(),
+		[]string{"1:2f:1.0|2:2f:1.0|3:2f:1.0|4:2f:1.0|5:2f:1.0|6:2f:1.0|7:2f:1.0", "1:2f:1.0|2:2f:1.0|3:2f:1.0|4:2f:1.0|5:2f:1.0|6:2f:1.0|7:2f:1.0"})
 	p.LoRaWANSendInterval = mcfg.Section("lorawan").Key("interval").MustInt(60)
 	p.LoRaWANSerialPort = mcfg.Section("lorawan").Key("serial_port").MustString("/dev/ttyS0")
 	p.LoRaWANApplicationEUI = mcfg.Section("lorawan").Key("applicationEUI").MustString("")
@@ -125,6 +144,12 @@ func (p *Moduleconfig) SaveParameterToFile() {
 	// [analogout420ma]
 	_, merr = mcfg.Section("analogout420ma").NewKey("allowed_user", strings.Join(p.AllowedAnalogOut420mAUser, ","))
 
+	// [analogout010v]
+	_, merr = mcfg.Section("analogout010v").NewKey("allowed_user", strings.Join(p.AllowedAnalogOut010VUser, ","))
+	for addr, cal := range p.AnalogOut010VCalibration {
+		_, merr = mcfg.Section("analogout010v").NewKey(analogOut010VCalibrationKey(addr), FormatAnalogOutCalibration(cal))
+	}
+
 	// [analogin]
 	_, merr = mcfg.Section("analogin").NewKey("allowed_user", strings.Join(p.AllowedAnalogInUser, ","))
 
@@ -137,10 +162,10 @@ func (p *Moduleconfig) SaveParameterToFile() {
 	_, merr = mcfg.Section("etemperature").NewKey("shared_file", p.EtemperatureSharedFile)
 
 	//[lorawan]
-	_, merr = mcfg.Section("lorawan").NewKey("shared_file_enabled", strconv.FormatBool(p.LoRaWANEnabled))
+	_, merr = mcfg.Section("lorawan").NewKey("lorawan_enabled", strconv.FormatBool(p.LoRaWANEnabled))
 	_, merr = mcfg.Section("lorawan").NewKey("shared_files_path", strings.Join(p.LoRaWANSharedDirs[:], ","))
 	_, merr = mcfg.Section("lorawan").NewKey("shared_files_elements", strings.Join(p.LoRaWANSharedFilesElements[:], ","))
-	_, merr = mcfg.Section("lorawan").NewKey("interval", strconv.FormatInt(int64(p.EtemperatureSamplerate), 10))
+	_, merr = mcfg.Section("lorawan").NewKey("interval", strconv.FormatInt(int64(p.LoRaWANSendInterval), 10))
 	_, merr = mcfg.Section("lorawan").NewKey("serial_port", p.LoRaWANSerialPort)
 	_, merr = mcfg.Section("lorawan").NewKey("applicationEUI", p.LoRaWANApplicationEUI)
 	_, merr = mcfg.Section("lorawan").NewKey("applicationKey", p.LoRaWANApplicationKey)

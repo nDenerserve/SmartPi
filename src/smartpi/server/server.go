@@ -183,6 +183,13 @@ func main() {
 	router.HandleFunc("/api/v1/module/analogout420ma/{address}/{current}", serverutils.TokenVerifyMiddleWare(modulesController.SetAnalogOut420mA(moduleConfig, smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeAnalogOut)).Methods("PUT")
 	router.HandleFunc("/api/v1/module/analogout420ma/{address}", serverutils.TokenVerifyMiddleWare(modulesController.ReadAnalogOut420mA(moduleConfig, smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeAnalogOut)).Methods("GET")
 
+	// 0-10V analog output module routes (MCP4728, 4 channels)
+	router.HandleFunc("/api/v1/module/analogout010v/{address}/{channel}/{voltage}", serverutils.TokenVerifyMiddleWare(modulesController.SetAnalogOut010VChannel(moduleConfig, smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeAnalogOut)).Methods("PUT")
+	router.HandleFunc("/api/v1/module/analogout010v/{address}", serverutils.TokenVerifyMiddleWare(modulesController.SetAnalogOut010V(moduleConfig, smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeAnalogOut)).Methods("PUT")
+	router.HandleFunc("/api/v1/module/analogout010v/{address}", serverutils.TokenVerifyMiddleWare(modulesController.ReadAnalogOut010V(moduleConfig, smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeAnalogOut)).Methods("GET")
+	// Per-output calibration of a 0-10V module, stored in /etc/smartpiModules (admin only).
+	router.HandleFunc("/api/v1/module/analogout010v/{address}/calibration", serverutils.RequireAdminGroup(serverutils.RequireSessionToken(modulesController.AnalogOut010VCalibration(moduleConfig), smartpiConfig), smartpiConfig)).Methods("GET", "PUT", "DELETE")
+
 	// Analog input module (MCP3424, 4x 4-20mA and/or 0-10V channels).
 	router.HandleFunc("/api/v1/module/analogin/{address}/{channel}", serverutils.TokenVerifyMiddleWare(modulesController.ReadAnalogInChannel(moduleConfig, smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeAnalogIn)).Methods("GET")
 	router.HandleFunc("/api/v1/module/analogin/{address}", serverutils.TokenVerifyMiddleWare(modulesController.ReadAnalogIn(moduleConfig, smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeAnalogIn)).Methods("GET")

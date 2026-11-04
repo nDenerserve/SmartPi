@@ -7,6 +7,13 @@ loglevel   = info
 [digitalout]
 allowed_user = 
 
+[analogout010v]
+allowed_user =
+# Per-board output calibration, one key per module I2C address, outputs 1-4
+# (left to right) as gain:offset with offset in V - measured = gain * set +
+# offset. Normally set through PUT /api/v1/module/analogout010v/<address>/calibration.
+# calibration_0x60 = 1:0, 1:0, 1:0, 1:0
+
 [etemperature]
 allowed_user        = 
 i2c_address         = 0x52
