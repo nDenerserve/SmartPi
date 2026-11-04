@@ -47,7 +47,7 @@ func TestParseI2CDetectOutput_DetectsKnownChipRangesAndInUseAddresses(t *testing
 		"0x27": {"detected", "MCP23017"},
 		"0x38": {"detected", "ADE7878"},
 		"0x5a": {"in_use", ""},
-		"0x60": {"detected", "MCP4725"},
+		"0x60": {"detected", "MCP4725/MCP4728"},
 		"0x68": {"detected", "MCP3424"},
 		"0x77": {"detected", ""},
 	}
