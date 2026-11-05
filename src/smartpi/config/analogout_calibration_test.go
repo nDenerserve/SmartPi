@@ -94,3 +94,64 @@ func TestSaveAnalogOut010VCalibration(t *testing.T) {
 		t.Fatalf("key not removed:\n%s", data)
 	}
 }
+
+func TestReadAnalogOut420mACalibrations(t *testing.T) {
+	f, err := ini.Load([]byte(`[analogout420ma]
+allowed_user = root
+calibration_0x60 = 1.02:-0.05
+calibration_0x61 = 1:3
+calibration_0x62 = broken
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	cals := readAnalogOut420mACalibrations(f.Section("analogout420ma"))
+	if len(cals) != 1 || cals[0x60] != (AnalogOutCalibration{1.02, -0.05}) {
+		t.Fatalf("want only 0x60 = 1.02:-0.05 (3mA offset is implausible), got %v", cals)
+	}
+}
+
+func TestSaveAnalogOut420mACalibration(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "smartpiModules")
+	if err := os.WriteFile(path, []byte("[analogout420ma]\nallowed_user = root\n\n[analogout010v]\ncalibration_0x60 = 1:0, 1:0, 1:0, 1:0\n"), 0640); err != nil {
+		t.Fatal(err)
+	}
+	old := modulesConfigPath
+	modulesConfigPath = path
+	defer func() { modulesConfigPath = old }()
+
+	p := &Moduleconfig{}
+	cal := AnalogOutCalibration{Gain: 0.995, Offset: 0.08}
+	if err := p.SaveAnalogOut420mACalibration(0x60, &cal); err != nil {
+		t.Fatal(err)
+	}
+	if got, ok := p.AnalogOut420mACalibrationFor(0x60); !ok || got != cal {
+		t.Fatalf("not applied in memory: %v %v", got, ok)
+	}
+	f, err := ini.Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if v := f.Section("analogout420ma").Key("calibration_0x60").String(); v != "0.995:0.08" {
+		t.Fatalf("stored %q", v)
+	}
+	// The 0-10V module's key with the same address is a different entry.
+	if !f.Section("analogout010v").HasKey("calibration_0x60") || !f.Section("analogout420ma").HasKey("allowed_user") {
+		t.Fatalf("other keys lost:\n%v", f)
+	}
+
+	if err := p.SaveAnalogOut420mACalibration(0x60, &AnalogOutCalibration{Gain: 1, Offset: 2}); err == nil {
+		t.Fatal("2mA offset saved")
+	}
+
+	if err := p.SaveAnalogOut420mACalibration(0x60, nil); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := p.AnalogOut420mACalibrationFor(0x60); ok {
+		t.Fatal("calibration still active after delete")
+	}
+	f, _ = ini.Load(path)
+	if f.Section("analogout420ma").HasKey("calibration_0x60") || !f.Section("analogout010v").HasKey("calibration_0x60") {
+		t.Fatalf("wrong key removed:\n%v", f)
+	}
+}

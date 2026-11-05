@@ -180,6 +180,9 @@ func main() {
 	router.HandleFunc("/api/v1/module/digitalout/{address}", serverutils.TokenVerifyMiddleWare(modulesController.ReadDigitalout(moduleConfig, smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeDigitalOut)).Methods("GET")
 
 	// 4-20mA analog output module routes (MCP4725)
+	// Registered before .../{address}/{current}, which would otherwise take
+	// "calibration" for a current value.
+	router.HandleFunc("/api/v1/module/analogout420ma/{address}/calibration", serverutils.RequireAdminGroup(serverutils.RequireSessionToken(modulesController.AnalogOut420mACalibration(moduleConfig), smartpiConfig), smartpiConfig)).Methods("GET", "PUT", "DELETE")
 	router.HandleFunc("/api/v1/module/analogout420ma/{address}/{current}", serverutils.TokenVerifyMiddleWare(modulesController.SetAnalogOut420mA(moduleConfig, smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeAnalogOut)).Methods("PUT")
 	router.HandleFunc("/api/v1/module/analogout420ma/{address}", serverutils.TokenVerifyMiddleWare(modulesController.ReadAnalogOut420mA(moduleConfig, smartpiConfig), smartpiConfig, deviceTokens, devicetoken.ScopeAnalogOut)).Methods("GET")
 

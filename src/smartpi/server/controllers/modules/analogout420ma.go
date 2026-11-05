@@ -2,6 +2,7 @@ package modulescontrollers
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -65,7 +66,7 @@ func (c ModulesController) SetAnalogOut420mA(mconf *config.Moduleconfig, conf *c
 		}
 
 		// Validate current range (4-20mA)
-		if current < 4.0 || current > 20.0 {
+		if !(current >= 4.0 && current <= 20.0) {
 			error.Message = "Current must be between 4.0 and 20.0 mA"
 			serverutils.RespondWithError(w, http.StatusBadRequest, error)
 			return
@@ -153,4 +154,59 @@ func parseHexOrDecimal(s string) (uint8, error) {
 	// Otherwise parse as decimal
 	val, err := strconv.ParseUint(s, 10, 8)
 	return uint8(val), err
+}
+
+// analogOut420mACalibration is the body/response of the 4-20mA calibration
+// endpoint: the output's measured current is gain * nominal + offset (mA).
+type analogOut420mACalibration struct {
+	Moduleaddress string `json:"moduleaddress"`
+	Calibrated    bool   `json:"calibrated"`
+	config.AnalogOutCalibration
+}
+
+// AnalogOut420mACalibration reads (GET), stores (PUT, body {"gain": 1.003,
+// "offset": -0.02}) or removes (DELETE) the calibration of the 4-20mA
+// module at {address} in /etc/smartpiModules:
+// /api/v1/module/analogout420ma/{address}/calibration
+//
+// Admin-only (session token of a user in the admin group), like the 0-10V
+// module's calibration - it changes what the output really drives.
+func (c ModulesController) AnalogOut420mACalibration(mconf *config.Moduleconfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		addressStr := mux.Vars(r)["address"]
+		address, err := parseHexOrDecimal(addressStr)
+		if err != nil {
+			serverutils.RespondWithError(w, http.StatusBadRequest, models.Error{Message: "Invalid address: " + err.Error() + ". Must be hex (e.g., 0x60) or decimal (e.g., 96)"})
+			return
+		}
+
+		switch r.Method {
+		case http.MethodPut:
+			var req config.AnalogOutCalibration
+			if err := json.NewDecoder(io.LimitReader(r.Body, 4096)).Decode(&req); err != nil {
+				serverutils.RespondWithError(w, http.StatusBadRequest, models.Error{Message: "Invalid JSON body: " + err.Error()})
+				return
+			}
+			if err := req.ValidateCurrent(); err != nil {
+				serverutils.RespondWithError(w, http.StatusBadRequest, models.Error{Message: err.Error()})
+				return
+			}
+			if err := mconf.SaveAnalogOut420mACalibration(uint16(address), &req); err != nil {
+				serverutils.RespondWithError(w, http.StatusInternalServerError, models.Error{Message: err.Error()})
+				return
+			}
+			log.Infof("analogout420ma 0x%02X: calibration set to gain %v, offset %v mA", address, req.Gain, req.Offset)
+		case http.MethodDelete:
+			if err := mconf.SaveAnalogOut420mACalibration(uint16(address), nil); err != nil {
+				serverutils.RespondWithError(w, http.StatusInternalServerError, models.Error{Message: err.Error()})
+				return
+			}
+			log.Infof("analogout420ma 0x%02X: calibration removed", address)
+		}
+
+		cal, ok := mconf.AnalogOut420mACalibrationFor(uint16(address))
+		if err := json.NewEncoder(w).Encode(analogOut420mACalibration{Moduleaddress: addressStr, Calibrated: ok, AnalogOutCalibration: cal}); err != nil {
+			panic(err)
+		}
+	}
 }

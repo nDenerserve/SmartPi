@@ -20,6 +20,9 @@ type Moduleconfig struct {
 
 	// [analogout420ma]
 	AllowedAnalogOut420mAUser []string
+	// AnalogOut420mACalibration holds per-board calibrations (offset in
+	// mA), keyed by I2C address, from the calibration_<address> keys.
+	AnalogOut420mACalibration map[uint16]AnalogOutCalibration
 
 	// [analogout010v]
 	AllowedAnalogOut010VUser []string
@@ -99,6 +102,7 @@ func (p *Moduleconfig) ReadParameterFromFile() {
 
 	// [analogout420ma]
 	p.AllowedAnalogOut420mAUser = splitList(mcfg.Section("analogout420ma").Key("allowed_user").String(), defaultAllowedUsers)
+	p.AnalogOut420mACalibration = readAnalogOut420mACalibrations(mcfg.Section("analogout420ma"))
 
 	// [analogout010v]
 	p.AllowedAnalogOut010VUser = splitList(mcfg.Section("analogout010v").Key("allowed_user").String(), defaultAllowedUsers)
@@ -143,6 +147,9 @@ func (p *Moduleconfig) SaveParameterToFile() {
 
 	// [analogout420ma]
 	_, merr = mcfg.Section("analogout420ma").NewKey("allowed_user", strings.Join(p.AllowedAnalogOut420mAUser, ","))
+	for addr, cal := range p.AnalogOut420mACalibration {
+		_, merr = mcfg.Section("analogout420ma").NewKey(analogOut420mACalibrationKey(addr), formatCalibration(cal))
+	}
 
 	// [analogout010v]
 	_, merr = mcfg.Section("analogout010v").NewKey("allowed_user", strings.Join(p.AllowedAnalogOut010VUser, ","))

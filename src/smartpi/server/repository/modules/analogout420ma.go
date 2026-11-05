@@ -2,6 +2,7 @@ package modulesRepository
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"sync"
 
@@ -15,173 +16,132 @@ import (
 	"periph.io/x/host/v3"
 )
 
-// MCP4725 commands
-const (
-	MCP4725_Command_Write_EEPROM = 0x60
-	MCP4725_Command_Read_EEPROM  = 0x60
-)
-
 // lastValues stores the last set current value for each MCP4725 address
 var (
 	lastValues     = make(map[uint16]float64)
 	lastValuesLock sync.Mutex
 )
 
-// AnalogOut420mA represents the MCP4725 4-20mA output module
+// The module's current output is proportional to the DAC code: full scale
+// (code 4095) is 23mA, so 4-20mA is codes 712-3561 and both ends have some
+// headroom for a calibration to correct into.
+const analogOut420mAFullScale = 23.0
+
+// AnalogOut420mACodeFromCurrent is the DAC code for current (mA) on an
+// output with calibration cal (measured = Gain * nominal + Offset).
+func AnalogOut420mACodeFromCurrent(current float64, cal config.AnalogOutCalibration) uint16 {
+	nominal := (current - cal.Offset) / cal.Gain
+	code := math.Round(nominal / analogOut420mAFullScale * 4095.0)
+	if code <= 0 || math.IsNaN(code) {
+		return 0
+	}
+	if code > 4095 {
+		return 4095
+	}
+	return uint16(code)
+}
+
+// AnalogOut420mACurrentFromCode is the inverse of
+// AnalogOut420mACodeFromCurrent, rounded to 1uA.
+func AnalogOut420mACurrentFromCode(code uint16, cal config.AnalogOutCalibration) float64 {
+	nominal := float64(code) * analogOut420mAFullScale / 4095.0
+	return math.Round((cal.Gain*nominal+cal.Offset)*1000) / 1000
+}
+
+func openMCP4725(address uint16, conf *config.Moduleconfig) (*i2c.Dev, func(), error) {
+	if _, err := host.Init(); err != nil {
+		return nil, nil, fmt.Errorf("initializing periph host: %w", err)
+	}
+	bus, err := i2creg.Open(conf.I2CDevice)
+	if err != nil {
+		log.Errorf("failed to open I2C device %s: %v", conf.I2CDevice, err)
+		return nil, nil, fmt.Errorf("opening I2C device %s: %w", conf.I2CDevice, err)
+	}
+	return &i2c.Dev{Bus: bus, Addr: address}, func() { bus.Close() }, nil
+}
+
+// SetAnalogOut420mA sets the output of the MCP4725 4-20mA module at
+// address, applying the module's calibration if one is stored.
 func (m ModulesRepository) SetAnalogOut420mA(address uint16, current float64, conf *config.Moduleconfig) (models.AnalogOut420mAStatus, error) {
 	var moduleStatus models.AnalogOut420mAStatus
 
-	// Validate current range (4-20mA)
-	if current < 4.0 || current > 20.0 {
+	if !(current >= 4.0 && current <= 20.0) {
 		return moduleStatus, errors.New("current must be between 4.0 and 20.0 mA")
 	}
 
-	if _, err := host.Init(); err != nil {
-		log.Fatal(err)
-	}
-
-	// Open default I²C bus
-	bus, err := i2creg.Open(conf.I2CDevice)
+	dev, closeBus, err := openMCP4725(address, conf)
 	if err != nil {
-		log.Fatalf("failed to open I²C device %s: %v", conf.I2CDevice, err)
-		moduleStatus.Error = "Failed to open I2C device: " + err.Error()
+		moduleStatus.Error = err.Error()
 		return moduleStatus, err
 	}
-	defer bus.Close()
+	defer closeBus()
 
-	// Create I2C device at the specified address
-	dev := i2c.Dev{Bus: bus, Addr: address}
-	log.Debugf("Created I2C device for MCP4725 at address 0x%02X on bus %s", address, conf.I2CDevice)
+	cal, calibrated := conf.AnalogOut420mACalibrationFor(address)
+	dacValue := AnalogOut420mACodeFromCurrent(current, cal)
+	log.Debugf("MCP4725 0x%02X: %.3f mA -> code %d (calibrated: %v)", address, current, dacValue, calibrated)
 
-	// Calculate DAC value from current (4-20mA)
-	// Standard formula: DAC = (current - 4) / 16 * 4095
-	// This maps 4mA -> 0, 20mA -> 4095 (12-bit full scale)
-	dacValue := uint16(math.Round((current / 23.0) * 4095.0))
-	log.Debugf("Calculated DAC value for %.3f mA: 0x%03X (%d)", current, dacValue, dacValue)
-
-	// Ensure DAC value is within range
-	if dacValue > 4095 {
-		dacValue = 4095
-	}
-
-	// MCP4725 Fast Mode format:
-	// Byte 0: 0x40 | (D11-D8)  -> Command + upper 4 bits of DAC
-	// Byte 1: D7-D0            -> Lower 8 bits of DAC
-	// Based on user testing: i2cset -y 1 0x60 0x44 0x00 0x44 0x00 works
-	// For DAC=1024 (0x0400): 0x40 | 0x04 = 0x44, 0x00
-	data := make([]byte, 4)
-	data[0] = byte(dacValue >> 8)
-	data[1] = byte(dacValue & 0xFF)
-	data[2] = byte(dacValue >> 8)   // Repeat
-	data[3] = byte(dacValue & 0xFF) // Repeat
-
-	log.Debugf("MCP4725: Address=0x%02X, DAC=0x%03X (%d), Data=[0x%02X, 0x%02X, 0x%02X, 0x%02X]",
-		address, dacValue, dacValue, data[0], data[1], data[2], data[3])
-
-	// Write to DAC (4 bytes as required by this MCP4725 module)
-	err = dev.Tx(data, nil)
-	if err != nil {
+	// MCP4725 Fast Mode write (C2:C1 = 00, PD = 00, then D11-D0), sent
+	// twice as this module has always done.
+	data := []byte{byte(dacValue >> 8), byte(dacValue), byte(dacValue >> 8), byte(dacValue)}
+	if err := dev.Tx(data, nil); err != nil {
 		log.Errorf("failed to write to MCP4725 at address 0x%02X: %v", address, err)
 		moduleStatus.Error = "I2C write failed: " + err.Error()
-		return moduleStatus, err
+		return moduleStatus, fmt.Errorf("writing to MCP4725 at 0x%02X: %w", address, err)
 	}
 
-	log.Debugf("Successfully wrote to MCP4725 at address 0x%02X: [0x%02X, 0x%02X, 0x%02X, 0x%02X]", address, data[0], data[1], data[2], data[3])
-
-	// Store the last set value
 	lastValuesLock.Lock()
 	lastValues[address] = current
 	lastValuesLock.Unlock()
 
-	// Set status values
 	moduleStatus.SetValue = current
-	moduleStatus.CurrentValue = current
-
+	moduleStatus.CurrentValue = AnalogOut420mACurrentFromCode(dacValue, cal)
+	moduleStatus.DACValue = dacValue
+	moduleStatus.Calibrated = calibrated
 	return moduleStatus, nil
 }
 
-// ReadAnalogOut420mAStatus reads the current status of the MCP4725 module
-// Note: MCP4725 doesn't have direct DAC readback, so we return the last set value
-// from memory or attempt to read from EEPROM
+// ReadAnalogOut420mAStatus reads the DAC register of the MCP4725 module at
+// address back. CurrentValue is what that code drives (calibration
+// applied), SetValue the last value set through this server - or the same
+// as CurrentValue after a restart.
 func (m ModulesRepository) ReadAnalogOut420mAStatus(address uint16, conf *config.Moduleconfig) (models.AnalogOut420mAStatus, error) {
 	var moduleStatus models.AnalogOut420mAStatus
 
-	if _, err := host.Init(); err != nil {
-		log.Fatal(err)
-	}
-
-	// Open default I²C bus
-	bus, err := i2creg.Open(conf.I2CDevice)
+	dev, closeBus, err := openMCP4725(address, conf)
 	if err != nil {
-		log.Fatalf("failed to open I²C: %v", err)
+		moduleStatus.Error = err.Error()
 		return moduleStatus, err
 	}
-	defer bus.Close()
+	defer closeBus()
 
-	// Create I2C device at the specified address
-	dev := i2c.Dev{Bus: bus, Addr: address}
+	cal, calibrated := conf.AnalogOut420mACalibrationFor(address)
+	moduleStatus.Calibrated = calibrated
 
-	// Try to read from EEPROM first
-	dacValueFromEEPROM, err := readMCP4725EEPROM(&dev)
-	if err == nil {
-		// Successfully read from EEPROM, convert to current
-		currentFromEEPROM := CalculateCurrentFromDACValue(dacValueFromEEPROM)
-		moduleStatus.CurrentValue = currentFromEEPROM
-		moduleStatus.SetValue = currentFromEEPROM
-		log.Debugf("Read EEPROM value for address 0x%02X: %.3f mA", address, currentFromEEPROM)
-	} else {
-		// Fall back to last value from memory
-		lastValuesLock.Lock()
-		if lastValue, ok := lastValues[address]; ok {
-			moduleStatus.CurrentValue = lastValue
-			moduleStatus.SetValue = lastValue
-			log.Debugf("Read last value from memory for address 0x%02X: %.3f mA", address, lastValue)
-		} else {
-			// No value found
-			moduleStatus.CurrentValue = 0.0
-			moduleStatus.SetValue = 0.0
-			log.Debugf("No value found for address 0x%02X", address)
-		}
-		lastValuesLock.Unlock()
+	dacValue, err := readMCP4725DAC(dev)
+	if err != nil {
+		moduleStatus.Error = err.Error()
+		return moduleStatus, fmt.Errorf("reading from MCP4725 at 0x%02X: %w", address, err)
 	}
+	moduleStatus.DACValue = dacValue
+	moduleStatus.CurrentValue = AnalogOut420mACurrentFromCode(dacValue, cal)
+	moduleStatus.SetValue = moduleStatus.CurrentValue
+
+	lastValuesLock.Lock()
+	if v, ok := lastValues[address]; ok {
+		moduleStatus.SetValue = v
+	}
+	lastValuesLock.Unlock()
 
 	return moduleStatus, nil
 }
 
-// readMCP4725EEPROM attempts to read the DAC value from MCP4725 EEPROM
-func readMCP4725EEPROM(dev *i2c.Dev) (uint16, error) {
-	// Try reading 4 bytes (matching the write format)
+// readMCP4725DAC reads the MCP4725 status: byte 0 status, bytes 1-2 the
+// DAC register (D11-D4, D3-D0 in the upper nibble), bytes 3-4 EEPROM.
+func readMCP4725DAC(dev *i2c.Dev) (uint16, error) {
 	readBuf := make([]byte, 5)
-	err := dev.Tx(nil, readBuf)
-	if err != nil {
-		log.Debugf("Failed to read from MCP4725: %v", err)
+	if err := dev.Tx(nil, readBuf); err != nil {
 		return 0, err
 	}
-	log.Debugf("MCP4725 read raw bytes: [0x%02X, 0x%02X, 0x%02X, 0x%02X]",
-		readBuf[0], readBuf[1], readBuf[2], readBuf[3])
-
-	// DAC-Wert aus den Read-Daten extrahieren
-	dacValue := uint16(readBuf[1])<<4 | uint16(readBuf[2]>>4)
-	log.Debugf("MCP4725 read raw DAC value (before masking): 0x%03X (%d)", dacValue, dacValue)
-
-	dacValue &= 0x0FFF // Mask to 12 bits
-	log.Debugf("MCP4725 read DAC value (after 12-bit mask): 0x%03X (%d)", dacValue, dacValue)
-	return dacValue, nil
-}
-
-// CalculateDACValueFromCurrent converts mA value to MCP4725 DAC value
-func CalculateDACValueFromCurrent(current float64) uint16 {
-	if current <= 4.0 {
-		return 0
-	}
-	if current >= 20.0 {
-		return 4095
-	}
-	return uint16(math.Round(current / 23.0 * 4095.0))
-}
-
-// CalculateCurrentFromDACValue converts DAC value back to mA
-// Standard 4-20mA formula: current = (DAC / 4095) * 23
-func CalculateCurrentFromDACValue(dacValue uint16) float64 {
-	return float64(dacValue) * 23.0 / 4095.0
+	log.Debugf("MCP4725 0x%02X read: % X", dev.Addr, readBuf)
+	return (uint16(readBuf[1])<<4 | uint16(readBuf[2]>>4)) & 0x0FFF, nil
 }
