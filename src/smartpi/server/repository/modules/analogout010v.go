@@ -42,8 +42,8 @@ const (
 // carry DAC1:DAC0 (channel, bits 2:1) and UDAC (bit 0, 0 = update output on
 // ACK).
 const (
-	mcp4728CmdMultiWrite  = 0x40 // 0100 0xxx: write DAC input register(s)
-	mcp4728CmdSingleWrite = 0x58 // 0101 1xxx: write DAC input register + EEPROM
+	mcp4728CmdMultiWrite      = 0x40 // 0100 0xxx: write DAC input register(s)
+	mcp4728CmdSequentialWrite = 0x50 // 0101 0xxx: write input registers + EEPROM from the given channel up to D
 )
 
 // analogOut010VOutputToDAC maps the outputs as labelled on the board
@@ -127,8 +127,17 @@ type AnalogOut010VSetting struct {
 
 // SetAnalogOut010V sets one or more channels of the MCP4728 0-10V module at
 // address and returns the module's state as read back afterwards. With
-// persist, each value is also written to the DAC's EEPROM so it survives a
-// power cycle (EEPROM writes are slow and wear the cell - use sparingly).
+// persist, the resulting state of *all four* outputs - not only the ones in
+// settings - is then stored in the DAC's EEPROM as power-up default (EEPROM
+// writes are slow and wear the cell - use sparingly).
+//
+// All four, because that is what the chip does anyway: measured on the
+// first board 2026-11-05, a Single Write (0x58) of one channel also copied
+// the live input registers of the other three into their EEPROM cells, so
+// a "persist output 3" silently made the current values of outputs 1, 2
+// and 4 their power-up defaults too. Storing the snapshot explicitly with
+// a Sequential Write makes that the documented behaviour instead of a side
+// effect, and needs one EEPROM cycle instead of one per channel.
 func (m ModulesRepository) SetAnalogOut010V(address uint16, settings []AnalogOut010VSetting, persist bool, conf *config.Moduleconfig) (models.AnalogOut010VStatus, error) {
 	var status models.AnalogOut010VStatus
 
@@ -184,13 +193,12 @@ func openMCP4728(address uint16, conf *config.Moduleconfig) (*i2c.Dev, func(), e
 	return dev, func() { bus.Close() }, nil
 }
 
-// writeAnalogOut010V writes settings, applying cal (indexed by output).
+// writeAnalogOut010V writes settings, applying cal (indexed by output),
+// and with persist then stores the resulting state of all four outputs as
+// power-up default - also with no settings, which just saves what the
+// outputs drive right now.
 func writeAnalogOut010V(dev *i2c.Dev, settings []AnalogOut010VSetting, persist bool, cal [4]config.AnalogOutCalibration) error {
-	if len(settings) == 0 {
-		return nil
-	}
-
-	if !persist {
+	if len(settings) > 0 {
 		// Multi-Write: several channel blocks may follow each other in one
 		// transaction, so a multi-channel update lands (almost) at once.
 		buf := make([]byte, 0, 3*len(settings))
@@ -203,24 +211,45 @@ func writeAnalogOut010V(dev *i2c.Dev, settings []AnalogOut010VSetting, persist b
 		if err := dev.Tx(buf, nil); err != nil {
 			return fmt.Errorf("writing to MCP4728 at 0x%02X: %w", dev.Addr, err)
 		}
+	}
+	if !persist {
 		return nil
 	}
+	return persistMCP4728(dev)
+}
 
-	// Single Write (register + EEPROM) takes one channel per transaction
-	// and keeps the chip busy for up to ~50ms afterwards, during which it
-	// NACKs further EEPROM writes - wait for RDY between channels.
-	for _, s := range settings {
-		code := analogOut010VCalibratedCode(s.Voltage, cal[s.Channel])
-		dac := analogOut010VOutputToDAC[s.Channel]
-		log.Debugf("MCP4728 0x%02X: output %d (DAC %c) -> %.3f V (code %d, persist)", dev.Addr, s.Channel+1, 'A'+dac, s.Voltage, code)
-		if err := dev.Tx(mcp4728WriteBlock(mcp4728CmdSingleWrite, dac, code), nil); err != nil {
-			return fmt.Errorf("writing output %d to MCP4728 at 0x%02X: %w", s.Channel+1, dev.Addr, err)
-		}
-		if err := waitMCP4728Ready(dev); err != nil {
-			return err
-		}
+// persistMCP4728 stores the live input registers of all four channels -
+// code, reference, gain and power-down bits exactly as they are - in the
+// EEPROM, as the power-up default. It reads them back first so channels
+// the caller did not touch keep what they currently output. A Sequential
+// Write starting at channel A writes A-D in one transaction; the chip
+// stays busy for up to ~50ms afterwards, so wait for RDY.
+func persistMCP4728(dev *i2c.Dev) error {
+	buf := make([]byte, 24)
+	if err := dev.Tx(nil, buf); err != nil {
+		return fmt.Errorf("reading from MCP4728 at 0x%02X: %w", dev.Addr, err)
 	}
-	return nil
+
+	// Each channel's 6-byte block carries its channel number (byte 0, bits
+	// 5:4); its register bytes 1-2 have the same layout as the data bytes
+	// of a Sequential Write (VREF PD1 PD0 Gx D11-D8, D7-D0).
+	regs := make([][]byte, 4)
+	for i := 0; i < 4; i++ {
+		block := buf[i*6 : i*6+6]
+		regs[int(block[0]>>4)&0x03] = block[1:3]
+	}
+	w := []byte{mcp4728CmdSequentialWrite} // starting channel A, UDAC=0
+	for ch, r := range regs {
+		if r == nil {
+			return fmt.Errorf("MCP4728 at 0x%02X: status read misses channel %c", dev.Addr, 'A'+ch)
+		}
+		w = append(w, r...)
+	}
+	log.Debugf("MCP4728 0x%02X: storing % X as power-up default", dev.Addr, w[1:])
+	if err := dev.Tx(w, nil); err != nil {
+		return fmt.Errorf("writing EEPROM of MCP4728 at 0x%02X: %w", dev.Addr, err)
+	}
+	return waitMCP4728Ready(dev)
 }
 
 // waitMCP4728Ready polls the RDY/~BSY bit (bit 7 of the first read byte)

@@ -66,8 +66,9 @@ func parseAnalogOut010VVoltage(s string) (float64, bool) {
 // SetAnalogOut010VChannel sets one output (1-4, as labelled on the board,
 // left to right - the repository maps that to the DAC channel) of an
 // MCP4728-based 0-10V output module: PUT /api/v1/module/analogout010v/{address}/{channel}/{voltage}
-// Optional query parameter persist=true also stores the value in the DAC's
-// EEPROM as power-up default. Responds with the full module status as read
+// Optional query parameter persist=true then stores the state of all four
+// outputs (not only this one) in the DAC's EEPROM as power-up default - see
+// modulesRepository.SetAnalogOut010V. Responds with the full module status as read
 // back from the DAC.
 func (c ModulesController) SetAnalogOut010VChannel(mconf *config.Moduleconfig, conf *config.SmartPiConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -115,7 +116,10 @@ type analogOut010VRequest struct {
 
 // SetAnalogOut010V sets several channels of an MCP4728-based 0-10V output
 // module in one I2C transaction: PUT /api/v1/module/analogout010v/{address}
-// with body {"voltages": [1.5, null, 10, 0], "persist": false}.
+// with body {"voltages": [1.5, null, 10, 0], "persist": false}. With
+// "persist": true the resulting state of all four outputs is stored as
+// power-up default; {"voltages": [], "persist": true} stores the current
+// state without changing anything.
 func (c ModulesController) SetAnalogOut010V(mconf *config.Moduleconfig, conf *config.SmartPiConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !analogOut010VAllowed(w, r, mconf, conf) {

@@ -86,17 +86,59 @@ func TestWriteAnalogOut010V_MultiWriteEncoding(t *testing.T) {
 	}
 }
 
-func TestWriteAnalogOut010V_PersistUsesSingleWrite(t *testing.T) {
-	// RDY bit set, so the busy-wait returns immediately.
-	bus := &fakeMCP4728Bus{reply: []byte{0x80}}
+func TestWriteAnalogOut010V_PersistStoresAllChannels(t *testing.T) {
+	// Status read: RDY set; A at 0x123 (internal, x2), B VDD/x1 at 0x800
+	// (never written by us), C powered down, D at 0xFFF. The fake answers
+	// every read with this, including the RDY poll.
+	reply := []byte{
+		0xC0, 0x91, 0x23, 0xC0, 0x00, 0x00,
+		0xD0, 0x08, 0x00, 0xD0, 0x00, 0x00,
+		0xE0, 0xB0, 0x00, 0xE0, 0x00, 0x00,
+		0xF0, 0x9F, 0xFF, 0xF0, 0x00, 0x00,
+	}
+	bus := &fakeMCP4728Bus{reply: reply}
 	dev := &i2c.Dev{Bus: bus, Addr: 0x60}
 
 	if err := writeAnalogOut010V(dev, []AnalogOut010VSetting{{Channel: 2, Voltage: 10}}, true, noCal); err != nil {
 		t.Fatal(err)
 	}
-	want := []byte{0x5E, 0x9C, 0x67} // output 3 = DAC D, single write
+	if len(bus.writes) != 2 {
+		t.Fatalf("want 2 transactions (set, store), got %d: %X", len(bus.writes), bus.writes)
+	}
+	// First the new value goes to the input register only ...
+	if want := []byte{0x46, 0x9C, 0x67}; !bytes.Equal(bus.writes[0], want) { // output 3 = DAC D
+		t.Errorf("set: wrote % X, want % X", bus.writes[0], want)
+	}
+	// ... then all four live registers go to EEPROM in one sequential
+	// write from channel A, untouched channels exactly as read.
+	want := []byte{0x50, 0x91, 0x23, 0x08, 0x00, 0xB0, 0x00, 0x9F, 0xFF}
+	if !bytes.Equal(bus.writes[1], want) {
+		t.Errorf("store: wrote % X, want % X", bus.writes[1], want)
+	}
+}
+
+func TestWriteAnalogOut010V_EmptySettings(t *testing.T) {
+	reply := []byte{
+		0xC0, 0x90, 0x01, 0xC0, 0x00, 0x00,
+		0xD0, 0x90, 0x02, 0xD0, 0x00, 0x00,
+		0xE0, 0x90, 0x03, 0xE0, 0x00, 0x00,
+		0xF0, 0x90, 0x04, 0xF0, 0x00, 0x00,
+	}
+	// Without persist: no bus traffic at all.
+	bus := &fakeMCP4728Bus{reply: reply}
+	if err := writeAnalogOut010V(&i2c.Dev{Bus: bus, Addr: 0x60}, nil, false, noCal); err != nil {
+		t.Fatal(err)
+	}
+	if len(bus.writes) != 0 {
+		t.Errorf("wrote %X", bus.writes)
+	}
+	// With persist: only the store of the current state.
+	if err := writeAnalogOut010V(&i2c.Dev{Bus: bus, Addr: 0x60}, nil, true, noCal); err != nil {
+		t.Fatal(err)
+	}
+	want := []byte{0x50, 0x90, 0x01, 0x90, 0x02, 0x90, 0x03, 0x90, 0x04}
 	if len(bus.writes) != 1 || !bytes.Equal(bus.writes[0], want) {
-		t.Fatalf("wrote %X, want [% X]", bus.writes, want)
+		t.Errorf("wrote %X, want [% X]", bus.writes, want)
 	}
 }
 
