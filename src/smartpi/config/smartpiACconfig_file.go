@@ -47,10 +47,14 @@ type SmartPiACConfig struct {
 	CTType                map[models.SmartPiPhase]string
 	CTTypePrimaryCurrent  map[models.SmartPiPhase]int
 	CTTypeRogowskiVoltage map[models.SmartPiPhase]int
-	CurrentDirection      map[models.SmartPiPhase]bool
-	MeasureCurrent        map[models.SmartPiPhase]bool
-	MeasureVoltage        map[models.SmartPiPhase]bool
-	Voltage               map[models.SmartPiPhase]float64
+	// CTTypeSecondaryCurrent is the rated secondary current in mA of a
+	// current-output CT of type "X/mA" at its primary current
+	// CTTypePrimaryCurrent, e.g. 100A/50mA.
+	CTTypeSecondaryCurrent map[models.SmartPiPhase]float64
+	CurrentDirection       map[models.SmartPiPhase]bool
+	MeasureCurrent         map[models.SmartPiPhase]bool
+	MeasureVoltage         map[models.SmartPiPhase]bool
+	Voltage                map[models.SmartPiPhase]float64
 
 	// [calibration]
 	CalibrationfactorI map[models.SmartPiPhase]float64
@@ -104,6 +108,10 @@ func (p *SmartPiACConfig) ReadParameterFromFile() {
 	p.CTTypeRogowskiVoltage[models.PhaseB] = accfg.Section("device").Key("ct_type_2_rogowski_voltage").MustInt(100)
 	p.CTTypeRogowskiVoltage[models.PhaseC] = accfg.Section("device").Key("ct_type_3_rogowski_voltage").MustInt(100)
 	p.CTTypeRogowskiVoltage[models.PhaseN] = accfg.Section("device").Key("ct_type_4_rogowski_voltage").MustInt(100)
+	p.CTTypeSecondaryCurrent = make(map[models.SmartPiPhase]float64)
+	for i, phase := range []models.SmartPiPhase{models.PhaseA, models.PhaseB, models.PhaseC, models.PhaseN} {
+		p.CTTypeSecondaryCurrent[phase] = accfg.Section("device").Key("ct_type_" + strconv.Itoa(i+1) + "_secondary_current").MustFloat64(50)
+	}
 	p.CurrentDirection = make(map[models.SmartPiPhase]bool)
 	p.CurrentDirection[models.PhaseA] = accfg.Section("device").Key("change_current_direction_1").MustBool(false)
 	p.CurrentDirection[models.PhaseB] = accfg.Section("device").Key("change_current_direction_2").MustBool(false)
@@ -178,6 +186,9 @@ func (p *SmartPiACConfig) SaveParameterToFile() {
 	_, acerr = accfg.Section("device").NewKey("ct_type_2_rogowski_voltage", strconv.FormatInt(int64(p.CTTypeRogowskiVoltage[models.PhaseB]), 10))
 	_, acerr = accfg.Section("device").NewKey("ct_type_3_rogowski_voltage", strconv.FormatInt(int64(p.CTTypeRogowskiVoltage[models.PhaseC]), 10))
 	_, acerr = accfg.Section("device").NewKey("ct_type_4_rogowski_voltage", strconv.FormatInt(int64(p.CTTypeRogowskiVoltage[models.PhaseN]), 10))
+	for i, phase := range []models.SmartPiPhase{models.PhaseA, models.PhaseB, models.PhaseC, models.PhaseN} {
+		_, acerr = accfg.Section("device").NewKey("ct_type_"+strconv.Itoa(i+1)+"_secondary_current", strconv.FormatFloat(p.CTTypeSecondaryCurrent[phase], 'f', -1, 64))
+	}
 
 	_, acerr = accfg.Section("device").NewKey("change_current_direction_1", strconv.FormatBool(p.CurrentDirection[models.PhaseA]))
 	_, acerr = accfg.Section("device").NewKey("change_current_direction_2", strconv.FormatBool(p.CurrentDirection[models.PhaseB]))

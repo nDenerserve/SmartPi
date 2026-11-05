@@ -132,9 +132,9 @@ func rolesFromClaims(claims jwt.MapClaims) []string {
 
 // IsDeviceToken reports whether the request's bearer token is a device token
 // (see package devicetoken) rather than a session token. Handlers that gate
-// on a per-user allowlist alongside TokenVerifyMiddleWare - AllowedDigitalOutUser
-// and AllowedAnalogOut420mAUser - use this to skip that allowlist for device
-// tokens: a device token's access is already scoped per-token at creation
+// on a per-user allowlist alongside TokenVerifyMiddleWare - AllowedDigitalOutUser,
+// AllowedAnalogOut420mAUser and AllowedAnalogOut010VUser - use this to skip
+// that allowlist for device tokens: a device token's access is already scoped per-token at creation
 // time in the web UI, by an operator who is themselves already subject to
 // that allowlist, so re-checking an OS username that a device token never
 // had in the first place would only lock every device token out.

@@ -2,8 +2,10 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -59,43 +61,10 @@ func (c Controller) UploadUpdatePackage(conf *config.SmartPiConfig) http.Handler
 
 		stagingDir := conf.UpdateStagingDir
 
-		r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
-		if err := r.ParseMultipartForm(32 << 20); err != nil {
-			errorObject.Message = "Uploaded file is too large or malformed."
-			serverutils.RespondWithError(w, http.StatusBadRequest, errorObject)
-			return
-		}
-
-		file, header, err := r.FormFile("file")
-		if err != nil {
-			errorObject.Message = "Missing uploaded file (expected multipart field \"file\")."
-			serverutils.RespondWithError(w, http.StatusBadRequest, errorObject)
-			return
-		}
-		defer file.Close()
-
-		if !strings.HasSuffix(strings.ToLower(header.Filename), ".deb") {
-			errorObject.Message = "Only .deb package files are supported."
-			serverutils.RespondWithError(w, http.StatusBadRequest, errorObject)
-			return
-		}
-
-		if err := os.MkdirAll(stagingDir, 0700); err != nil {
-			log.Errorf("update: creating staging directory %s: %v", stagingDir, err)
-			errorObject.Message = "Could not prepare the upload directory."
-			serverutils.RespondWithError(w, http.StatusInternalServerError, errorObject)
-			return
-		}
-		update.CleanStaleUploads(stagingDir)
-
-		// Each upload gets its own filename rather than a fixed one, so a
-		// second upload arriving while a previous install is still starting
-		// up can never overwrite the file that install is reading.
-		destPath := filepath.Join(stagingDir, fmt.Sprintf("upload-%d.deb", time.Now().UnixNano()))
-		if err := saveUploadedFile(file, destPath); err != nil {
-			log.Errorf("update: storing upload at %s: %v", destPath, err)
-			errorObject.Message = fmt.Sprintf("Could not store the uploaded file: %v", err)
-			serverutils.RespondWithError(w, http.StatusInternalServerError, errorObject)
+		destPath, status, msg := receiveUpload(w, r, stagingDir)
+		if status != 0 {
+			errorObject.Message = msg
+			serverutils.RespondWithError(w, status, errorObject)
 			return
 		}
 
@@ -126,6 +95,73 @@ func (c Controller) UploadUpdatePackage(conf *config.SmartPiConfig) http.Handler
 		w.WriteHeader(http.StatusAccepted)
 		serverutils.ResponseJSON(w, job)
 	}
+}
+
+// receiveUpload streams the multipart field "file" of r straight into a new
+// file in stagingDir and returns its path. On failure it returns the HTTP
+// status and message to answer with (status 0 = success).
+//
+// The part is read with r.MultipartReader() on purpose, not with
+// ParseMultipartForm: that buffers everything above its memory limit in a
+// temporary file in os.TempDir() - /tmp, a small tmpfs (RAM) on Raspberry
+// Pi OS - and never removes it unless MultipartForm.RemoveAll is called.
+// Every ~40 MB package upload used to stay behind there until /tmp was full
+// and further uploads failed with "too large or malformed".
+func receiveUpload(w http.ResponseWriter, r *http.Request, stagingDir string) (string, int, string) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
+	mr, err := r.MultipartReader()
+	if err != nil {
+		return "", http.StatusBadRequest, "Uploaded file is malformed (expected a multipart/form-data upload)."
+	}
+
+	var part *multipart.Part
+	for {
+		part, err = mr.NextPart()
+		if err == io.EOF {
+			return "", http.StatusBadRequest, "Missing uploaded file (expected multipart field \"file\")."
+		}
+		if err != nil {
+			return "", uploadErrorStatus(err), "Uploaded file is too large or malformed."
+		}
+		if part.FormName() == "file" {
+			break
+		}
+		part.Close()
+	}
+	defer part.Close()
+
+	if !strings.HasSuffix(strings.ToLower(part.FileName()), ".deb") {
+		return "", http.StatusBadRequest, "Only .deb package files are supported."
+	}
+
+	if err := os.MkdirAll(stagingDir, 0700); err != nil {
+		log.Errorf("update: creating staging directory %s: %v", stagingDir, err)
+		return "", http.StatusInternalServerError, "Could not prepare the upload directory."
+	}
+	update.CleanStaleUploads(stagingDir)
+
+	// Each upload gets its own filename rather than a fixed one, so a
+	// second upload arriving while a previous install is still starting
+	// up can never overwrite the file that install is reading.
+	destPath := filepath.Join(stagingDir, fmt.Sprintf("upload-%d.deb", time.Now().UnixNano()))
+	if err := saveUploadedFile(part, destPath); err != nil {
+		log.Errorf("update: storing upload at %s: %v", destPath, err)
+		if status := uploadErrorStatus(err); status == http.StatusRequestEntityTooLarge {
+			return "", status, fmt.Sprintf("Uploaded file is larger than %d MB.", maxUploadBytes>>20)
+		}
+		return "", http.StatusInternalServerError, fmt.Sprintf("Could not store the uploaded file: %v", err)
+	}
+	return destPath, 0, ""
+}
+
+// uploadErrorStatus tells an upload over maxUploadBytes (413) apart from
+// any other broken upload (400).
+func uploadErrorStatus(err error) int {
+	var tooLarge *http.MaxBytesError
+	if errors.As(err, &tooLarge) {
+		return http.StatusRequestEntityTooLarge
+	}
+	return http.StatusBadRequest
 }
 
 func saveUploadedFile(src io.Reader, destPath string) error {
