@@ -30,15 +30,13 @@ const (
 	// values file: the timestamp plus at least 18 readings.
 	minSharedFields = 19
 	// readAttempts is how often a read of the shared values file is tried
-	// before it counts as failed.
-	readAttempts = 3
+	// before the server gives up.
+	readAttempts = 5
 	// readRetryDelay is the pause between two attempts. smartpireadout leaves
 	// the file empty only for a fraction of a millisecond between truncating
-	// and writing it, so a short pause is enough to find the complete line.
-	readRetryDelay = 10 * time.Millisecond
-	// maxFailedReads is how many reads of the shared values file in a row may
-	// fail, each after all its attempts, before the server gives up.
-	maxFailedReads = 10
+	// and writing it, so the first retry almost always finds the complete
+	// line; the others cover a writer that is held up for longer.
+	readRetryDelay = 20 * time.Millisecond
 	// sharedFileTimeout is how long the server waits at startup for
 	// smartpireadout to create the shared values file.
 	sharedFileTimeout = 60 * time.Second
@@ -49,8 +47,7 @@ const (
 //
 // smartpireadout rewrites the file in place every second, truncating it before
 // writing the new line, so a read can find the file empty or the line
-// incomplete. Such a read returns an error and leaves the caller's registers
-// as they are.
+// incomplete. Such a read returns an error.
 func readRegisterValues(path string) ([]uint32, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -164,7 +161,6 @@ func main() {
 	defer serv.Close()
 
 	sharedFile := smartpiConfig.SharedDir + "/smartpi_values"
-	failedReads := 0
 
 	go func() {
 		for {
@@ -175,14 +171,8 @@ func main() {
 				time.Sleep(1 * time.Second)
 				values, err := readRegisterValuesRetry(sharedFile, readAttempts, readRetryDelay)
 				if err != nil {
-					failedReads++
-					if failedReads >= maxFailedReads {
-						log.Fatalf("Values not written, %d reads in a row failed: %v", failedReads, err)
-					}
-					log.Debugf("Skipping incomplete shared values file: %v", err)
-					continue
+					log.Fatalf("Values not written, %d reads failed: %v", readAttempts, err)
 				}
-				failedReads = 0
 				for i, registervalue := range values {
 					serv.HoldingRegisters[2*i] = uint16(registervalue >> 16)
 					serv.HoldingRegisters[2*i+1] = uint16(registervalue)
