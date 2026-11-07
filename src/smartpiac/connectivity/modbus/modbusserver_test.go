@@ -119,6 +119,43 @@ func TestReadRegisterValuesWhileRewritten(t *testing.T) {
 	t.Logf("%d complete reads, %d incomplete ones skipped", complete, failed)
 }
 
+// TestReadRegisterValuesRetryRecovers starts with an empty file, as a read
+// right after the truncate finds it, and writes the line while the reader is
+// still retrying.
+func TestReadRegisterValuesRetryRecovers(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "smartpi_values")
+	writeShared(t, path, "")
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		time.Sleep(20 * time.Millisecond)
+		writeShared(t, path, sharedLine)
+	}()
+
+	values, err := readRegisterValuesRetry(path, 50, 10*time.Millisecond)
+	<-done
+	if err != nil {
+		t.Fatalf("line was written during the retries, got %v", err)
+	}
+	if len(values) != 26 {
+		t.Fatalf("got %d values, want 26", len(values))
+	}
+}
+
+func TestReadRegisterValuesRetryGivesUp(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "smartpi_values")
+	writeShared(t, path, "")
+
+	start := time.Now()
+	if _, err := readRegisterValuesRetry(path, 3, 10*time.Millisecond); err == nil {
+		t.Fatal("no error for a file that stays empty")
+	}
+	if elapsed := time.Since(start); elapsed < 20*time.Millisecond {
+		t.Fatalf("gave up after %v, before the third attempt", elapsed)
+	}
+}
+
 func TestWaitForFile(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "smartpi_values")
 	go func() {

@@ -29,8 +29,15 @@ const (
 	// minSharedFields is the field count of a complete line in the shared
 	// values file: the timestamp plus at least 18 readings.
 	minSharedFields = 19
+	// readAttempts is how often a read of the shared values file is tried
+	// before it counts as failed.
+	readAttempts = 3
+	// readRetryDelay is the pause between two attempts. smartpireadout leaves
+	// the file empty only for a fraction of a millisecond between truncating
+	// and writing it, so a short pause is enough to find the complete line.
+	readRetryDelay = 10 * time.Millisecond
 	// maxFailedReads is how many reads of the shared values file in a row may
-	// fail before the server gives up.
+	// fail, each after all its attempts, before the server gives up.
 	maxFailedReads = 10
 	// sharedFileTimeout is how long the server waits at startup for
 	// smartpireadout to create the shared values file.
@@ -72,6 +79,18 @@ func readRegisterValues(path string) ([]uint32, error) {
 		values = append(values, math.Float32bits(float32(val)))
 	}
 	return values, nil
+}
+
+// readRegisterValuesRetry calls readRegisterValues up to attempts times, with
+// delay between the attempts, and returns the first complete read or the last
+// error.
+func readRegisterValuesRetry(path string, attempts int, delay time.Duration) ([]uint32, error) {
+	values, err := readRegisterValues(path)
+	for i := 1; i < attempts && err != nil; i++ {
+		time.Sleep(delay)
+		values, err = readRegisterValues(path)
+	}
+	return values, err
 }
 
 // waitForFile waits until path exists or timeout has passed. smartpireadout
@@ -155,7 +174,7 @@ func main() {
 			case event := <-watcher.Events:
 				log.Debugf("EVENT! %#v\n", event)
 				time.Sleep(1 * time.Second)
-				values, err := readRegisterValues(sharedFile)
+				values, err := readRegisterValuesRetry(sharedFile, readAttempts, readRetryDelay)
 				if err != nil {
 					failedReads++
 					if failedReads >= maxFailedReads {
