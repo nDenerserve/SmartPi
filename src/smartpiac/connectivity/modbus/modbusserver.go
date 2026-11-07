@@ -166,7 +166,6 @@ func main() {
 	sharedFile := smartpiConfig.SharedDir + "/smartpi_values"
 	failedReads := 0
 
-	//
 	go func() {
 		for {
 			select {
