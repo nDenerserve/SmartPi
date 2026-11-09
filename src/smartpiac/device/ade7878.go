@@ -30,6 +30,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/nDenerserve/SmartPi/models"
@@ -101,13 +102,32 @@ var (
 			VoltageRmsOffset:      1.0,
 			PowerCorrectionFactor: 0.043861,
 		},
+		// Special type for a customer order: that SmartPi had a modified
+		// burden resistor of 3.75 Ohm instead of the standard 7.5 Ohm. It
+		// is wrong on every standard SmartPi (current reads twice too high)
+		// and therefore deliberately not offered in the web UI - kept only so
+		// that this customer's config keeps working. A 600A/100mA CT on a
+		// standard SmartPi is set up as "X/mA" (600 A / 100 mA) instead.
 		"600A/100mA": CTFactors{
 			CurrentResistor:       3.75,
 			CurrentClampFactor:    (0.1 / 6),
 			CurrentRmsOffset:      1.032,
 			VoltageRmsOffset:      1.0,
 			PowerCorrectionFactor: 0.019413,
-		}, "ROGOWSKI": CTFactors{
+		},
+		// Current-output CT with any ratio, e.g. 100A/50mA, 200A/100mA: the
+		// secondary current flows through the same burden as that of
+		// "YHDC_SCT013" (100A/50mA), so it shares its correction factors;
+		// the clamp factor follows from CTTypePrimaryCurrent and
+		// CTTypeSecondaryCurrent, see currentClampFactor.
+		"X/mA": CTFactors{
+			CurrentResistor:       7.5,
+			CurrentClampFactor:    0,
+			CurrentRmsOffset:      1.032,
+			VoltageRmsOffset:      1.0,
+			PowerCorrectionFactor: 0.019413,
+		},
+		"ROGOWSKI": CTFactors{
 			CurrentResistor:       1.0,
 			CurrentClampFactor:    1.0,
 			CurrentRmsOffset:      1.010725941,
@@ -401,6 +421,76 @@ func InitADE7878(c *config.SmartPiACConfig) (*i2c.Device, error) {
 	return d, nil
 }
 
+// Plausibility limit of the secondary current of an "X/mA" CT.
+const ctMaxSecondaryCurrent = 100.0 // mA
+
+// ValidCustomCT reports whether the "X/mA" settings of phase can be used:
+// a positive primary current and a secondary current in (0, 100] mA.
+func ValidCustomCT(c *config.SmartPiACConfig, phase models.SmartPiPhase) bool {
+	is := c.CTTypeSecondaryCurrent[phase]
+	return c.CTTypePrimaryCurrent[phase] > 0 && is > 0 && is <= ctMaxSecondaryCurrent
+}
+
+// warnedCustomCT keeps the invalid-config warning to once per phase
+// instead of once per reading.
+var (
+	warnedCustomCT     = make(map[models.SmartPiPhase]bool)
+	warnedCustomCTLock sync.Mutex
+)
+
+// currentClampFactor is the CT's secondary output per 100A primary (A, or
+// V for voltage-output CTs) that ReadCurrent divides by. ok is false for an
+// unusable "X/mA" configuration; that phase then reads 0.
+func currentClampFactor(c *config.SmartPiACConfig, phase models.SmartPiPhase) (ccf float64, ok bool) {
+	ct := c.CTType[phase]
+	switch ct {
+	case "YHDC_SCT013", "YHDC_SCT4333QL", "400A/033V", "600A/100mA":
+		return CTTypes[ct].CurrentClampFactor, true
+	case "ROGOWSKI":
+		return CTTypes[ct].CurrentClampFactor / (100.0 / (float64(c.CTTypeRogowskiVoltage[phase])) * 100.0), true
+	case "X/mA":
+		warnedCustomCTLock.Lock()
+		defer warnedCustomCTLock.Unlock()
+		if !ValidCustomCT(c, phase) {
+			if !warnedCustomCT[phase] {
+				log.Warnf("phase %v: CT type X/mA needs a primary current > 0 A and a secondary current of 0-%.0f mA, got %d A / %v mA - current and power read as 0", phase, ctMaxSecondaryCurrent, c.CTTypePrimaryCurrent[phase], c.CTTypeSecondaryCurrent[phase])
+				warnedCustomCT[phase] = true
+			}
+			return 0, false
+		}
+		warnedCustomCT[phase] = false
+		// secondary A per 100A primary, e.g. 100A/50mA -> 0.05, same as "YHDC_SCT013"
+		return c.CTTypeSecondaryCurrent[phase] / 1000.0 / float64(c.CTTypePrimaryCurrent[phase]) * 100.0, true
+	default:
+		return CTTypes[ct].CurrentClampFactor / (float64(c.CTTypePrimaryCurrent[phase]) / 100.0), true
+	}
+}
+
+// powerScaleFactor is the divisor ("pcf") that scales the ADE7878's power
+// and energy registers to the CT. ok as for currentClampFactor.
+func powerScaleFactor(c *config.SmartPiACConfig, phase models.SmartPiPhase) (pcf float64, ok bool) {
+	switch c.CTType[phase] {
+	case "YHDC_SCT013":
+		return 1.0, true
+	case "400A/033V":
+		return 0.5, true
+	case "YHDC_SCT4333QL", "600A/100mA":
+		return 1.0 / 3.0, true
+	case "ROGOWSKI":
+		return (float64(c.CTTypeRogowskiVoltage[phase])) / 1635.43, true
+	case "X/mA":
+		// Power per register count is proportional to the CT's primary
+		// per secondary current; scaled from "YHDC_SCT013" (pcf 1 at
+		// 100A/50mA - "YHDC_SCT4333QL", 1/60 per 100A, has 1/3 the same way).
+		if !ValidCustomCT(c, phase) {
+			return 0, false
+		}
+		return (c.CTTypeSecondaryCurrent[phase] / float64(c.CTTypePrimaryCurrent[phase])) / (50.0 / 100.0), true
+	default:
+		return 200 / (float64(c.CTTypePrimaryCurrent[phase])), true
+	}
+}
+
 func ReadCurrent(d *i2c.Device, c *config.SmartPiACConfig, phase models.SmartPiPhase) (current float64) {
 	command := make([]byte, 2)
 	switch phase {
@@ -426,18 +516,10 @@ func ReadCurrent(d *i2c.Device, c *config.SmartPiACConfig, phase models.SmartPiP
 		panic(fmt.Errorf("Invalid frequency %g", c.PowerFrequency))
 	}
 
-	if c.MeasureCurrent[phase] {
+	ccf, ctOK := currentClampFactor(c, phase)
+	if c.MeasureCurrent[phase] && ctOK {
 		outcome := float64(DeviceFetchInt(d, 4, command))
 		cr := CTTypes[c.CTType[phase]].CurrentResistor
-		var ccf float64
-		switch c.CTType[phase] {
-		case "YHDC_SCT013", "YHDC_SCT4333QL", "400A/033V", "600A/100mA":
-			ccf = CTTypes[c.CTType[phase]].CurrentClampFactor
-		case "ROGOWSKI":
-			ccf = CTTypes[c.CTType[phase]].CurrentClampFactor / (100.0 / (float64(c.CTTypeRogowskiVoltage[phase])) * 100.0)
-		default:
-			ccf = CTTypes[c.CTType[phase]].CurrentClampFactor / (float64(c.CTTypePrimaryCurrent[phase]) / 100.0)
-		}
 		oc := CTTypes[c.CTType[phase]].CurrentRmsOffset
 		// outcome = outcome - 7300
 		current = (((((outcome * 0.3535) / rmsFactor) / cr) / ccf) * 100.0 * oc * c.CalibrationfactorI[phase])
@@ -514,22 +596,10 @@ func ReadActiveWatts(d *i2c.Device, c *config.SmartPiACConfig, phase models.Smar
 		panic(fmt.Errorf("Invalid phase %q", phase))
 	}
 
-	var pcf float64
-	switch c.CTType[phase] {
-	case "YHDC_SCT013":
-		pcf = 1.0
-	case "400A/033V":
-		pcf = 0.5
-	case "YHDC_SCT4333QL", "600A/100mA":
-		pcf = 1.0 / 3.0
-	case "ROGOWSKI":
-		pcf = (float64(c.CTTypeRogowskiVoltage[phase])) / 1635.43
-	default:
-		pcf = 200 / (float64(c.CTTypePrimaryCurrent[phase]))
-	}
+	pcf, ctOK := powerScaleFactor(c, phase)
 
 	outcome := float64(DeviceFetchInt(d, 4, command))
-	if c.MeasureCurrent[phase] {
+	if c.MeasureCurrent[phase] && ctOK {
 		watts = outcome * calibrationCurveFactorCurrent * powerCalibrationFactor(c, phase) * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf
 	} else {
 		watts = 0.0
@@ -579,21 +649,12 @@ func ReadActiveEnergy(d *i2c.Device, c *config.SmartPiACConfig, phase models.Sma
 		panic(fmt.Errorf("Invalid phase %q", phase))
 	}
 
-	var pcf float64
-	switch c.CTType[phase] {
-	case "YHDC_SCT013":
-		pcf = 1.0
-	case "400A/033V":
-		pcf = 0.5
-	case "YHDC_SCT4333QL", "600A/100mA":
-		pcf = 1.0 / 3.0
-	case "ROGOWSKI":
-		pcf = (float64(c.CTTypeRogowskiVoltage[phase])) / 1635.43
-	default:
-		pcf = 200 / (float64(c.CTTypePrimaryCurrent[phase]))
-	}
+	pcf, ctOK := powerScaleFactor(c, phase)
 
 	outcome := float64(DeviceFetchInt(d, 4, command))
+	if !ctOK {
+		return 0
+	}
 
 	energy = outcome * calibrationCurveFactorCurrent * calibrationCurveFactorPower * powerCalibrationFactor(c, phase) / pcf
 
@@ -669,21 +730,9 @@ func ReadApparentPower(d *i2c.Device, c *config.SmartPiACConfig, phase models.Sm
 		panic(fmt.Errorf("Invalid phase %q", phase))
 	}
 
-	var pcf float64
-	switch c.CTType[phase] {
-	case "YHDC_SCT013":
-		pcf = 1.0
-	case "400A/033V":
-		pcf = 0.5
-	case "YHDC_SCT4333QL", "600A/100mA":
-		pcf = 1.0 / 3.0
-	case "ROGOWSKI":
-		pcf = (float64(c.CTTypeRogowskiVoltage[phase])) / 1635.43
-	default:
-		pcf = 200 / (float64(c.CTTypePrimaryCurrent[phase]))
-	}
+	pcf, ctOK := powerScaleFactor(c, phase)
 
-	if c.MeasureCurrent[phase] {
+	if c.MeasureCurrent[phase] && ctOK {
 		outcome := float64(DeviceFetchInt(d, 4, command))
 		return outcome * calibrationCurveFactorCurrent * calibrationCurveFactorPower * powerCalibrationFactor(c, phase) * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf * 1.14989234
 	} else {
@@ -704,22 +753,10 @@ func ReadReactivePower(d *i2c.Device, c *config.SmartPiACConfig, phase models.Sm
 		panic(fmt.Errorf("Invalid phase %q", phase))
 	}
 
-	var pcf float64
-	switch c.CTType[phase] {
-	case "YHDC_SCT013":
-		pcf = 1.0
-	case "400A/033V":
-		pcf = 0.5
-	case "YHDC_SCT4333QL", "600A/100mA":
-		pcf = 1.0 / 3.0
-	case "ROGOWSKI":
-		pcf = (float64(c.CTTypeRogowskiVoltage[phase])) / 1635.43
-	default:
-		pcf = 200 / (float64(c.CTTypePrimaryCurrent[phase]))
-	}
+	pcf, ctOK := powerScaleFactor(c, phase)
 
 	outcome := float64(DeviceFetchInt(d, 4, command))
-	if c.MeasureCurrent[phase] {
+	if c.MeasureCurrent[phase] && ctOK {
 		rewatts = outcome * calibrationCurveFactorCurrent * calibrationCurveFactorPower * powerCalibrationFactor(c, phase) * CTTypes[c.CTType[phase]].PowerCorrectionFactor / pcf * 2.560177029
 	} else {
 		rewatts = 0.0

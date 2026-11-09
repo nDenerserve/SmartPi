@@ -437,3 +437,16 @@ Or you can add it later via webgui:
  * /etc/smartpi, /etc/smartpiAC and /etc/smartpiModules are written with mode 0640 and without the fixed /tmp files
  * replaced the sudo rules for apt-get, systemd-run, systemctl, useradd, chpasswd and tee (each of them a root shell with free arguments) by etc/sudoers.d/smartpi: only `smartpiserver --pam-check` and `smartpiserver --root-helper`, which checks every argument (src/smartpi/roothelper)
  * new website build (passwords masked in the settings, login token no longer printed to the browser console)
+
+ ### 11/04/26
+ * added module (0-10V output, MCP4728, 4 channels): `GET /api/v1/module/analogout010v/{address}` reads all channels back from the DAC, `PUT /api/v1/module/analogout010v/{address}/{channel}/{voltage}` sets one channel, `PUT /api/v1/module/analogout010v/{address}` with `{"voltages": [1.5, null, 10, 0]}` sets several at once; `persist=true` (query parameter or JSON field) also stores the value in the DAC's EEPROM as power-up default
+ * the module uses the device-token scope `analogout` and the allowlist `[analogout010v] allowed_user` in /etc/smartpiModules (default root,smartpi)
+ * fixed /etc/smartpiModules: a missing or empty `allowed_user` (digitalout, analogout420ma, analogin, etemperature) locked every user out instead of falling back to root,smartpi; same for the LoRaWAN `shared_files_path`/`shared_files_elements` defaults; entries are trimmed now
+ * fixed /etc/smartpi: the `ftp_sendtimes` default was never applied (space- instead of comma-separated) and more than 24 entries crashed the config read
+ * new website build; the "create token", "create user" and "add address" controls are labelled buttons now instead of a filter-coloured "+" icon, which stayed invisible (white) in some browsers
+ * fixed Dashboard: the info card read the live data before the first response arrived (console error "Cannot read properties of null"); removed debug console output of the live data
+ * 0-10V output module: channels 1-4 are the outputs as labelled on the board (left to right); the board routes them to the DAC swapped in pairs (B, A, D, C, measured on hardware), the status shows the DAC channel as `dacchannel`
+ * 0-10V output module: per-output calibration (gain and offset, from two measurements per output) per module address in /etc/smartpiModules `[analogout010v] calibration_<address>`, set via the admin-only `GET/PUT/DELETE /api/v1/module/analogout010v/{address}/calibration`; the status reports `calibrated` per output
+ * settings "Module" tab: calibration assistant for the 0-10V output module - per output set 1 V and 9 V, enter the measured voltages, gain/offset are fitted (from the DAC codes actually set, so recalibrating over an existing calibration works) and stored; delete calibration, all outputs to 0 V
+ * I2C scan: 0x60-0x63 is reported as MCP4725/MCP4728 (4-20mA or 0-10V output), 0x64-0x67 as MCP4728
+ * fixed the update upload: every uploaded .deb stayed behind as a ~40 MB multipart temp file in /tmp (a 200 MB tmpfs on Raspberry Pi OS) until /tmp was full and uploads failed with "too large or malformed"; the upload is now streamed straight into the staging directory

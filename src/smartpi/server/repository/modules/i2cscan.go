@@ -25,9 +25,9 @@ var i2cRowHeader = regexp.MustCompile(`^([0-9a-f]{2}):(.*)$`)
 // i2cdetect's default probe mode sends a bare SMBus "quick write" command to
 // most addresses, which the tool's own manpage warns can alter state on some
 // chips. -r instead uses a read-only "receive byte" probe for every address,
-// which matters here because a MCP4725 DAC (analogout420ma module) may be
-// live on this same bus, actively driving a 4-20mA loop - a scan must never
-// risk writing to it.
+// which matters here because a MCP4725/MCP4728 DAC (analogout420ma /
+// analogout010v module) may be live on this same bus, actively driving an
+// output - a scan must never risk writing to it.
 func (m ModulesRepository) ScanI2C(conf *config.Moduleconfig) (models.I2CScanStatus, error) {
 	var status models.I2CScanStatus
 	status.Bus = conf.I2CDevice
@@ -118,8 +118,12 @@ func i2cAddressHint(addr int) string {
 		return "MCP23017"
 	case addr == 0x38:
 		return "ADE7878"
+	// 4-20mA out (MCP4725, 0x60-0x63) and 0-10V out (MCP4728, 0x60-0x67)
+	// share the low half of the range, both ship at 0x60.
 	case addr >= 0x60 && addr <= 0x63:
-		return "MCP4725"
+		return "MCP4725/MCP4728"
+	case addr >= 0x64 && addr <= 0x67:
+		return "MCP4728"
 	case addr >= 0x68 && addr <= 0x6f:
 		return "MCP3424"
 	default:

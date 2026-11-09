@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/fatih/structs"
 	"github.com/nDenerserve/SmartPi/models"
@@ -220,7 +221,8 @@ func (c ConfigRepository) PrepareConfig(wc models.Writeconfiguration, conf inter
 						case float64:
 							aData[ind] = float64(v.(float64))
 						case string:
-							floatval, _ := strconv.ParseFloat(v.(string), 64)
+							// German input: "333,3" as well as "333.3"
+							floatval, _ := strconv.ParseFloat(strings.Replace(strings.TrimSpace(v.(string)), ",", ".", 1), 64)
 							aData[ind] = floatval
 						case int:
 							aData[ind] = float64(v.(int))
@@ -267,7 +269,8 @@ func (c ConfigRepository) PrepareConfig(wc models.Writeconfiguration, conf inter
 							// aData[k] = float64(v.(float64))
 							aData[ind] = float64(v.(float64))
 						case string:
-							floatval, _ := strconv.ParseFloat(v.(string), 64)
+							// German input: "333,3" as well as "333.3"
+							floatval, _ := strconv.ParseFloat(strings.Replace(strings.TrimSpace(v.(string)), ",", ".", 1), 64)
 							aData[ind] = floatval
 						case int:
 							aData[ind] = float64(v.(int))
