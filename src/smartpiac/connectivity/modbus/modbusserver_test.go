@@ -156,6 +156,44 @@ func TestReadRegisterValuesRetryGivesUp(t *testing.T) {
 	}
 }
 
+func TestLoadRegisters(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "smartpi_values")
+	writeShared(t, path, sharedLine)
+	values, err := readRegisterValues(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	registers := make([]uint16, 2*len(values)+2)
+	if err := loadRegisters(registers, path); err != nil {
+		t.Fatal(err)
+	}
+	for i, want := range values {
+		if got := uint32(registers[2*i])<<16 | uint32(registers[2*i+1]); got != want {
+			t.Errorf("value %d in registers %d and %d = %v, want %v", i, 2*i, 2*i+1,
+				math.Float32frombits(got), math.Float32frombits(want))
+		}
+	}
+	if tail := registers[2*len(values):]; tail[0] != 0 || tail[1] != 0 {
+		t.Errorf("registers after the last value were written: %v", tail)
+	}
+}
+
+func TestLoadRegistersKeepsRegistersOnError(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "smartpi_values")
+	writeShared(t, path, "")
+
+	registers := []uint16{1, 2, 3, 4}
+	if err := loadRegisters(registers, path); err == nil {
+		t.Fatal("no error for an empty file")
+	}
+	for i, want := range []uint16{1, 2, 3, 4} {
+		if registers[i] != want {
+			t.Fatalf("registers = %v after a failed read, want them unchanged", registers)
+		}
+	}
+}
+
 func TestWaitForFile(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "smartpi_values")
 	go func() {

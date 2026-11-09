@@ -90,6 +90,21 @@ func readRegisterValuesRetry(path string, attempts int, delay time.Duration) ([]
 	return values, err
 }
 
+// loadRegisters reads the shared values file, retrying incomplete reads, and
+// stores the readings in registers, two registers per reading, high word
+// first. If the read fails, registers are left unchanged.
+func loadRegisters(registers []uint16, path string) error {
+	values, err := readRegisterValuesRetry(path, readAttempts, readRetryDelay)
+	if err != nil {
+		return fmt.Errorf("values not written, %d reads failed: %w", readAttempts, err)
+	}
+	for i, value := range values {
+		registers[2*i] = uint16(value >> 16)
+		registers[2*i+1] = uint16(value)
+	}
+	return nil
+}
+
 // waitForFile waits until path exists or timeout has passed. smartpireadout
 // creates the shared values file with its first reading, which can be a
 // moment after this server has started.
@@ -131,7 +146,17 @@ func main() {
 	//
 	done := make(chan bool)
 
+	sharedFile := smartpiConfig.SharedDir + "/smartpi_values"
+
+	// Fill the registers before opening the Modbus transports, so that no
+	// client reads the zero-initialised registers as if they were readings.
+	if err := waitForFile(sharedFile, sharedFileTimeout); err != nil {
+		log.Fatal("ERROR", err)
+	}
 	serv := mbserver.NewServer()
+	if err := loadRegisters(serv.HoldingRegisters, sharedFile); err != nil {
+		log.Fatal(err)
+	}
 
 	if smartpiConfig.ModbusTCPenabled {
 		err := serv.ListenTCP(smartpiConfig.ModbusTCPAddress)
@@ -160,8 +185,6 @@ func main() {
 	}
 	defer serv.Close()
 
-	sharedFile := smartpiConfig.SharedDir + "/smartpi_values"
-
 	go func() {
 		for {
 			select {
@@ -169,13 +192,8 @@ func main() {
 			case event := <-watcher.Events:
 				log.Debugf("EVENT! %#v\n", event)
 				time.Sleep(1 * time.Second)
-				values, err := readRegisterValuesRetry(sharedFile, readAttempts, readRetryDelay)
-				if err != nil {
-					log.Fatalf("Values not written, %d reads failed: %v", readAttempts, err)
-				}
-				for i, registervalue := range values {
-					serv.HoldingRegisters[2*i] = uint16(registervalue >> 16)
-					serv.HoldingRegisters[2*i+1] = uint16(registervalue)
+				if err := loadRegisters(serv.HoldingRegisters, sharedFile); err != nil {
+					log.Fatal(err)
 				}
 
 				// watch for errors
@@ -184,10 +202,6 @@ func main() {
 			}
 		}
 	}()
-
-	if err := waitForFile(sharedFile, sharedFileTimeout); err != nil {
-		log.Fatal("ERROR", err)
-	}
 
 	// out of the box fsnotify can watch a single file, or a single directory
 	if err := watcher.Add(sharedFile); err != nil {
