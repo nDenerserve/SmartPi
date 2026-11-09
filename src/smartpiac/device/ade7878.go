@@ -640,11 +640,11 @@ func ReadActiveEnergy(d *i2c.Device, c *config.SmartPiACConfig, phase models.Sma
 	command := make([]byte, 2)
 	switch phase {
 	case models.PhaseA:
-		command = []byte{0xE4, 0x00} // 0xE4000 (AWATTHR total active energy phase A)
+		command = ADE7878REG["AWATTHR"] // 0xE400 (AWATTHR total active energy phase A)
 	case models.PhaseB:
-		command = []byte{0xE4, 0x00} // 0xE4001 (BWATTHR total active energy phase B)
+		command = ADE7878REG["BWATTHR"] // 0xE401 (BWATTHR total active energy phase B)
 	case models.PhaseC:
-		command = []byte{0xE4, 0x00} // 0xE4002 (CWATTHR total active energy phase C)
+		command = ADE7878REG["CWATTHR"] // 0xE402 (CWATTHR total active energy phase C)
 	default:
 		panic(fmt.Errorf("Invalid phase %q", phase))
 	}
@@ -770,17 +770,18 @@ func ReadReactivePower(d *i2c.Device, c *config.SmartPiACConfig, phase models.Sm
 
 func CalculatePowerFactor(c *config.SmartPiACConfig, phase models.SmartPiPhase, watts float64, voltAmps float64, voltAmpsReactive float64) float64 {
 
-	powerFactor := watts / CTTypes[c.CTType[phase]].PowerCorrectionFactor / voltAmps
-
-	if c.MeasureCurrent[phase] {
-		if math.Signbit(voltAmpsReactive) {
-			return powerFactor
-		} else {
-			return powerFactor * -1
-		}
-	} else {
+	// watts and voltAmps both carry the CT's PowerCorrectionFactor, so it
+	// cancels out in the ratio. Without apparent power there is no power factor.
+	if !c.MeasureCurrent[phase] || voltAmps == 0 {
 		return 0.0
 	}
+
+	powerFactor := watts / voltAmps
+
+	if math.Signbit(voltAmpsReactive) {
+		return powerFactor
+	}
+	return powerFactor * -1
 }
 
 func ReadPhase(d *i2c.Device, c *config.SmartPiACConfig, p models.SmartPiPhase, measureFrequency bool, v *models.ADE7878Readout) {
